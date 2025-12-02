@@ -6,6 +6,10 @@ import 'package:flutter_math_fork/flutter_math.dart';
 /// This widget expects text with LaTeX wrapped in \(...\) for inline math
 /// or \[...\] for display math. All mathematical and chemical notation
 /// MUST be explicitly wrapped in these delimiters.
+/// 
+/// Chemical equations should use mhchem syntax: \ce{H2O -> H+ + OH-}
+/// Note: flutter_math_fork may not fully support mhchem, so we use
+/// \mathrm{} as a fallback for chemical formulas.
 class LaTeXWidget extends StatelessWidget {
   final String text;
   final TextStyle? textStyle;
@@ -36,7 +40,8 @@ class LaTeXWidget extends StatelessWidget {
     final hasInlineLaTeX = processedInput.contains('\\(');
     final hasDisplayLaTeX = processedInput.contains('\\[');
     
-    // 3. No LaTeX? Return plain text
+    // 3. No LaTeX? Return plain text (Unicode symbols will render natively)
+    // This is optimal for simple symbols like H₂O, 90°, π per guidelines
     if (!hasInlineLaTeX && !hasDisplayLaTeX) {
       return Text(processedInput, style: style);
     }
@@ -57,8 +62,12 @@ class LaTeXWidget extends StatelessWidget {
 
   Widget _renderPureLaTeX(String latex, TextStyle style, bool isInline) {
     try {
+      // Preprocess mhchem syntax: \ce{...} -> convert to \mathrm{} format
+      // Since flutter_math_fork may not support mhchem, we convert it
+      String processedLatex = _processMhchemSyntax(latex);
+      
       return Math.tex(
-        latex,
+        processedLatex,
         mathStyle: isInline ? MathStyle.text : MathStyle.display,
         textStyle: style,
       );
@@ -67,6 +76,95 @@ class LaTeXWidget extends StatelessWidget {
       // Fallback: show content as plain text
       return Text(latex, style: style.copyWith(color: Colors.red.shade700));
     }
+  }
+
+  /// Process mhchem syntax (\ce{...}) and convert to \mathrm{} format
+  /// This converts mhchem commands to LaTeX that flutter_math_fork can render
+  /// Examples:
+  /// - \ce{H2O} -> \mathrm{H}_{2}\mathrm{O}
+  /// - \ce{H+} -> \mathrm{H}^{+}
+  /// - \ce{H2O -> H+ + OH-} -> \mathrm{H}_{2}\mathrm{O} \rightarrow \mathrm{H}^{+} + \mathrm{OH}^{-}
+  String _processMhchemSyntax(String latex) {
+    // Pattern to match \ce{...} blocks
+    final cePattern = RegExp(r'\\ce\{([^}]+)\}');
+    
+    return latex.replaceAllMapped(cePattern, (match) {
+      final content = match.group(1)!;
+      
+      // Split by arrows first to handle reactions
+      final arrowPattern = RegExp(r'\s*(<=>|<=|=>|->|<-)\s*');
+      final parts = content.split(arrowPattern);
+      final arrows = arrowPattern.allMatches(content).map((m) => m.group(1)!).toList();
+      
+      final convertedParts = <String>[];
+      for (int i = 0; i < parts.length; i++) {
+        final part = parts[i].trim();
+        if (part.isEmpty) continue;
+        
+        // Check if this part is an arrow
+        if (i > 0 && (i - 1) < arrows.length) {
+          final arrow = arrows[i - 1];
+          String arrowLatex;
+          switch (arrow) {
+            case '<=>':
+              arrowLatex = r'\rightleftharpoons';
+              break;
+            case '<=':
+            case '<-':
+              arrowLatex = r'\leftarrow';
+              break;
+            case '=>':
+              arrowLatex = r'\Rightarrow';
+              break;
+            case '->':
+            default:
+              arrowLatex = r'\rightarrow';
+          }
+          convertedParts.add(arrowLatex);
+        }
+        
+        // Convert chemical formula part
+        if (part.isNotEmpty) {
+          String formula = part;
+          
+          // Handle charges: 2+, 3-, +, -
+          formula = formula.replaceAllMapped(
+            RegExp(r'(\d+)([+-])(?=\s|$|,|\))'),
+            (m) => '^{${m.group(1)}${m.group(2)}}',
+          );
+          formula = formula.replaceAllMapped(
+            RegExp(r'(?<!\d)([+-])(?=\s|$|,|\))'),
+            (m) => '^{${m.group(1)}}',
+          );
+          
+          // Handle subscripts: numbers after letters
+          formula = formula.replaceAllMapped(
+            RegExp(r'([A-Za-z]+)(\d+)'),
+            (m) {
+              final letters = m.group(1)!;
+              final number = m.group(2)!;
+              // Split multi-letter elements and add subscript to last letter
+              if (letters.length > 1) {
+                return letters.substring(0, letters.length - 1) + 
+                       '${letters[letters.length - 1]}_{$number}';
+              }
+              return '${letters}_{$number}';
+            },
+          );
+          
+          // Handle parentheses with subscripts: (NH4)2
+          formula = formula.replaceAllMapped(
+            RegExp(r'\)(\d+)'),
+            (m) => ')_{${m.group(1)}}',
+          );
+          
+          // Wrap in \mathrm{}
+          convertedParts.add(r'\mathrm{' + formula + '}');
+        }
+      }
+      
+      return convertedParts.join(' ');
+    });
   }
 
   Widget _renderMixedContent(String input, TextStyle style) {
@@ -103,9 +201,12 @@ class LaTeXWidget extends StatelessWidget {
       
       // Add LaTeX widget
       try {
+        // Preprocess mhchem syntax before rendering
+        final processedContent = _processMhchemSyntax(match.content);
+        
         // Wrap Math widget to handle overflow
         final mathWidget = Math.tex(
-          match.content,
+          processedContent,
           mathStyle: match.isInline ? MathStyle.text : MathStyle.display,
           textStyle: style,
         );

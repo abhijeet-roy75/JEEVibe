@@ -9,7 +9,8 @@ class ApiService {
   // For iOS simulator: http://localhost:3000
   // For real device: http://YOUR_COMPUTER_IP:3000 (ensure same WiFi)
   // Current IP: 192.168.5.81
-  static const String baseUrl = 'http://192.168.5.81:3000';
+  // static const String baseUrl = 'http://192.168.5.81:3000';
+  static const String baseUrl = 'https://jeevibe.onrender.com';
   
   /// Upload image and get solution
   static Future<Solution> solveQuestion(File imageFile) async {

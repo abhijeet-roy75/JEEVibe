@@ -49,5 +49,7 @@
 	<string>We need camera access to capture questions for Snap &amp; Solve</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need photo library access to select questions from your gallery</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

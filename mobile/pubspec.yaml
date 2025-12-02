@@ -1,7 +1,7 @@
 name: jeevibe_mobile
 description: JEEVibe Snap & Solve POC - iOS Flutter App
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -47,4 +47,5 @@ flutter:
   # Assets
   assets:
     - assets/images/
+    - assets/images/priya_maam.jpeg
 

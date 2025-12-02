@@ -69,8 +69,10 @@ mobile/android/app/debug
 mobile/android/app/profile
 mobile/android/app/release
 
-# Docs (exclude from GitHub)
+# Docs and other folders (exclude from GitHub)
 docs/
+screens/
+scripts/
 
 # Temporary files
 *.tmp

@@ -1,13 +1,16 @@
-import 'dart:async';
+/// Camera Screen - Snap Your Question
+/// Matches design: 4 Camera Interface Screen Redesigned.png
 import 'dart:io';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
-import '../utils/image_compressor.dart';
-import '../services/api_service.dart';
-import 'solution_screen.dart';
-import '../theme/jeevibe_theme.dart';
+import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'photo_review_screen.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
+import '../providers/app_state_provider.dart';
+import '../widgets/priya_avatar.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -16,187 +19,111 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
-  CameraController? _controller;
-  List<CameraDescription>? _cameras;
-  bool _isInitialized = false;
-  bool _isInitializing = false;
+class _CameraScreenState extends State<CameraScreen> {
   final ImagePicker _picker = ImagePicker();
-  double _minAvailableZoom = 1.0;
-  double _maxAvailableZoom = 1.0;
-  double _currentZoomLevel = 1.0;
-  FlashMode _flashMode = FlashMode.off;
+  bool _isProcessing = false;
+  File? _selectedImage;
+  bool _isQuickTipsExpanded = false;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _initializeCamera();
-  }
+  Future<void> _capturePhoto() async {
+    if (_isProcessing) return;
 
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _controller?.dispose();
-    super.dispose();
-  }
+    setState(() => _isProcessing = true);
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    final CameraController? cameraController = _controller;
-
-    // App state changed before we got the chance to initialize.
-    if (cameraController == null || !cameraController.value.isInitialized) {
-      return;
-    }
-
-    if (state == AppLifecycleState.inactive) {
-      cameraController.dispose();
-    } else if (state == AppLifecycleState.resumed) {
-      _initializeCamera();
-    }
-  }
-
-  Future<void> _initializeCamera() async {
-    if (!mounted) return;
-    
-    setState(() {
-      _isInitializing = true;
-    });
-    
     try {
-      _cameras = await availableCameras().timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw TimeoutException('Camera initialization timed out');
-        },
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
       );
-      
-      if (_cameras != null && _cameras!.isNotEmpty && mounted) {
-        _controller = CameraController(
-          _cameras![0],
-          ResolutionPreset.high, // Higher resolution for better OCR
-          enableAudio: false,
-          imageFormatGroup: Platform.isIOS 
-              ? ImageFormatGroup.jpeg 
-              : ImageFormatGroup.yuv420,
-        );
-        
-        await _controller!.initialize().timeout(
-          const Duration(seconds: 10),
-          onTimeout: () {
-            throw TimeoutException('Camera initialization timed out');
-          },
-        );
 
-        if (mounted && _controller != null && _controller!.value.isInitialized) {
-          _minAvailableZoom = await _controller!.getMinZoomLevel();
-          _maxAvailableZoom = await _controller!.getMaxZoomLevel();
-          
-          // Enable autofocus for sharp images
-          try {
-            await _controller!.setFocusMode(FocusMode.auto);
-          } catch (e) {
-            debugPrint('Failed to set focus mode: $e');
-          }
-          
-          setState(() {
-            _isInitialized = true;
-            _isInitializing = false;
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint('Camera initialization error: $e');
-      if (mounted) {
-        setState(() {
-          _isInitialized = false;
-          _isInitializing = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _takePicture() async {
-    if (!_isInitialized || _controller == null || _controller!.value.isTakingPicture) {
-      return;
-    }
-
-    try {
-      final XFile file = await _controller!.takePicture();
-      await _processImage(File(file.path));
-    } catch (e) {
-      _showError('Failed to capture image: $e');
-    }
-  }
-
-  Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
         await _processImage(File(image.path));
       }
     } catch (e) {
-      _showError('Failed to pick image: $e');
+      if (mounted) {
+        _showError('Failed to capture image: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    if (_isProcessing) return;
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+      );
+
+      if (image != null) {
+        await _processImage(File(image.path));
+      }
+    } catch (e) {
+      if (mounted) {
+        _showError('Failed to pick image: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 
   Future<void> _processImage(File imageFile) async {
-    // 1. Crop Image
+    setState(() {
+      _selectedImage = imageFile;
+    });
+
+    // Crop the image
     final croppedFile = await ImageCropper().cropImage(
       sourcePath: imageFile.path,
       uiSettings: [
         AndroidUiSettings(
           toolbarTitle: 'Crop Question',
-          toolbarColor: JVColors.primary,
+          toolbarColor: AppColors.primaryPurple,
           toolbarWidgetColor: Colors.white,
           initAspectRatio: CropAspectRatioPreset.original,
           lockAspectRatio: false,
         ),
         IOSUiSettings(
           title: 'Crop Question',
-          doneButtonTitle: 'Solve',
+          doneButtonTitle: 'Next',
           cancelButtonTitle: 'Cancel',
           aspectRatioLockEnabled: false,
         ),
       ],
     );
 
-    if (croppedFile == null) return; // User cancelled cropping
+    if (croppedFile == null) {
+      setState(() {
+        _selectedImage = null;
+      });
+      return;
+    }
 
-    try {
-      final processedFile = File(croppedFile.path);
-      
-      // 3. Compress
-      final compressedFile = await ImageCompressor.compressImage(processedFile);
-      
-      // 4. Start Solving (but don't wait)
-      final solutionFuture = ApiService.solveQuestion(compressedFile);
-      
-      // 5. Dispose camera before navigation
-      if (mounted) {
-        setState(() {
-          _isInitialized = false; // Prevent CameraPreview from rendering
-        });
-      }
-      await _controller?.dispose();
-      _controller = null;
-      
-      // 6. Navigate Immediately
-      if (mounted) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => SolutionScreen(
-              solutionFuture: solutionFuture,
-              imageFile: processedFile, // Pass the cropped image
-            ),
+    if (mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => PhotoReviewScreen(
+            imageFile: File(croppedFile.path),
           ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        _showError('Failed to process image: $e');
-      }
+        ),
+      );
+      // Reset selected image after navigation
+      setState(() {
+        _selectedImage = null;
+      });
+    }
+  }
+
+  void _solveWithAI() {
+    if (_selectedImage != null) {
+      _processImage(_selectedImage!);
     }
   }
 
@@ -204,170 +131,371 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: JVColors.error,
+        backgroundColor: AppColors.errorRed,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
 
-  void _toggleFlash() {
-    if (_controller != null) {
-      setState(() {
-        _flashMode = _flashMode == FlashMode.off ? FlashMode.torch : FlashMode.off;
-      });
-      _controller!.setFlashMode(_flashMode);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_isInitializing) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator(color: JVColors.primary)),
-      );
-    }
-
-    if (!_isInitialized || _controller == null) {
-      return Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 64),
-              const SizedBox(height: 16),
-              const Text(
-                'Camera not available',
-                style: TextStyle(color: Colors.white, fontSize: 18),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _initializeCamera,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
+      body: Column(
         children: [
-          // Camera Preview with tap-to-focus
-          GestureDetector(
-            onTapDown: (TapDownDetails details) async {
-              if (_controller != null && _controller!.value.isInitialized) {
-                try {
-                  // Calculate focus point (0.0 to 1.0)
-                  final RenderBox renderBox = context.findRenderObject() as RenderBox;
-                  final Offset localPosition = renderBox.globalToLocal(details.globalPosition);
-                  final double x = localPosition.dx / renderBox.size.width;
-                  final double y = localPosition.dy / renderBox.size.height;
-                  
-                  // Set focus point
-                  await _controller!.setFocusPoint(Offset(x, y));
-                  await _controller!.setFocusMode(FocusMode.auto);
-                } catch (e) {
-                  debugPrint('Failed to set focus point: $e');
-                }
-              }
-            },
-            child: Center(
-              child: _controller != null && _controller!.value.isInitialized
-                  ? CameraPreview(_controller!)
-                  : const SizedBox.shrink(),
+          // Top section: Purple gradient header
+          _buildHeader(),
+          
+          // Bottom section: White background with content
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: AppColors.backgroundGradient,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Capture and Gallery buttons
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 16),
+                          _buildCaptureButton(),
+                          const SizedBox(height: 16),
+                          _buildGalleryButton(),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Priya Ma'am Card
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: _buildPriyaMaamCard(),
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Solve with AI Button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: _buildSolveButton(),
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Quick Tips Section
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: _buildQuickTips(),
+                    ),
+                    
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
             ),
           ),
+          
+          // Bottom footer bar
+          _buildBottomBar(),
+        ],
+      ),
+    );
+  }
 
-          // Grid Overlay
-          CustomPaint(
-            size: Size.infinite,
-            painter: GridPainter(),
+  Widget _buildHeader() {
+    return Consumer<AppStateProvider>(
+      builder: (context, appState, child) {
+        return Container(
+          decoration: const BoxDecoration(
+            gradient: AppColors.primaryGradient,
           ),
-
-          // Overlay
-          SafeArea(
-            child: Column(
+          child: SafeArea(
+            bottom: false,
+            child: Stack(
               children: [
-                // Top Bar
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white, size: 28),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          _flashMode == FlashMode.off ? Icons.flash_off : Icons.flash_on,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                        onPressed: _toggleFlash,
-                      ),
-                    ],
+                // Decorative circles
+                Positioned(
+                  top: -64,
+                  right: -64,
+                  child: Container(
+                    width: 128,
+                    height: 128,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
                   ),
                 ),
-
-                const Spacer(),
-
-                // Instructions
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Center the question in the frame',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                Positioned(
+                  bottom: -48,
+                  left: -48,
+                  child: Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
                   ),
                 ),
-
-                const SizedBox(height: 32),
-
-                // Controls
+                // Header content
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 40, left: 32, right: 32),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 48),
+                  child: Column(
                     children: [
-                      // Gallery Button
-                      IconButton(
-                        icon: const Icon(Icons.photo_library, color: Colors.white, size: 32),
-                        onPressed: _pickImage,
-                      ),
-
-                      // Capture Button
-                      GestureDetector(
-                        onTap: _takePicture,
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 4),
-                            color: Colors.white24,
+                      // Top row: Back button, Snap counter, Bookmark
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Back button
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back, color: Colors.white),
+                            onPressed: () => Navigator.of(context).pop(),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
                           ),
-                          child: Container(
-                            margin: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
+                          
+                          // Snap counter badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(AppRadius.radiusRound),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.camera_alt,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '${appState.snapsUsed}/${appState.snapLimit} snaps',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+                          
+                          // Bookmark/History button
+                          IconButton(
+                            icon: const Icon(Icons.bookmark_border, color: Colors.white),
+                            onPressed: () {
+                              // TODO: Navigate to history
+                            },
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Camera icon in white circle
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          size: 40,
+                          color: AppColors.primaryPurple,
                         ),
                       ),
-
-                      // Spacer to balance layout
-                      const SizedBox(width: 32),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Title
+                      Text(
+                        'Snap Your Question',
+                        style: AppTextStyles.headerWhite.copyWith(fontSize: 24),
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Subtitle
+                      Text(
+                        'Point your camera at any JEE question',
+                        style: AppTextStyles.bodyWhite.copyWith(
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                      ),
                     ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCaptureButton() {
+    return Container(
+      width: double.infinity,
+      height: 80,
+      decoration: BoxDecoration(
+        gradient: AppColors.ctaGradient,
+        borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+        boxShadow: AppShadows.buttonShadow,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _isProcessing ? null : _capturePhoto,
+          borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (_isProcessing)
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                else
+                  const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 32,
+                  ),
+                const SizedBox(width: 12),
+                Text(
+                  'Capture',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGalleryButton() {
+    return Container(
+      width: double.infinity,
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+        border: Border.all(color: AppColors.borderGray, width: 2),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _isProcessing ? null : _pickFromGallery,
+          borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.photo_library_outlined,
+                  color: _isProcessing ? AppColors.textGray : AppColors.primaryPurple,
+                  size: 32,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Gallery',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: _isProcessing ? AppColors.textGray : AppColors.textDark,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPriyaMaamCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: AppColors.priyaCardGradient,
+        borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+        border: Border.all(
+          color: const Color(0xFFE9D5FF),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryPurple.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Avatar
+          PriyaAvatar(size: 48),
+          const SizedBox(width: 12),
+          // Text
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Priya Ma\'am',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF7C3AED),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.auto_awesome,
+                      color: AppColors.primaryPurple,
+                      size: 16,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'I\'m ready to help! Just snap a clear photo of your question, and I\'ll solve it step-by-step for you. 📚',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: const Color(0xFF6B21A8),
+                    height: 1.6,
                   ),
                 ),
               ],
@@ -377,47 +505,183 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
       ),
     );
   }
-}
 
-// Grid overlay painter
-class GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.3)
-      ..strokeWidth = 1;
-
-    // Draw grid lines (3x3)
-    final thirdWidth = size.width / 3;
-    final thirdHeight = size.height / 3;
-
-    // Vertical lines
-    canvas.drawLine(
-      Offset(thirdWidth, 0),
-      Offset(thirdWidth, size.height),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(thirdWidth * 2, 0),
-      Offset(thirdWidth * 2, size.height),
-      paint,
-    );
-
-    // Horizontal lines
-    canvas.drawLine(
-      Offset(0, thirdHeight),
-      Offset(size.width, thirdHeight),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(0, thirdHeight * 2),
-      Offset(size.width, thirdHeight * 2),
-      paint,
+  Widget _buildSolveButton() {
+    final isEnabled = _selectedImage != null && !_isProcessing;
+    
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: isEnabled ? AppColors.ctaGradient : null,
+        color: isEnabled ? null : AppColors.borderGray,
+        borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+        boxShadow: isEnabled ? AppShadows.buttonShadow : [],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isEnabled ? _solveWithAI : null,
+          borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Solve with AI',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: isEnabled ? Colors.white : AppColors.textGray,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.arrow_forward,
+                  color: isEnabled ? Colors.white : AppColors.textGray,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget _buildQuickTips() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+        border: Border.all(color: AppColors.borderLight),
+        boxShadow: AppShadows.cardShadow,
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                _isQuickTipsExpanded = !_isQuickTipsExpanded;
+              });
+            },
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.lightbulb_outline,
+                  color: AppColors.warningAmber,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Quick Tips for Best Results',
+                    style: AppTextStyles.headerSmall,
+                  ),
+                ),
+                AnimatedRotation(
+                  turns: _isQuickTipsExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: AppColors.textLight,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_isQuickTipsExpanded) ...[
+            const SizedBox(height: 20),
+            _buildTipItem('💡', 'Good Lighting', 'Ensure the question is well-lit, no shadows'),
+            const SizedBox(height: 16),
+            _buildTipItem('📐', 'Frame Completely', 'Include the entire question in the frame'),
+            const SizedBox(height: 16),
+            _buildTipItem('📱', 'Hold Steady', 'Keep your phone still to avoid blurry photos'),
+            const SizedBox(height: 16),
+            _buildTipItem('✍️', 'Clear Text', 'Works with printed and neat handwriting'),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTipItem(String emoji, String title, String description) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          emoji,
+          style: const TextStyle(fontSize: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: AppTextStyles.labelMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      description,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textMedium,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppColors.successGreen,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomBar() {
+    return Consumer<AppStateProvider>(
+      builder: (context, appState, child) {
+        final remaining = appState.snapsRemaining;
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: const BoxDecoration(
+            gradient: AppColors.ctaGradient,
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.camera_alt,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '$remaining more snap${remaining != 1 ? 's' : ''} available today',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
-
-
