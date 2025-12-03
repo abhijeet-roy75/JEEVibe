@@ -13,11 +13,13 @@ import 'package:flutter_math_fork/flutter_math.dart';
 class LaTeXWidget extends StatelessWidget {
   final String text;
   final TextStyle? textStyle;
+  final FontWeight? latexWeight; // Optional custom weight for LaTeX content
 
   const LaTeXWidget({
     super.key,
     required this.text,
     this.textStyle,
+    this.latexWeight, // Defaults to FontWeight.w600 if not specified
   });
 
   @override
@@ -66,15 +68,44 @@ class LaTeXWidget extends StatelessWidget {
       // Since flutter_math_fork may not support mhchem, we convert it
       String processedLatex = _processMhchemSyntax(latex);
       
-      return Math.tex(
-        processedLatex,
-        mathStyle: isInline ? MathStyle.text : MathStyle.display,
-        textStyle: style,
+      // Validate LaTeX - remove empty groups that cause parser errors
+      processedLatex = processedLatex.replaceAll(RegExp(r'_\{\}'), '');
+      processedLatex = processedLatex.replaceAll(RegExp(r'\^\{\}'), '');
+      
+      // Apply bold formatting to LaTeX content (FontWeight.w600 by default)
+      final boldStyle = style.copyWith(
+        fontWeight: latexWeight ?? FontWeight.w600,
+      );
+      
+      // Wrap in FittedBox to scale down if too wide, preventing overflow
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: double.infinity,
+          ),
+          child: Math.tex(
+            processedLatex,
+            mathStyle: isInline ? MathStyle.text : MathStyle.display,
+            textStyle: boldStyle,
+          ),
+        ),
       );
     } catch (e) {
       debugPrint('LaTeX parsing error: $e for: $latex');
-      // Fallback: show content as plain text
-      return Text(latex, style: style.copyWith(color: Colors.red.shade700));
+      // Fallback: show original content as plain text (not red, just normal)
+      // This way users can still read the content even if LaTeX fails
+      final boldStyle = style.copyWith(
+        fontWeight: latexWeight ?? FontWeight.w600,
+      );
+      // Clean up LaTeX commands for display
+      String displayText = latex
+          .replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1') // Remove \mathrm{}
+          .replaceAll(RegExp(r'\\[()\[\]]'), '') // Remove LaTeX delimiters
+          .replaceAll(RegExp(r'_{([^}]+)}'), r'$1') // Simplify subscripts
+          .replaceAll(RegExp(r'\^{([^}]+)}'), r'$1'); // Simplify superscripts
+      return Text(displayText.isEmpty ? latex : displayText, style: boldStyle);
     }
   }
 
@@ -199,31 +230,54 @@ class LaTeXWidget extends StatelessWidget {
         ));
       }
       
-      // Add LaTeX widget
+      // Add LaTeX widget with bold formatting
       try {
         // Preprocess mhchem syntax before rendering
-        final processedContent = _processMhchemSyntax(match.content);
+        String processedContent = _processMhchemSyntax(match.content);
         
-        // Wrap Math widget to handle overflow
-        final mathWidget = Math.tex(
-          processedContent,
-          mathStyle: match.isInline ? MathStyle.text : MathStyle.display,
-          textStyle: style,
+        // Validate LaTeX - remove empty groups that cause parser errors
+        processedContent = processedContent.replaceAll(RegExp(r'_\{\}'), '');
+        processedContent = processedContent.replaceAll(RegExp(r'\^\{\}'), '');
+        
+        // Apply bold formatting to LaTeX content (FontWeight.w600 by default)
+        final boldStyle = style.copyWith(
+          fontWeight: latexWeight ?? FontWeight.w600,
+        );
+        
+        // Wrap Math widget to handle overflow - use FittedBox to scale down
+        final mathWidget = FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400), // Prevent extreme overflow
+            child: Math.tex(
+              processedContent,
+              mathStyle: match.isInline ? MathStyle.text : MathStyle.display,
+              textStyle: boldStyle,
+            ),
+          ),
         );
         
         spans.add(WidgetSpan(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400), // Prevent extreme overflow
-            child: mathWidget,
-          ),
+          child: mathWidget,
           alignment: PlaceholderAlignment.middle,
         ));
       } catch (e) {
         debugPrint('LaTeX parsing error: $e for: ${match.content}');
-        // Fallback: show content in red to indicate error
+        // Fallback: show content as plain text (not red, just normal)
+        // Clean up LaTeX commands for better readability
+        String displayText = match.content
+            .replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1') // Remove \mathrm{}
+            .replaceAll(RegExp(r'\\[()\[\]]'), '') // Remove LaTeX delimiters
+            .replaceAll(RegExp(r'_{([^}]+)}'), r'$1') // Simplify subscripts
+            .replaceAll(RegExp(r'\^{([^}]+)}'), r'$1'); // Simplify superscripts
+        
+        final boldStyle = style.copyWith(
+          fontWeight: latexWeight ?? FontWeight.w600,
+        );
         spans.add(TextSpan(
-          text: match.content,
-          style: style.copyWith(color: Colors.red.shade700),
+          text: displayText.isEmpty ? match.content : displayText,
+          style: boldStyle,
         ));
       }
       

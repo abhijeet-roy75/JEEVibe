@@ -354,6 +354,15 @@ REQUIREMENTS:
 - Question must be standalone (don't reference other questions)
 - Use JEE Main question format and style
 
+EXPLANATION REQUIREMENTS (CRITICAL):
+- Each question MUST include a comprehensive, detailed explanation that helps students understand the concept deeply
+- "approach": Provide 3-5 sentences explaining the overall strategy, key concepts involved, why this method works, and common pitfalls to avoid
+- "steps": Each step should be 2-3 sentences with clear calculations, reasoning, and explanations. Include ALL necessary steps to reach the solution
+- "finalAnswer": Provide the final answer with proper units and a brief verification or check
+- Explanations should be educational and thorough, especially helpful when students get questions wrong
+- Use Priya Ma'am's encouraging tone throughout explanations
+- Include conceptual insights, not just procedural steps
+
 OUTPUT FORMAT (strict JSON object):
 {
   "question": "Question text with LaTeX \\(...\\)",
@@ -364,11 +373,11 @@ OUTPUT FORMAT (strict JSON object):
     "D": "Option D"
   },
   "correctAnswer": "A|B|C|D",
-  "explanation": {
-    "approach": "Brief strategy",
-    "steps": ["Step 1", "Step 2"],
-    "finalAnswer": "Answer with units"
-  },
+      "explanation": {
+        "approach": "Comprehensive strategy explanation (3-5 sentences explaining the overall approach, key concepts involved, and why this method works)",
+        "steps": ["Detailed step 1 with calculations and reasoning (2-3 sentences)", "Detailed step 2 with calculations and reasoning (2-3 sentences)", "Continue with all necessary steps, each with clear explanations"],
+        "finalAnswer": "Final answer with units and brief verification"
+      },
   "priyaMaamNote": "Encouraging tip"
 }
 

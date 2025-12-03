@@ -243,7 +243,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
                 // Header content
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 48),
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16), // Reduced bottom from 48 to 16
                   child: Column(
                     children: [
                       // Top row: Back button, Snap counter, Bookmark
@@ -301,12 +301,12 @@ class _CameraScreenState extends State<CameraScreen> {
                         ],
                       ),
                       
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 12), // Reduced from 24
                       
                       // Camera icon in white circle
                       Container(
-                        width: 80,
-                        height: 80,
+                        width: 48, // Reduced from 80
+                        height: 48, // Reduced from 80
                         decoration: BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
@@ -320,27 +320,32 @@ class _CameraScreenState extends State<CameraScreen> {
                         ),
                         child: const Icon(
                           Icons.camera_alt,
-                          size: 40,
+                          size: 24, // Reduced from 40
                           color: AppColors.primaryPurple,
                         ),
                       ),
                       
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8), // Reduced from 16
                       
                       // Title
                       Text(
                         'Snap Your Question',
-                        style: AppTextStyles.headerWhite.copyWith(fontSize: 24),
+                        style: AppTextStyles.headerWhite.copyWith(fontSize: 20), // Consistent with other headers
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4), // Reduced from 8
                       
                       // Subtitle
                       Text(
                         'Point your camera at any JEE question',
                         style: AppTextStyles.bodyWhite.copyWith(
                           color: Colors.white.withOpacity(0.9),
+                          fontSize: 13, // Slightly smaller
                         ),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),

@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../models/solution_model.dart';
 import '../models/snap_data_model.dart';
 import '../widgets/latex_widget.dart';
+import '../widgets/chemistry_text.dart';
+import '../widgets/app_header.dart';
 import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -16,6 +18,7 @@ class FollowUpQuizScreen extends StatefulWidget {
   final SolutionDetails solution;
   final String topic;
   final String difficulty;
+  final String subject; // Mathematics, Physics, or Chemistry
 
   const FollowUpQuizScreen({
     super.key,
@@ -23,6 +26,7 @@ class FollowUpQuizScreen extends StatefulWidget {
     required this.solution,
     required this.topic,
     required this.difficulty,
+    required this.subject,
   });
 
   @override
@@ -41,6 +45,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
   Timer? _timer;
   int timeRemaining = 90;
   DateTime? _sessionStartTime;
+  DateTime? _questionStartTime;
   List<QuestionResult> _questionResults = [];
 
   @override
@@ -94,6 +99,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
   }
 
   void _startTimer() {
+    _questionStartTime = DateTime.now();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (timeRemaining > 0) {
         setState(() {
@@ -121,6 +127,20 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
     
     final isAnswerCorrect = answer == question.correctAnswer;
     
+    // Calculate time spent on this question
+    int timeSpent = 0;
+    if (_questionStartTime != null) {
+      final elapsed = DateTime.now().difference(_questionStartTime!);
+      timeSpent = elapsed.inSeconds;
+      // If timer ran out, use the full 90 seconds
+      if (timeSpent > 90) {
+        timeSpent = 90;
+      }
+    } else {
+      // Fallback: calculate from remaining time
+      timeSpent = 90 - timeRemaining;
+    }
+    
     _questionResults.add(QuestionResult(
       questionNumber: currentQuestionIndex + 1,
       question: question.question,
@@ -132,6 +152,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
         'steps': question.explanation.steps,
         'finalAnswer': question.explanation.finalAnswer,
       },
+      timeSpentSeconds: timeSpent,
     ));
     
     setState(() {
@@ -156,6 +177,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
         selectedAnswer = null;
         showFeedback = false;
         timeRemaining = 90;
+        _questionStartTime = null; // Reset for next question
       });
       _startTimer();
     } else {
@@ -249,122 +271,55 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
     final difficultyLevels = ['Basic', 'Intermediate', 'Advanced'];
     final level = difficultyLevels[currentQuestionIndex];
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(0, 48, 0, 40),
-      decoration: const BoxDecoration(
-        gradient: AppColors.primaryGradient,
+    return AppHeaderWithProgress(
+      currentIndex: currentQuestionIndex,
+      total: 3,
+      title: 'Question ${currentQuestionIndex + 1} of 3',
+      subtitle: '$level Level',
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Navigator.of(context).pop(),
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // Top bar
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Practice Similar',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(AppRadius.radiusRound),
-                      border: Border.all(color: Colors.white.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.access_time, color: Colors.white, size: 16),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${timeRemaining}s',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Progress circle
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: const BoxDecoration(
-                        gradient: AppColors.ctaGradient,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${currentQuestionIndex + 1}',
-                          style: AppTextStyles.headerMedium.copyWith(
-                            color: Colors.white,
-                            fontSize: 24,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Practice Similar',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: Colors.white,
                 ),
               ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(AppRadius.radiusRound),
+              border: Border.all(color: Colors.white.withOpacity(0.3)),
             ),
-            
-            const SizedBox(height: 16),
-            
-            Text(
-              'Question ${currentQuestionIndex + 1} of 3',
-              style: AppTextStyles.headerWhite,
+            child: Row(
+              children: [
+                const Icon(Icons.access_time, color: Colors.white, size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  '${timeRemaining}s',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
-            
-            const SizedBox(height: 8),
-            
-            Text(
-              '$level Level',
-              style: AppTextStyles.bodyWhite.copyWith(
-                color: Colors.white.withOpacity(0.9),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
+      circleSize: 60, // Reduced from 80
     );
   }
 
@@ -515,9 +470,9 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: LaTeXWidget(
-              text: question.question,
-              textStyle: AppTextStyles.bodyLarge,
+            child: _buildContentWidget(
+              question.question,
+              AppTextStyles.bodyLarge,
             ),
           ),
         ],
@@ -585,9 +540,9 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: LaTeXWidget(
-                      text: optionValue,
-                      textStyle: AppTextStyles.bodyLarge,
+                    child: _buildContentWidget(
+                      optionValue,
+                      AppTextStyles.bodyLarge,
                     ),
                   ),
                 ],
@@ -649,6 +604,22 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
         ),
       ),
     );
+  }
+
+  /// Build content widget based on subject (ChemistryText for Chemistry, LaTeXWidget for others)
+  Widget _buildContentWidget(String content, TextStyle textStyle) {
+    if (widget.subject.toLowerCase() == 'chemistry') {
+      return ChemistryText(
+        content,
+        textStyle: textStyle,
+        fontSize: textStyle.fontSize ?? 16,
+      );
+    } else {
+      return LaTeXWidget(
+        text: content,
+        textStyle: textStyle,
+      );
+    }
   }
 
   Widget _buildLoadingState() {

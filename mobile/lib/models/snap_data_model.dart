@@ -199,6 +199,7 @@ class QuestionResult {
   final String correctAnswer;
   final bool isCorrect;
   final Map<String, dynamic>? explanation;
+  final int timeSpentSeconds;
 
   QuestionResult({
     required this.questionNumber,
@@ -207,6 +208,7 @@ class QuestionResult {
     required this.correctAnswer,
     required this.isCorrect,
     this.explanation,
+    this.timeSpentSeconds = 0,
   });
 
   factory QuestionResult.fromJson(Map<String, dynamic> json) {
@@ -217,6 +219,7 @@ class QuestionResult {
       correctAnswer: json['correctAnswer'] ?? '',
       isCorrect: json['isCorrect'] ?? false,
       explanation: json['explanation'] as Map<String, dynamic>?,
+      timeSpentSeconds: json['timeSpentSeconds'] ?? 0,
     );
   }
 
@@ -228,6 +231,7 @@ class QuestionResult {
       'correctAnswer': correctAnswer,
       'isCorrect': isCorrect,
       'explanation': explanation,
+      'timeSpentSeconds': timeSpentSeconds,
     };
   }
 }

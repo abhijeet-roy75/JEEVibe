@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'camera_screen.dart';
 import 'daily_limit_screen.dart';
+import 'solution_review_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
+import '../widgets/app_header.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,33 +46,41 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-          decoration: const BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: AppColors.backgroundGradient,
         ),
-        child: RefreshIndicator(
-          onRefresh: () async {
-            final appState = Provider.of<AppStateProvider>(context, listen: false);
-            await appState.refresh();
-            await _updateCountdown();
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
-                _buildHeader(),
-                _buildSnapCounterCard(),
-                const SizedBox(height: AppSpacing.space24),
-                _buildMainCTA(),
-                const SizedBox(height: AppSpacing.space32),
-                _buildRecentSolutions(),
-                const SizedBox(height: AppSpacing.space32),
-                _buildTodayProgress(),
-                const SizedBox(height: AppSpacing.space32),
-                _buildCongratulationsCard(),
-                const SizedBox(height: AppSpacing.space40),
-              ],
+        child: Column(
+          children: [
+            // Fixed header at top
+            _buildHeader(),
+            // Scrollable content below header
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  final appState = Provider.of<AppStateProvider>(context, listen: false);
+                  await appState.refresh();
+                  await _updateCountdown();
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    children: [
+                      _buildSnapCounterCard(),
+                      const SizedBox(height: AppSpacing.space24),
+                      _buildMainCTA(),
+                      const SizedBox(height: AppSpacing.space32),
+                      _buildRecentSolutions(),
+                      const SizedBox(height: AppSpacing.space32),
+                      _buildTodayProgress(),
+                      const SizedBox(height: AppSpacing.space32),
+                      _buildCongratulationsCard(),
+                      const SizedBox(height: AppSpacing.space40),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -136,20 +146,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader() {
-                    return Container(
-      padding: const EdgeInsets.fromLTRB(0, 48, 0, 64),
-                      decoration: const BoxDecoration(
-        gradient: AppColors.primaryGradient,
+    return AppHeader(
+      title: Text(
+        'Snap and Solve',
+        style: AppTextStyles.headerWhite.copyWith(fontSize: 20), // Consistent with other headers
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Center(
-          child: Text(
-            'Snap and Solve',
-            style: AppTextStyles.headerWhite.copyWith(fontSize: 28),
-          ),
-        ),
-      ),
+      // Use default padding (24 top, 16 bottom)
     );
   }
 
@@ -433,7 +438,13 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // TODO: Navigate to solution details
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => SolutionReviewScreen(
+                  recentSolution: solution,
+                ),
+              ),
+            );
           },
           borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
           child: Padding(

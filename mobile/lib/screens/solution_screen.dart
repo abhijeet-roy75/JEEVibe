@@ -10,7 +10,9 @@ import 'processing_screen.dart';
 import 'camera_screen.dart';
 import 'daily_limit_screen.dart';
 import '../widgets/latex_widget.dart';
+import '../widgets/chemistry_text.dart';
 import '../widgets/priya_avatar.dart';
+import '../widgets/app_header.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
@@ -159,60 +161,13 @@ class _SolutionScreenState extends State<SolutionScreen> {
   }
 
   Widget _buildHeader(Solution solution) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(0, 48, 0, 32),
-      decoration: const BoxDecoration(
-        gradient: AppColors.primaryGradient,
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // Close button
-            Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                ),
-              ),
-            ),
-            
-            // Checkmark icon
-            Container(
-              width: 64,
-              height: 64,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.check,
-                color: AppColors.successGreen,
-                size: 32,
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            Text(
-              'Question Recognized!',
-              style: AppTextStyles.headerWhite.copyWith(fontSize: 24),
-            ),
-            
-            const SizedBox(height: 8),
-            
-            Text(
-              '${solution.topic} - ${solution.subject}',
-              style: AppTextStyles.bodyWhite.copyWith(
-                color: Colors.white.withOpacity(0.9),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return AppHeaderWithIcon(
+      icon: Icons.check,
+      title: 'Question Recognized!',
+      subtitle: '${solution.topic} - ${solution.subject}',
+      iconColor: AppColors.successGreen,
+      iconSize: 48, // Reduced from 64
+      onClose: () => Navigator.of(context).popUntil((route) => route.isFirst),
     );
   }
 
@@ -242,9 +197,29 @@ class _SolutionScreenState extends State<SolutionScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          LaTeXWidget(
-            text: solution.recognizedQuestion,
-            textStyle: AppTextStyles.bodyLarge,
+          // Display original question image if available
+          if (widget.imageFile != null) ...[
+            Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(maxHeight: 300),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                border: Border.all(color: AppColors.borderLight),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                child: Image.file(
+                  widget.imageFile!,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          _buildContentWidget(
+            solution.recognizedQuestion,
+            solution.subject,
+            AppTextStyles.bodyLarge,
           ),
           const SizedBox(height: 16),
                         Row(
@@ -344,7 +319,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
                             ),
                           ),
                           title: Text(
-            _getStepTitle(stepNumber),
+            _getStepTitle(stepNumber, stepContent),
             style: AppTextStyles.labelMedium,
                           ),
           trailing: const Icon(Icons.keyboard_arrow_down, color: AppColors.textMedium),
@@ -367,14 +342,49 @@ class _SolutionScreenState extends State<SolutionScreen> {
                     );
   }
 
-  String _getStepTitle(int number) {
-    const titles = [
-      'Identify the forces',
-      'Calculate friction force',
-      'Apply Newton\'s Second Law',
-      'Solve for acceleration',
-    ];
-    return number <= titles.length ? titles[number - 1] : 'Step $number';
+  String _getStepTitle(int number, String stepContent) {
+    // Try to extract title from step content
+    // Format: "Step 1: Title" or "Title: description" or just use first few words
+    final content = stepContent.trim();
+    
+    // Check if step starts with "Step N:" or "Step N -"
+    final stepPattern = RegExp(r'^Step\s+\d+[:\-]\s*(.+?)(?:\.|$)', caseSensitive: false);
+    final match = stepPattern.firstMatch(content);
+    if (match != null && match.group(1) != null) {
+      String title = match.group(1)!.trim();
+      // Limit title length to avoid overflow
+      if (title.length > 50) {
+        title = '${title.substring(0, 47)}...';
+      }
+      return title;
+    }
+    
+    // Check if step has a colon separator (e.g., "Title: description")
+    final colonIndex = content.indexOf(':');
+    if (colonIndex > 0 && colonIndex < 60) {
+      String title = content.substring(0, colonIndex).trim();
+      // Remove common prefixes
+      title = title.replaceAll(RegExp(r'^(Step\s+\d+[:\-]?\s*)', caseSensitive: true), '');
+      if (title.isNotEmpty && title.length <= 50) {
+        return title;
+      }
+    }
+    
+    // Fallback: use first few words (up to 6 words or 50 chars)
+    final words = content.split(RegExp(r'\s+'));
+    if (words.isNotEmpty) {
+      String title = '';
+      for (int i = 0; i < words.length && i < 6 && title.length < 50; i++) {
+        if (title.isNotEmpty) title += ' ';
+        title += words[i];
+      }
+      if (title.isNotEmpty) {
+        return title.length > 50 ? '${title.substring(0, 47)}...' : title;
+      }
+    }
+    
+    // Ultimate fallback
+    return 'Step $number';
   }
 
   Widget _buildFinalAnswer(Solution solution) {
@@ -450,12 +460,13 @@ class _SolutionScreenState extends State<SolutionScreen> {
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                Text(
+                                _buildContentWidget(
                                   solution.solution.priyaMaamTip,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: const Color(0xFF6B21A8),
-                    height: 1.5,
-                  ),
+                                  solution.subject,
+                                  AppTextStyles.bodyMedium.copyWith(
+                                    color: const Color(0xFF6B21A8),
+                                    height: 1.5,
+                                  ),
                                 ),
                               ],
                             ),
@@ -624,6 +635,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
                                     solution: solution.solution,
                                     topic: solution.topic,
                                     difficulty: solution.difficulty,
+                                    subject: solution.subject,
                                   ),
                                 ),
                               );
@@ -781,5 +793,21 @@ class _SolutionScreenState extends State<SolutionScreen> {
         );
       },
     );
+  }
+
+  /// Build content widget based on subject (ChemistryText for Chemistry, LaTeXWidget for others)
+  Widget _buildContentWidget(String content, String subject, TextStyle textStyle) {
+    if (subject.toLowerCase() == 'chemistry') {
+      return ChemistryText(
+        content,
+        textStyle: textStyle,
+        fontSize: textStyle.fontSize ?? 14,
+      );
+    } else {
+      return LaTeXWidget(
+        text: content,
+        textStyle: textStyle,
+      );
+    }
   }
 }
