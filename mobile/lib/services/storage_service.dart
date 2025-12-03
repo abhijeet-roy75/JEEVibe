@@ -12,6 +12,7 @@ class StorageService {
   static const String _keyLastResetDate = '${_keyPrefix}last_reset_date';
   static const String _keySnapHistory = '${_keyPrefix}snap_history';
   static const String _keyRecentSolutions = '${_keyPrefix}recent_solutions';
+  static const String _keyAllSolutions = '${_keyPrefix}all_solutions';
   static const String _keyTotalQuestionsPracticed = '${_keyPrefix}total_questions_practiced';
   static const String _keyTotalCorrect = '${_keyPrefix}total_correct';
   static const String _keyTotalSnapsUsed = '${_keyPrefix}total_snaps_used';
@@ -159,8 +160,90 @@ class StorageService {
       final prefs = await _preferences;
       final jsonString = json.encode(solutions.map((s) => s.toJson()).toList());
       await prefs.setString(_keyRecentSolutions, jsonString);
+      
+      // Also add to all solutions list (for "View All" functionality)
+      await _addToAllSolutions(solution);
     } catch (e) {
       debugPrint('Error adding recent solution: $e');
+    }
+  }
+
+  /// Add solution to all solutions list (internal helper)
+  Future<void> _addToAllSolutions(RecentSolution solution) async {
+    try {
+      // Get all solutions (this will trigger migration if needed)
+      final allSolutions = await getAllSolutions();
+      
+      // Check if solution already exists (by id) to avoid duplicates
+      final existingIndex = allSolutions.indexWhere((s) => s.id == solution.id);
+      if (existingIndex >= 0) {
+        // Update existing solution
+        allSolutions[existingIndex] = solution;
+      } else {
+        // Add new solution at the beginning
+        allSolutions.insert(0, solution);
+      }
+      
+      final prefs = await _preferences;
+      final jsonString = json.encode(allSolutions.map((s) => s.toJson()).toList());
+      await prefs.setString(_keyAllSolutions, jsonString);
+    } catch (e) {
+      debugPrint('Error adding to all solutions: $e');
+    }
+  }
+
+  /// Get all solutions (not limited to 3)
+  Future<List<RecentSolution>> getAllSolutions() async {
+    try {
+      final prefs = await _preferences;
+      var jsonString = prefs.getString(_keyAllSolutions);
+      
+      // Migration: If all solutions list is empty but recent solutions exist, migrate them
+      if (jsonString == null || jsonString.isEmpty) {
+        final recentSolutions = await getRecentSolutions();
+        if (recentSolutions.isNotEmpty) {
+          // Save all recent solutions to all solutions list
+          final allSolutionsJson = json.encode(recentSolutions.map((s) => s.toJson()).toList());
+          await prefs.setString(_keyAllSolutions, allSolutionsJson);
+          jsonString = allSolutionsJson;
+        } else {
+          return [];
+        }
+      }
+
+      final List<dynamic> jsonList = json.decode(jsonString);
+      return jsonList.map((j) => RecentSolution.fromJson(j)).toList();
+    } catch (e) {
+      debugPrint('Error getting all solutions: $e');
+      return [];
+    }
+  }
+
+  /// Get all solutions for today (filtered by date)
+  Future<List<RecentSolution>> getAllSolutionsForToday() async {
+    try {
+      final allSolutions = await getAllSolutions();
+      final today = DateTime.now();
+      final todayStart = DateTime(today.year, today.month, today.day);
+      final todayEnd = todayStart.add(const Duration(days: 1));
+      
+      final filtered = allSolutions.where((solution) {
+        try {
+          final solutionDate = DateTime.parse(solution.timestamp);
+          // Include solutions from today (from start of today to start of tomorrow)
+          final isToday = (solutionDate.isAtSameMomentAs(todayStart) || 
+                          solutionDate.isAfter(todayStart)) && 
+                         solutionDate.isBefore(todayEnd);
+          return isToday;
+        } catch (e) {
+          return false;
+        }
+      }).toList();
+      
+      return filtered;
+    } catch (e) {
+      debugPrint('Error getting solutions for today: $e');
+      return [];
     }
   }
 

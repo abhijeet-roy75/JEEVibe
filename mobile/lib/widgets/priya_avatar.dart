@@ -20,6 +20,8 @@ class PriyaAvatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
+        // Add a white background to ensure circular shape is visible
+        color: Colors.white,
         boxShadow: showShadow
             ? [
                 BoxShadow(

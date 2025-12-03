@@ -33,44 +33,177 @@ class LaTeXWidget extends StatelessWidget {
   }
 
   Widget _parseAndRender(String input, TextStyle style) {
-    // 1. Minimal preprocessing - only handle newlines
-    String processedInput = input
-        .replaceAll(r'\n', '\n')        // Literal \n → newline
-        .replaceAll(r'\\n', '\n');      // Escaped \n → newline
+    // 1. Preprocessing - handle newlines and problematic characters
+    // Preserve all spaces - don't remove them
+    String processedInput = input;
     
-    // 2. Simple delimiter detection (use escaped backslashes, not raw strings)
+    // Remove or escape newlines that could break LaTeX parsing
+    // Replace actual newline characters with spaces (LaTeX doesn't handle raw newlines well)
+    processedInput = processedInput.replaceAll('\n', ' ');
+    processedInput = processedInput.replaceAll('\r', ' ');
+    // Handle escaped newlines
+    processedInput = processedInput.replaceAll(r'\n', ' ');
+    processedInput = processedInput.replaceAll(r'\\n', ' ');
+    
+    // Remove other problematic control characters that LaTeX might interpret
+    processedInput = processedInput.replaceAll(RegExp(r'\\[a-zA-Z]+\s*$'), ''); // Remove trailing LaTeX commands without arguments
+    
+    // 2. Convert dollar sign delimiters to \( \) format for consistency
+    // Support both $...$ (inline) and $$...$$ (display) syntax
+    try {
+      processedInput = _convertDollarDelimiters(processedInput);
+    } catch (e) {
+      debugPrint('Error converting dollar delimiters: $e');
+      // Continue with original input if conversion fails
+    }
+    
+    // 3. Clean nested LaTeX delimiters (remove inner delimiters if outer ones exist)
+    // This prevents "Can't use function '\(' in math mode" errors
+    // Note: _cleanNestedDelimiters is now a no-op, nested delimiters are handled in _removeNestedDelimiters
+    processedInput = _cleanNestedDelimiters(processedInput);
+    
+    // 4. Simple delimiter detection (use escaped backslashes, not raw strings)
     final hasInlineLaTeX = processedInput.contains('\\(');
     final hasDisplayLaTeX = processedInput.contains('\\[');
     
-    // 3. No LaTeX? Return plain text (Unicode symbols will render natively)
+    // 5. No LaTeX? Return plain text (Unicode symbols will render natively)
     // This is optimal for simple symbols like H₂O, 90°, π per guidelines
     if (!hasInlineLaTeX && !hasDisplayLaTeX) {
       return Text(processedInput, style: style);
     }
     
-    // 4. Check if entire text is pure LaTeX (wrapped in delimiters)
+    // 6. Check if entire text is pure LaTeX (wrapped in delimiters)
     final trimmed = processedInput.trim();
     if (trimmed.startsWith('\\(') && trimmed.endsWith('\\)')) {
-      // Pure inline LaTeX
-      return _renderPureLaTeX(trimmed.substring(2, trimmed.length - 2), style, true);
+      // Pure inline LaTeX - extract content and remove any nested delimiters
+      String content = trimmed.substring(2, trimmed.length - 2);
+      content = _removeNestedDelimiters(content);
+      return _renderPureLaTeX(content, style, true);
     } else if (trimmed.startsWith('\\[') && trimmed.endsWith('\\]')) {
-      // Pure display LaTeX
-      return _renderPureLaTeX(trimmed.substring(2, trimmed.length - 2), style, false);
+      // Pure display LaTeX - extract content and remove any nested delimiters
+      String content = trimmed.substring(2, trimmed.length - 2);
+      content = _removeNestedDelimiters(content);
+      return _renderPureLaTeX(content, style, false);
     }
     
-    // 5. Mixed content - parse and render inline spans
+    // 7. Mixed content - parse and render inline spans
     return _renderMixedContent(processedInput, style);
+  }
+  
+  /// Convert dollar sign delimiters ($...$ and $$...$$) to \( \) and \[ \] format
+  /// Also fixes common typos like ext{} -> \mathrm{}
+  String _convertDollarDelimiters(String input) {
+    try {
+      String converted = input;
+      
+      // Fix common typos: ext{} -> \mathrm{}
+      converted = converted.replaceAll(RegExp(r'\bext\{([^}]+)\}'), r'\\mathrm{$1}');
+      
+      // Convert $$...$$ (display math) to \[...\]
+      // Use a more robust pattern that handles nested content
+      // Match $$...$$ but not $$$...$$$ (which would be invalid anyway)
+      converted = converted.replaceAllMapped(
+        RegExp(r'\$\$([^$]+?)\$\$'),
+        (match) {
+          if (match.groupCount >= 1 && match.group(1) != null) {
+            return '\\[' + match.group(1)! + '\\]';
+          }
+          return match.group(0)!;
+        },
+      );
+      
+      // Convert $...$ (inline math) to \(...\)
+      // Be careful not to match $$...$$, so we check for non-$ before and after
+      // Pattern: $ not preceded by $, then content (non-greedy), then $ not followed by $
+      // Also handle cases where $ might be at start/end of string
+      converted = converted.replaceAllMapped(
+        RegExp(r'(?<!\$)\$([^$\n]+?)\$(?!\$)'),
+        (match) {
+          if (match.groupCount >= 1 && match.group(1) != null) {
+            String content = match.group(1)!.trim();
+            if (content.isNotEmpty) {
+              return '\\(' + content + '\\)';
+            }
+          }
+          return match.group(0)!; // Return original if empty or invalid
+        },
+      );
+      
+      return converted;
+    } catch (e) {
+      debugPrint('Error in _convertDollarDelimiters: $e');
+      return input; // Return original on error
+    }
+  }
+  
+  /// Clean nested LaTeX delimiters to prevent parser errors
+  String _cleanNestedDelimiters(String input) {
+    // This function is called before delimiter conversion, so we don't need to handle
+    // nested delimiters here. The _removeNestedDelimiters function handles that after
+    // conversion. This function can be simplified or removed, but keeping it for now
+    // to avoid breaking changes.
+    return input;
+  }
+  
+  /// Remove nested LaTeX delimiters from content (for pure LaTeX mode)
+  /// This removes ALL \( \) and \[ \] pairs from the content since Math.tex() doesn't need them
+  String _removeNestedDelimiters(String content) {
+    // Remove any nested \( \) or \[ \] from the content
+    // Math.tex() expects raw LaTeX without delimiters
+    String cleaned = content;
+    // Remove all \( \) pairs (can be nested, so do it multiple times)
+    int iterations = 0;
+    while (cleaned.contains('\\(') && cleaned.contains('\\)') && iterations < 10) {
+      cleaned = cleaned.replaceAll(RegExp(r'\\\(([^)]*)\\\)'), r'$1');
+      iterations++;
+    }
+    // Remove all \[ \] pairs (can be nested, so do it multiple times)
+    iterations = 0;
+    while (cleaned.contains('\\[') && cleaned.contains('\\]') && iterations < 10) {
+      cleaned = cleaned.replaceAll(RegExp(r'\\\[([^\]]*)\\\]'), r'$1');
+      iterations++;
+    }
+    return cleaned;
   }
 
   Widget _renderPureLaTeX(String latex, TextStyle style, bool isInline) {
     try {
+      // Remove any remaining nested delimiters
+      String cleanedLatex = _removeNestedDelimiters(latex);
+      
+      // Remove problematic characters that break LaTeX parsing
+      // Remove newlines and other control characters FIRST
+      cleanedLatex = cleanedLatex.replaceAll('\n', ' ');
+      cleanedLatex = cleanedLatex.replaceAll('\r', ' ');
+      cleanedLatex = cleanedLatex.replaceAll('\t', ' ');
+      
+      // Remove undefined control sequences that might cause errors
+      // This includes things like \n, \t, etc. that aren't valid LaTeX
+      // Pattern: \ followed by a single letter that's not part of a valid LaTeX command
+      cleanedLatex = cleanedLatex.replaceAll(RegExp(r'\\([ntrbfv])(?![a-zA-Z])'), ' '); // Replace \n, \t, \r, etc. with space (but not if followed by letter)
+      
+      // Remove any standalone backslashes that aren't part of commands
+      cleanedLatex = cleanedLatex.replaceAll(RegExp(r'\\(?![a-zA-Z\(\)\[\]])'), '');
+      
       // Preprocess mhchem syntax: \ce{...} -> convert to \mathrm{} format
       // Since flutter_math_fork may not support mhchem, we convert it
-      String processedLatex = _processMhchemSyntax(latex);
+      String processedLatex = _processMhchemSyntax(cleanedLatex);
       
       // Validate LaTeX - remove empty groups that cause parser errors
       processedLatex = processedLatex.replaceAll(RegExp(r'_\{\}'), '');
       processedLatex = processedLatex.replaceAll(RegExp(r'\^\{\}'), '');
+      
+      // Remove any stray LaTeX delimiters that might have been missed
+      // Math.tex() doesn't need delimiters, so remove all of them
+      processedLatex = processedLatex.replaceAll(RegExp(r'\\\(|\\\)|\\\[|\\\]'), '');
+      
+      // Final cleanup: remove any remaining problematic patterns
+      processedLatex = processedLatex.trim();
+      
+      // If after cleaning, we have nothing or just whitespace, return plain text
+      if (processedLatex.isEmpty || processedLatex.trim().isEmpty) {
+        return _renderFallbackText(latex, style);
+      }
       
       // Apply bold formatting to LaTeX content (FontWeight.w600 by default)
       final boldStyle = style.copyWith(
@@ -94,19 +227,50 @@ class LaTeXWidget extends StatelessWidget {
       );
     } catch (e) {
       debugPrint('LaTeX parsing error: $e for: $latex');
-      // Fallback: show original content as plain text (not red, just normal)
-      // This way users can still read the content even if LaTeX fails
-      final boldStyle = style.copyWith(
-        fontWeight: latexWeight ?? FontWeight.w600,
-      );
-      // Clean up LaTeX commands for display
-      String displayText = latex
-          .replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1') // Remove \mathrm{}
-          .replaceAll(RegExp(r'\\[()\[\]]'), '') // Remove LaTeX delimiters
-          .replaceAll(RegExp(r'_{([^}]+)}'), r'$1') // Simplify subscripts
-          .replaceAll(RegExp(r'\^{([^}]+)}'), r'$1'); // Simplify superscripts
-      return Text(displayText.isEmpty ? latex : displayText, style: boldStyle);
+      // Never show "Parser Error" to users - always fallback to cleaned text
+      return _renderFallbackText(latex, style);
     }
+  }
+  
+  /// Render fallback text when LaTeX parsing fails
+  /// This ensures users never see "Parser Error" messages
+  Widget _renderFallbackText(String originalLatex, TextStyle style) {
+    final boldStyle = style.copyWith(
+      fontWeight: latexWeight ?? FontWeight.w600,
+    );
+    
+    // Aggressive cleaning to make text readable
+    String displayText = originalLatex
+        .replaceAll('\n', ' ') // Remove newlines
+        .replaceAll('\r', ' ') // Remove carriage returns
+        .replaceAll('\t', ' ') // Remove tabs
+        .replaceAll(RegExp(r'\\n'), ' ') // Remove escaped newlines
+        .replaceAll(RegExp(r'\\([ntrbfv])(?![a-zA-Z])'), ' ') // Remove control sequences like \n, \t
+        .replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1') // Remove \mathrm{}
+        .replaceAll(RegExp(r'\\[()\[\]]'), '') // Remove LaTeX delimiters
+        .replaceAll(RegExp(r'_{([^}]+)}'), r'$1') // Simplify subscripts
+        .replaceAll(RegExp(r'\^{([^}]+)}'), r'$1') // Simplify superscripts
+        .replaceAll(RegExp(r'\\[a-zA-Z]+\{?[^}]*\}?'), '') // Remove LaTeX commands with optional braces
+        .replaceAll(RegExp(r'[{}]'), '') // Remove braces
+        .replaceAll(RegExp(r'\s+'), ' ') // Normalize whitespace
+        .trim();
+    
+    // If displayText is empty or just whitespace, show a cleaned version of original
+    if (displayText.isEmpty || displayText.trim().isEmpty) {
+      displayText = originalLatex
+          .replaceAll(RegExp(r'\\[()\[\]]'), '')
+          .replaceAll(RegExp(r'\\[a-zA-Z]+'), '')
+          .replaceAll(RegExp(r'[{}]'), '')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+    }
+    
+    // Final check - if still empty, show a generic message
+    if (displayText.isEmpty || displayText.trim().isEmpty) {
+      return const SizedBox.shrink(); // Don't show anything if we can't extract readable text
+    }
+    
+    return Text(displayText, style: boldStyle);
   }
 
   /// Process mhchem syntax (\ce{...}) and convert to \mathrm{} format
@@ -232,8 +396,15 @@ class LaTeXWidget extends StatelessWidget {
       
       // Add LaTeX widget with bold formatting
       try {
+        // Clean up problematic characters first
+        String processedContent = match.content;
+        processedContent = processedContent.replaceAll('\n', ' ');
+        processedContent = processedContent.replaceAll('\r', ' ');
+        processedContent = processedContent.replaceAll(RegExp(r'\\n'), ' ');
+        processedContent = processedContent.replaceAll(RegExp(r'\\([ntrbfv])'), ' '); // Replace \n, \t, etc.
+        
         // Preprocess mhchem syntax before rendering
-        String processedContent = _processMhchemSyntax(match.content);
+        processedContent = _processMhchemSyntax(processedContent);
         
         // Validate LaTeX - remove empty groups that cause parser errors
         processedContent = processedContent.replaceAll(RegExp(r'_\{\}'), '');
@@ -267,10 +438,15 @@ class LaTeXWidget extends StatelessWidget {
         // Fallback: show content as plain text (not red, just normal)
         // Clean up LaTeX commands for better readability
         String displayText = match.content
+            .replaceAll('\n', ' ') // Remove newlines
+            .replaceAll('\r', ' ') // Remove carriage returns
+            .replaceAll(RegExp(r'\\n'), ' ') // Remove escaped newlines
+            .replaceAll(RegExp(r'\\([ntrbfv])'), ' ') // Remove control sequences
             .replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1') // Remove \mathrm{}
             .replaceAll(RegExp(r'\\[()\[\]]'), '') // Remove LaTeX delimiters
             .replaceAll(RegExp(r'_{([^}]+)}'), r'$1') // Simplify subscripts
-            .replaceAll(RegExp(r'\^{([^}]+)}'), r'$1'); // Simplify superscripts
+            .replaceAll(RegExp(r'\^{([^}]+)}'), r'$1') // Simplify superscripts
+            .replaceAll(RegExp(r'\\[a-zA-Z]+'), ''); // Remove other LaTeX commands
         
         final boldStyle = style.copyWith(
           fontWeight: latexWeight ?? FontWeight.w600,
@@ -300,7 +476,8 @@ class LaTeXWidget extends StatelessWidget {
     return RichText(
       text: TextSpan(children: spans),
       softWrap: true,
-      overflow: TextOverflow.visible,
+      overflow: TextOverflow.clip,
+      textAlign: TextAlign.left,
     );
   }
 }

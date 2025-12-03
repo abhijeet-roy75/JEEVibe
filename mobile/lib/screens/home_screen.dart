@@ -4,10 +4,13 @@ import 'package:provider/provider.dart';
 import 'camera_screen.dart';
 import 'daily_limit_screen.dart';
 import 'solution_review_screen.dart';
+import 'all_solutions_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
 import '../widgets/app_header.dart';
+import '../models/snap_data_model.dart';
+import '../services/storage_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -45,13 +48,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: null, // Explicitly remove system app bar
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppColors.backgroundGradient,
         ),
         child: Column(
           children: [
-            // Fixed header at top
+            // Fixed header at top (AppHeader has SafeArea built-in)
             _buildHeader(),
             // Scrollable content below header
             Expanded(
@@ -65,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   child: Column(
                     children: [
+                      const SizedBox(height: AppSpacing.space16), // Add spacing after header
                       _buildSnapCounterCard(),
                       const SizedBox(height: AppSpacing.space24),
                       _buildMainCTA(),
@@ -147,14 +153,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHeader() {
     return AppHeader(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.home,
+          color: Colors.white,
+          size: 24,
+        ),
+      ),
       title: Text(
-        'Snap and Solve',
+        'JEEVibe Snap and Solve',
         style: AppTextStyles.headerWhite.copyWith(fontSize: 20), // Consistent with other headers
         textAlign: TextAlign.center,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
-      // Use default padding (24 top, 16 bottom)
+      showGradient: true, // Ensure gradient is shown
+      // Use default padding (24 top, 16 bottom) - AppHeader has SafeArea built-in
     );
   }
 
@@ -164,121 +184,115 @@ class _HomeScreenState extends State<HomeScreen> {
         final isComplete = appState.snapsUsed >= appState.snapLimit;
         final remaining = appState.snapsRemaining;
 
-        return Transform.translate(
-          offset: const Offset(0, -32),
-          child: Padding(
-            padding: AppSpacing.screenPadding,
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                        color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-                border: Border.all(color: AppColors.borderLight),
-                boxShadow: AppShadows.cardShadowElevated,
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      // Camera Icon
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppColors.cardLightPurple,
-                          borderRadius: BorderRadius.circular(12),
+        return Padding(
+          padding: AppSpacing.screenPadding,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+              border: Border.all(color: AppColors.borderLight),
+              boxShadow: AppShadows.cardShadowElevated,
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    // Camera Icon
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.cardLightPurple,
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         Icons.camera_alt,
-                          color: AppColors.primaryPurple,
-                          size: 24,
-                        ),
+                        color: AppColors.primaryPurple,
+                        size: 24,
                       ),
-                      const SizedBox(width: 16),
-                      // Snaps Today
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Snaps Today',
-                              style: AppTextStyles.headerSmall,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Free daily limit',
-                              style: AppTextStyles.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Counter
-                      Text(
-                        '${appState.snapsUsed}/${appState.snapLimit}',
-                        style: AppTextStyles.headerLarge.copyWith(
-                          fontSize: 32,
-                          color: isComplete ? AppColors.successGreen : AppColors.primaryPurple,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Progress Bar
-                  Container(
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: AppColors.borderLight,
-                      borderRadius: BorderRadius.circular(4),
                     ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: appState.snapsUsed / appState.snapLimit,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: isComplete 
-                              ? const LinearGradient(
-                                  colors: [AppColors.successGreen, AppColors.successGreenLight],
-                                )
-                              : AppColors.ctaGradient,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
+                    const SizedBox(width: 16),
+                    // Snaps Today
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Snaps Today',
+                            style: AppTextStyles.headerSmall,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Free daily limit',
+                            style: AppTextStyles.bodySmall,
+                          ),
+                        ],
                       ),
+                    ),
+                    // Counter
+                    Text(
+                      '${appState.snapsUsed}/${appState.snapLimit}',
+                      style: AppTextStyles.headerLarge.copyWith(
+                        fontSize: 32,
+                        color: isComplete ? AppColors.successGreen : AppColors.primaryPurple,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              
-              const SizedBox(height: 12),
-              
-                  // Reset time and remaining
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.access_time,
-                        size: 16,
+                const SizedBox(height: 16),
+                // Progress Bar
+                Container(
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: AppColors.borderLight,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: appState.snapsUsed / appState.snapLimit,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: isComplete 
+                            ? const LinearGradient(
+                                colors: [AppColors.successGreen, AppColors.successGreenLight],
+                              )
+                            : AppColors.ctaGradient,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Reset time and remaining
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: AppColors.textLight,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _resetCountdown.isNotEmpty ? _resetCountdown : 'Resets at midnight',
+                      style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textLight,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _resetCountdown.isNotEmpty ? _resetCountdown : 'Resets at midnight',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textLight,
-                        ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      isComplete 
+                          ? 'All complete! 🎉'
+                          : '$remaining remaining',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: isComplete ? AppColors.successGreen : AppColors.primaryPurple,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const Spacer(),
-                      Text(
-                        isComplete 
-                            ? 'All complete! 🎉'
-                            : '$remaining remaining',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: isComplete ? AppColors.successGreen : AppColors.primaryPurple,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         );
@@ -362,11 +376,15 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Recent Solutions', style: AppTextStyles.headerMedium),
+                  Text('Recent Snaps', style: AppTextStyles.headerMedium),
                   if (solutions.isNotEmpty)
                     TextButton(
                       onPressed: () {
-                        // TODO: Navigate to full history
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const AllSolutionsScreen(),
+                          ),
+                        );
                       },
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,
@@ -426,7 +444,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSolutionCard(solution) {
+  Widget _buildSolutionCard(RecentSolution solution) {
+    final BuildContext context = this.context;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -437,14 +456,35 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => SolutionReviewScreen(
-                  recentSolution: solution,
+          onTap: () async {
+            // Get all solutions for today to enable navigation
+            final storage = StorageService();
+            final allSolutions = await storage.getAllSolutionsForToday();
+            if (allSolutions.isEmpty) {
+              // Fallback: use recent solutions if today's list is empty
+              final appState = Provider.of<AppStateProvider>(context, listen: false);
+              final recentSolutions = appState.recentSolutions;
+              if (recentSolutions.isNotEmpty) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => SolutionReviewScreen(
+                      allSolutions: recentSolutions,
+                      initialIndex: recentSolutions.indexOf(solution),
+                    ),
+                  ),
+                );
+              }
+            } else {
+              final index = allSolutions.indexWhere((s) => s.id == solution.id);
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => SolutionReviewScreen(
+                    allSolutions: allSolutions,
+                    initialIndex: index >= 0 ? index : 0,
+                  ),
                 ),
-              ),
-            );
+              );
+            }
           },
           borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
           child: Padding(

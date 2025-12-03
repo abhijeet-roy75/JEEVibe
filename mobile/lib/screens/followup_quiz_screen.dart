@@ -283,19 +283,6 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                'Practice Similar',
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -319,7 +306,6 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
           ),
         ],
       ),
-      circleSize: 60, // Reduced from 80
     );
   }
 
@@ -442,7 +428,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
 
   Widget _buildQuestionCard(FollowUpQuestion question) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24), // Increased from 20 for better readability
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
@@ -471,8 +457,12 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
           const SizedBox(width: 16),
           Expanded(
             child: _buildContentWidget(
-              question.question,
-              AppTextStyles.bodyLarge,
+              _addSpacesToText(question.question),
+              widget.subject,
+              AppTextStyles.bodyLarge.copyWith(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -505,7 +495,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20), // Increased from 16 for better readability
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
@@ -541,8 +531,12 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildContentWidget(
-                      optionValue,
-                      AppTextStyles.bodyLarge,
+                      _addSpacesToText(optionValue),
+                      widget.subject,
+                      AppTextStyles.bodyLarge.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
@@ -606,9 +600,138 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
     );
   }
 
+  /// Add spaces between words that are concatenated (e.g., "(A)and(C)only" -> "(A) and (C) only")
+  /// IMPORTANT: This function should NOT modify LaTeX content inside delimiters
+  String _addSpacesToText(String text) {
+    if (text.isEmpty) return text;
+    
+    // First, check if this is pure LaTeX (wrapped in delimiters) - if so, don't add spaces
+    final trimmed = text.trim();
+    if (trimmed.startsWith('\\(') && trimmed.endsWith('\\)')) {
+      return text; // Don't modify pure LaTeX
+    }
+    if (trimmed.startsWith('\\[') && trimmed.endsWith('\\]')) {
+      return text; // Don't modify pure LaTeX
+    }
+    
+    // Pattern to add spaces before capital letters, numbers, and common patterns
+    // But preserve LaTeX commands and existing spaces
+    String result = text;
+    
+    // Protect LaTeX content inside delimiters - extract and restore later
+    final latexBlocks = <String>[];
+    // Match \(...\) and \[...\] blocks
+    final latexPattern = RegExp(r'\\([()\[\]])(.*?)\\([()\[\]])');
+    result = result.replaceAllMapped(latexPattern, (match) {
+      final fullMatch = match.group(0)!;
+      final placeholder = '___LATEX_BLOCK_${latexBlocks.length}___';
+      latexBlocks.add(fullMatch);
+      return placeholder;
+    });
+    
+    // CRITICAL: Fix common concatenated chemistry/physics terms FIRST
+    // These are common patterns in JEE questions
+    final commonTerms = {
+      'paramagnetic': 'paramagnetic',
+      'diamagnetic': 'diamagnetic',
+      'unpaired': 'unpaired',
+      'electrons': 'electrons',
+      'electron': 'electron',
+      'with': 'with',
+      'three': 'three',
+      'two': 'two',
+      'four': 'four',
+      'one': 'one',
+      'no': 'no',
+    };
+    
+    // Fix concatenated patterns like "paramagneticwiththreeunpairedelectrons"
+    // Strategy: Insert spaces before common words when they appear concatenated
+    result = result.replaceAllMapped(
+      RegExp(r'paramagnetic(with)', caseSensitive: false),
+      (match) => 'paramagnetic ${match.group(1)}',
+    );
+    result = result.replaceAllMapped(
+      RegExp(r'diamagnetic(with)', caseSensitive: false),
+      (match) => 'diamagnetic ${match.group(1)}',
+    );
+    result = result.replaceAllMapped(
+      RegExp(r'(with)(three|two|four|one|no)', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    result = result.replaceAllMapped(
+      RegExp(r'(three|two|four|one|no)(unpaired)', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    result = result.replaceAllMapped(
+      RegExp(r'(unpaired)(electron)', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    result = result.replaceAllMapped(
+      RegExp(r'(electron)(s)', caseSensitive: false),
+      (match) => '${match.group(1)}${match.group(2)}', // Keep 's' attached
+    );
+    
+    // Add space before capital letters that follow lowercase letters or numbers
+    result = result.replaceAllMapped(
+      RegExp(r'([a-z0-9])([A-Z])'),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    
+    // Add space before numbers that follow letters
+    result = result.replaceAllMapped(
+      RegExp(r'([a-zA-Z])(\d)'),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    
+    // Add space after numbers that are followed by letters
+    result = result.replaceAllMapped(
+      RegExp(r'(\d)([A-Za-z])'),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    
+    // Fix common patterns like "StatementI" -> "Statement I", "StatementII" -> "Statement II"
+    result = result.replaceAllMapped(
+      RegExp(r'Statement([IVX]+)', caseSensitive: false),
+      (match) => 'Statement ${match.group(1)}',
+    );
+    result = result.replaceAllMapped(
+      RegExp(r'Option\(([A-Z])\)', caseSensitive: false),
+      (match) => 'Option (${match.group(1)})',
+    );
+    
+    // Fix "and" patterns like "(A)and(C)only" -> "(A) and (C) only"
+    result = result.replaceAllMapped(
+      RegExp(r'([\)])(and)([\(])', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
+    );
+    result = result.replaceAllMapped(
+      RegExp(r'([A-Z][a-z]+)(and)([A-Z])', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
+    );
+    
+    // Fix "only" patterns like "(C)only" -> "(C) only"
+    result = result.replaceAllMapped(
+      RegExp(r'([\)])(only)', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    
+    // Clean up multiple spaces
+    result = result.replaceAll(RegExp(r'\s+'), ' ');
+    
+    // Restore protected LaTeX blocks
+    for (int i = 0; i < latexBlocks.length; i++) {
+      result = result.replaceAll('___LATEX_BLOCK_${i}___', latexBlocks[i]);
+    }
+    
+    // Preserve LaTeX commands - don't add spaces inside \( \) or \[ \]
+    // This is a simple approach - more complex LaTeX handling might be needed
+    return result.trim();
+  }
+
   /// Build content widget based on subject (ChemistryText for Chemistry, LaTeXWidget for others)
-  Widget _buildContentWidget(String content, TextStyle textStyle) {
-    if (widget.subject.toLowerCase() == 'chemistry') {
+  Widget _buildContentWidget(String content, String subject, TextStyle textStyle) {
+    if (subject.toLowerCase() == 'chemistry') {
       return ChemistryText(
         content,
         textStyle: textStyle,

@@ -42,11 +42,20 @@ class ChemistryText extends StatelessWidget {
     
     // If it's mixed content, delegate to LaTeXWidget for proper handling
     if (isMixedContent) {
-      return LaTeXWidget(
-        text: formula,
-        textStyle: textStyle,
-        latexWeight: latexWeight,
-      );
+      try {
+        return LaTeXWidget(
+          text: formula,
+          textStyle: textStyle,
+          latexWeight: latexWeight,
+        );
+      } catch (e) {
+        debugPrint('Error in LaTeXWidget for chemistry: $e');
+        // Fallback to plain text if LaTeXWidget fails
+        return Text(
+          formula,
+          style: textStyle,
+        );
+      }
     }
 
     // Check if formula already has LaTeX delimiters
@@ -64,6 +73,8 @@ class ChemistryText extends StatelessWidget {
         } else if (content.startsWith('\\[') && content.endsWith('\\]')) {
           content = content.substring(2, content.length - 2);
         }
+        // Remove any nested delimiters that might cause parser errors
+        content = _removeNestedDelimiters(content);
         // Clean up common chemistry LaTeX patterns
         processedFormula = _preprocessChemistry(content);
       } else {
@@ -76,6 +87,11 @@ class ChemistryText extends StatelessWidget {
       // Validate that we don't have empty subscripts/superscripts
       processedFormula = processedFormula.replaceAll(RegExp(r'_\{\}'), '');
       processedFormula = processedFormula.replaceAll(RegExp(r'\^\{\}'), '');
+      // Remove any stray delimiters that might have been introduced
+      // Math.tex() doesn't need delimiters, so remove all of them
+      processedFormula = processedFormula.replaceAll(RegExp(r'\\\(|\\\)|\\\[|\\\]'), '');
+      // Remove any stray delimiters that might have been introduced
+      processedFormula = processedFormula.replaceAll(RegExp(r'\\[\(\[\)\]]'), '');
 
       // Wrap in FittedBox to scale down if too wide, preventing overflow
       return FittedBox(
@@ -241,6 +257,27 @@ class ChemistryText extends StatelessWidget {
     );
 
     return result;
+  }
+  
+  /// Remove nested LaTeX delimiters from content
+  /// This removes ALL \( \) and \[ \] pairs from the content since Math.tex() doesn't need them
+  String _removeNestedDelimiters(String content) {
+    // Remove any nested \( \) or \[ \] from the content
+    // Math.tex() expects raw LaTeX without delimiters
+    String cleaned = content;
+    // Remove all \( \) pairs (can be nested, so do it multiple times)
+    int iterations = 0;
+    while (cleaned.contains('\\(') && cleaned.contains('\\)') && iterations < 10) {
+      cleaned = cleaned.replaceAll(RegExp(r'\\\(([^)]*)\\\)'), r'$1');
+      iterations++;
+    }
+    // Remove all \[ \] pairs (can be nested, so do it multiple times)
+    iterations = 0;
+    while (cleaned.contains('\\[') && cleaned.contains('\\]') && iterations < 10) {
+      cleaned = cleaned.replaceAll(RegExp(r'\\\[([^\]]*)\\\]'), r'$1');
+      iterations++;
+    }
+    return cleaned;
   }
 }
 

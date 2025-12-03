@@ -166,8 +166,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
       title: 'Question Recognized!',
       subtitle: '${solution.topic} - ${solution.subject}',
       iconColor: AppColors.successGreen,
-      iconSize: 48, // Reduced from 64
+      iconSize: 40, // Further reduced from 48 to match photo review screen
       onClose: () => Navigator.of(context).popUntil((route) => route.isFirst),
+      bottomPadding: 12, // Further reduced from 16
     );
   }
 
@@ -223,7 +224,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
           ),
           const SizedBox(height: 16),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -239,29 +240,6 @@ class _SolutionScreenState extends State<SolutionScreen> {
                   ),
                 ),
               ),
-              TextButton(
-                onPressed: () {
-                  // TODO: Report issue
-                },
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(0, 0),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Row(
-                children: [
-                    const Icon(Icons.flag_outlined, size: 16, color: AppColors.primaryPurple),
-                    const SizedBox(width: 6),
-                                  Text(
-                      'Report Issue',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.primaryPurple,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                                ],
-                              ),
-                            ),
                           ],
                         ),
         ],
@@ -321,6 +299,8 @@ class _SolutionScreenState extends State<SolutionScreen> {
                           title: Text(
             _getStepTitle(stepNumber, stepContent),
             style: AppTextStyles.labelMedium,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
                           ),
           trailing: const Icon(Icons.keyboard_arrow_down, color: AppColors.textMedium),
                           children: [
@@ -345,46 +325,78 @@ class _SolutionScreenState extends State<SolutionScreen> {
   String _getStepTitle(int number, String stepContent) {
     // Try to extract title from step content
     // Format: "Step 1: Title" or "Title: description" or just use first few words
-    final content = stepContent.trim();
+    String content = stepContent.trim();
+    
+    // Remove LaTeX delimiters and commands for title extraction
+    content = _cleanLaTeXForTitle(content);
     
     // Check if step starts with "Step N:" or "Step N -"
-    final stepPattern = RegExp(r'^Step\s+\d+[:\-]\s*(.+?)(?:\.|$)', caseSensitive: false);
+    final stepPattern = RegExp(r'^Step\s+\d+[:\-]\s*(.+?)(?:\.|,|$)', caseSensitive: false);
     final match = stepPattern.firstMatch(content);
     if (match != null && match.group(1) != null) {
       String title = match.group(1)!.trim();
+      // Stop at first sentence or comma for cleaner title
+      final sentenceEnd = title.indexOf('.');
+      if (sentenceEnd > 0 && sentenceEnd < 40) {
+        title = title.substring(0, sentenceEnd);
+      }
       // Limit title length to avoid overflow
-      if (title.length > 50) {
-        title = '${title.substring(0, 47)}...';
+      if (title.length > 40) {
+        title = '${title.substring(0, 37)}...';
       }
       return title;
     }
     
     // Check if step has a colon separator (e.g., "Title: description")
     final colonIndex = content.indexOf(':');
-    if (colonIndex > 0 && colonIndex < 60) {
+    if (colonIndex > 0 && colonIndex < 50) {
       String title = content.substring(0, colonIndex).trim();
       // Remove common prefixes
       title = title.replaceAll(RegExp(r'^(Step\s+\d+[:\-]?\s*)', caseSensitive: true), '');
-      if (title.isNotEmpty && title.length <= 50) {
+      // Clean LaTeX from title
+      title = _cleanLaTeXForTitle(title);
+      if (title.isNotEmpty && title.length <= 40) {
         return title;
       }
     }
     
-    // Fallback: use first few words (up to 6 words or 50 chars)
+    // Fallback: use first few words (up to 5 words or 40 chars), skip LaTeX-heavy parts
     final words = content.split(RegExp(r'\s+'));
     if (words.isNotEmpty) {
       String title = '';
-      for (int i = 0; i < words.length && i < 6 && title.length < 50; i++) {
-        if (title.isNotEmpty) title += ' ';
-        title += words[i];
+      int wordCount = 0;
+      for (int i = 0; i < words.length && wordCount < 5 && title.length < 40; i++) {
+        String word = words[i];
+        // Skip words that are mostly LaTeX
+        if (!word.contains('\\(') && !word.contains('\\[') && !word.contains('\\mathrm')) {
+          if (title.isNotEmpty) title += ' ';
+          title += word;
+          wordCount++;
+        }
       }
       if (title.isNotEmpty) {
-        return title.length > 50 ? '${title.substring(0, 47)}...' : title;
+        return title.length > 40 ? '${title.substring(0, 37)}...' : title;
       }
     }
     
     // Ultimate fallback
     return 'Step $number';
+  }
+  
+  /// Clean LaTeX commands from text for use in titles
+  String _cleanLaTeXForTitle(String text) {
+    String cleaned = text;
+    // Remove LaTeX delimiters
+    cleaned = cleaned.replaceAll(RegExp(r'\\[\(\[\)\]]'), '');
+    // Remove \mathrm{} and content
+    cleaned = cleaned.replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1');
+    // Remove subscripts/superscripts but keep content
+    cleaned = cleaned.replaceAll(RegExp(r'[_\^]\{([^}]+)\}'), r'$1');
+    // Remove standalone LaTeX commands
+    cleaned = cleaned.replaceAll(RegExp(r'\\[a-zA-Z]+\{?[^}]*\}?'), '');
+    // Clean up extra spaces
+    cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return cleaned;
   }
 
   Widget _buildFinalAnswer(Solution solution) {
@@ -412,12 +424,13 @@ class _SolutionScreenState extends State<SolutionScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        LaTeXWidget(
-                          text: solution.solution.finalAnswer,
-            textStyle: AppTextStyles.headerLarge.copyWith(
-              color: AppColors.successGreen,
-              fontSize: 28,
-            ),
+                        _buildContentWidget(
+                          solution.solution.finalAnswer,
+                          solution.subject,
+                          AppTextStyles.bodyLarge.copyWith(
+                            color: AppColors.successGreen,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -427,52 +440,61 @@ class _SolutionScreenState extends State<SolutionScreen> {
   Widget _buildPriyaTip(Solution solution) {
     if (solution.solution.priyaMaamTip.isEmpty) return const SizedBox.shrink();
 
+    // Pre-process the tip text to add spaces and ensure readability
+    final tipText = _addSpacesToText(solution.solution.priyaMaamTip);
+
     return Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(28), // Increased padding for more space
+      decoration: BoxDecoration(
         gradient: AppColors.priyaCardGradient,
         borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
         border: Border.all(color: const Color(0xFFE9D5FF), width: 2),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          PriyaAvatar(size: 48),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PriyaAvatar(size: 56), // Larger avatar
+          const SizedBox(width: 20), // More spacing
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Text(
                       'Priya Ma\'am\'s Tip',
                       style: AppTextStyles.labelMedium.copyWith(
                         color: const Color(0xFF7C3AED),
+                        fontSize: 18, // Larger title
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     const Icon(
                       Icons.auto_awesome,
                       color: Color(0xFF9333EA),
-                      size: 16,
+                      size: 20,
                     ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                _buildContentWidget(
-                                  solution.solution.priyaMaamTip,
-                                  solution.subject,
-                                  AppTextStyles.bodyMedium.copyWith(
-                                    color: const Color(0xFF6B21A8),
-                                    height: 1.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                  ],
+                ),
+                const SizedBox(height: 16), // More spacing
+                // Use direct Text widget for maximum readability - no LaTeX processing
+                Text(
+                  tipText,
+                  style: const TextStyle(
+                    fontSize: 28, // MUCH LARGER - 28px
+                    color: Color(0xFF4C1D95), // Darker purple for better contrast
+                    height: 1.8, // Increased line height for better readability
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3, // Slight letter spacing for clarity
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -782,7 +804,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 ),
               const SizedBox(width: 8),
               Text(
-                  '${appState.snapsUsed}/${appState.snapLimit} snaps remaining today',
+                  '${appState.snapsRemaining}/${appState.snapLimit} snaps remaining today',
                   style: AppTextStyles.labelMedium.copyWith(
                     color: Colors.white,
                   ),
@@ -795,13 +817,63 @@ class _SolutionScreenState extends State<SolutionScreen> {
     );
   }
 
+  /// Add spaces between words that are concatenated (e.g., "BothStatementI" -> "Both Statement I")
+  String _addSpacesToText(String text) {
+    if (text.isEmpty) return text;
+    
+    // Pattern to add spaces before capital letters, numbers, and common patterns
+    // But preserve LaTeX commands and existing spaces
+    String result = text;
+    
+    // Add space before capital letters that follow lowercase letters or numbers
+    result = result.replaceAllMapped(
+      RegExp(r'([a-z0-9])([A-Z])'),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    
+    // Add space before numbers that follow letters
+    result = result.replaceAllMapped(
+      RegExp(r'([a-zA-Z])(\d)'),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    
+    // Add space after numbers that are followed by letters
+    result = result.replaceAllMapped(
+      RegExp(r'(\d)([A-Za-z])'),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    
+    // Fix common patterns like "StatementI" -> "Statement I", "StatementII" -> "Statement II"
+    result = result.replaceAllMapped(
+      RegExp(r'Statement([IVX]+)', caseSensitive: false),
+      (match) => 'Statement ${match.group(1)}',
+    );
+    result = result.replaceAllMapped(
+      RegExp(r'Option\(([A-Z])\)', caseSensitive: false),
+      (match) => 'Option (${match.group(1)})',
+    );
+    
+    // Fix "and" patterns like "StatementIandStatementII" -> "Statement I and Statement II"
+    result = result.replaceAllMapped(
+      RegExp(r'([A-Z][a-z]+)(and)([A-Z])', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
+    );
+    
+    // Clean up multiple spaces
+    result = result.replaceAll(RegExp(r'\s+'), ' ');
+    
+    // Preserve LaTeX commands - don't add spaces inside \( \) or \[ \]
+    // This is a simple approach - more complex LaTeX handling might be needed
+    return result.trim();
+  }
+
   /// Build content widget based on subject (ChemistryText for Chemistry, LaTeXWidget for others)
   Widget _buildContentWidget(String content, String subject, TextStyle textStyle) {
     if (subject.toLowerCase() == 'chemistry') {
       return ChemistryText(
         content,
         textStyle: textStyle,
-        fontSize: textStyle.fontSize ?? 14,
+        fontSize: textStyle.fontSize ?? 16, // Use bodyLarge size (16) as default
       );
     } else {
       return LaTeXWidget(

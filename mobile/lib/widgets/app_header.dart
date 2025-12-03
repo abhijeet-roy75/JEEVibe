@@ -73,13 +73,13 @@ class AppHeader extends StatelessWidget {
 
             // Center content (icons, progress circles, etc.)
             if (centerContent != null) ...[
-              SizedBox(height: leading != null || title != null ? 12 : 0), // Reduced from 24
+              SizedBox(height: leading != null || title != null ? 8 : 0), // Further reduced from 12
               centerContent!,
             ],
 
             // Subtitle
             if (subtitle != null) ...[
-              SizedBox(height: centerContent != null ? 8 : 0), // Reduced from 16
+              SizedBox(height: centerContent != null ? 4 : 0), // Further reduced from 8
               subtitle!,
             ],
           ],
@@ -153,6 +153,7 @@ class AppHeaderWithIcon extends StatelessWidget {
                 subtitle!,
                 style: AppTextStyles.bodyWhite.copyWith(
                   color: Colors.white.withOpacity(0.9),
+                  fontSize: 13, // Slightly smaller subtitle
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -160,6 +161,7 @@ class AppHeaderWithIcon extends StatelessWidget {
           : null,
       trailing: trailing,
       bottomPadding: bottomPadding,
+      topPadding: 20, // Reduced from default 24 for more compact header
     );
   }
 }
@@ -190,48 +192,12 @@ class AppHeaderWithProgress extends StatelessWidget {
     return AppHeader(
       leading: leading,
       trailing: trailing,
-      centerContent: Container(
-        width: circleSize,
-        height: circleSize,
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.3),
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Container(
-            width: circleSize * 0.8, // 80% of outer circle
-            height: circleSize * 0.8,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Container(
-                width: circleSize * 0.6, // 60% of outer circle
-                height: circleSize * 0.6,
-                decoration: const BoxDecoration(
-                  gradient: AppColors.ctaGradient,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '${currentIndex + 1}',
-                    style: AppTextStyles.headerMedium.copyWith(
-                      color: Colors.white,
-                      fontSize: 20, // Reduced from 24
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+      // Removed centerContent (circle icon) since title already shows question number
       title: Text(
         title,
         style: AppTextStyles.headerWhite.copyWith(fontSize: 18), // Reduced from default
         textAlign: TextAlign.center,
-        maxLines: 2,
+        maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
       subtitle: subtitle != null
