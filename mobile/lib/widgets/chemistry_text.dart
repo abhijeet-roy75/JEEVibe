@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'latex_widget.dart';
+import '../config/content_config.dart';
+import '../utils/text_preprocessor.dart';
 
 /// Specialized widget for chemistry formulas
 /// Handles H₂O, CO₂, chemical equations, etc. with proper LaTeX rendering
@@ -16,7 +18,7 @@ class ChemistryText extends StatelessWidget {
     Key? key,
     this.textStyle,
     this.fontSize = 16,
-    this.latexWeight, // Defaults to FontWeight.w600 if not specified
+    this.latexWeight, // Defaults to ContentConfig.latexFontWeight if not specified
   }) : super(key: key);
 
   @override
@@ -26,7 +28,7 @@ class ChemistryText extends StatelessWidget {
 
     // Make chemistry formulas semi-bold (stands out)
     final boldStyle = style.copyWith(
-      fontWeight: latexWeight ?? FontWeight.w600,
+      fontWeight: latexWeight ?? ContentConfig.latexFontWeight,
     );
 
     // If formula is empty, return empty widget
@@ -110,15 +112,23 @@ class ChemistryText extends StatelessWidget {
       );
     } catch (e) {
       debugPrint('Chemistry LaTeX parsing error: $e for: $formula');
-      // Fallback: Show original text with Unicode conversion
+      // Fallback: Show cleaned text using text preprocessor
       try {
+        String cleanedFormula = TextPreprocessor.cleanLatexForFallback(formula);
+        cleanedFormula = TextPreprocessor.normalizeWhitespace(cleanedFormula);
+        
+        // If still empty after cleaning, try Unicode conversion
+        if (cleanedFormula.isEmpty) {
+          cleanedFormula = _convertToUnicode(formula);
+        }
+        
         return Text(
-          _convertToUnicode(formula),
-          style: boldStyle, // Bold fallback too
+          cleanedFormula.isEmpty ? formula : cleanedFormula,
+          style: boldStyle,
         );
       } catch (e2) {
         // Ultimate fallback: show original text
-        debugPrint('Unicode conversion also failed: $e2');
+        debugPrint('Fallback conversion also failed: $e2');
         return Text(
           formula,
           style: boldStyle,

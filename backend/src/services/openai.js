@@ -7,6 +7,7 @@ const OpenAI = require('openai');
 const { BASE_PROMPT_TEMPLATE } = require('../prompts/priya_maam_base');
 const { SNAP_SOLVE_FOLLOWUP_PROMPT } = require('../prompts/snap_solve');
 const { getSyllabusAlignedTopic, JEE_SYLLABUS } = require('../prompts/jee_syllabus_reference');
+const { validateAndNormalizeLaTeX, validateDelimiters } = require('./latex-validator');
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -93,22 +94,24 @@ OUTPUT FORMAT (strict JSON):
     const content = response.choices[0].message.content;
     const solutionData = JSON.parse(content);
 
-    // Normalize LaTeX markers in solution data
-    // Fix double-escaped LaTeX markers that might appear after JSON parsing
+    // Normalize LaTeX markers in solution data using validator service
     const normalizeLaTeX = (text) => {
       if (typeof text !== 'string') return text;
-
-      return text
-        // Fix multiple backslashes before delimiters (handle 2+ backslashes)
-        .replace(/\\{2,}\(/g, '\\(')   // 2+ backslashes + ( → \(
-        .replace(/\\{2,}\)/g, '\\)')   // 2+ backslashes + ) → \)
-        .replace(/\\{2,}\[/g, '\\[')   // 2+ backslashes + [ → \[
-        .replace(/\\{2,}\]/g, '\\]')   // 2+ backslashes + ] → \]
-        // Fix common OCR errors
-        .replace(/(?<!\\)ext\{/g, '\\mathrm{')  // Missing \ before ext{
-        .replace(/\\text\{/g, '\\mathrm{')      // \text → \mathrm for compatibility
-        // Ensure spaces in chemical formulas use ~ (non-breaking space)
-        .replace(/\\mathrm\{([^}]*)\s+([^}]*)\}/g, '\\mathrm{$1~$2}');
+      
+      try {
+        const normalized = validateAndNormalizeLaTeX(text);
+        
+        // Validate delimiters and log any issues
+        const validation = validateDelimiters(normalized);
+        if (!validation.balanced) {
+          console.warn('LaTeX validation warnings:', validation.errors);
+        }
+        
+        return normalized;
+      } catch (error) {
+        console.error('Error normalizing LaTeX:', error);
+        return text; // Return original on error
+      }
     };
 
     // Validate LaTeX formatting
@@ -248,16 +251,16 @@ async function generateFollowUpQuestions(originalQuestion, solution, topic, diff
       console.warn('Response data:', JSON.stringify(data, null, 2));
     }
 
-    // Normalize LaTeX markers in all questions
-    // Helper function to normalize LaTeX (fix double-escaped markers)
+    // Normalize LaTeX markers in all questions using validator service
     const normalizeLaTeX = (text) => {
       if (typeof text !== 'string') return text;
-      // Match 3+ backslashes followed by ( ) [ or ] and replace with proper LaTeX markers
-      return text
-        .replace(/\\{3,}\(/g, '\\(')   // Match 3+ backslashes + ( and replace with \(
-        .replace(/\\{3,}\)/g, '\\)')    // Match 3+ backslashes + ) and replace with \)
-        .replace(/\\{3,}\[/g, '\\[')    // Match 3+ backslashes + [ and replace with \[
-        .replace(/\\{3,}\]/g, '\\]');   // Match 3+ backslashes + ] and replace with \]
+      
+      try {
+        return validateAndNormalizeLaTeX(text);
+      } catch (error) {
+        console.error('Error normalizing LaTeX in follow-up questions:', error);
+        return text;
+      }
     };
 
     const normalizedQuestions = questions.map(q => {
@@ -418,16 +421,16 @@ Generate Question ${questionNumber} NOW in strict JSON object format.`;
       throw new Error('Invalid question structure from OpenAI');
     }
 
-    // Normalize LaTeX markers - fix double-escaped backslashes
-    // Helper function to normalize LaTeX (fix double-escaped markers)
+    // Normalize LaTeX markers using validator service
     const normalizeLaTeX = (text) => {
       if (typeof text !== 'string') return text;
-      // Match 3+ backslashes followed by ( ) [ or ] and replace with proper LaTeX markers
-      return text
-        .replace(/\\{3,}\(/g, '\\(')   // Match 3+ backslashes + ( and replace with \(
-        .replace(/\\{3,}\)/g, '\\)')    // Match 3+ backslashes + ) and replace with \)
-        .replace(/\\{3,}\[/g, '\\[')    // Match 3+ backslashes + [ and replace with \[
-        .replace(/\\{3,}\]/g, '\\]');   // Match 3+ backslashes + ] and replace with \]
+      
+      try {
+        return validateAndNormalizeLaTeX(text);
+      } catch (error) {
+        console.error('Error normalizing LaTeX in single question:', error);
+        return text;
+      }
     };
 
     // Normalize question text

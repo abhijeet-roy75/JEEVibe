@@ -16,6 +16,8 @@ import '../widgets/app_header.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
+import '../config/content_config.dart';
+import '../utils/text_preprocessor.dart';
 
 class SolutionScreen extends StatefulWidget {
   final Future<Solution> solutionFuture;
@@ -220,7 +222,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
           _buildContentWidget(
             solution.recognizedQuestion,
             solution.subject,
-            AppTextStyles.bodyLarge,
+            ContentConfig.getQuestionTextStyle(color: AppColors.textMedium),
           ),
           const SizedBox(height: 16),
                         Row(
@@ -313,7 +315,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
                               ),
                               child: LaTeXWidget(
                 text: stepContent,
-                textStyle: AppTextStyles.bodyMedium,
+                textStyle: ContentConfig.getStepTextStyle(color: AppColors.textMedium),
                               ),
                             ),
                           ],
@@ -427,9 +429,11 @@ class _SolutionScreenState extends State<SolutionScreen> {
                         _buildContentWidget(
                           solution.solution.finalAnswer,
                           solution.subject,
-                          AppTextStyles.bodyLarge.copyWith(
+                          TextStyle(
+                            fontSize: ContentConfig.finalAnswerTextSize,
                             color: AppColors.successGreen,
                             fontWeight: FontWeight.w600,
+                            height: 1.6,
                           ),
                         ),
                       ],
@@ -441,7 +445,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
     if (solution.solution.priyaMaamTip.isEmpty) return const SizedBox.shrink();
 
     // Pre-process the tip text to add spaces and ensure readability
-    final tipText = _addSpacesToText(solution.solution.priyaMaamTip);
+    final tipText = TextPreprocessor.addSpacesToText(solution.solution.priyaMaamTip);
 
     return Container(
       padding: const EdgeInsets.all(28), // Increased padding for more space
@@ -482,11 +486,11 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 // Use direct Text widget for maximum readability - no LaTeX processing
                 Text(
                   tipText,
-                  style: const TextStyle(
-                    fontSize: 28, // MUCH LARGER - 28px
-                    color: Color(0xFF4C1D95), // Darker purple for better contrast
-                    height: 1.8, // Increased line height for better readability
-                    fontWeight: FontWeight.w600,
+                  style: TextStyle(
+                    fontSize: ContentConfig.priyaTipTextSize, // INCREASED - 34px for better readability
+                    color: const Color(0xFF4C1D95), // Darker purple for better contrast
+                    height: ContentConfig.priyaTipLineHeight, // Increased line height for better readability
+                    fontWeight: ContentConfig.priyaTipFontWeight,
                     letterSpacing: 0.3, // Slight letter spacing for clarity
                   ),
                 ),
@@ -817,55 +821,6 @@ class _SolutionScreenState extends State<SolutionScreen> {
     );
   }
 
-  /// Add spaces between words that are concatenated (e.g., "BothStatementI" -> "Both Statement I")
-  String _addSpacesToText(String text) {
-    if (text.isEmpty) return text;
-    
-    // Pattern to add spaces before capital letters, numbers, and common patterns
-    // But preserve LaTeX commands and existing spaces
-    String result = text;
-    
-    // Add space before capital letters that follow lowercase letters or numbers
-    result = result.replaceAllMapped(
-      RegExp(r'([a-z0-9])([A-Z])'),
-      (match) => '${match.group(1)} ${match.group(2)}',
-    );
-    
-    // Add space before numbers that follow letters
-    result = result.replaceAllMapped(
-      RegExp(r'([a-zA-Z])(\d)'),
-      (match) => '${match.group(1)} ${match.group(2)}',
-    );
-    
-    // Add space after numbers that are followed by letters
-    result = result.replaceAllMapped(
-      RegExp(r'(\d)([A-Za-z])'),
-      (match) => '${match.group(1)} ${match.group(2)}',
-    );
-    
-    // Fix common patterns like "StatementI" -> "Statement I", "StatementII" -> "Statement II"
-    result = result.replaceAllMapped(
-      RegExp(r'Statement([IVX]+)', caseSensitive: false),
-      (match) => 'Statement ${match.group(1)}',
-    );
-    result = result.replaceAllMapped(
-      RegExp(r'Option\(([A-Z])\)', caseSensitive: false),
-      (match) => 'Option (${match.group(1)})',
-    );
-    
-    // Fix "and" patterns like "StatementIandStatementII" -> "Statement I and Statement II"
-    result = result.replaceAllMapped(
-      RegExp(r'([A-Z][a-z]+)(and)([A-Z])', caseSensitive: false),
-      (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
-    );
-    
-    // Clean up multiple spaces
-    result = result.replaceAll(RegExp(r'\s+'), ' ');
-    
-    // Preserve LaTeX commands - don't add spaces inside \( \) or \[ \]
-    // This is a simple approach - more complex LaTeX handling might be needed
-    return result.trim();
-  }
 
   /// Build content widget based on subject (ChemistryText for Chemistry, LaTeXWidget for others)
   Widget _buildContentWidget(String content, String subject, TextStyle textStyle) {

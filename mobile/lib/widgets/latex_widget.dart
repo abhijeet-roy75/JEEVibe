@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import '../config/content_config.dart';
+import '../utils/text_preprocessor.dart';
 
 /// Widget to render LaTeX text with proper math rendering
 /// 
@@ -19,7 +21,7 @@ class LaTeXWidget extends StatelessWidget {
     super.key,
     required this.text,
     this.textStyle,
-    this.latexWeight, // Defaults to FontWeight.w600 if not specified
+    this.latexWeight, // Defaults to ContentConfig.latexFontWeight if not specified
   });
 
   @override
@@ -205,9 +207,9 @@ class LaTeXWidget extends StatelessWidget {
         return _renderFallbackText(latex, style);
       }
       
-      // Apply bold formatting to LaTeX content (FontWeight.w600 by default)
+      // Apply bold formatting to LaTeX content (use ContentConfig default)
       final boldStyle = style.copyWith(
-        fontWeight: latexWeight ?? FontWeight.w600,
+        fontWeight: latexWeight ?? ContentConfig.latexFontWeight,
       );
       
       // Wrap in FittedBox to scale down if too wide, preventing overflow
@@ -236,38 +238,16 @@ class LaTeXWidget extends StatelessWidget {
   /// This ensures users never see "Parser Error" messages
   Widget _renderFallbackText(String originalLatex, TextStyle style) {
     final boldStyle = style.copyWith(
-      fontWeight: latexWeight ?? FontWeight.w600,
+      fontWeight: latexWeight ?? ContentConfig.latexFontWeight,
     );
     
-    // Aggressive cleaning to make text readable
-    String displayText = originalLatex
-        .replaceAll('\n', ' ') // Remove newlines
-        .replaceAll('\r', ' ') // Remove carriage returns
-        .replaceAll('\t', ' ') // Remove tabs
-        .replaceAll(RegExp(r'\\n'), ' ') // Remove escaped newlines
-        .replaceAll(RegExp(r'\\([ntrbfv])(?![a-zA-Z])'), ' ') // Remove control sequences like \n, \t
-        .replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1') // Remove \mathrm{}
-        .replaceAll(RegExp(r'\\[()\[\]]'), '') // Remove LaTeX delimiters
-        .replaceAll(RegExp(r'_{([^}]+)}'), r'$1') // Simplify subscripts
-        .replaceAll(RegExp(r'\^{([^}]+)}'), r'$1') // Simplify superscripts
-        .replaceAll(RegExp(r'\\[a-zA-Z]+\{?[^}]*\}?'), '') // Remove LaTeX commands with optional braces
-        .replaceAll(RegExp(r'[{}]'), '') // Remove braces
-        .replaceAll(RegExp(r'\s+'), ' ') // Normalize whitespace
-        .trim();
+    // Use text preprocessor to clean LaTeX for fallback display
+    String displayText = TextPreprocessor.cleanLatexForFallback(originalLatex);
+    displayText = TextPreprocessor.normalizeWhitespace(displayText);
     
-    // If displayText is empty or just whitespace, show a cleaned version of original
+    // If displayText is empty, don't show anything
     if (displayText.isEmpty || displayText.trim().isEmpty) {
-      displayText = originalLatex
-          .replaceAll(RegExp(r'\\[()\[\]]'), '')
-          .replaceAll(RegExp(r'\\[a-zA-Z]+'), '')
-          .replaceAll(RegExp(r'[{}]'), '')
-          .replaceAll(RegExp(r'\s+'), ' ')
-          .trim();
-    }
-    
-    // Final check - if still empty, show a generic message
-    if (displayText.isEmpty || displayText.trim().isEmpty) {
-      return const SizedBox.shrink(); // Don't show anything if we can't extract readable text
+      return const SizedBox.shrink();
     }
     
     return Text(displayText, style: boldStyle);
@@ -410,9 +390,9 @@ class LaTeXWidget extends StatelessWidget {
         processedContent = processedContent.replaceAll(RegExp(r'_\{\}'), '');
         processedContent = processedContent.replaceAll(RegExp(r'\^\{\}'), '');
         
-        // Apply bold formatting to LaTeX content (FontWeight.w600 by default)
+        // Apply bold formatting to LaTeX content (use ContentConfig default)
         final boldStyle = style.copyWith(
-          fontWeight: latexWeight ?? FontWeight.w600,
+          fontWeight: latexWeight ?? ContentConfig.latexFontWeight,
         );
         
         // Wrap Math widget to handle overflow - use FittedBox to scale down
@@ -435,21 +415,12 @@ class LaTeXWidget extends StatelessWidget {
         ));
       } catch (e) {
         debugPrint('LaTeX parsing error: $e for: ${match.content}');
-        // Fallback: show content as plain text (not red, just normal)
-        // Clean up LaTeX commands for better readability
-        String displayText = match.content
-            .replaceAll('\n', ' ') // Remove newlines
-            .replaceAll('\r', ' ') // Remove carriage returns
-            .replaceAll(RegExp(r'\\n'), ' ') // Remove escaped newlines
-            .replaceAll(RegExp(r'\\([ntrbfv])'), ' ') // Remove control sequences
-            .replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1') // Remove \mathrm{}
-            .replaceAll(RegExp(r'\\[()\[\]]'), '') // Remove LaTeX delimiters
-            .replaceAll(RegExp(r'_{([^}]+)}'), r'$1') // Simplify subscripts
-            .replaceAll(RegExp(r'\^{([^}]+)}'), r'$1') // Simplify superscripts
-            .replaceAll(RegExp(r'\\[a-zA-Z]+'), ''); // Remove other LaTeX commands
+        // Fallback: show content as plain text using text preprocessor
+        String displayText = TextPreprocessor.cleanLatexForFallback(match.content);
+        displayText = TextPreprocessor.normalizeWhitespace(displayText);
         
         final boldStyle = style.copyWith(
-          fontWeight: latexWeight ?? FontWeight.w600,
+          fontWeight: latexWeight ?? ContentConfig.latexFontWeight,
         );
         spans.add(TextSpan(
           text: displayText.isEmpty ? match.content : displayText,

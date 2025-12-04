@@ -12,6 +12,8 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
 import 'practice_results_screen.dart';
+import '../config/content_config.dart';
+import '../utils/text_preprocessor.dart';
 
 class FollowUpQuizScreen extends StatefulWidget {
   final String recognizedQuestion;
@@ -457,10 +459,9 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
           const SizedBox(width: 16),
           Expanded(
             child: _buildContentWidget(
-              _addSpacesToText(question.question),
+              TextPreprocessor.addSpacesToText(question.question),
               widget.subject,
-              AppTextStyles.bodyLarge.copyWith(
-                fontSize: 22,
+              ContentConfig.getQuestionTextStyle(color: AppColors.textDark).copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -531,10 +532,9 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildContentWidget(
-                      _addSpacesToText(optionValue),
+                      TextPreprocessor.addSpacesToText(optionValue),
                       widget.subject,
-                      AppTextStyles.bodyLarge.copyWith(
-                        fontSize: 20,
+                      ContentConfig.getOptionTextStyle(color: AppColors.textDark).copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -600,134 +600,6 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
     );
   }
 
-  /// Add spaces between words that are concatenated (e.g., "(A)and(C)only" -> "(A) and (C) only")
-  /// IMPORTANT: This function should NOT modify LaTeX content inside delimiters
-  String _addSpacesToText(String text) {
-    if (text.isEmpty) return text;
-    
-    // First, check if this is pure LaTeX (wrapped in delimiters) - if so, don't add spaces
-    final trimmed = text.trim();
-    if (trimmed.startsWith('\\(') && trimmed.endsWith('\\)')) {
-      return text; // Don't modify pure LaTeX
-    }
-    if (trimmed.startsWith('\\[') && trimmed.endsWith('\\]')) {
-      return text; // Don't modify pure LaTeX
-    }
-    
-    // Pattern to add spaces before capital letters, numbers, and common patterns
-    // But preserve LaTeX commands and existing spaces
-    String result = text;
-    
-    // Protect LaTeX content inside delimiters - extract and restore later
-    final latexBlocks = <String>[];
-    // Match \(...\) and \[...\] blocks
-    final latexPattern = RegExp(r'\\([()\[\]])(.*?)\\([()\[\]])');
-    result = result.replaceAllMapped(latexPattern, (match) {
-      final fullMatch = match.group(0)!;
-      final placeholder = '___LATEX_BLOCK_${latexBlocks.length}___';
-      latexBlocks.add(fullMatch);
-      return placeholder;
-    });
-    
-    // CRITICAL: Fix common concatenated chemistry/physics terms FIRST
-    // These are common patterns in JEE questions
-    final commonTerms = {
-      'paramagnetic': 'paramagnetic',
-      'diamagnetic': 'diamagnetic',
-      'unpaired': 'unpaired',
-      'electrons': 'electrons',
-      'electron': 'electron',
-      'with': 'with',
-      'three': 'three',
-      'two': 'two',
-      'four': 'four',
-      'one': 'one',
-      'no': 'no',
-    };
-    
-    // Fix concatenated patterns like "paramagneticwiththreeunpairedelectrons"
-    // Strategy: Insert spaces before common words when they appear concatenated
-    result = result.replaceAllMapped(
-      RegExp(r'paramagnetic(with)', caseSensitive: false),
-      (match) => 'paramagnetic ${match.group(1)}',
-    );
-    result = result.replaceAllMapped(
-      RegExp(r'diamagnetic(with)', caseSensitive: false),
-      (match) => 'diamagnetic ${match.group(1)}',
-    );
-    result = result.replaceAllMapped(
-      RegExp(r'(with)(three|two|four|one|no)', caseSensitive: false),
-      (match) => '${match.group(1)} ${match.group(2)}',
-    );
-    result = result.replaceAllMapped(
-      RegExp(r'(three|two|four|one|no)(unpaired)', caseSensitive: false),
-      (match) => '${match.group(1)} ${match.group(2)}',
-    );
-    result = result.replaceAllMapped(
-      RegExp(r'(unpaired)(electron)', caseSensitive: false),
-      (match) => '${match.group(1)} ${match.group(2)}',
-    );
-    result = result.replaceAllMapped(
-      RegExp(r'(electron)(s)', caseSensitive: false),
-      (match) => '${match.group(1)}${match.group(2)}', // Keep 's' attached
-    );
-    
-    // Add space before capital letters that follow lowercase letters or numbers
-    result = result.replaceAllMapped(
-      RegExp(r'([a-z0-9])([A-Z])'),
-      (match) => '${match.group(1)} ${match.group(2)}',
-    );
-    
-    // Add space before numbers that follow letters
-    result = result.replaceAllMapped(
-      RegExp(r'([a-zA-Z])(\d)'),
-      (match) => '${match.group(1)} ${match.group(2)}',
-    );
-    
-    // Add space after numbers that are followed by letters
-    result = result.replaceAllMapped(
-      RegExp(r'(\d)([A-Za-z])'),
-      (match) => '${match.group(1)} ${match.group(2)}',
-    );
-    
-    // Fix common patterns like "StatementI" -> "Statement I", "StatementII" -> "Statement II"
-    result = result.replaceAllMapped(
-      RegExp(r'Statement([IVX]+)', caseSensitive: false),
-      (match) => 'Statement ${match.group(1)}',
-    );
-    result = result.replaceAllMapped(
-      RegExp(r'Option\(([A-Z])\)', caseSensitive: false),
-      (match) => 'Option (${match.group(1)})',
-    );
-    
-    // Fix "and" patterns like "(A)and(C)only" -> "(A) and (C) only"
-    result = result.replaceAllMapped(
-      RegExp(r'([\)])(and)([\(])', caseSensitive: false),
-      (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
-    );
-    result = result.replaceAllMapped(
-      RegExp(r'([A-Z][a-z]+)(and)([A-Z])', caseSensitive: false),
-      (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
-    );
-    
-    // Fix "only" patterns like "(C)only" -> "(C) only"
-    result = result.replaceAllMapped(
-      RegExp(r'([\)])(only)', caseSensitive: false),
-      (match) => '${match.group(1)} ${match.group(2)}',
-    );
-    
-    // Clean up multiple spaces
-    result = result.replaceAll(RegExp(r'\s+'), ' ');
-    
-    // Restore protected LaTeX blocks
-    for (int i = 0; i < latexBlocks.length; i++) {
-      result = result.replaceAll('___LATEX_BLOCK_${i}___', latexBlocks[i]);
-    }
-    
-    // Preserve LaTeX commands - don't add spaces inside \( \) or \[ \]
-    // This is a simple approach - more complex LaTeX handling might be needed
-    return result.trim();
-  }
 
   /// Build content widget based on subject (ChemistryText for Chemistry, LaTeXWidget for others)
   Widget _buildContentWidget(String content, String subject, TextStyle textStyle) {

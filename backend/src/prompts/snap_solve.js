@@ -43,18 +43,27 @@ MAINTAIN:
 
 OUTPUT FORMAT (strict JSON object - required for API):
 IMPORTANT: Use LaTeX format \\(...\\) for ALL mathematical and chemical expressions in questions and options.
+CRITICAL: NEVER nest delimiters - use single-level \\(...\\) only.
 
-EXAMPLES OF JEE FORMAT:
-- Math: "Find \\(\\int_0^1 x^2 dx\\)" NOT "Find ∫₀¹ x² dx"
-- Chemistry: "Mass of \\(\\mathrm{H}_{2}\\mathrm{SO}_{4}\\)" NOT "Mass of H₂SO₄"
-- Ions: "\\(\\mathrm{NH}_{4}^{+}\\)" NOT "NH₄⁺"
+CORRECT EXAMPLES OF JEE FORMAT:
+- Math: "Find \\(\\int_0^1 x^2 dx\\)" 
+- Chemistry: "Mass of \\(\\mathrm{H}_{2}\\mathrm{SO}_{4}\\)"
+- Ions: "\\(\\mathrm{NH}_{4}^{+}\\)"
 - Electronic config: "\\(1\\mathrm{s}^{2} 2\\mathrm{s}^{2} 2\\mathrm{p}^{3}\\)"
 - Hybridization: "\\(\\mathrm{sp}^{3}\\mathrm{d}^{2}\\)"
 - Orbital notation: "\\(t_{2g}^{6} e_{g}^{0}\\)"
 - Greek letters: "\\(\\alpha\\), \\(\\beta\\), \\(\\gamma\\)"
 - Fractions: "\\(\\frac{\\mathrm{dy}}{\\mathrm{dx}}\\)"
 
+WRONG EXAMPLES (DO NOT DO THIS):
+- ❌ "Find ∫₀¹ x² dx" (Unicode - WRONG)
+- ❌ "Mass of H₂SO₄" (Unicode - WRONG)
+- ❌ "NH₄⁺" (Unicode - WRONG)
+- ❌ "\\(\\(x + y\\)\\)" (nested delimiters - WRONG)
+- ❌ "x^2" (missing delimiters - WRONG)
+
 NEVER use Unicode subscripts/superscripts - always use LaTeX with \\mathrm{} for chemistry.
+NEVER nest delimiters - if you see \\(\\(...\\)\\) you are doing it WRONG.
 
 {
   "questions": [

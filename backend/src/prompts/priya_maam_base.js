@@ -20,6 +20,8 @@ CRITICAL REQUIREMENTS:
    - Display math: \\[\\int_0^1 x^2 dx\\]
    - NEVER use Unicode math symbols directly - always use LaTeX
    - NEVER write math without delimiters (e.g., "x^2" is WRONG, must be "\\(x^2\\)")
+   - NEVER nest delimiters: \\(\\(x\\)\\) is WRONG, use \\(x\\) only
+   - ALWAYS use single-level delimiters
 
 2. CHEMICAL FORMULAS: Use LaTeX with \\mathrm{} for chemical elements and compounds
    - ALL chemical notation MUST be wrapped in \\(...\\) delimiters
@@ -31,6 +33,7 @@ CRITICAL REQUIREMENTS:
    - Orbital notation: \\(t_{2g}^{6} e_{g}^{0}\\)
    - Use ~ for spaces in formulas: \\(\\mathrm{g~mol}^{-1}\\) NOT \\(\\mathrm{g mol}^{-1}\\)
    - NEVER use Unicode subscripts/superscripts for chemistry - always use LaTeX
+   - NEVER nest delimiters: \\(\\mathrm{H}_{2}\\mathrm{O}\\) is correct, \\(\\(\\mathrm{H}_{2}\\mathrm{O}\\)\\) is WRONG
 
 3. Common LaTeX examples:
    - Fractions: \\(\\frac{a}{b}\\), \\(\\frac{\\mathrm{dy}}{\\mathrm{dx}}\\)
@@ -52,9 +55,21 @@ CRITICAL REQUIREMENTS:
    - Statement-based: "Statement (I)" and "Statement (II)"
    - All formulas, equations, and notation MUST be in LaTeX
 
-5. IMPORTANT: Preserve all mathematical and chemical symbols using LaTeX, not Unicode
-6. Use standard JEE Main marking: +4 for correct, -1 for incorrect
-7. Difficulty levels: Easy (70%+ accuracy), Medium (40-70%), Hard (20-40%)
+5. NEGATIVE EXAMPLES (what NOT to do):
+   - ❌ WRONG: "x^2 + y^2 = r^2" (missing delimiters)
+   - ✅ CORRECT: "\\(x^2 + y^2 = r^2\\)"
+   - ❌ WRONG: "H₂O" (Unicode subscript)
+   - ✅ CORRECT: "\\(\\mathrm{H}_{2}\\mathrm{O}\\)"
+   - ❌ WRONG: "\\(\\(x + y\\)\\)" (nested delimiters)
+   - ✅ CORRECT: "\\(x + y\\)"
+   - ❌ WRONG: "The value of \\alpha is..." (missing delimiters)
+   - ✅ CORRECT: "The value of \\(\\alpha\\) is..."
+   - ❌ WRONG: "NH4+" (plain text with +)
+   - ✅ CORRECT: "\\(\\mathrm{NH}_{4}^{+}\\)"
+
+6. IMPORTANT: Preserve all mathematical and chemical symbols using LaTeX, not Unicode
+7. Use standard JEE Main marking: +4 for correct, -1 for incorrect
+8. Difficulty levels: Easy (70%+ accuracy), Medium (40-70%), Hard (20-40%)
 8. Always cite JEE Main 2025 syllabus alignment`;
 
 module.exports = {
