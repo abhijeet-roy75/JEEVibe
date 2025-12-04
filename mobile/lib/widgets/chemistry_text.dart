@@ -80,10 +80,16 @@ class ChemistryText extends StatelessWidget {
         // Clean up common chemistry LaTeX patterns
         processedFormula = _preprocessChemistry(content);
       } else {
-        // No delimiters - wrap in LaTeX delimiters and preprocess
+        // No delimiters - preprocess and ensure LaTeX commands are present
         processedFormula = _preprocessChemistry(formula);
-        // Wrap in inline LaTeX delimiters
-        processedFormula = '\\(' + processedFormula + '\\)';
+        
+        // Only wrap in delimiters if we have LaTeX commands
+        // This prevents wrapping plain text unnecessarily
+        if (processedFormula.contains('\\mathrm') || 
+            processedFormula.contains('_{') || 
+            processedFormula.contains('^{')) {
+          processedFormula = '\\(' + processedFormula + '\\)';
+        }
       }
 
       // Validate that we don't have empty subscripts/superscripts
@@ -95,21 +101,30 @@ class ChemistryText extends StatelessWidget {
       // Remove any stray delimiters that might have been introduced
       processedFormula = processedFormula.replaceAll(RegExp(r'\\[\(\[\)\]]'), '');
 
-      // Wrap in FittedBox to scale down if too wide, preventing overflow
-      return FittedBox(
-        fit: BoxFit.scaleDown,
-        alignment: Alignment.centerLeft,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: double.infinity,
-          ),
-          child: Math.tex(
-            processedFormula,
-            textStyle: boldStyle, // Bold for chemistry
-            mathStyle: MathStyle.text,
-          ),
-        ),
-      );
+      // Render chemistry formula - short formulas render fine without scaling
+      // Long formulas already delegated to LaTeXWidget above
+      try {
+        return Math.tex(
+          processedFormula,
+          textStyle: boldStyle, // Bold for chemistry
+          mathStyle: MathStyle.text,
+        );
+      } catch (mathError) {
+        debugPrint('Math.tex error in chemistry: $mathError');
+        // Fallback to cleaned text
+        String cleanedFormula = TextPreprocessor.cleanLatexForFallback(formula);
+        cleanedFormula = TextPreprocessor.normalizeWhitespace(cleanedFormula);
+        
+        if (cleanedFormula.isEmpty) {
+          cleanedFormula = _convertToUnicode(formula);
+        }
+        
+        return Text(
+          cleanedFormula.isEmpty ? formula : cleanedFormula,
+          style: boldStyle,
+          softWrap: true,
+        );
+      }
     } catch (e) {
       debugPrint('Chemistry LaTeX parsing error: $e for: $formula');
       // Fallback: Show cleaned text using text preprocessor

@@ -9,13 +9,15 @@ class ContentConfig {
   // TEXT SIZES - Consistent across all screens
   // ============================================================================
   
-  /// Questions (main question text)
+  /// Questions (main question text)  
   /// Used in: solution_screen, followup_quiz_screen, review_questions_screen, solution_review_screen
-  static const double questionTextSize = 20.0;
+  /// Set to 18px for better fit without overflow
+  static const double questionTextSize = 18.0;
   
   /// Options (multiple choice options)
   /// Used in: followup_quiz_screen, review_questions_screen
-  static const double optionTextSize = 18.0;
+  /// Set to 16px for better balance
+  static const double optionTextSize = 16.0;
   
   /// Steps and explanations
   /// Used in: solution_screen, solution_review_screen, review_questions_screen
@@ -28,12 +30,13 @@ class ContentConfig {
   
   /// Final answer text
   /// Used in: solution_screen, solution_review_screen
-  static const double finalAnswerTextSize = 18.0;
+  /// Set to 17px for better balance
+  static const double finalAnswerTextSize = 17.0;
   
-  /// Priya Ma'am's tips - INCREASED for better readability
-  /// Was 28px, now 34px based on user feedback
+  /// Priya Ma'am's tips - Adjusted for balance with other text
+  /// Was 28px (too small), tried 34px (too large), now 18px for good balance
   /// Used in: solution_screen, practice_results_screen
-  static const double priyaTipTextSize = 34.0;
+  static const double priyaTipTextSize = 18.0;
   
   /// Labels and metadata (subject, topic, difficulty)
   /// Used in: all screens

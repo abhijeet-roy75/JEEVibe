@@ -487,12 +487,14 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 Text(
                   tipText,
                   style: TextStyle(
-                    fontSize: ContentConfig.priyaTipTextSize, // INCREASED - 34px for better readability
+                    fontSize: ContentConfig.priyaTipTextSize,
                     color: const Color(0xFF4C1D95), // Darker purple for better contrast
                     height: ContentConfig.priyaTipLineHeight, // Increased line height for better readability
                     fontWeight: ContentConfig.priyaTipFontWeight,
                     letterSpacing: 0.3, // Slight letter spacing for clarity
                   ),
+                  softWrap: true, // Enable text wrapping
+                  overflow: TextOverflow.visible, // Allow wrapping instead of clipping
                 ),
               ],
             ),

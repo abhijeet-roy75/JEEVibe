@@ -39,6 +39,20 @@ class LaTeXWidget extends StatelessWidget {
     // Preserve all spaces - don't remove them
     String processedInput = input;
     
+    // 1a. Auto-wrap naked \mathrm{} commands that aren't in delimiters
+    // This catches cases where backend missed wrapping chemistry formulas
+    if (!processedInput.contains('\\(') && !processedInput.contains('\\[')) {
+      // No delimiters at all - check for LaTeX commands
+      if (processedInput.contains('\\mathrm{') || 
+          processedInput.contains('\\frac{') ||
+          processedInput.contains('\\sqrt{') ||
+          processedInput.contains('_{') ||
+          processedInput.contains('^{')) {
+        // Has LaTeX commands but no delimiters - wrap entire text
+        processedInput = '\\(' + processedInput + '\\)';
+      }
+    }
+    
     // Remove or escape newlines that could break LaTeX parsing
     // Replace actual newline characters with spaces (LaTeX doesn't handle raw newlines well)
     processedInput = processedInput.replaceAll('\n', ' ');
@@ -80,11 +94,25 @@ class LaTeXWidget extends StatelessWidget {
       // Pure inline LaTeX - extract content and remove any nested delimiters
       String content = trimmed.substring(2, trimmed.length - 2);
       content = _removeNestedDelimiters(content);
+      
+      // If content is very long (>100 chars), treat as mixed to enable wrapping
+      // This prevents long questions from being rendered as one-line LaTeX
+      if (content.length > 100) {
+        return _renderMixedContent(processedInput, style);
+      }
+      
       return _renderPureLaTeX(content, style, true);
     } else if (trimmed.startsWith('\\[') && trimmed.endsWith('\\]')) {
       // Pure display LaTeX - extract content and remove any nested delimiters
       String content = trimmed.substring(2, trimmed.length - 2);
       content = _removeNestedDelimiters(content);
+      
+      // If content is very long (>100 chars), treat as mixed to enable wrapping
+      // This prevents long questions from being rendered as one-line LaTeX
+      if (content.length > 100) {
+        return _renderMixedContent(processedInput, style);
+      }
+      
       return _renderPureLaTeX(content, style, false);
     }
     
@@ -212,21 +240,19 @@ class LaTeXWidget extends StatelessWidget {
         fontWeight: latexWeight ?? ContentConfig.latexFontWeight,
       );
       
-      // Wrap in FittedBox to scale down if too wide, preventing overflow
-      return FittedBox(
-        fit: BoxFit.scaleDown,
-        alignment: Alignment.centerLeft,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: double.infinity,
-          ),
-          child: Math.tex(
-            processedLatex,
-            mathStyle: isInline ? MathStyle.text : MathStyle.display,
-            textStyle: boldStyle,
-          ),
-        ),
-      );
+      // Render LaTeX directly - short content should fit fine
+      // For long content, we already redirect to mixed rendering above
+      try {
+        return Math.tex(
+          processedLatex,
+          mathStyle: isInline ? MathStyle.text : MathStyle.display,
+          textStyle: boldStyle,
+        );
+      } catch (layoutError) {
+        // If Math.tex fails with layout, fallback to text
+        debugPrint('Math.tex layout error: $layoutError');
+        return _renderFallbackText(processedLatex, style);
+      }
     } catch (e) {
       debugPrint('LaTeX parsing error: $e for: $latex');
       // Never show "Parser Error" to users - always fallback to cleaned text
@@ -395,24 +421,32 @@ class LaTeXWidget extends StatelessWidget {
           fontWeight: latexWeight ?? ContentConfig.latexFontWeight,
         );
         
-        // Wrap Math widget to handle overflow - use FittedBox to scale down
-        final mathWidget = FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400), // Prevent extreme overflow
-            child: Math.tex(
-              processedContent,
-              mathStyle: match.isInline ? MathStyle.text : MathStyle.display,
-              textStyle: boldStyle,
-            ),
-          ),
-        );
-        
-        spans.add(WidgetSpan(
-          child: mathWidget,
-          alignment: PlaceholderAlignment.middle,
-        ));
+        // Render LaTeX inline without FittedBox to maintain readable size
+        try {
+          final mathWidget = Math.tex(
+            processedContent,
+            mathStyle: match.isInline ? MathStyle.text : MathStyle.display,
+            textStyle: boldStyle,
+          );
+          
+          spans.add(WidgetSpan(
+            child: mathWidget,
+            alignment: PlaceholderAlignment.middle,
+          ));
+        } catch (mathError) {
+          debugPrint('Math.tex error in mixed content: $mathError');
+          // If Math.tex fails, add as plain text
+          String displayText = TextPreprocessor.cleanLatexForFallback(match.content);
+          displayText = TextPreprocessor.normalizeWhitespace(displayText);
+          
+          final boldStyle = style.copyWith(
+            fontWeight: latexWeight ?? ContentConfig.latexFontWeight,
+          );
+          spans.add(TextSpan(
+            text: displayText.isEmpty ? match.content : displayText,
+            style: boldStyle,
+          ));
+        }
       } catch (e) {
         debugPrint('LaTeX parsing error: $e for: ${match.content}');
         // Fallback: show content as plain text using text preprocessor

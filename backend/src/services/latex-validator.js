@@ -200,25 +200,85 @@ function fixChemicalFormulas(text) {
 function ensureDelimiters(text) {
   let fixed = text;
 
-  // Look for common math patterns that might be missing delimiters
-  // This is conservative - we only wrap obvious math expressions
-
-  // Pattern: Standalone fractions, integrals, etc. without delimiters
-  // Match \frac, \int, \sum, etc. that aren't already in delimiters
-  const mathCommands = ['frac', 'int', 'sum', 'lim', 'sqrt', 'infty'];
+  // Split text by existing delimiters to only process text outside of them
+  const parts = _splitByDelimiters(fixed);
   
-  mathCommands.forEach(cmd => {
-    // Match \command that's not preceded by \( or \[
-    const pattern = new RegExp(`(?<!\\\\\\()(?<!\\\\\\[)\\\\${cmd}(?:\\{[^}]*\\})?`, 'g');
+  fixed = parts.map(part => {
+    if (part.isDelimited) {
+      return part.text; // Already has delimiters, don't modify
+    }
     
-    fixed = fixed.replace(pattern, (match) => {
-      // Check if this is already inside delimiters by looking at context
-      // This is a simple heuristic
-      return `\\(${match}\\)`;
+    let content = part.text;
+    
+    // Wrap standalone \mathrm{} expressions (chemistry formulas)
+    // Pattern: \mathrm{...} with any number of subscripts/superscripts following
+    // Example: \mathrm{sp}^{3} -> \(\mathrm{sp}^{3}\)
+    content = content.replace(
+      /\\mathrm\{[^}]+\}(?:[_^]\{[^}]+\})*/g,
+      (match) => {
+        // Don't double-wrap if already in delimiters
+        return `\\(${match}\\)`;
+      }
+    );
+    
+    // Wrap standalone math commands
+    const mathCommands = ['frac', 'int', 'sum', 'lim', 'sqrt', 'infty', 'alpha', 'beta', 'gamma', 'theta', 'pi', 'Delta', 'omega', 'phi'];
+    mathCommands.forEach(cmd => {
+      const pattern = new RegExp(`\\\\${cmd}(?:\\{[^}]*\\})?`, 'g');
+      content = content.replace(pattern, (match) => `\\(${match}\\)`);
     });
-  });
+    
+    // Wrap standalone subscripts/superscripts patterns (for variables)
+    content = content.replace(/([a-zA-Z])_\{[^}]+\}/g, (match) => `\\(${match}\\)`);
+    content = content.replace(/([a-zA-Z])\^\{[^}]+\}/g, (match) => `\\(${match}\\)`);
+    
+    // Wrap sequences of \mathrm that are separated by spaces or underscores
+    // Example: "\mathrm{H}_{2}\mathrm{O}" -> "\(\mathrm{H}_{2}\mathrm{O}\)"
+    content = content.replace(
+      /\\mathrm\{[^}]+\}(?:[_^]\{[^}]+\}|\\mathrm\{[^}]+\})*/g,
+      (match) => `\\(${match}\\)`
+    );
+    
+    return content;
+  }).join('');
 
   return fixed;
+}
+
+/**
+ * Helper function to split text by LaTeX delimiters
+ */
+function _splitByDelimiters(text) {
+  const parts = [];
+  let currentPos = 0;
+  let insideDelimiters = false;
+  
+  // Find all \( \) and \[ \] delimiters
+  const delimiterRegex = /\\\(|\\\)|\\\[|\\\]/g;
+  let match;
+  
+  while ((match = delimiterRegex.exec(text)) !== null) {
+    if (!insideDelimiters) {
+      // We found an opening delimiter
+      if (currentPos < match.index) {
+        parts.push({ text: text.substring(currentPos, match.index), isDelimited: false });
+      }
+      currentPos = match.index;
+      insideDelimiters = true;
+    } else {
+      // We found a closing delimiter
+      parts.push({ text: text.substring(currentPos, match.index + match[0].length), isDelimited: true });
+      currentPos = match.index + match[0].length;
+      insideDelimiters = false;
+    }
+  }
+  
+  // Add remaining text
+  if (currentPos < text.length) {
+    parts.push({ text: text.substring(currentPos), isDelimited: insideDelimiters });
+  }
+  
+  return parts;
 }
 
 /**

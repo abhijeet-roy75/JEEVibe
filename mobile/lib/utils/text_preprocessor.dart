@@ -57,6 +57,10 @@ class TextPreprocessor {
     
     // Fix "only" patterns like "(C)only" -> "(C) only"
     result = result.replaceAllMapped(
+      RegExp(r'(\([A-Z]\))(only)', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    result = result.replaceAllMapped(
       RegExp(r'([\)])(only)', caseSensitive: false),
       (match) => '${match.group(1)} ${match.group(2)}',
     );
@@ -149,6 +153,13 @@ class TextPreprocessor {
   static String _fixStatementPatterns(String text) {
     String result = text;
     
+    // "Statements" or "Statement" followed by (A), (B), etc.
+    // Handle: "Statements(A)" -> "Statements (A)"
+    result = result.replaceAllMapped(
+      RegExp(r'(Statements?)\(([A-Z])\)', caseSensitive: false),
+      (match) => '${match.group(1)} (${match.group(2)})',
+    );
+    
     // "StatementI" -> "Statement I", "StatementII" -> "Statement II"
     result = result.replaceAllMapped(
       RegExp(r'Statement([IVX]+)', caseSensitive: false),
@@ -170,6 +181,12 @@ class TextPreprocessor {
     
     // "(A)and(C)" -> "(A) and (C)"
     result = result.replaceAllMapped(
+      RegExp(r'(\([A-Z]\))(and)(\([A-Z]\))', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
+    );
+    
+    // ")and(" -> ") and ("
+    result = result.replaceAllMapped(
       RegExp(r'([\)])(and)([\(])', caseSensitive: false),
       (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
     );
@@ -178,6 +195,16 @@ class TextPreprocessor {
     result = result.replaceAllMapped(
       RegExp(r'([A-Z][a-z]+)(and)([A-Z])', caseSensitive: false),
       (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
+    );
+    
+    // ")and" or "and(" -> ") and" or "and ("
+    result = result.replaceAllMapped(
+      RegExp(r'(\))(and)', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    result = result.replaceAllMapped(
+      RegExp(r'(and)(\()', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)}',
     );
     
     return result;
