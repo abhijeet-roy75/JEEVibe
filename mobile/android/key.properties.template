@@ -1,0 +1,18 @@
+# Upload Keystore Configuration for Google Play App Signing
+# 
+# INSTRUCTIONS:
+# 1. Copy this file to key.properties (DO NOT commit key.properties to git)
+# 2. Generate a keystore using the command below
+# 3. Fill in the values below with your keystore information
+#
+# Generate keystore command:
+# keytool -genkey -v -keystore ~/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# Store the keystore file in a secure location (e.g., ~/upload-keystore.jks)
+# BACK UP YOUR KEYSTORE FILE AND REMEMBER YOUR PASSWORDS!
+
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=upload
+storeFile=/path/to/your/upload-keystore.jks
+

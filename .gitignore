@@ -65,6 +65,9 @@ mobile/ios/Runner.xcodeproj/project.xcworkspace/xcuserdata/
 mobile/android/.gradle/
 mobile/android/captures/
 mobile/android/local.properties
+mobile/android/key.properties
+mobile/android/*.keystore
+mobile/android/*.jks
 mobile/android/app/debug
 mobile/android/app/profile
 mobile/android/app/release
