@@ -122,6 +122,25 @@ function removeNestedDelimiters(text) {
     
     if (before === cleaned) break;
   }
+  
+  // Strategy 3.5: ULTRA-AGGRESSIVE - Remove ALL inner delimiters from any \(...\) block
+  // This is a safety net for extremely nested cases
+  for (let i = 0; i < 5; i++) {
+    const before = cleaned;
+    
+    // Find all \(...\) blocks and strip inner delimiters
+    cleaned = cleaned.replace(/\\\(([^\)]*)\\\)/g, (match, content) => {
+      // Remove ALL delimiter patterns from content
+      const innerCleaned = content
+        .replace(/\\\(/g, '')
+        .replace(/\\\)/g, '')
+        .replace(/\\\[/g, '')
+        .replace(/\\\]/g, '');
+      return '\\(' + innerCleaned + '\\)';
+    });
+    
+    if (before === cleaned) break;
+  }
 
   // Strategy 4: Remove any stray delimiters that appear consecutively
   // \(\( -> \(, \)\) -> \), etc.
