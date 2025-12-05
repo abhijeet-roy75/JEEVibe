@@ -66,12 +66,13 @@ function fixCommonErrors(text) {
 
 /**
  * Remove nested LaTeX delimiters that cause parser errors
+ * AGGRESSIVE VERSION: Multiple passes with different strategies
  */
 function removeNestedDelimiters(text) {
   let cleaned = text;
-  const maxIterations = 5;
+  const maxIterations = 10; // Increased for more aggressive cleaning
 
-  // Remove nested inline delimiters \( ... \( ... \) ... \)
+  // Strategy 1: Remove nested inline delimiters \( ... \( ... \) ... \)
   for (let i = 0; i < maxIterations; i++) {
     const before = cleaned;
     
@@ -90,7 +91,7 @@ function removeNestedDelimiters(text) {
     if (before === cleaned) break;
   }
 
-  // Remove nested display delimiters \[ ... \[ ... \] ... \]
+  // Strategy 2: Remove nested display delimiters \[ ... \[ ... \] ... \]
   for (let i = 0; i < maxIterations; i++) {
     const before = cleaned;
     
@@ -106,6 +107,33 @@ function removeNestedDelimiters(text) {
 
     if (before === cleaned) break;
   }
+
+  // Strategy 3: Aggressive pattern matching for common nested patterns
+  // Pattern: \( text \( inner \) text \) -> \( text inner text \)
+  for (let i = 0; i < maxIterations; i++) {
+    const before = cleaned;
+    
+    // Match any sequence of delimiters and remove inner ones
+    cleaned = cleaned.replace(/\\\(([^\\]*?)(\\\(|\\\[)([^]*?)(\\\)|\\\])([^\\]*?)\\\)/g, 
+      (match, before, openDelim, inner, closeDelim, after) => {
+        return '\\(' + before + inner + after + '\\)';
+      }
+    );
+    
+    if (before === cleaned) break;
+  }
+
+  // Strategy 4: Remove any stray delimiters that appear consecutively
+  // \(\( -> \(, \)\) -> \), etc.
+  cleaned = cleaned.replace(/\\\(\s*\\\(/g, '\\(');
+  cleaned = cleaned.replace(/\\\)\s*\\\)/g, '\\)');
+  cleaned = cleaned.replace(/\\\[\s*\\\[/g, '\\[');
+  cleaned = cleaned.replace(/\\\]\s*\\\]/g, '\\]');
+
+  // Strategy 5: Remove delimiters immediately followed by their closing pair
+  // \(\) -> empty, but preserve meaningful content
+  cleaned = cleaned.replace(/\\\(\s*\\\)/g, '');
+  cleaned = cleaned.replace(/\\\[\s*\\\]/g, '');
 
   return cleaned;
 }
@@ -359,9 +387,119 @@ function validateDelimiters(text) {
   };
 }
 
+/**
+ * Validate LaTeX and reject if critically malformed
+ * Returns { valid: boolean, errors: string[], normalized: string }
+ */
+function validateAndReject(text, fieldName = 'text') {
+  if (!text || typeof text !== 'string') {
+    return { valid: true, errors: [], normalized: text };
+  }
+
+  const errors = [];
+  let normalized = text;
+
+  try {
+    // Attempt normalization
+    normalized = validateAndNormalizeLaTeX(text);
+
+    // Check for severely nested delimiters (more than 2 levels)
+    const nestedInlinePattern = /\\\([^\\]*\\\([^\\]*\\\([^\\]*\\\)/;
+    if (nestedInlinePattern.test(normalized)) {
+      errors.push(`${fieldName}: Severely nested inline delimiters detected (3+ levels)`);
+    }
+
+    // Check delimiter balance
+    const delimiterCheck = validateDelimiters(normalized);
+    if (!delimiterCheck.balanced) {
+      errors.push(`${fieldName}: Unbalanced delimiters - ${delimiterCheck.errors.join(', ')}`);
+    }
+
+    // Check for common AI errors that shouldn't exist after normalization
+    if (normalized.includes('\\(\\(') || normalized.includes('\\)\\)')) {
+      errors.push(`${fieldName}: Consecutive delimiters found after normalization`);
+    }
+
+    // Check for \text{} which should have been converted to \mathrm{}
+    if (normalized.includes('\\text{')) {
+      console.warn(`${fieldName}: Found \\text{} command, should use \\mathrm{} for chemistry`);
+    }
+
+    // Log validation result
+    if (errors.length > 0) {
+      console.error(`LaTeX validation errors in ${fieldName}:`, errors);
+      console.error(`Original text: ${text.substring(0, 200)}...`);
+      console.error(`Normalized text: ${normalized.substring(0, 200)}...`);
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors: errors,
+      normalized: normalized
+    };
+  } catch (error) {
+    errors.push(`${fieldName}: Validation exception - ${error.message}`);
+    console.error(`LaTeX validation exception in ${fieldName}:`, error);
+    return {
+      valid: false,
+      errors: errors,
+      normalized: text // Return original on exception
+    };
+  }
+}
+
+/**
+ * Comprehensive LaTeX validation for all text fields
+ * Returns { valid: boolean, errors: string[], data: object }
+ */
+function validateSolutionResponse(solutionData) {
+  const allErrors = [];
+  const validated = {};
+
+  // Validate recognizedQuestion
+  const questionCheck = validateAndReject(solutionData.recognizedQuestion, 'recognizedQuestion');
+  validated.recognizedQuestion = questionCheck.normalized;
+  if (!questionCheck.valid) {
+    allErrors.push(...questionCheck.errors);
+  }
+
+  // Validate solution fields
+  if (solutionData.solution) {
+    const approachCheck = validateAndReject(solutionData.solution.approach, 'solution.approach');
+    validated.approach = approachCheck.normalized;
+    if (!approachCheck.valid) allErrors.push(...approachCheck.errors);
+
+    const finalAnswerCheck = validateAndReject(solutionData.solution.finalAnswer, 'solution.finalAnswer');
+    validated.finalAnswer = finalAnswerCheck.normalized;
+    if (!finalAnswerCheck.valid) allErrors.push(...finalAnswerCheck.errors);
+
+    const tipCheck = validateAndReject(solutionData.solution.priyaMaamTip, 'solution.priyaMaamTip');
+    validated.priyaMaamTip = tipCheck.normalized;
+    if (!tipCheck.valid) allErrors.push(...tipCheck.errors);
+
+    // Validate steps
+    validated.steps = [];
+    if (Array.isArray(solutionData.solution.steps)) {
+      solutionData.solution.steps.forEach((step, index) => {
+        const stepCheck = validateAndReject(step, `solution.steps[${index}]`);
+        validated.steps.push(stepCheck.normalized);
+        if (!stepCheck.valid) allErrors.push(...stepCheck.errors);
+      });
+    }
+  }
+
+  return {
+    valid: allErrors.length === 0,
+    errors: allErrors,
+    validatedData: validated
+  };
+}
+
 module.exports = {
   validateAndNormalizeLaTeX,
   validateDelimiters,
+  validateAndReject,
+  validateSolutionResponse,
   fixCommonErrors,
   removeNestedDelimiters,
   fixChemicalFormulas,

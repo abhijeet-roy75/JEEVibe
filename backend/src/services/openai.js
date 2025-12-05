@@ -7,7 +7,7 @@ const OpenAI = require('openai');
 const { BASE_PROMPT_TEMPLATE } = require('../prompts/priya_maam_base');
 const { SNAP_SOLVE_FOLLOWUP_PROMPT } = require('../prompts/snap_solve');
 const { getSyllabusAlignedTopic, JEE_SYLLABUS } = require('../prompts/jee_syllabus_reference');
-const { validateAndNormalizeLaTeX, validateDelimiters } = require('./latex-validator');
+const { validateAndNormalizeLaTeX, validateDelimiters, validateAndReject, validateSolutionResponse } = require('./latex-validator');
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -39,6 +39,13 @@ You are solving a JEE Main 2025 level question from a photo. Your task:
    - Hard: 20-40% students can solve (multi-step, complex reasoning)
 5. Solve the question step-by-step in Priya Ma'am's voice
 6. Provide a clear final answer
+
+CRITICAL SPACING REQUIREMENTS:
+- ALL step descriptions MUST have proper word spacing
+- Write naturally: "Step 1: Draw the structure" NOT "Step1:Drawthestructure"
+- Add spaces in compound names: "3,3-dimethyl hex-1-ene-4-yne" NOT "3,3-dimethylhex-1-ene-4-yne"
+- Chemistry terms must be spaced: "paramagnetic with three unpaired electrons"
+- Never concatenate words - every word must be separated by a space
 
 JEE MAIN 2025 SYLLABUS REFERENCE:
 Mathematics has 14 units: Sets/Relations/Functions, Complex Numbers, Matrices, Permutations, Binomial Theorem, Sequences, Limits/Differentiability, Integral Calculus, Differential Equations, Coordinate Geometry, 3D Geometry, Vector Algebra, Statistics/Probability, Trigonometry.
@@ -94,6 +101,17 @@ OUTPUT FORMAT (strict JSON):
     const content = response.choices[0].message.content;
     const solutionData = JSON.parse(content);
 
+    // COMPREHENSIVE VALIDATION: Validate entire solution response
+    console.log('[LaTeX Validation] Validating solution response...');
+    const fullValidation = validateSolutionResponse(solutionData);
+    
+    if (!fullValidation.valid) {
+      console.error('[LaTeX Validation] Issues found:', fullValidation.errors);
+      console.warn('[LaTeX Validation] Content has been normalized, continuing with processed data');
+    } else {
+      console.log('[LaTeX Validation] ✓ All LaTeX formatting passed validation');
+    }
+
     // Normalize LaTeX markers in solution data using validator service
     const normalizeLaTeX = (text) => {
       if (typeof text !== 'string') return text;
@@ -104,12 +122,12 @@ OUTPUT FORMAT (strict JSON):
         // Validate delimiters and log any issues
         const validation = validateDelimiters(normalized);
         if (!validation.balanced) {
-          console.warn('LaTeX validation warnings:', validation.errors);
+          console.warn('[LaTeX] Delimiter balance warning:', validation.errors);
         }
         
         return normalized;
       } catch (error) {
-        console.error('Error normalizing LaTeX:', error);
+        console.error('[LaTeX] Normalization error:', error);
         return text; // Return original on error
       }
     };

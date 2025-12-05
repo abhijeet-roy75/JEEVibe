@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import '../config/content_config.dart';
 import '../utils/text_preprocessor.dart';
+import '../utils/latex_to_text.dart';
 
 /// Widget to render LaTeX text with proper math rendering
 /// 
@@ -73,9 +74,8 @@ class LaTeXWidget extends StatelessWidget {
       // Continue with original input if conversion fails
     }
     
-    // 3. Clean nested LaTeX delimiters (remove inner delimiters if outer ones exist)
-    // This prevents "Can't use function '\(' in math mode" errors
-    // Note: _cleanNestedDelimiters is now a no-op, nested delimiters are handled in _removeNestedDelimiters
+    // 3. AGGRESSIVE nested delimiter removal - multiple strategies
+    processedInput = _aggressivelyRemoveNestedDelimiters(processedInput);
     processedInput = _cleanNestedDelimiters(processedInput);
     
     // 4. Simple delimiter detection (use escaped backslashes, not raw strings)
@@ -261,22 +261,97 @@ class LaTeXWidget extends StatelessWidget {
   }
   
   /// Render fallback text when LaTeX parsing fails
-  /// This ensures users never see "Parser Error" messages
+  /// ULTIMATE FALLBACK: Uses LaTeX-to-text converter for best readability
+  /// This ensures users NEVER see "Parser Error" messages
   Widget _renderFallbackText(String originalLatex, TextStyle style) {
     final boldStyle = style.copyWith(
       fontWeight: latexWeight ?? ContentConfig.latexFontWeight,
     );
     
-    // Use text preprocessor to clean LaTeX for fallback display
-    String displayText = TextPreprocessor.cleanLatexForFallback(originalLatex);
-    displayText = TextPreprocessor.normalizeWhitespace(displayText);
-    
-    // If displayText is empty, don't show anything
-    if (displayText.isEmpty || displayText.trim().isEmpty) {
-      return const SizedBox.shrink();
+    try {
+      // Strategy 1: Try comprehensive LaTeX-to-text converter (NEW!)
+      if (LaTeXToText.containsLaTeX(originalLatex)) {
+        String converted = LaTeXToText.convert(originalLatex);
+        if (converted.isNotEmpty && converted.trim().isNotEmpty) {
+          debugPrint('[LaTeX Fallback] Successfully converted LaTeX to readable text');
+          return Text(converted, style: boldStyle);
+        }
+      }
+      
+      // Strategy 2: Use text preprocessor to clean LaTeX
+      String displayText = TextPreprocessor.cleanLatexForFallback(originalLatex);
+      displayText = TextPreprocessor.normalizeWhitespace(displayText);
+      
+      if (displayText.isNotEmpty && displayText.trim().isNotEmpty) {
+        debugPrint('[LaTeX Fallback] Used text preprocessor for cleanup');
+        return Text(displayText, style: boldStyle);
+      }
+      
+      // Strategy 3: Last resort - show original with basic cleanup
+      String lastResort = originalLatex
+          .replaceAll(RegExp(r'\\\(|\\\)|\\\[|\\\]'), '')
+          .replaceAll(RegExp(r'\\[a-zA-Z]+'), '')
+          .replaceAll(RegExp(r'[{}]'), '')
+          .trim();
+          
+      if (lastResort.isNotEmpty) {
+        debugPrint('[LaTeX Fallback] Using last resort cleanup');
+        return Text(lastResort, style: boldStyle);
+      }
+    } catch (e) {
+      debugPrint('[LaTeX Fallback] Error in fallback rendering: $e');
     }
     
-    return Text(displayText, style: boldStyle);
+    // If all else fails, return empty widget (better than showing error)
+    return const SizedBox.shrink();
+  }
+  
+  /// Aggressively remove nested delimiters with multiple strategies
+  /// This is the FIRST LINE OF DEFENSE against "Can't use function '\(' in math mode" errors
+  String _aggressivelyRemoveNestedDelimiters(String text) {
+    String cleaned = text;
+    const maxIterations = 10;
+    
+    // Strategy 1: Remove consecutive delimiters
+    for (int i = 0; i < 3; i++) {
+      cleaned = cleaned.replaceAll(r'\(\(', r'\(');
+      cleaned = cleaned.replaceAll(r'\)\)', r'\)');
+      cleaned = cleaned.replaceAll(r'\[\[', r'\[');
+      cleaned = cleaned.replaceAll(r'\]\]', r'\]');
+      cleaned = cleaned.replaceAll(r'\(\s*\(', r'\(');
+      cleaned = cleaned.replaceAll(r'\)\s*\)', r'\)');
+    }
+    
+    // Strategy 2: Remove inner delimiters from wrapped content
+    for (int i = 0; i < maxIterations; i++) {
+      final before = cleaned;
+      
+      // Match \(...\) and remove inner delimiters
+      cleaned = cleaned.replaceAllMapped(
+        RegExp(r'\\\(([^\\]*?(?:\\[^()\[\]]+)*?[^\\]*?)\\\)'),
+        (match) {
+          final content = match.group(1)!;
+          final innerCleaned = content
+              .replaceAll(r'\(', '')
+              .replaceAll(r'\)', '')
+              .replaceAll(r'\[', '')
+              .replaceAll(r'\]', '');
+          return '\\($innerCleaned\\)';
+        },
+      );
+      
+      if (before == cleaned) break;
+    }
+    
+    // Strategy 3: Remove empty delimiter pairs
+    cleaned = cleaned.replaceAll(r'\(\s*\)', '');
+    cleaned = cleaned.replaceAll(r'\[\s*\]', '');
+    
+    // Strategy 4: Fix common patterns like \(\text{H}_{2}\text{O}\)
+    // (already handled by other cleaning, but double-check)
+    cleaned = cleaned.replaceAll(RegExp(r'\\text\{'), r'\\mathrm{');
+    
+    return cleaned;
   }
 
   /// Process mhchem syntax (\ce{...}) and convert to \mathrm{} format

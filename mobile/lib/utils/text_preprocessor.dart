@@ -271,5 +271,114 @@ class TextPreprocessor {
         .replaceAll(RegExp(r'\n+'), ' ')  // Newlines -> space
         .trim();
   }
+  
+  /// Preprocess step content specifically
+  /// Handles common issues in step descriptions like concatenated words
+  static String preprocessStepContent(String stepText) {
+    if (stepText.isEmpty) return stepText;
+    
+    String result = stepText;
+    
+    // Fix "Step1:", "Step2:", etc. -> "Step 1:", "Step 2:"
+    result = result.replaceAllMapped(
+      RegExp(r'Step(\d+):', caseSensitive: false),
+      (match) => 'Step ${match.group(1)}:',
+    );
+    
+    // Fix missing space after colon: "Title:Description" -> "Title: Description"
+    result = result.replaceAllMapped(
+      RegExp(r':([A-Z])'),
+      (match) => ': ${match.group(1)}',
+    );
+    
+    // Fix chemistry compound names that are concatenated
+    // Pattern: "3,3-dimethylhex" -> "3,3-dimethyl hex"
+    // Add space before "hex", "but", "pent", "prop", "meth", "eth"
+    final hydrocarbon = ['hex', 'hept', 'oct', 'non', 'dec', 'but', 'pent', 'prop', 'meth', 'eth'];
+    for (final prefix in hydrocarbon) {
+      // Match when prefix follows another word without space
+      result = result.replaceAllMapped(
+        RegExp('([a-z])($prefix)', caseSensitive: false),
+        (match) {
+          final before = match.group(1)!;
+          final compound = match.group(2)!;
+          // Don't add space if it's part of a word like "method"
+          if (compound == 'meth' && result.contains('${match.group(0)}od')) {
+            return match.group(0)!;
+          }
+          return '$before $compound';
+        },
+      );
+    }
+    
+    // Fix concatenated chemistry terms
+    // "ynecarbon" -> "yne carbon", "enethere" -> "ene there"
+    result = result.replaceAllMapped(
+      RegExp(r'(yne|ene|ane)(carbon|there|are|is|have|has)', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+    
+    // Apply general spacing fixes
+    result = addSpacesToText(result);
+    
+    // Normalize whitespace
+    result = normalizeWhitespace(result);
+    
+    return result;
+  }
+  
+  /// Extract clean title from step content (for step card titles)
+  /// Removes LaTeX and extracts meaningful title
+  static String extractStepTitle(String stepContent, {int maxLength = 40}) {
+    if (stepContent.isEmpty) return stepContent;
+    
+    String cleaned = stepContent;
+    
+    // Remove LaTeX delimiters and content for title
+    cleaned = cleaned.replaceAll(RegExp(r'\\\(.*?\\\)'), ' ');
+    cleaned = cleaned.replaceAll(RegExp(r'\\\[.*?\\\]'), ' ');
+    
+    // Remove LaTeX commands
+    cleaned = cleaned.replaceAll(RegExp(r'\\[a-zA-Z]+\{?[^}]*\}?'), '');
+    
+    // Check if step starts with "Step N:" pattern
+    final stepPattern = RegExp(r'^Step\s+\d+[:\-]\s*(.+?)(?:\.|,|$)', caseSensitive: false);
+    final match = stepPattern.firstMatch(cleaned);
+    if (match != null && match.group(1) != null) {
+      String title = match.group(1)!.trim();
+      // Limit length
+      if (title.length > maxLength) {
+        title = '${title.substring(0, maxLength - 3)}...';
+      }
+      return title;
+    }
+    
+    // Check for colon-based title: "Title: description"
+    final colonIndex = cleaned.indexOf(':');
+    if (colonIndex > 0 && colonIndex < 50) {
+      String title = cleaned.substring(0, colonIndex).trim();
+      // Remove "Step N" prefix if present
+      title = title.replaceAll(RegExp(r'^Step\s+\d+', caseSensitive: false), '').trim();
+      if (title.isNotEmpty && title.length <= maxLength) {
+        return title;
+      }
+    }
+    
+    // Fallback: use first few words
+    final words = cleaned.split(RegExp(r'\s+'));
+    if (words.isNotEmpty) {
+      String title = '';
+      for (int i = 0; i < words.length && i < 5 && title.length < maxLength; i++) {
+        if (title.isNotEmpty) title += ' ';
+        title += words[i];
+      }
+      if (title.length > maxLength) {
+        title = '${title.substring(0, maxLength - 3)}...';
+      }
+      return title.trim();
+    }
+    
+    return stepContent.substring(0, maxLength.clamp(0, stepContent.length));
+  }
 }
 

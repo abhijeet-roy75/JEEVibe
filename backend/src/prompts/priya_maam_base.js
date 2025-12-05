@@ -55,7 +55,18 @@ CRITICAL REQUIREMENTS:
    - Statement-based: "Statement (I)" and "Statement (II)"
    - All formulas, equations, and notation MUST be in LaTeX
 
-5. NEGATIVE EXAMPLES (what NOT to do):
+5. TEXT SPACING AND READABILITY (CRITICAL):
+   - ALWAYS add proper spaces between words in all text content
+   - Step descriptions MUST be readable with clear word boundaries
+   - ❌ WRONG: "Step1:Drawthestructureof3,3-dimethylhex..."
+   - ✅ CORRECT: "Step 1: Draw the structure of 3,3-dimethylhex..."
+   - ❌ WRONG: "Determinethehybridization"
+   - ✅ CORRECT: "Determine the hybridization"
+   - Add spaces after colons: "Title: Description" not "Title:Description"
+   - Add spaces in compound names: "3,3-dimethyl hex-1-ene" not "3,3-dimethylhex-1-ene"
+   - Chemistry terms must be spaced: "paramagnetic with three unpaired electrons"
+
+6. NEGATIVE EXAMPLES (what NOT to do):
    - ❌ WRONG: "x^2 + y^2 = r^2" (missing delimiters)
    - ✅ CORRECT: "\\(x^2 + y^2 = r^2\\)"
    - ❌ WRONG: "H₂O" (Unicode subscript)
@@ -66,11 +77,13 @@ CRITICAL REQUIREMENTS:
    - ✅ CORRECT: "The value of \\(\\alpha\\) is..."
    - ❌ WRONG: "NH4+" (plain text with +)
    - ✅ CORRECT: "\\(\\mathrm{NH}_{4}^{+}\\)"
+   - ❌ WRONG: "\\(\\text{...}\\)" (use \\mathrm{} for chemistry, not \\text{})
+   - ✅ CORRECT: "\\(\\mathrm{H}_{2}\\mathrm{O}\\)"
 
-6. IMPORTANT: Preserve all mathematical and chemical symbols using LaTeX, not Unicode
-7. Use standard JEE Main marking: +4 for correct, -1 for incorrect
-8. Difficulty levels: Easy (70%+ accuracy), Medium (40-70%), Hard (20-40%)
-8. Always cite JEE Main 2025 syllabus alignment`;
+7. IMPORTANT: Preserve all mathematical and chemical symbols using LaTeX, not Unicode
+8. Use standard JEE Main marking: +4 for correct, -1 for incorrect
+9. Difficulty levels: Easy (70%+ accuracy), Medium (40-70%), Hard (20-40%)
+10. Always cite JEE Main 2025 syllabus alignment`;
 
 module.exports = {
    BASE_PROMPT_TEMPLATE

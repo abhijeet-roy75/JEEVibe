@@ -175,6 +175,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
   }
 
   Widget _buildQuestionCard(Solution solution) {
+    // CRITICAL: Preprocess question text for proper spacing
+    final processedQuestion = TextPreprocessor.addSpacesToText(solution.recognizedQuestion);
+    
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -220,7 +223,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
             const SizedBox(height: 16),
           ],
           _buildContentWidget(
-            solution.recognizedQuestion,
+            processedQuestion,
             solution.subject,
             ContentConfig.getQuestionTextStyle(color: AppColors.textMedium),
           ),
@@ -269,6 +272,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
   }
 
   Widget _buildStepCard(int stepNumber, String stepContent) {
+    // CRITICAL: Preprocess step content for proper spacing
+    final processedStepContent = TextPreprocessor.preprocessStepContent(stepContent);
+    
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
@@ -299,7 +305,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
                             ),
                           ),
                           title: Text(
-            _getStepTitle(stepNumber, stepContent),
+            _getStepTitle(stepNumber, processedStepContent),
             style: AppTextStyles.labelMedium,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -314,7 +320,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 borderRadius: BorderRadius.circular(AppRadius.radiusSmall),
                               ),
                               child: LaTeXWidget(
-                text: stepContent,
+                text: processedStepContent,
                 textStyle: ContentConfig.getStepTextStyle(color: AppColors.textMedium),
                               ),
                             ),
@@ -328,6 +334,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
     // Try to extract title from step content
     // Format: "Step 1: Title" or "Title: description" or just use first few words
     String content = stepContent.trim();
+    
+    // CRITICAL: Preprocess for spacing before extracting title
+    content = TextPreprocessor.preprocessStepContent(content);
     
     // Remove LaTeX delimiters and commands for title extraction
     content = _cleanLaTeXForTitle(content);
@@ -402,6 +411,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
   }
 
   Widget _buildFinalAnswer(Solution solution) {
+    // CRITICAL: Preprocess final answer for proper spacing
+    final processedAnswer = TextPreprocessor.addSpacesToText(solution.solution.finalAnswer);
+    
     return Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -427,7 +439,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
                         ),
                         const SizedBox(height: 12),
                         _buildContentWidget(
-                          solution.solution.finalAnswer,
+                          processedAnswer,
                           solution.subject,
                           TextStyle(
                             fontSize: ContentConfig.finalAnswerTextSize,
