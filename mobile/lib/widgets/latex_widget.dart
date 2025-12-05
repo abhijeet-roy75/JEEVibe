@@ -243,10 +243,21 @@ class LaTeXWidget extends StatelessWidget {
       // Render LaTeX directly - short content should fit fine
       // For long content, we already redirect to mixed rendering above
       try {
-        return Math.tex(
-          processedLatex,
-          mathStyle: isInline ? MathStyle.text : MathStyle.display,
-          textStyle: boldStyle,
+        // Wrap in flexible container to prevent overflow
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            try {
+              return Math.tex(
+                processedLatex,
+                mathStyle: isInline ? MathStyle.text : MathStyle.display,
+                textStyle: boldStyle,
+              );
+            } catch (layoutError) {
+              // If Math.tex fails with layout in constrained space, fallback
+              debugPrint('Math.tex layout error: $layoutError');
+              return _renderFallbackText(processedLatex, style);
+            }
+          },
         );
       } catch (layoutError) {
         // If Math.tex fails with layout, fallback to text
@@ -336,6 +347,29 @@ class LaTeXWidget extends StatelessWidget {
               .replaceAll(r'\)', '')
               .replaceAll(r'\[', '')
               .replaceAll(r'\]', '');
+          return '\\($innerCleaned\\)';
+        },
+      );
+      
+      if (before == cleaned) break;
+    }
+    
+    // Strategy 2.5: ULTRA-AGGRESSIVE - Find any \(...\) and strip ALL inner delimiters
+    // Safety net for extremely nested cases like \(\(\mathrm{sp}^{3}\)\)
+    for (int i = 0; i < 5; i++) {
+      final before = cleaned;
+      
+      // Find all \(...\) blocks and remove any delimiter patterns inside
+      cleaned = cleaned.replaceAllMapped(
+        RegExp(r'\\\(([^\)]*)\\\)'),
+        (match) {
+          final content = match.group(1)!;
+          // Remove ALL delimiter patterns from content
+          final innerCleaned = content
+              .replaceAll(RegExp(r'\\\('), '')
+              .replaceAll(RegExp(r'\\\)'), '')
+              .replaceAll(RegExp(r'\\\['), '')
+              .replaceAll(RegExp(r'\\\]'), '');
           return '\\($innerCleaned\\)';
         },
       );

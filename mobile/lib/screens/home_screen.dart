@@ -11,6 +11,7 @@ import '../providers/app_state_provider.dart';
 import '../widgets/app_header.dart';
 import '../models/snap_data_model.dart';
 import '../services/storage_service.dart';
+import '../utils/text_preprocessor.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -532,7 +533,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  solution.getPreviewText(),
+                  TextPreprocessor.addSpacesToText(solution.getPreviewText()),
                   style: AppTextStyles.bodyMedium,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

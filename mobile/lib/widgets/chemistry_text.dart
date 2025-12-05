@@ -104,10 +104,32 @@ class ChemistryText extends StatelessWidget {
       // Render chemistry formula - short formulas render fine without scaling
       // Long formulas already delegated to LaTeXWidget above
       try {
-        return Math.tex(
-          processedFormula,
-          textStyle: boldStyle, // Bold for chemistry
-          mathStyle: MathStyle.text,
+        // Wrap in flexible container to prevent overflow
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            try {
+              return Math.tex(
+                processedFormula,
+                textStyle: boldStyle, // Bold for chemistry
+                mathStyle: MathStyle.text,
+              );
+            } catch (mathError) {
+              debugPrint('Math.tex error in chemistry (layout): $mathError');
+              // Fallback to cleaned text
+              String cleanedFormula = TextPreprocessor.cleanLatexForFallback(formula);
+              cleanedFormula = TextPreprocessor.normalizeWhitespace(cleanedFormula);
+              
+              if (cleanedFormula.isEmpty) {
+                cleanedFormula = _convertToUnicode(formula);
+              }
+              
+              return Text(
+                cleanedFormula.isEmpty ? formula : cleanedFormula,
+                style: boldStyle,
+                softWrap: true,
+              );
+            }
+          },
         );
       } catch (mathError) {
         debugPrint('Math.tex error in chemistry: $mathError');
