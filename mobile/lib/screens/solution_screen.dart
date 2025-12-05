@@ -447,6 +447,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
                             fontWeight: FontWeight.w600,
                             height: 1.6,
                           ),
+                          allowWrapping: true, // Enable wrapping for Final Answer
                         ),
                       ],
                     ),
@@ -837,17 +838,19 @@ class _SolutionScreenState extends State<SolutionScreen> {
 
 
   /// Build content widget based on subject (ChemistryText for Chemistry, LaTeXWidget for others)
-  Widget _buildContentWidget(String content, String subject, TextStyle textStyle) {
+  Widget _buildContentWidget(String content, String subject, TextStyle textStyle, {bool allowWrapping = false}) {
     if (subject.toLowerCase() == 'chemistry') {
       return ChemistryText(
         content,
         textStyle: textStyle,
         fontSize: textStyle.fontSize ?? 16, // Use bodyLarge size (16) as default
+        allowWrapping: allowWrapping,
       );
     } else {
       return LaTeXWidget(
         text: content,
         textStyle: textStyle,
+        allowWrapping: allowWrapping,
       );
     }
   }

@@ -74,10 +74,24 @@ class RecentSolution {
     };
   }
 
-  /// Get preview text (first 80 characters)
+  /// Get preview text (first 80 characters) with LaTeX cleaned
   String getPreviewText() {
-    if (question.length <= 80) return question;
-    return '${question.substring(0, 77)}...';
+    // Clean LaTeX delimiters and commands for preview
+    String cleanedQuestion = question
+        .replaceAll(RegExp(r'\\\('), '') // Remove \(
+        .replaceAll(RegExp(r'\\\)'), '') // Remove \)
+        .replaceAll(RegExp(r'\\\['), '') // Remove \[
+        .replaceAll(RegExp(r'\\\]'), '') // Remove \]
+        .replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1') // \mathrm{X} -> X
+        .replaceAll(RegExp(r'\\text\{([^}]+)\}'), r'$1') // \text{X} -> X
+        .replaceAll(RegExp(r'[_^]\{([^}]+)\}'), r'$1') // _{X} or ^{X} -> X
+        .replaceAll(RegExp(r'\\[a-zA-Z]+'), '') // Remove LaTeX commands
+        .replaceAll(RegExp(r'[{}]'), '') // Remove braces
+        .replaceAll(RegExp(r'\s+'), ' ') // Normalize whitespace
+        .trim();
+    
+    if (cleanedQuestion.length <= 80) return cleanedQuestion;
+    return '${cleanedQuestion.substring(0, 77)}...';
   }
 
   /// Get time ago string (e.g., "5 min ago", "2 hours ago")

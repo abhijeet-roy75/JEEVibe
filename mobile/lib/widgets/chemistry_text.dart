@@ -12,6 +12,7 @@ class ChemistryText extends StatelessWidget {
   final TextStyle? textStyle;
   final double fontSize;
   final FontWeight? latexWeight; // Optional custom weight for chemistry formulas
+  final bool allowWrapping; // Allow text wrapping instead of scaling for long content
 
   const ChemistryText(
     this.formula, {
@@ -19,6 +20,7 @@ class ChemistryText extends StatelessWidget {
     this.textStyle,
     this.fontSize = 16,
     this.latexWeight, // Defaults to ContentConfig.latexFontWeight if not specified
+    this.allowWrapping = false, // Default to false to preserve existing behavior
   }) : super(key: key);
 
   @override
@@ -104,14 +106,58 @@ class ChemistryText extends StatelessWidget {
       // Render chemistry formula - short formulas render fine without scaling
       // Long formulas already delegated to LaTeXWidget above
       try {
-        // Wrap in flexible container to prevent overflow
+        // For very long formulas, use text fallback immediately to prevent overflow
+        if (processedFormula.length > 100) {
+          debugPrint('[ChemistryText] Formula too long (${processedFormula.length} chars), using fallback');
+          String cleanedFormula = TextPreprocessor.cleanLatexForFallback(formula);
+          cleanedFormula = TextPreprocessor.normalizeWhitespace(cleanedFormula);
+          
+          if (cleanedFormula.isEmpty) {
+            cleanedFormula = _convertToUnicode(formula);
+          }
+          
+          return Text(
+            cleanedFormula.isEmpty ? formula : cleanedFormula,
+            style: boldStyle,
+            softWrap: true,
+          );
+        }
+        
+        // Wrap in LayoutBuilder to get constraints and constrain Math widget
         return LayoutBuilder(
           builder: (context, constraints) {
             try {
-              return Math.tex(
-                processedFormula,
-                textStyle: boldStyle, // Bold for chemistry
-                mathStyle: MathStyle.text,
+              // If wrapping is allowed, use text fallback immediately for better readability
+              if (allowWrapping) {
+                debugPrint('[ChemistryText] Wrapping allowed, using text fallback for readability');
+                String cleanedFormula = TextPreprocessor.cleanLatexForFallback(formula);
+                cleanedFormula = TextPreprocessor.normalizeWhitespace(cleanedFormula);
+                
+                if (cleanedFormula.isEmpty) {
+                  cleanedFormula = _convertToUnicode(formula);
+                }
+                
+                return Text(
+                  cleanedFormula.isEmpty ? formula : cleanedFormula,
+                  style: boldStyle,
+                  softWrap: true,
+                );
+              }
+              
+              // For short formulas without wrapping, use FittedBox to prevent overflow
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: constraints.maxWidth,
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Math.tex(
+                    processedFormula,
+                    textStyle: boldStyle, // Bold for chemistry
+                    mathStyle: MathStyle.text,
+                  ),
+                ),
               );
             } catch (mathError) {
               debugPrint('Math.tex error in chemistry (layout): $mathError');

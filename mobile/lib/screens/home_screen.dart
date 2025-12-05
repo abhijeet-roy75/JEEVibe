@@ -158,13 +158,24 @@ class _HomeScreenState extends State<HomeScreen> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.home,
           color: Colors.white,
-          size: 24,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipOval(
+          child: Padding(
+            padding: const EdgeInsets.all(6),
+            child: Image.asset(
+              'assets/images/JEEVibeLogo.png',
+              fit: BoxFit.contain,
+            ),
+          ),
         ),
       ),
       title: Text(
@@ -541,28 +552,28 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.successBackground,
-                        borderRadius: BorderRadius.circular(AppRadius.radiusRound),
-                      ),
-                      child: Text(
-                        'Practice: 2/3',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.successGreen,
-                          fontSize: 11,
+                    // Topic capsule/badge
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardLightPurple.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(AppRadius.radiusRound),
+                          border: Border.all(
+                            color: AppColors.primaryPurple.withOpacity(0.3),
+                            width: 1,
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        solution.topic,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textLight,
+                        child: Text(
+                          solution.topic,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.primaryPurple,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

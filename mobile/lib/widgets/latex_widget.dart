@@ -17,12 +17,14 @@ class LaTeXWidget extends StatelessWidget {
   final String text;
   final TextStyle? textStyle;
   final FontWeight? latexWeight; // Optional custom weight for LaTeX content
+  final bool allowWrapping; // Allow text wrapping instead of scaling for long content
 
   const LaTeXWidget({
     super.key,
     required this.text,
     this.textStyle,
     this.latexWeight, // Defaults to ContentConfig.latexFontWeight if not specified
+    this.allowWrapping = false, // Default to false to preserve existing behavior
   });
 
   @override
@@ -243,25 +245,41 @@ class LaTeXWidget extends StatelessWidget {
       // Render LaTeX directly - short content should fit fine
       // For long content, we already redirect to mixed rendering above
       try {
-        // Wrap in flexible container to prevent overflow
+        // Wrap in LayoutBuilder to get constraints and constrain Math widget
         return LayoutBuilder(
           builder: (context, constraints) {
             try {
-              return Math.tex(
-                processedLatex,
-                mathStyle: isInline ? MathStyle.text : MathStyle.display,
-                textStyle: boldStyle,
+              // If wrapping is allowed, use text fallback immediately for better readability
+              if (allowWrapping) {
+                debugPrint('[LaTeX] Wrapping allowed, using text fallback for readability');
+                return _renderFallbackText(processedLatex, style);
+              }
+              
+              // For formulas without wrapping, use FittedBox to prevent overflow
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: constraints.maxWidth,
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Math.tex(
+                    processedLatex,
+                    mathStyle: isInline ? MathStyle.text : MathStyle.display,
+                    textStyle: boldStyle,
+                  ),
+                ),
               );
             } catch (layoutError) {
               // If Math.tex fails with layout in constrained space, fallback
-              debugPrint('Math.tex layout error: $layoutError');
+              debugPrint('[LaTeX] Math.tex layout error: $layoutError');
               return _renderFallbackText(processedLatex, style);
             }
           },
         );
       } catch (layoutError) {
         // If Math.tex fails with layout, fallback to text
-        debugPrint('Math.tex layout error: $layoutError');
+        debugPrint('[LaTeX] Math.tex layout error: $layoutError');
         return _renderFallbackText(processedLatex, style);
       }
     } catch (e) {
