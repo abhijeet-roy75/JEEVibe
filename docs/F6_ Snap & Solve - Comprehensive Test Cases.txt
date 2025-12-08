@@ -1,0 +1,1499 @@
+﻿For a PoC (Proof of Concept), you want to validate the core happy path and critical failures without exhaustive testing. Here's the streamlined list:
+🎯 PoC Test Cases (22 Total)
+Core Happy Path (12 cases) - Must Work
+Camera & Capture:
+* TC-CAM-001: Camera Opens Successfully
+* TC-CAM-002: Camera Permission Granted
+* TC-CAM-007: Capture Photo Successfully
+* TC-CAM-008: Preview Screen Shows Captured Image
+* TC-CAM-010: Use Photo Flow
+OCR & Processing:
+* TC-OCR-001: Clear Printed Text Recognition
+* TC-OCR-004: Math LaTeX Recognition
+Solution Generation:
+* TC-SOL-001: Correct Solution Generated
+* TC-SOL-002: Solution in Priya Ma'am Voice
+* TC-SOL-003: LaTeX Rendered Correctly
+Follow-Up Questions:
+* TC-FOLLOW-001: 3 Follow-Up Questions Generated
+* TC-FOLLOW-002: Difficulty Progression (Q1 Similar)
+________________
+
+
+Critical Error Handling (5 cases) - Must Not Crash
+Network Issues:
+* TC-ERR-001: Network Error During Upload
+* TC-ERR-002: OpenAI API Timeout
+Quality Issues:
+* TC-OCR-003: Handwritten Text Recognition (Messy)
+* TC-OCR-007: Blurry Image Handling
+* TC-OCR-011: Non-Question Image
+________________
+
+
+Performance Validation (3 cases) - Must Be Fast
+* TC-PERF-004: OpenAI API Response Time (<10 seconds)
+* TC-PERF-005: End-to-End Snap Time (<25 seconds on 3G)
+* TC-PERF-006: Memory Usage (<200MB on low-end device)
+________________
+
+
+Business Logic (2 cases) - Must Enforce Limits
+* TC-TIER-001: Free Tier 5 Snaps Per Day
+* TC-TIER-002: Free Tier 6th Snap Blocked
+________________
+
+
+📋 PoC Test Execution Checklist
+PHASE 1: Happy Path (30 minutes)
+[ ] TC-CAM-001 - Camera opens
+[ ] TC-CAM-002 - Permission granted
+[ ] TC-CAM-007 - Photo captured
+[ ] TC-CAM-008 - Preview shown
+[ ] TC-CAM-010 - Upload works
+[ ] TC-OCR-001 - Printed text recognized
+[ ] TC-OCR-004 - Math LaTeX works
+[ ] TC-SOL-001 - Solution correct
+[ ] TC-SOL-002 - Priya Ma'am voice
+[ ] TC-SOL-003 - LaTeX displays
+[ ] TC-FOLLOW-001 - 3 questions generated
+[ ] TC-FOLLOW-002 - Progressive difficulty
+
+
+PHASE 2: Critical Failures (20 minutes)
+[ ] TC-ERR-001 - No internet handled
+[ ] TC-ERR-002 - API timeout handled
+[ ] TC-OCR-003 - Messy handwriting handled
+[ ] TC-OCR-007 - Blurry image rejected
+[ ] TC-OCR-011 - Non-question rejected
+
+
+PHASE 3: Performance (15 minutes)
+[ ] TC-PERF-004 - Solution <10 seconds
+[ ] TC-PERF-005 - End-to-end <25 seconds
+[ ] TC-PERF-006 - Memory <200MB
+
+
+PHASE 4: Business Rules (10 minutes)
+[ ] TC-TIER-001 - 5 snaps work
+[ ] TC-TIER-002 - 6th snap blocked
+
+
+Total Time: ~75 minutes (1.25 hours)
+________________
+
+
+🚀 Quick PoC Demo Script
+Use this for investor/founder demos:
+1. Show camera opens fast (TC-CAM-001) - 5 sec
+2. Capture clear printed question (TC-CAM-007) - 10 sec
+3. Solution appears with Priya Ma'am voice (TC-SOL-001, TC-SOL-002) - 15 sec
+4. Math renders perfectly (TC-SOL-003) - 5 sec
+5. 3 follow-up questions shown (TC-FOLLOW-001) - 10 sec
+6. Demonstrate 5-snap limit (TC-TIER-001, TC-TIER-002) - 20 sec
+
+
+Total demo: 65 seconds (1 minute killer demo!)
+________________
+
+
+✅ PoC Success Criteria
+GREEN LIGHT if:
+* ✅ All 12 happy path cases pass
+* ✅ App doesn't crash on any of 5 error cases
+* ✅ Performance within targets (10s solution, <200MB RAM)
+* ✅ Free tier limit enforced correctly
+YELLOW LIGHT if:
+* ⚠️ 10-11 happy path cases pass (minor issues ok)
+* ⚠️ Performance slightly over (12-15s solution time)
+* ⚠️ OCR accuracy 70-80% (acceptable for PoC)
+RED LIGHT if:
+* ❌ <10 happy path cases pass
+* ❌ App crashes on error cases
+* ❌ Solution takes >20 seconds
+* ❌ Tier limits don't work
+________________
+
+
+📝 Minimal Test Data Needed
+For PoC, you only need 5 test images:
+1. Clear printed math question (TC-OCR-001, TC-OCR-004)
+2. Handwritten neat question (Happy path)
+3. Handwritten messy question (TC-OCR-003)
+4. Blurry photo (TC-OCR-007)
+5. Random non-question image (TC-OCR-011)
+________________
+
+
+Bottom Line: Test these 22 cases in ~75 minutes to validate your PoC is ready for beta users. Focus on happy path + critical errors only. Full 120-case suite is for pre-production launch.
+F6: Snap & Solve - Comprehensive Test Cases
+Test Suite Overview
+Feature: Snap & Solve (Camera-based question solving with 3 follow-up questions)
+Components: F6.1 Camera Capture, F6.2 Solution Display, F6.3 Follow-Up Practice Quiz
+Priority: P0 (Must Have - Core viral feature)
+Test Environment: Android devices (API 26+), various network conditions
+________________
+
+
+Test Case Categories
+1. Camera & Image Capture (F6.1) - 25 test cases
+2. Image Processing & OCR (F6.2) - 20 test cases
+3. Solution Generation (F6.2) - 18 test cases
+4. Follow-Up Questions (F6.3) - 15 test cases
+5. Error Handling - 12 test cases
+6. Performance & Optimization - 10 test cases
+7. Free/Pro Tier Limits - 8 test cases
+8. Edge Cases & Security - 12 test cases
+Total: 120 Test Cases
+________________
+
+
+1. Camera & Image Capture (F6.1)
+TC-CAM-001: Camera Opens Successfully
+* Precondition: User tapped Snap & Solve FAB button
+* Steps:
+   1. Navigate to Dashboard
+   2. Tap floating camera icon
+* Expected: Camera viewfinder opens within 1 second
+* Priority: P0 - Critical
+* Status: [ ]
+TC-CAM-002: Camera Permission Granted
+* Precondition: First-time app launch, camera permission not yet granted
+* Steps:
+   1. Tap Snap & Solve button
+   2. System shows permission dialog
+   3. Tap "Allow"
+* Expected: Camera opens, permission saved for future
+* Priority: P0 - Critical
+* Status: [ ]
+TC-CAM-003: Camera Permission Denied
+* Precondition: User denies camera permission
+* Steps:
+   1. Tap Snap & Solve
+   2. Tap "Deny" on permission dialog
+* Expected: Show message "Camera access needed. Enable in Settings → Permissions"
+* Priority: P0 - Critical
+* Status: [ ]
+TC-CAM-004: Grid Overlay Displayed
+* Precondition: Camera opened
+* Steps: Observe camera viewfinder
+* Expected: Alignment grid overlay visible, guides user to frame question
+* Priority: P1 - High
+* Status: [ ]
+TC-CAM-005: Flash Toggle Works
+* Precondition: Device supports flash
+* Steps:
+   1. Open camera
+   2. Tap flash icon (cycle: Auto → On → Off)
+* Expected: Flash mode changes, icon updates
+* Priority: P2 - Medium
+* Status: [ ]
+TC-CAM-006: Flash Not Available
+* Precondition: Device has no flash (e.g., tablet)
+* Steps: Open camera
+* Expected: Flash toggle hidden or disabled
+* Priority: P2 - Medium
+* Status: [ ]
+TC-CAM-007: Capture Photo Successfully
+* Precondition: Camera open, question framed
+* Steps:
+   1. Frame question within grid
+   2. Tap shutter button
+* Expected: Photo captured, preview screen appears
+* Priority: P0 - Critical
+* Status: [ ]
+TC-CAM-008: Preview Screen Shows Captured Image
+* Precondition: Photo just captured
+* Steps: Observe preview screen
+* Expected:
+   * Captured image displayed
+   * [Retake] button visible (left)
+   * [Use This Photo] button visible (right)
+* Priority: P0 - Critical
+* Status: [ ]
+TC-CAM-009: Retake Photo Flow
+* Precondition: On preview screen
+* Steps: Tap [Retake] button
+* Expected: Return to camera viewfinder, previous photo discarded
+* Priority: P1 - High
+* Status: [ ]
+TC-CAM-010: Use Photo Flow
+* Precondition: On preview screen
+* Steps: Tap [Use This Photo]
+* Expected:
+   * Show loading: "Priya Ma'am is solving this..."
+   * Image uploaded to Firebase Storage
+   * OpenAI Vision API called
+* Priority: P0 - Critical
+* Status: [ ]
+TC-CAM-011: Gallery Upload Option
+* Precondition: Camera open
+* Steps:
+   1. Look for gallery icon (bottom-left)
+   2. Tap gallery icon
+   3. Select existing image
+* Expected: Image preview shown, same flow as camera capture
+* Priority: P1 - High
+* Status: [ ]
+TC-CAM-012: Gallery Permission Denied
+* Precondition: User denies storage permission
+* Steps:
+   1. Tap gallery icon
+   2. Deny permission
+* Expected: Show message "Storage access needed to select photos"
+* Priority: P2 - Medium
+* Status: [ ]
+TC-CAM-013: Camera on Low-End Device (2GB RAM)
+* Precondition: Testing on device with 2GB RAM or less
+* Steps: Open camera, capture photo
+* Expected:
+   * Camera opens within 2 seconds
+   * No app crash
+   * Preview loads within 1 second
+* Priority: P0 - Critical
+* Status: [ ]
+TC-CAM-014: Camera Rotation Portrait/Landscape
+* Precondition: Camera open
+* Steps: Rotate device from portrait to landscape
+* Expected: Camera adjusts orientation smoothly, grid remains aligned
+* Priority: P2 - Medium
+* Status: [ ]
+TC-CAM-015: Back Button from Camera
+* Precondition: Camera open
+* Steps: Press Android back button
+* Expected: Return to Dashboard, camera released
+* Priority: P1 - High
+* Status: [ ]
+TC-CAM-016: Back Button from Preview
+* Precondition: On photo preview screen
+* Steps: Press back button
+* Expected: Return to camera (or Dashboard), photo discarded
+* Priority: P1 - High
+* Status: [ ]
+TC-CAM-017: App Minimized During Camera
+* Precondition: Camera open
+* Steps: Press home button, then return to app
+* Expected: Camera still open or gracefully returns to camera
+* Priority: P2 - Medium
+* Status: [ ]
+TC-CAM-018: Image Auto-Compression >5MB
+* Precondition: Capture high-resolution image >5MB
+* Steps: Capture photo, check upload size
+* Expected: Image compressed to <5MB, quality 80% JPEG
+* Priority: P1 - High
+* Status: [ ]
+TC-CAM-019: Snap Count Display (Free Tier)
+* Precondition: User on Free tier, used 3 snaps today
+* Steps: Open camera
+* Expected: Show "3/5 snaps used today" badge
+* Priority: P1 - High
+* Status: [ ]
+TC-CAM-020: Snap Count Display (Pro Tier)
+* Precondition: User on Pro tier
+* Steps: Open camera
+* Expected: Show "Unlimited snaps" or no counter
+* Priority: P2 - Medium
+* Status: [ ]
+TC-CAM-021: Camera in Dark Environment
+* Precondition: Test in low light
+* Steps: Capture photo with flash Auto
+* Expected: Flash fires automatically, image visible
+* Priority: P2 - Medium
+* Status: [ ]
+TC-CAM-022: Camera Focus Works
+* Precondition: Camera open
+* Steps: Tap on question text in viewfinder
+* Expected: Camera auto-focuses on tapped area
+* Priority: P2 - Medium
+* Status: [ ]
+TC-CAM-023: Shutter Button Disabled During Capture
+* Precondition: Camera open
+* Steps: Tap shutter, immediately tap again
+* Expected: Second tap ignored, prevents double capture
+* Priority: P2 - Medium
+* Status: [ ]
+TC-CAM-024: Camera Crash Recovery
+* Precondition: Force camera crash (simulated)
+* Steps: Attempt to reopen camera
+* Expected: Show error, offer [Try Again] button, or return to Dashboard
+* Priority: P1 - High
+* Status: [ ]
+TC-CAM-025: Multiple Camera Sensors
+* Precondition: Device with multiple rear cameras
+* Steps: Open camera
+* Expected: Uses main rear camera (not wide-angle or telephoto)
+* Priority: P2 - Medium
+* Status: [ ]
+________________
+
+
+2. Image Processing & OCR (F6.2)
+TC-OCR-001: Clear Printed Text Recognition
+* Precondition: Snap photo of printed question from textbook
+* Steps: Upload clear printed text
+* Expected: OCR extracts text with >95% accuracy, math symbols correct
+* Priority: P0 - Critical
+* Status: [ ]
+TC-OCR-002: Handwritten Text Recognition (Neat)
+* Precondition: Snap photo of neatly handwritten question
+* Steps: Upload neat handwriting
+* Expected: OCR extracts text with >80% accuracy
+* Priority: P1 - High
+* Status: [ ]
+TC-OCR-003: Handwritten Text Recognition (Messy)
+* Precondition: Snap photo of messy handwriting
+* Steps: Upload messy handwriting
+* Expected:
+   * If accuracy <60%, show "Couldn't recognize question clearly. Try retaking photo."
+   * Offer [Retake] button
+* Priority: P1 - High
+* Status: [ ]
+TC-OCR-004: Math LaTeX Recognition
+* Precondition: Snap question with complex math (fractions, integrals, etc.)
+* Steps: Upload question with ∫, √, ∑, fractions
+* Expected:
+   * Math converted to LaTeX: \int, \sqrt{}, \sum, \frac{}{}
+   * Display renders correctly in solution
+* Priority: P0 - Critical
+* Status: [ ]
+TC-OCR-005: Diagram Recognition
+* Precondition: Snap question with diagram (circuit, free body, graph)
+* Steps: Upload question with diagram
+* Expected:
+   * OpenAI Vision identifies diagram type
+   * Solution references diagram: "In the given circuit diagram..."
+* Priority: P1 - High
+* Status: [ ]
+TC-OCR-006: Multiple Choice Options Recognition
+* Precondition: Snap MCQ with options A, B, C, D
+* Steps: Upload MCQ
+* Expected: All 4 options extracted correctly
+* Priority: P1 - High
+* Status: [ ]
+TC-OCR-007: Blurry Image Handling
+* Precondition: Upload intentionally blurry photo
+* Steps: Capture with camera moving
+* Expected: Show "Image too blurry. Please retake photo with steady hand."
+* Priority: P1 - High
+* Status: [ ]
+TC-OCR-008: Tilted/Skewed Image
+* Precondition: Capture image at 30° angle
+* Steps: Upload tilted photo
+* Expected:
+   * OpenAI Vision auto-corrects angle, OR
+   * Still extracts text with reasonable accuracy
+* Priority: P2 - Medium
+* Status: [ ]
+TC-OCR-009: Low Light Image
+* Precondition: Capture in poor lighting (no flash)
+* Steps: Upload dark image
+* Expected: Show "Image too dark. Try retaking with flash."
+* Priority: P2 - Medium
+* Status: [ ]
+TC-OCR-010: Overexposed Image
+* Precondition: Capture with excessive light
+* Steps: Upload washed-out image
+* Expected: Show "Image overexposed. Try adjusting lighting."
+* Priority: P2 - Medium
+* Status: [ ]
+TC-OCR-011: Non-Question Image
+* Precondition: Upload random photo (not a question)
+* Steps: Upload photo of a person/landscape
+* Expected: Show "No question detected. Please upload a math/physics/chemistry question."
+* Priority: P1 - High
+* Status: [ ]
+TC-OCR-012: Empty/Blank Image
+* Precondition: Upload blank white image
+* Steps: Upload blank photo
+* Expected: Show "No content detected. Please capture a question."
+* Priority: P2 - Medium
+* Status: [ ]
+TC-OCR-013: Multi-Page Question
+* Precondition: Question spans 2 pages
+* Steps: Upload photo showing partial question
+* Expected:
+   * OpenAI attempts to solve visible part, OR
+   * Show "Question appears incomplete. Can you capture the full question?"
+* Priority: P2 - Medium
+* Status: [ ]
+TC-OCR-014: Question in Hindi
+* Precondition: Upload question in Hindi (Devanagari script)
+* Steps: Upload Hindi question
+* Expected:
+   * OpenAI recognizes Hindi script
+   * Solution provided in Hindi if user language is Hindi
+* Priority: P1 - High (for Hindi market)
+* Status: [ ]
+TC-OCR-015: Mixed English-Hindi Question
+* Precondition: Question has both English and Hindi
+* Steps: Upload mixed-language question
+* Expected: Both languages recognized, solution in user's preferred language
+* Priority: P2 - Medium
+* Status: [ ]
+TC-OCR-016: Chemical Formulae Recognition
+* Precondition: Upload chemistry question with H₂SO₄, CH₃COOH
+* Steps: Upload with subscripts/superscripts
+* Expected: Formulae converted to LaTeX with correct subscripts
+* Priority: P1 - High
+* Status: [ ]
+TC-OCR-017: Greek Letters Recognition
+* Precondition: Question contains α, β, θ, ω, etc.
+* Steps: Upload question with Greek letters
+* Expected: Converted to LaTeX: \alpha, \beta, \theta, \omega
+* Priority: P1 - High
+* Status: [ ]
+TC-OCR-018: Question Number Extracted
+* Precondition: Photo includes question number "Q. 15"
+* Steps: Upload question with number
+* Expected: Question number ignored or handled gracefully (not part of solution)
+* Priority: P2 - Medium
+* Status: [ ]
+TC-OCR-019: Watermarked Image
+* Precondition: Upload question from coaching material with watermark
+* Steps: Upload watermarked image
+* Expected: OCR extracts question despite watermark
+* Priority: P2 - Medium
+* Status: [ ]
+TC-OCR-020: Image Format Validation
+* Precondition: Attempt various formats
+* Steps: Try JPG, PNG, HEIC (iPhone), WebP
+* Expected:
+   * JPG, PNG work perfectly
+   * HEIC converted to JPG automatically
+   * WebP supported or converted
+* Priority: P1 - High
+* Status: [ ]
+________________
+
+
+3. Solution Generation (F6.2)
+TC-SOL-001: Correct Solution Generated
+* Precondition: Upload valid physics question
+* Steps: Wait for solution
+* Expected:
+   * Step-by-step solution appears
+   * Final answer is correct
+   * Solution time <10 seconds
+* Priority: P0 - Critical
+* Status: [ ]
+TC-SOL-002: Solution in Priya Ma'am Voice
+* Precondition: Solution generated
+* Steps: Read solution text
+* Expected:
+   * Uses "Let's", "we", encouraging tone
+   * Matches Priya Ma'am persona
+   * No robotic language
+* Priority: P1 - High
+* Status: [ ]
+TC-SOL-003: LaTeX Rendered Correctly
+* Precondition: Solution contains math
+* Steps: Check display
+* Expected:
+   * All math renders as proper symbols (not code)
+   * No \frac{}{} visible, shows fraction
+   * No \sqrt{} visible, shows √
+* Priority: P0 - Critical
+* Status: [ ]
+TC-SOL-004: Step-by-Step Breakdown
+* Precondition: Solution generated for multi-step problem
+* Steps: Read solution
+* Expected:
+   * Clear "Step 1:", "Step 2:", etc.
+   * Each step explains one action
+   * Logical progression
+* Priority: P0 - Critical
+* Status: [ ]
+TC-SOL-005: Final Answer Highlighted
+* Precondition: Solution complete
+* Steps: Locate final answer
+* Expected:
+   * Final answer clearly marked (bold, boxed, or "Final Answer:" label)
+   * Includes units if applicable
+* Priority: P1 - High
+* Status: [ ]
+TC-SOL-006: Difficulty Level Shown
+* Precondition: Solution displayed
+* Steps: Check metadata
+* Expected: Shows "JEE Main level" or similar difficulty indicator
+* Priority: P2 - Medium
+* Status: [ ]
+TC-SOL-007: Priya Ma'am Tip Included
+* Precondition: Solution generated
+* Steps: Scroll to bottom of solution
+* Expected:
+   * Priya Ma'am's tip section present
+   * Contains strategic advice or pro tip
+   * Example: "Pro tip: Always draw FBD first for mechanics problems"
+* Priority: P1 - High
+* Status: [ ]
+TC-SOL-008: Solution for Wrong Question Type
+* Precondition: Upload non-JEE question (e.g., elementary math)
+* Steps: Wait for solution
+* Expected:
+   * Still provides solution, OR
+   * Message: "This seems simpler than JEE level. Here's the solution anyway..."
+* Priority: P2 - Medium
+* Status: [ ]
+TC-SOL-009: Ambiguous Question Handling
+* Precondition: Upload question with missing information
+* Steps: Wait for solution
+* Expected:
+   * OpenAI notes missing info: "Assuming coefficient of friction = 0.3..."
+   * Provides solution with stated assumptions
+* Priority: P2 - Medium
+* Status: [ ]
+TC-SOL-010: Multiple Solution Methods
+* Precondition: Question solvable by multiple methods
+* Steps: Check solution
+* Expected:
+   * Shows one method fully
+   * Optional: Mentions alternate method at end
+* Priority: P2 - Medium
+* Status: [ ]
+TC-SOL-011: Diagram in Solution
+* Precondition: Physics mechanics question requiring FBD
+* Steps: Read solution
+* Expected:
+   * Solution references need for diagram
+   * Either: ASCII diagram, OR text description: "Draw FBD showing forces..."
+* Priority: P2 - Medium
+* Status: [ ]
+TC-SOL-012: Units Conversion Shown
+* Precondition: Question requires unit conversion
+* Steps: Check solution steps
+* Expected: Unit conversion explicitly shown as a step
+* Priority: P1 - High
+* Status: [ ]
+TC-SOL-013: Common Mistakes Section
+* Precondition: Solution generated
+* Steps: Look for mistakes section
+* Expected:
+   * Optional section: "Common mistakes students make:"
+   * Lists 1-2 typical errors
+* Priority: P2 - Medium
+* Status: [ ]
+TC-SOL-014: Solution for Organic Chemistry
+* Precondition: Upload organic reaction mechanism question
+* Steps: Check solution
+* Expected:
+   * Reaction mechanism steps shown
+   * Electron movement arrows described
+   * Product identified correctly
+* Priority: P1 - High
+* Status: [ ]
+TC-SOL-015: Solution Copy to Clipboard
+* Precondition: Solution displayed
+* Steps: Long-press on solution text
+* Expected: Android text selection appears, can copy text
+* Priority: P2 - Medium
+* Status: [ ]
+TC-SOL-016: Share Solution Button
+* Precondition: Solution displayed
+* Steps: Tap [Share Solution] button
+* Expected:
+   * Android share sheet opens
+   * Can share via WhatsApp, Telegram, etc.
+   * Shares text + image of original question
+* Priority: P1 - High
+* Status: [ ]
+TC-SOL-017: Bookmark Solution Button
+* Precondition: Solution displayed
+* Steps: Tap [Bookmark Solution] button
+* Expected:
+   * Solution saved to "My Bookmarks"
+   * Confirmation toast: "Saved to bookmarks ✓"
+* Priority: P2 - Medium
+* Status: [ ]
+TC-SOL-018: Report Issue Button
+* Precondition: Solution appears wrong
+* Steps: Tap [Report Issue]
+* Expected:
+   * Form appears: "What's wrong? (Wrong answer / OCR error / Other)"
+   * Submit sends report to admin
+* Priority: P2 - Medium
+* Status: [ ]
+________________
+
+
+4. Follow-Up Questions (F6.3)
+TC-FOLLOW-001: 3 Follow-Up Questions Generated
+* Precondition: Solution displayed
+* Steps: Scroll to "Practice Similar Questions"
+* Expected: Exactly 3 questions visible
+* Priority: P0 - Critical
+* Status: [ ]
+TC-FOLLOW-002: Difficulty Progression (Q1 Similar)
+* Precondition: Follow-up questions visible
+* Steps: Read Question 1
+* Expected:
+   * Same concept as original
+   * Similar difficulty
+   * Different numbers/scenario
+* Priority: P0 - Critical
+* Status: [ ]
+TC-FOLLOW-003: Difficulty Progression (Q2 Twist)
+* Precondition: Follow-up questions visible
+* Steps: Read Question 2
+* Expected:
+   * Same core concept
+   * One additional complexity (e.g., friction added)
+   * Slightly harder than Q1
+* Priority: P0 - Critical
+* Status: [ ]
+TC-FOLLOW-004: Difficulty Progression (Q3 Advanced)
+* Precondition: Follow-up questions visible
+* Steps: Read Question 3
+* Expected:
+   * Combines concept with related topic
+   * Multi-step problem
+   * Hardest of the 3
+* Priority: P0 - Critical
+* Status: [ ]
+TC-FOLLOW-005: Start Practice Button
+* Precondition: Follow-up questions displayed
+* Steps: Tap [Start Practice]
+* Expected: Opens mini-quiz interface with Question 1
+* Priority: P0 - Critical
+* Status: [ ]
+TC-FOLLOW-006: Mini-Quiz Interface
+* Precondition: Practice started
+* Steps: Observe UI
+* Expected:
+   * Question 1/3 shown
+   * 4 options (A, B, C, D)
+   * Timer: 90 seconds countdown
+   * [Submit Answer] button
+* Priority: P1 - High
+* Status: [ ]
+TC-FOLLOW-007: Answer Question 1 Correctly
+* Precondition: On Question 1
+* Steps: Select correct option, tap Submit
+* Expected:
+   * Green checkmark: "Correct! ✓"
+   * Brief explanation shown
+   * [Next Question] button appears
+* Priority: P0 - Critical
+* Status: [ ]
+TC-FOLLOW-008: Answer Question 1 Incorrectly
+* Precondition: On Question 1
+* Steps: Select wrong option, tap Submit
+* Expected:
+   * Red X: "Not quite. Correct answer: C"
+   * Explanation shown
+   * Priya Ma'am encouragement: "This is tricky—let's see why..."
+* Priority: P0 - Critical
+* Status: [ ]
+TC-FOLLOW-009: Progress Through All 3 Questions
+* Precondition: Practice started
+* Steps: Answer all 3 questions
+* Expected:
+   * Q1 → Q2 → Q3 progression smooth
+   * Each shows immediate feedback
+   * Timer resets for each question (90s each)
+* Priority: P0 - Critical
+* Status: [ ]
+TC-FOLLOW-010: Mini-Quiz Completion Summary
+* Precondition: Answered all 3 questions
+* Steps: View summary screen
+* Expected:
+   * "You got 2/3 correct!"
+   * Priya Ma'am feedback: "You're getting better at Mechanics! 🎉"
+   * [Done] button to return
+* Priority: P1 - High
+* Status: [ ]
+TC-FOLLOW-011: Exit Mid-Quiz
+* Precondition: On Question 2 of mini-quiz
+* Steps: Press back button
+* Expected:
+   * Confirmation: "Exit practice? Progress won't be saved."
+   * [Cancel] [Exit] options
+* Priority: P2 - Medium
+* Status: [ ]
+TC-FOLLOW-012: Timer Expires During Question
+* Precondition: On any follow-up question
+* Steps: Wait 90 seconds without answering
+* Expected:
+   * Auto-submit (marked as unanswered)
+   * Show correct answer
+   * Move to next question
+* Priority: P2 - Medium
+* Status: [ ]
+TC-FOLLOW-013: Performance Tracked
+* Precondition: Complete mini-quiz
+* Steps: Check user's topic mastery in Progress Dashboard
+* Expected:
+   * Topic accuracy updated
+   * 3 questions added to "questions practiced" count
+   * Micro-skill scores updated
+* Priority: P1 - High
+* Status: [ ]
+TC-FOLLOW-014: Skip Follow-Up Practice
+* Precondition: Solution displayed with follow-ups
+* Steps: Tap [Back to Dashboard] instead of [Start Practice]
+* Expected: Return to Dashboard, snap recorded but practice not done
+* Priority: P2 - Medium
+* Status: [ ]
+TC-FOLLOW-015: Follow-Up Questions Not Generated
+* Precondition: OpenAI API fails to generate follow-ups
+* Steps: Wait for follow-ups after solution
+* Expected:
+   * Show message: "Practice questions coming soon!"
+   * Only show [Back to Dashboard]
+* Priority: P2 - Medium
+* Status: [ ]
+________________
+
+
+5. Error Handling
+TC-ERR-001: Network Error During Upload
+* Precondition: Device has no internet
+* Steps: Capture photo, tap [Use This Photo]
+* Expected:
+   * Show "No internet connection. Please check your network."
+   * [Retry] button appears
+* Priority: P0 - Critical
+* Status: [ ]
+TC-ERR-002: OpenAI API Timeout
+* Precondition: OpenAI API takes >30 seconds
+* Steps: Upload photo, wait
+* Expected:
+   * Show "Taking longer than usual... Still processing..."
+   * After 30s: "Request timed out. Please try again."
+   * [Retry] button
+* Priority: P1 - High
+* Status: [ ]
+TC-ERR-003: OpenAI API Returns Error
+* Precondition: OpenAI API returns 500 error
+* Steps: Upload photo
+* Expected:
+   * Show "Something went wrong. Please try again."
+   * Log error to Sentry for debugging
+   * [Retry] button
+* Priority: P1 - High
+* Status: [ ]
+TC-ERR-004: Firebase Storage Upload Fails
+* Precondition: Firebase Storage quota exceeded or error
+* Steps: Capture photo, try to upload
+* Expected:
+   * Show "Upload failed. Please try again."
+   * [Retry] button
+   * Error logged
+* Priority: P1 - High
+* Status: [ ]
+TC-ERR-005: Image Too Large (>10MB)
+* Precondition: Somehow capture >10MB image
+* Steps: Try to upload
+* Expected:
+   * Auto-compress before upload, OR
+   * Show "Image too large. Please retake photo."
+* Priority: P2 - Medium
+* Status: [ ]
+TC-ERR-006: Invalid Image Format
+* Precondition: User selects .gif or .bmp from gallery
+* Steps: Try to upload
+* Expected: Show "Unsupported format. Please use JPG or PNG."
+* Priority: P2 - Medium
+* Status: [ ]
+TC-ERR-007: OCR Confidence Too Low
+* Precondition: Image quality very poor, OCR confidence <30%
+* Steps: Upload poor quality image
+* Expected:
+   * Show "Couldn't recognize question clearly. Try retaking photo with better lighting."
+   * [Retake] button
+* Priority: P1 - High
+* Status: [ ]
+TC-ERR-008: OpenAI Returns Non-Question Content
+* Precondition: OpenAI identifies image as non-educational
+* Steps: Upload random image
+* Expected: Show "This doesn't appear to be a JEE question. Please upload a math, physics, or chemistry problem."
+* Priority: P2 - Medium
+* Status: [ ]
+TC-ERR-009: App Crashes During Processing
+* Precondition: Force crash during OpenAI API call
+* Steps: Restart app
+* Expected:
+   * No data loss
+   * Can retry snap (counts against daily limit if already uploaded)
+* Priority: P1 - High
+* Status: [ ]
+TC-ERR-010: User Exits App During Upload
+* Precondition: Image uploading
+* Steps: Press home button or switch app
+* Expected:
+   * Upload continues in background, OR
+   * Cancels gracefully and can retry
+* Priority: P2 - Medium
+* Status: [ ]
+TC-ERR-011: Malformed JSON from OpenAI
+* Precondition: OpenAI returns invalid JSON
+* Steps: Upload question
+* Expected:
+   * Backend handles parsing error
+   * Show "Solution unavailable. Please try again."
+   * Error logged for manual review
+* Priority: P1 - High
+* Status: [ ]
+TC-ERR-012: Retry Mechanism Works
+* Precondition: Any error with [Retry] button
+* Steps: Tap [Retry]
+* Expected:
+   * Re-attempts upload/processing
+   * Shows loading indicator
+   * Success or new error message
+* Priority: P1 - High
+* Status: [ ]
+________________
+
+
+6. Performance & Optimization
+TC-PERF-001: Image Compression Speed
+* Precondition: Capture 4MB image
+* Steps: Time compression to <5MB
+* Expected: Compression completes within 2 seconds
+* Priority: P1 - High
+* Status: [ ]
+TC-PERF-002: Upload Speed on 4G
+* Precondition: Connected to 4G (5 Mbps)
+* Steps: Upload 3MB image
+* Expected: Upload completes within 5 seconds
+* Priority: P1 - High
+* Status: [ ]
+TC-PERF-003: Upload Speed on 3G
+* Precondition: Connected to 3G (500 Kbps)
+* Steps: Upload 3MB image
+* Expected: Upload completes within 15 seconds, shows progress indicator
+* Priority: P2 - Medium
+* Status: [ ]
+TC-PERF-004: OpenAI API Response Time
+* Precondition: Upload typical question
+* Steps: Measure time from upload complete to solution displayed
+* Expected: Solution appears within 10 seconds
+* Priority: P0 - Critical
+* Status: [ ]
+TC-PERF-005: End-to-End Snap Time
+* Precondition: Camera ready
+* Steps: Time from capture to solution displayed
+* Expected:
+   * On 4G: <15 seconds total
+   * On 3G: <25 seconds total
+* Priority: P0 - Critical
+* Status: [ ]
+TC-PERF-006: Memory Usage During Processing
+* Precondition: Low-end device (2GB RAM)
+* Steps:
+   1. Monitor memory before snap
+   2. Capture and process image
+   3. Check memory usage
+* Expected: App uses <200MB total, no out-of-memory crash
+* Priority: P1 - High
+* Status: [ ]
+TC-PERF-007: Battery Consumption
+* Precondition: Full battery
+* Steps: Use Snap & Solve 10 times in 1 hour
+* Expected: Battery drain <10% (comparable to camera app usage)
+* Priority: P2 - Medium
+* Status: [ ]
+TC-PERF-008: Cache Performance
+* Precondition: Snap same question twice
+* Steps:
+   * Snap question, wait for solution
+   * Snap exact same question again
+* Expected:
+   * Second time shows cached solution instantly (<1 second), OR
+   * Still processes but faster due to image similarity
+* Priority: P2 - Medium
+* Status: [ ]
+TC-PERF-009: Concurrent Snaps
+* Precondition: Multiple users snapping simultaneously (load test)
+* Steps: Simulate 100 concurrent API calls
+* Expected:
+   * All requests processed
+   * No rate limiting errors (or graceful queue)
+   * Average response time <15 seconds
+* Priority: P1 - High
+* Status: [ ]
+TC-PERF-010: Image Storage Cleanup
+* Precondition: User has 100 old snaps (>30 days)
+* Steps: Check Firebase Storage
+* Expected:
+   * Images older than 30 days auto-deleted
+   * Cloud Function runs daily cleanup
+   * User's current snaps intact
+* Priority: P1 - High (DPDP compliance)
+* Status: [ ]
+________________
+
+
+7. Free/Pro Tier Limits
+TC-TIER-001: Free Tier 5 Snaps Per Day
+* Precondition: Free user, fresh day (no snaps used)
+* Steps: Use Snap & Solve 5 times
+* Expected: All 5 work normally, counter shows 1/5, 2/5, ..., 5/5
+* Priority: P0 - Critical
+* Status: [ ]
+TC-TIER-002: Free Tier 6th Snap Blocked
+* Precondition: Free user, used 5 snaps today
+* Steps: Attempt 6th snap
+* Expected:
+   * After capture, show: "You've used all 5 snaps today! Upgrade to Pro for unlimited snaps."
+   * [Upgrade to Pro] button prominent
+   * [Not Now] dismisses, returns to Dashboard
+* Priority: P0 - Critical
+* Status: [ ]
+TC-TIER-003: Snap Counter Resets at Midnight
+* Precondition: Used 5 snaps, wait until midnight IST
+* Steps: Check snap counter after 12:00 AM
+* Expected: Counter resets to 0/5, can snap again
+* Priority: P1 - High
+* Status: [ ]
+TC-TIER-004: Pro Tier Unlimited Snaps
+* Precondition: Pro user
+* Steps: Use Snap & Solve 10 times in one day
+* Expected: All work without limit, no counter shown
+* Priority: P1 - High
+* Status: [ ]
+TC-TIER-005: Upgrade Mid-Day
+* Precondition: Free user, used 5 snaps, hits limit
+* Steps:
+   * Tap [Upgrade to Pro]
+   * Complete payment
+* Expected:
+   * Immediately can snap again (unlimited)
+   * No need to wait until next day
+* Priority: P1 - High
+* Status: [ ]
+TC-TIER-006: Downgrade to Free
+* Precondition: Pro user downgrades/cancels subscription
+* Steps: Next day after cancellation, use snaps
+* Expected:
+   * Back to 5 snaps/day limit
+   * Counter reappears
+* Priority: P2 - Medium
+* Status: [ ]
+TC-TIER-007: Snap Limit Across Devices
+* Precondition: Free user logged in on 2 devices
+* Steps:
+   1. Use 3 snaps on Device A
+   2. Use 2 snaps on Device B
+   3. Attempt 6th snap on either device
+* Expected: Blocked after 5 total (shared limit across devices)
+* Priority: P1 - High
+* Status: [ ]
+TC-TIER-008: Trial Period Snaps
+* Precondition: User in 7-day Pro trial
+* Steps: Use Snap & Solve multiple times
+* Expected: Unlimited snaps during trial, treated as Pro user
+* Priority: P2 - Medium
+* Status: [ ]
+________________
+
+
+8. Edge Cases & Security
+TC-EDGE-001: Rapid Fire Snaps
+* Precondition: User repeatedly taps snap button
+* Steps: Capture and submit 3 photos in 10 seconds
+* Expected:
+   * All 3 queue properly
+   * Each gets unique solution
+   * No crashes or duplicate processing
+* Priority: P1 - High
+* Status: [ ]
+TC-EDGE-002: Same Question Multiple Times
+* Precondition: User snaps identical question 3 times
+* Steps: Upload same question repeatedly
+* Expected:
+   * Each counts as separate snap (against daily limit)
+   * Solution may be served from cache (faster)
+   * No error or warning
+* Priority: P2 - Medium
+* Status: [ ]
+TC-EDGE-003: Screenshot of Question from App
+* Precondition: User takes screenshot of question from another app
+* Steps: Upload screenshot via gallery
+* Expected:
+   * Works normally if text is clear
+   * OCR extracts question from screenshot
+* Priority: P2 - Medium
+* Status: [ ]
+TC-EDGE-004: Screenshot of Solution Shared
+* Precondition: User receives solution screenshot from friend
+* Steps: Upload screenshot of solved question
+* Expected:
+   * OpenAI recognizes it's a solution (not question)
+   * Message: "This appears to be a solution. Please upload a question."
+   * OR: Attempts to extract original question if visible
+* Priority: P2 - Medium
+* Status: [ ]
+TC-EDGE-005: Copyrighted Material Detection
+* Precondition: Upload question from paid test series with copyright notice
+* Steps: Capture question with visible copyright
+* Expected:
+   * Still processes (educational fair use), OR
+   * Warning: "Please respect copyright. Use for personal study only."
+* Priority: P2 - Medium
+* Status: [ ]
+TC-EDGE-006: Adult/Inappropriate Content
+* Precondition: User attempts to upload inappropriate image
+* Steps: Upload non-educational inappropriate content
+* Expected:
+   * Content filtering catches it
+   * Message: "Invalid content detected. Snap & Solve is for educational questions only."
+   * Log incident for review
+* Priority: P1 - High (safety)
+* Status: [ ]
+TC-EDGE-007: Image Manipulation/Editing
+* Precondition: User edits image (crop, rotate, filters) before upload
+* Steps: Upload edited image
+* Expected: Still processes normally if question is clear
+* Priority: P2 - Medium
+* Status: [ ]
+TC-EDGE-008: Old Photo from Gallery (Years Old)
+* Precondition: User uploads image from 2020
+* Steps: Select old photo from gallery
+* Expected: Works normally (no timestamp validation)
+* Priority: P2 - Medium
+* Status: [ ]
+TC-EDGE-009: Image with No Text (Pure Diagram)
+* Precondition: Upload circuit diagram with no accompanying text
+* Steps: Upload diagram-only image
+* Expected:
+   * OpenAI attempts to interpret diagram
+   * Solution like: "Based on the circuit shown, assuming you're asked to find..."
+   * OR: "Please include the question text with the diagram"
+* Priority: P2 - Medium
+* Status: [ ]
+TC-EDGE-010: Extremely Long Question
+* Precondition: Upload multi-part question (5+ sub-questions)
+* Steps: Capture and upload
+* Expected:
+   * OpenAI processes entire question
+   * Solution addresses all parts, OR
+   * Message: "This question has multiple parts. I'll solve the first part..."
+* Priority: P2 - Medium
+* Status: [ ]
+TC-EDGE-011: Parent Monitoring
+* Precondition: Parent has access to child's account
+* Steps: Parent checks Snap & Solve history
+* Expected:
+   * Parent can view all snaps used (count, dates)
+   * Cannot view actual images (deleted after 30 days)
+   * Shows topic breakdown
+* Priority: P2 - Medium (post-MVP feature)
+* Status: [ ]
+TC-EDGE-012: Database Corruption
+* Precondition: Simulate Firestore write failure
+* Steps: Try to save snap metadata
+* Expected:
+   * Error caught
+   * User still sees solution
+   * Error logged for retry
+   * Snap may not count against limit (benefit to user)
+* Priority: P1 - High
+* Status: [ ]
+________________
+
+
+Test Execution Matrix
+By Priority
+Priority
+	Test Cases
+	Must Pass Before
+	P0 (Critical)
+	38 cases
+	MVP Launch (Week 16)
+	P1 (High)
+	51 cases
+	Beta Testing (Week 14)
+	P2 (Medium)
+	31 cases
+	Post-MVP (Month 2-3)
+	By Test Type
+Type
+	Count
+	Tools
+	Functional
+	78
+	Manual + Espresso
+	Performance
+	10
+	Firebase Performance, Android Profiler
+	Security
+	6
+	Manual + Penetration test
+	Compatibility
+	12
+	Device farm (5 devices)
+	Usability
+	14
+	User testing (10 users)
+	Test Devices Matrix
+Device
+	Android
+	RAM
+	Screen
+	Priority
+	Samsung Galaxy A12
+	11
+	3GB
+	6.5"
+	P0 - Must test
+	Xiaomi Redmi Note 10
+	11
+	4GB
+	6.43"
+	P0 - Must test
+	OnePlus Nord CE 2
+	12
+	6GB
+	6.43"
+	P1 - Should test
+	Realme Narzo 30
+	10
+	4GB
+	6.5"
+	P1 - Should test
+	Google Pixel 6
+	14
+	8GB
+	6.4"
+	P2 - Nice to test
+	Network Conditions Matrix
+Condition
+	Speed
+	Latency
+	Test Scenarios
+	WiFi
+	50 Mbps
+	10ms
+	Baseline performance
+	4G
+	5 Mbps
+	50ms
+	Primary use case
+	3G
+	500 Kbps
+	150ms
+	Tier 2/3 cities
+	2G
+	50 Kbps
+	500ms
+	Worst case (should gracefully fail)
+	Offline
+	0
+	N/A
+	Error handling
+	________________
+
+
+Automated Test Scripts
+Example Espresso Test (TC-CAM-002)
+@Test
+fun testCameraPermissionGranted() {
+    // Grant permission programmatically
+    grantPermissions(Manifest.permission.CAMERA)
+    
+    // Launch app
+    activityRule.launchActivity(Intent())
+    
+    // Tap Snap & Solve FAB
+    onView(withId(R.id.snap_solve_fab))
+        .perform(click())
+    
+    // Verify camera viewfinder opened
+    onView(withId(R.id.camera_viewfinder))
+        .check(matches(isDisplayed()))
+    
+    // Verify opened within 1 second
+    // (handled by Espresso timeout)
+}
+
+
+Example Performance Test (TC-PERF-004)
+@Test
+fun testOpenAIAPIResponseTime() {
+    val startTime = System.currentTimeMillis()
+    
+    // Upload test image
+    val testImage = loadTestResource("sample_question.jpg")
+    snapSolveService.uploadAndSolve(testImage)
+    
+    // Wait for solution
+    val solution = waitForSolution(timeout = 10000) // 10 seconds
+    
+    val endTime = System.currentTimeMillis()
+    val duration = endTime - startTime
+    
+    // Assert under 10 seconds
+    assertThat(duration).isLessThan(10000)
+    assertThat(solution).isNotNull()
+}
+
+
+________________
+
+
+Test Data Requirements
+Sample Images Needed
+1. Clear Printed Questions (10 samples)
+   * Math: Calculus, Algebra, Geometry
+   * Physics: Mechanics, Electromagnetism
+   * Chemistry: Organic, Inorganic, Physical
+2. Handwritten Questions (10 samples)
+   * 5 neat handwriting
+   * 5 messy handwriting
+3. Questions with Diagrams (5 samples)
+   * Circuit diagrams
+   * Free body diagrams
+   * Graphs (x-y plots)
+   * Chemical structures
+   * Geometric figures
+4. Edge Cases (10 samples)
+   * Blurry images
+   * Tilted images
+   * Low light images
+   * Overexposed images
+   * Multi-language questions
+5. Negative Cases (5 samples)
+   * Non-question images (landscapes, people)
+   * Blank/empty images
+   * Inappropriate content (for safety testing)
+   * Screenshots of solutions
+   * Random text (not questions)
+Total: 50 test images
+________________
+
+
+Bug Tracking Template
+**Bug ID**: SNAP-XXX
+**Test Case**: TC-XXX-XXX
+**Severity**: Critical / High / Medium / Low
+**Priority**: P0 / P1 / P2
+**Status**: Open / In Progress / Fixed / Closed
+
+
+**Description**:
+[Brief description of the bug]
+
+
+**Steps to Reproduce**:
+1. [Step 1]
+2. [Step 2]
+3. [Step 3]
+
+
+**Expected Result**:
+[What should happen]
+
+
+**Actual Result**:
+[What actually happened]
+
+
+**Environment**:
+- Device: Samsung Galaxy A12
+- Android: 11
+- App Version: 1.0.0-beta
+- Network: 4G
+
+
+**Screenshots/Logs**:
+[Attach screenshots, error logs, video if applicable]
+
+
+**Notes**:
+[Any additional context]
+
+
+________________
+
+
+Test Execution Schedule
+Week 9-10 (Development Complete)
+* Day 1-2: TC-CAM-* (Camera capture - 25 cases)
+* Day 3-4: TC-OCR-* (Image processing - 20 cases)
+* Day 5: Review and fix critical bugs
+Week 11-12 (Alpha Testing)
+* Day 1-2: TC-SOL-* (Solution generation - 18 cases)
+* Day 3-4: TC-FOLLOW-* (Follow-up questions - 15 cases)
+* Day 5: TC-ERR-* (Error handling - 12 cases)
+Week 13-14 (Beta Testing)
+* Day 1-2: TC-PERF-* (Performance - 10 cases)
+* Day 3: TC-TIER-* (Free/Pro limits - 8 cases)
+* Day 4-5: TC-EDGE-* (Edge cases - 12 cases)
+Week 15 (Final Testing)
+* Day 1-2: Regression testing (all P0 cases)
+* Day 3: User acceptance testing (10 beta users)
+* Day 4-5: Bug fixes and retesting
+Week 16 (Launch Week)
+* Day 1-2: Final smoke test (critical path only)
+* Day 3: Production deployment
+* Day 4-5: Monitor production, hot fixes if needed
+________________
+
+
+Success Criteria
+For MVP Launch (Week 16)
+Must Pass (Blockers):
+* ✅ All P0 test cases (38 cases) pass 100%
+* ✅ P1 test cases pass rate >90% (46/51 cases)
+* ✅ No critical or high-severity bugs open
+* ✅ Performance metrics met:
+   * Camera opens <1 second
+   * Solution appears <10 seconds (4G)
+   * App doesn't crash on 2GB RAM devices
+* ✅ Free tier limits work correctly (5 snaps/day)
+* ✅ OCR accuracy >80% on printed text
+* ✅ LaTeX renders correctly
+Nice to Have (Not Blockers):
+* P2 test cases pass rate >70%
+* Medium-severity bugs <5 open
+* OCR accuracy >70% on handwritten text
+Post-MVP Targets (Month 2-3)
+* ✅ All 120 test cases pass
+* ✅ Zero high-severity bugs
+* ✅ OCR accuracy >90% on printed, >75% on handwritten
+* ✅ Solution accuracy >95% (validated by expert reviewers)
+* ✅ User satisfaction >4.5/5 (in-app survey)
+________________
+
+
+Test Reporting
+Daily Test Report Template
+Date: [YYYY-MM-DD]
+Tester: [Name]
+Build Version: [1.0.0-betaX]
+
+
+EXECUTED TODAY:
+- Test Cases Run: X
+- Passed: X
+- Failed: X
+- Blocked: X
+
+
+NEW BUGS FOUND:
+1. [SNAP-XXX] Brief description - Severity
+2. [SNAP-XXX] Brief description - Severity
+
+
+BUGS FIXED:
+1. [SNAP-XXX] Brief description
+
+
+BLOCKERS:
+[List any blockers preventing testing]
+
+
+NOTES:
+[Any observations or concerns]
+
+
+Weekly Test Summary
+Week: [X]
+Test Progress: [XX]% complete
+Pass Rate: [XX]%
+
+
+Status by Priority:
+- P0: X/38 passed (XX%)
+- P1: X/51 passed (XX%)
+- P2: X/31 passed (XX%)
+
+
+Critical Issues:
+[List open critical bugs]
+
+
+Risks:
+[Any risks to timeline or quality]
+
+
+Next Week Plan:
+[What will be tested next week]
+
+
+________________
+
+
+Sign-Off Checklist
+Before MVP Launch
+* [ ] All P0 test cases executed and passed
+* [ ] >90% of P1 test cases passed
+* [ ] No critical bugs open
+* [ ] Performance benchmarks met
+* [ ] Tested on 5 physical devices
+* [ ] Tested on 4G, 3G, WiFi, offline
+* [ ] Free/Pro tier limits verified
+* [ ] Error messages user-friendly and actionable
+* [ ] Priya Ma'am persona consistent throughout
+* [ ] LaTeX rendering perfect
+* [ ] OCR accuracy acceptable (>80% printed)
+* [ ] Solution quality validated (10 sample questions)
+* [ ] Follow-up questions progressive and relevant
+* [ ] Image storage cleanup working (30-day deletion)
+* [ ] User data privacy maintained (DPDP compliant)
+QA Lead Sign-Off: _________________ Date: _______
+Product Owner Sign-Off: _________________ Date: _______
+CTO Sign-Off: _________________ Date: _______
+________________
+
+
+Appendix: Sample Test Execution Log
+Test Case ID
+	Date Tested
+	Tester
+	Device
+	Result
+	Notes
+	Bug ID
+	TC-CAM-001
+	2025-12-01
+	Rohan
+	Galaxy A12
+	✅ Pass
+	Camera opens in 0.8s
+	-
+	TC-CAM-002
+	2025-12-01
+	Rohan
+	Galaxy A12
+	✅ Pass
+	Permission flow smooth
+	-
+	TC-OCR-001
+	2025-12-02
+	Priya
+	Redmi Note 10
+	✅ Pass
+	96% accuracy on print
+	-
+	TC-OCR-002
+	2025-12-02
+	Priya
+	Redmi Note 10
+	❌ Fail
+	Only 65% on handwriting
+	SNAP-045
+	TC-SOL-004
+	2025-12-03
+	Amit
+	OnePlus Nord
+	✅ Pass
+	Step-by-step clear
+	-
+	TC-PERF-004
+	2025-12-04
+	Amit
+	Pixel 6
+	⚠️ Warning
+	11.2s (target <10s)
+	SNAP-052
+	________________
+
+
+Total Test Cases: 120
+Estimated Test Execution Time: 40-50 hours (with 2 testers)
+Recommended Team: 2 QA testers + 1 developer for bug fixes
+Document Version: 1.0
+Last Updated: 2025-11-22
+Owner: QA Team Lead

@@ -1,0 +1,276 @@
+﻿Snap and Solve Screen AFTER picture has been recognized and accepted   
+
+
+  
+
+
+
+
+
+
+
+import React, { useState } from 'react';
+import { ChevronDown, CheckCircle, Bookmark, Share2, AlertCircle, Sparkles, BookOpen, Play, Home, X, BookmarkCheck } from 'lucide-react';
+
+
+const SnapSolveSolutionScreen = () => {
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [expandedStep, setExpandedStep] = useState(null);
+  const [sheetState, setSheetState] = useState('half'); // peek, half, full
+
+
+  const solutionData = {
+    recognizedQuestion: "A block of mass 2 kg rests on a horizontal surface. If a force of 12 N is applied horizontally and the coefficient of friction is μ = 0.3, find the acceleration of the block. (g = 10 m/s²)",
+    topic: "Mechanics - Newton's Laws",
+    difficulty: "JEE Main Level",
+    steps: [
+      {
+        id: 1,
+        title: "Identify the forces",
+        content: "The forces acting on the block are:\n• Applied force F = 12 N (horizontal)\n• Friction force f = μN (opposing motion)\n• Normal force N = mg = 2 × 10 = 20 N"
+      },
+      {
+        id: 2,
+        title: "Calculate friction force",
+        content: "Friction force f = μN\nf = 0.3 × 20 = 6 N\n\nThis force opposes the applied force."
+      },
+      {
+        id: 3,
+        title: "Apply Newton's Second Law",
+        content: "Net force = Applied force - Friction force\nF_net = 12 - 6 = 6 N\n\nUsing F = ma:\n6 = 2 × a"
+      },
+      {
+        id: 4,
+        title: "Solve for acceleration",
+        content: "a = F_net / m\na = 6 / 2\na = 3 m/s²"
+      }
+    ],
+    finalAnswer: "3 m/s²",
+    priyaTip: "Pro tip: When dealing with friction problems, always remember to subtract the friction force from the applied force to get the net force. Friction always opposes motion!",
+    conceptTag: "Newton's Second Law + Friction"
+  };
+
+
+  const toggleStep = (stepId) => {
+    setExpandedStep(expandedStep === stepId ? null : stepId);
+  };
+
+
+  return (
+    <div className="w-full max-w-md mx-auto min-h-screen bg-gradient-to-b from-purple-50 via-white to-purple-50">
+      {/* Success Header */}
+      <div className="bg-gradient-to-r from-purple-600 to-purple-500 px-6 pt-8 pb-12 text-white relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+        
+        <div className="relative z-10">
+          <button className="mb-4 p-2 hover:bg-white/10 rounded-full transition-colors">
+            <X className="w-6 h-6" />
+          </button>
+
+
+          <div className="flex justify-center mb-4">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
+              <CheckCircle className="w-10 h-10 text-purple-600" />
+            </div>
+          </div>
+          
+          <h1 className="text-2xl font-bold text-center mb-2">
+            Question Recognized!
+          </h1>
+          
+          <p className="text-center text-purple-100 text-sm">
+            {solutionData.topic}
+          </p>
+        </div>
+      </div>
+
+
+      {/* Question Card - Overlapping */}
+      <div className="px-6 -mt-8 relative z-20 mb-6">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-5">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+              <BookOpen className="w-4 h-4 text-purple-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-xs font-semibold text-purple-600 mb-2">HERE'S WHAT I SEE:</h3>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {solutionData.recognizedQuestion}
+              </p>
+            </div>
+          </div>
+
+
+          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+              {solutionData.difficulty}
+            </span>
+            <button className="text-xs text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              Report Issue
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      {/* Action Buttons Row */}
+      <div className="px-6 mb-6">
+        <div className="flex gap-3">
+          <button
+            onClick={() => setIsBookmarked(!isBookmarked)}
+            className={`flex-1 py-3 rounded-xl font-semibold text-sm border-2 transition-all flex items-center justify-center gap-2 ${
+              isBookmarked
+                ? 'bg-purple-50 border-purple-600 text-purple-600'
+                : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+            {isBookmarked ? 'Saved' : 'Bookmark'}
+          </button>
+          
+          <button className="flex-1 py-3 rounded-xl font-semibold text-sm bg-white border-2 border-gray-200 text-gray-700 hover:border-gray-300 transition-all flex items-center justify-center gap-2">
+            <Share2 className="w-4 h-4" />
+            Share
+          </button>
+        </div>
+      </div>
+
+
+      {/* Step-by-Step Solution */}
+      <div className="px-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles className="w-5 h-5 text-purple-600" />
+          <h2 className="text-xl font-bold text-gray-800">Step-by-Step Solution</h2>
+        </div>
+
+
+        <div className="space-y-3">
+          {solutionData.steps.map((step, index) => (
+            <div key={step.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => toggleStep(step.id)}
+                className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-purple-600 font-bold text-sm">{index + 1}</span>
+                  </div>
+                  <span className="font-semibold text-gray-800 text-left">{step.title}</span>
+                </div>
+                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${expandedStep === step.id ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {expandedStep === step.id && (
+                <div className="px-4 pb-4 pt-2 bg-gradient-to-b from-gray-50 to-white border-t border-gray-100">
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line font-mono">
+                    {step.content}
+                  </p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+
+        {/* Final Answer Card */}
+        <div className="mt-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-5 border-2 border-green-200 shadow-sm">
+          <div className="flex items-center gap-2 mb-2">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <span className="text-sm font-bold text-green-800">FINAL ANSWER</span>
+          </div>
+          <div className="text-3xl font-bold text-green-700">
+            {solutionData.finalAnswer}
+          </div>
+        </div>
+      </div>
+
+
+      {/* Priya Ma'am's Tip */}
+      <div className="px-6 mb-6">
+        <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl p-5 border-2 border-purple-200 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-md">
+              <span className="text-white font-bold text-lg">P</span>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="font-bold text-purple-800">Priya Ma'am's Tip</span>
+                <Sparkles className="w-4 h-4 text-purple-500" />
+              </div>
+              <p className="text-sm text-purple-900 leading-relaxed">
+                {solutionData.priyaTip}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      {/* Practice Similar Section */}
+      <div className="px-6 mb-6">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-md">
+              <Play className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-gray-800 mb-1">Practice Similar Questions</h3>
+              <p className="text-sm text-gray-600">Master this concept with 3 follow-up questions</p>
+            </div>
+          </div>
+          
+          {/* Preview of difficulty levels */}
+          <div className="flex gap-2 mb-4">
+            <div className="flex-1 bg-white/60 rounded-lg p-2 text-center border border-green-200">
+              <div className="text-xs font-semibold text-green-700">Basic</div>
+              <div className="text-[10px] text-green-600">Q1</div>
+            </div>
+            <div className="flex-1 bg-white/60 rounded-lg p-2 text-center border border-yellow-200">
+              <div className="text-xs font-semibold text-yellow-700">Intermediate</div>
+              <div className="text-[10px] text-yellow-600">Q2</div>
+            </div>
+            <div className="flex-1 bg-white/60 rounded-lg p-2 text-center border border-red-200">
+              <div className="text-xs font-semibold text-red-700">Advanced</div>
+              <div className="text-[10px] text-red-600">Q3</div>
+            </div>
+          </div>
+
+
+          <button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-4 rounded-xl font-semibold text-lg hover:from-blue-600 hover:to-indigo-600 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2">
+            <Play className="w-5 h-5" />
+            Start Practice
+          </button>
+        </div>
+      </div>
+
+
+      {/* Bottom Actions */}
+      <div className="px-6 pb-8 space-y-3">
+        <button className="w-full bg-purple-600 text-white py-4 rounded-xl font-semibold text-lg hover:bg-purple-700 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2">
+          <BookOpen className="w-5 h-5" />
+          Snap Another Question
+        </button>
+        
+        <button className="w-full bg-gray-100 text-gray-700 py-4 rounded-xl font-semibold text-lg hover:bg-gray-200 active:scale-95 transition-all flex items-center justify-center gap-2">
+          <Home className="w-5 h-5" />
+          Back to Dashboard
+        </button>
+      </div>
+
+
+      {/* Footer Message */}
+      <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4 text-white text-center">
+        <p className="text-sm font-medium flex items-center justify-center gap-2">
+          <span className="text-2xl">🎯</span>
+          <span>3/5 snaps remaining today</span>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+
+export default SnapSolveSolutionScreen;

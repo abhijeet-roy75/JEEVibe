@@ -35,6 +35,22 @@ dependencies:
   cupertino_icons: ^1.0.6
   image_cropper: ^11.0.0
   google_fonts: ^6.3.2
+  
+  # Firebase - Updated to latest versions for Xcode 26.1.1 compatibility
+  firebase_core: ^3.8.1
+  firebase_auth: ^5.3.4
+  cloud_firestore: ^5.5.2
+  firebase_storage: ^12.3.7
+  firebase_analytics: ^11.3.7
+  
+  # Authentication
+  local_auth: ^2.1.8
+  crypto: ^3.0.3
+  
+  # Auth UI Components
+  pin_code_fields: ^8.0.1
+  country_code_picker: ^3.0.0
+  intl_phone_number_input: ^0.7.4
 
 dev_dependencies:
   flutter_test:
