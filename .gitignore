@@ -40,7 +40,13 @@ Thumbs.db
 *.swo
 *~
 
-# Flutter/Dart
+# Firebase Configuration
+mobile/android/app/google-services.json
+mobile/ios/Runner/GoogleService-Info.plist
+mobile/lib/firebase_options.dart
+mobile/firebase_app_id_file.json
+
+# Flutter/Dart/Pub
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
