@@ -77,4 +77,30 @@ git push origin main
 
 **Summary:**
 - Clone work repos normally: `git clone git@github.com:work/repo.git`
-- Clone personal repos with alias: `git clone git@github-personal:personal/repo.git`
+- Clone personal repos with alias: `git clone git@github-repo2:abhijeet-roy75/repo.git`
+
+## How do I switch back to my Work account?
+
+**You don't need to do anything!**
+
+Because we set up aliases, your computer automatically knows which key to use based on the URL:
+
+- **For Work (Voiceboard)**: Just use the normal command.
+  ```bash
+  git clone git@github.com:voiceboard/repo.git
+  ```
+  It uses your default key (`id_ed25519`) automatically.
+
+- **For Personal (JEEVibe)**: Use the alias we created.
+  ```bash
+  git clone git@github-repo2:abhijeet-roy75/JEEVibe.git
+  ```
+  It uses your personal key (`id_ed25519_jeevibe`) automatically.
+
+**Check which account is active for a repo:**
+```bash
+git remote -v
+```
+- If it starts with `git@github.com...` -> Uses Work Account
+- If it starts with `git@github-repo2...` -> Uses Personal Account
+
