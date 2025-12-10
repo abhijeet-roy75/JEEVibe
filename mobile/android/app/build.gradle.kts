@@ -63,6 +63,18 @@ android {
             isShrinkResources = false
         }
     }
+    
+    // Suppress warnings about obsolete Java options from dependencies
+    tasks.withType<JavaCompile> {
+        options.compilerArgs.add("-Xlint:-options")
+    }
+    
+    // Suppress debug symbol stripping warning (known Flutter issue)
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
 
 flutter {

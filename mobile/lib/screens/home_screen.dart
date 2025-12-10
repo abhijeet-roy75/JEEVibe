@@ -12,6 +12,7 @@ import '../widgets/app_header.dart';
 import '../models/snap_data_model.dart';
 import '../services/storage_service.dart';
 import '../utils/text_preprocessor.dart';
+import 'profile/profile_view_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -184,6 +185,19 @@ class _HomeScreenState extends State<HomeScreen> {
         textAlign: TextAlign.center,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
+      ),
+      trailing: GestureDetector(
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileViewScreen()));
+        },
+        child: Container(
+             padding: const EdgeInsets.all(8),
+             decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white24,
+             ),
+             child: const Icon(Icons.person, color: Colors.white),
+        ),
       ),
       showGradient: true, // Ensure gradient is shown
       // Use default padding (24 top, 16 bottom) - AppHeader has SafeArea built-in

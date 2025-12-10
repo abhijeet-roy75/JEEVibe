@@ -5,8 +5,10 @@ import '../services/snap_counter_service.dart';
 import '../models/snap_data_model.dart';
 
 class AppStateProvider extends ChangeNotifier {
-  final StorageService _storage = StorageService();
-  final SnapCounterService _snapCounter = SnapCounterService();
+  final StorageService _storage;
+  final SnapCounterService _snapCounter;
+
+  AppStateProvider(this._storage, this._snapCounter);
 
   // State variables
   int _snapsUsed = 0;

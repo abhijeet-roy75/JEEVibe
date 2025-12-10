@@ -4,12 +4,9 @@ import 'storage_service.dart';
 import '../models/snap_data_model.dart';
 
 class SnapCounterService {
-  final StorageService _storage = StorageService();
+  final StorageService _storage;
 
-  // Singleton pattern
-  static final SnapCounterService _instance = SnapCounterService._internal();
-  factory SnapCounterService() => _instance;
-  SnapCounterService._internal();
+  SnapCounterService(this._storage);
 
   /// Initialize the service (should be called on app launch)
   Future<void> initialize() async {
