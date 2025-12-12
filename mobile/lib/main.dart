@@ -14,7 +14,7 @@ import 'providers/app_state_provider.dart';
 // Screens
 import 'screens/auth/welcome_screen.dart'; // The new Auth Wrapper
 import 'screens/auth/pin_verification_screen.dart'; // PIN verification
-import 'screens/home_screen.dart'; // The main dashboard
+import 'screens/assessment_intro_screen.dart'; // The new home dashboard
 // Services
 import 'services/firebase/pin_service.dart';
 
@@ -143,8 +143,8 @@ class _AppInitializerState extends State<AppInitializer> {
       
       if (!mounted) return;
       
-      // Determine target screen (Home or Profile Setup)
-      Widget targetScreen = const HomeScreen(); // Profile exists, so go to home
+      // Determine target screen (Assessment Intro is the new home)
+      Widget targetScreen = const AssessmentIntroScreen(); // Profile exists, so go to assessment intro
       
       // If PIN exists, show PIN verification screen, otherwise go directly to target
       if (hasPin) {

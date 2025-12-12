@@ -8,6 +8,10 @@ const express = require('express');
 const cors = require('cors');
 const solveRouter = require('./routes/solve');
 
+// Initialize Firebase
+const { db, storage } = require('./config/firebase');
+console.log('🔥 Firebase connected');
+
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
@@ -68,6 +72,9 @@ app.listen(PORT, () => {
     console.warn('⚠️  WARNING: OPENAI_API_KEY not set in .env file');
   }
 });
+
+const testFirebaseRouter = require('./routes/test-firebase');
+app.use('/api', testFirebaseRouter);
 
 module.exports = app;
 

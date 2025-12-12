@@ -19,6 +19,7 @@ class StorageService {
   static const String _keyHasSeenWelcome = '${_keyPrefix}has_seen_welcome';
   static const String _keyFirstLaunchDate = '${_keyPrefix}first_launch_date';
   static const String _keyAppVersion = '${_keyPrefix}app_version';
+  static const String _keyAssessmentStatus = '${_keyPrefix}assessment_status';
 
   // Constants
   static const int defaultSnapLimit = 5;
@@ -372,6 +373,33 @@ class StorageService {
       await prefs.setString(_keyAppVersion, version);
     } catch (e) {
       debugPrint('Error setting app version: $e');
+    }
+  }
+
+  // ===== ASSESSMENT STATUS METHODS =====
+
+  /// Get assessment status ('not_started', 'in_progress', 'completed')
+  Future<String> getAssessmentStatus() async {
+    try {
+      final prefs = await _preferences;
+      return prefs.getString(_keyAssessmentStatus) ?? 'not_started';
+    } catch (e) {
+      debugPrint('Error getting assessment status: $e');
+      return 'not_started';
+    }
+  }
+
+  /// Set assessment status
+  Future<void> setAssessmentStatus(String status) async {
+    try {
+      final prefs = await _preferences;
+      if (status == 'not_started' || status == 'in_progress' || status == 'completed') {
+        await prefs.setString(_keyAssessmentStatus, status);
+      } else {
+        debugPrint('Invalid assessment status: $status');
+      }
+    } catch (e) {
+      debugPrint('Error setting assessment status: $e');
     }
   }
 

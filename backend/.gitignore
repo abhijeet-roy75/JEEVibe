@@ -1,6 +1,13 @@
 node_modules/
-.env
 .DS_Store
 *.log
 dist/
 
+# Firebase
+serviceAccountKey.json
+*.json
+!package*.json
+
+# Environment
+.env
+.env.local
