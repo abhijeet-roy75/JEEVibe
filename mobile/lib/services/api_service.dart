@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'dart:convert';
 import '../models/solution_model.dart';
+import '../models/assessment_question.dart';
+import '../models/assessment_response.dart';
 
 class ApiService {
   // Backend URL
@@ -169,6 +171,80 @@ class ApiService {
       return response.statusCode == 200;
     } catch (e) {
       return false;
+    }
+  }
+
+  /// Get assessment questions
+  /// Requires Firebase ID token for authentication
+  static Future<List<AssessmentQuestion>> getAssessmentQuestions({
+    required String authToken,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/assessment/questions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['success'] == true && jsonData['questions'] != null) {
+          final questions = jsonData['questions'] as List<dynamic>;
+          return questions
+              .map((q) => AssessmentQuestion.fromJson(q as Map<String, dynamic>))
+              .toList();
+        } else {
+          throw Exception(jsonData['error'] ?? 'Invalid response format');
+        }
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to fetch assessment questions');
+      }
+    } on SocketException {
+      throw Exception('No internet connection. Please check your network and try again.');
+    } on http.ClientException {
+      throw Exception('Network error. Please try again.');
+    } catch (e) {
+      throw Exception('Failed to fetch assessment questions: ${e.toString()}');
+    }
+  }
+
+  /// Submit assessment responses
+  /// Requires Firebase ID token for authentication
+  static Future<AssessmentResult> submitAssessment({
+    required String authToken,
+    required List<AssessmentResponse> responses,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/assessment/submit'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+        body: json.encode({
+          'responses': responses.map((r) => r.toJson()).toList(),
+        }),
+      ).timeout(const Duration(seconds: 60));
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return AssessmentResult.fromJson(jsonData);
+      } else {
+        final errorData = json.decode(response.body);
+        return AssessmentResult(
+          success: false,
+          error: errorData['error'] ?? 'Failed to submit assessment',
+        );
+      }
+    } on SocketException {
+      throw Exception('No internet connection. Please check your network and try again.');
+    } on http.ClientException {
+      throw Exception('Network error. Please try again.');
+    } catch (e) {
+      throw Exception('Failed to submit assessment: ${e.toString()}');
     }
   }
 }

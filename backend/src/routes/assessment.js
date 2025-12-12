@@ -29,22 +29,24 @@ router.get('/questions', authenticateUser, async (req, res) => {
     // Use authenticated userId from middleware
     const userId = req.userId;
     
+    // TEMPORARILY DISABLED FOR TESTING: Allow multiple assessment attempts
+    // TODO: Re-enable this check before production
     // Check if user already completed assessment
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await retryFirestoreOperation(async () => {
-      return await userRef.get();
-    });
-    
-    if (userDoc.exists) {
-      const userData = userDoc.data();
-      if (userData.assessment?.status === 'completed') {
-        return res.status(400).json({
-          success: false,
-          error: 'Assessment already completed. Cannot retake.',
-          completed_at: userData.assessment.completed_at
-        });
-      }
-    }
+    // const userRef = db.collection('users').doc(userId);
+    // const userDoc = await retryFirestoreOperation(async () => {
+    //   return await userRef.get();
+    // });
+    // 
+    // if (userDoc.exists) {
+    //   const userData = userDoc.data();
+    //   if (userData.assessment?.status === 'completed') {
+    //     return res.status(400).json({
+    //       success: false,
+    //       error: 'Assessment already completed. Cannot retake.',
+    //       completed_at: userData.assessment.completed_at
+    //     });
+    //   }
+    // }
     
     // Get randomized questions (with retry)
     const questions = await retryFirestoreOperation(async () => {
@@ -112,23 +114,25 @@ router.post('/submit', authenticateUser, async (req, res) => {
       });
     }
     
+    // TEMPORARILY DISABLED FOR TESTING: Allow multiple assessment submissions
+    // TODO: Re-enable this check before production
     // Check if user already completed assessment BEFORE processing
     // This prevents wasted computation if assessment is already done
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await retryFirestoreOperation(async () => {
-      return await userRef.get();
-    });
-    
-    if (userDoc.exists) {
-      const userData = userDoc.data();
-      if (userData.assessment?.status === 'completed') {
-        return res.status(400).json({
-          success: false,
-          error: 'Assessment already completed. Cannot submit again.',
-          completed_at: userData.assessment.completed_at
-        });
-      }
-    }
+    // const userRef = db.collection('users').doc(userId);
+    // const userDoc = await retryFirestoreOperation(async () => {
+    //   return await userRef.get();
+    // });
+    // 
+    // if (userDoc.exists) {
+    //   const userData = userDoc.data();
+    //   if (userData.assessment?.status === 'completed') {
+    //     return res.status(400).json({
+    //       success: false,
+    //       error: 'Assessment already completed. Cannot submit again.',
+    //       completed_at: userData.assessment.completed_at
+    //     });
+    //   }
+    // }
     
     // Validate and sanitize inputs
     try {

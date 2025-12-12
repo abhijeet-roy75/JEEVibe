@@ -273,19 +273,21 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
     return await db.runTransaction(async (transaction) => {
       const userRef = db.collection('users').doc(userId);
       
+      // TEMPORARILY DISABLED FOR TESTING: Allow overwriting completed assessments
+      // TODO: Re-enable this check before production
       // Read user document to check status and prevent race conditions
       const userDoc = await transaction.get(userRef);
       
-      if (userDoc.exists) {
-        const userData = userDoc.data();
-        if (userData.assessment?.status === 'completed') {
-          // Check error code to provide better message
-          const error = new Error('Assessment already completed. Cannot submit again.');
-          error.code = 'ASSESSMENT_ALREADY_COMPLETED';
-          error.statusCode = 400;
-          throw error;
-        }
-      }
+      // if (userDoc.exists) {
+      //   const userData = userDoc.data();
+      //   if (userData.assessment?.status === 'completed') {
+      //     // Check error code to provide better message
+      //     const error = new Error('Assessment already completed. Cannot submit again.');
+      //     error.code = 'ASSESSMENT_ALREADY_COMPLETED';
+      //     error.statusCode = 400;
+      //     throw error;
+      //   }
+      // }
       
       // Update user profile atomically
       transaction.set(userRef, {
