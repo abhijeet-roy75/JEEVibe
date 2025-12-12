@@ -41,6 +41,9 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api', solveRouter);
 
+const assessmentRouter = require('./routes/assessment');
+app.use('/api/assessment', assessmentRouter);
+
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
@@ -48,7 +51,12 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       health: '/api/health',
-      solve: 'POST /api/solve'
+      solve: 'POST /api/solve',
+      assessment: {
+        questions: 'GET /api/assessment/questions?userId=...',
+        submit: 'POST /api/assessment/submit',
+        results: 'GET /api/assessment/results/:userId'
+      }
     }
   });
 });

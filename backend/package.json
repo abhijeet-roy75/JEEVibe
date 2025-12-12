@@ -7,7 +7,14 @@
     "start": "node src/index.js",
     "dev": "node src/index.js",
     "start:background": "node src/index.js > server.log 2>&1 &",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:api": "node scripts/test-assessment-api.js",
+    "test:theta": "node scripts/test-assessment-theta.js",
+    "test:scenarios": "node scripts/test-multiple-scenarios.js",
+    "test:scenarios:sim": "node scripts/test-scenarios-simulation.js",
+    "test:circuit-breaker": "node scripts/test-circuit-breaker.js",
+    "populate:assessment": "node scripts/populate-assessment-questions.js",
+    "update:images": "node scripts/update-question-images.js"
   },
   "keywords": [
     "jee",
@@ -19,6 +26,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "axios": "^1.13.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",

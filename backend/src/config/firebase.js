@@ -12,11 +12,12 @@ function initializeFirebase() {
     }
 
     // Option 1: Use service account file (development/local only)
-    // Skip file check on Vercel/serverless (no file system access)
+    // Skip file check on Vercel/Render/serverless (no file system access)
     const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+    const isRender = process.env.RENDER === 'true' || process.env.RENDER_SERVICE_ID;
     const isProduction = process.env.NODE_ENV === 'production' && !process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
     
-    if (!isVercel && !isProduction) {
+    if (!isVercel && !isRender && !isProduction) {
       const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || './serviceAccountKey.json';
       const resolvedPath = path.resolve(serviceAccountPath);
       
@@ -36,6 +37,8 @@ function initializeFirebase() {
       }
     } else if (isVercel) {
       console.log('🌐 Vercel environment detected - using environment variables only');
+    } else if (isRender) {
+      console.log('🌐 Render.com environment detected - using environment variables only');
     }
     
     // Option 2: Use environment variables (production)
