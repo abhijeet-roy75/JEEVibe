@@ -277,27 +277,54 @@ router.post('/submit', authenticateUser, async (req, res) => {
       };
     });
     
-    // Process assessment (enrichedResponses already have subject, chapter, is_correct)
-    const assessmentResults = await processInitialAssessment(userId, enrichedResponses);
+    // Set status to "processing" in Firestore immediately
+    const userRef = db.collection('users').doc(userId);
+    await retryFirestoreOperation(async () => {
+      await userRef.set({
+        assessment: {
+          status: 'processing',
+          submitted_at: new Date().toISOString()
+        }
+      }, { merge: true });
+    });
     
-    // Return results (without sensitive data)
-    const sanitizedResults = {
+    // Process assessment asynchronously (don't await - return immediately)
+    // Note: processInitialAssessment already saves results to Firestore
+    processInitialAssessment(userId, enrichedResponses)
+      .then((assessmentResults) => {
+        // Results are already saved by processInitialAssessment
+        // Just log success
+        console.log('Assessment processing completed:', {
+          userId,
+          overallTheta: assessmentResults.overall_theta,
+          timestamp: new Date().toISOString()
+        });
+      })
+      .catch((error) => {
+        // Update status to error
+        console.error('Error processing assessment in background:', {
+          userId,
+          error: error.message,
+          stack: error.stack
+        });
+        return retryFirestoreOperation(async () => {
+          await userRef.set({
+            assessment: {
+              status: 'error',
+              error: error.message,
+              error_at: new Date().toISOString()
+            }
+          }, { merge: true });
+        });
+      });
+    
+    // Return immediately with processing status
+    res.json({
       success: true,
-      assessment: {
-        status: assessmentResults.assessment.status,
-        completed_at: assessmentResults.assessment.completed_at,
-        time_taken_seconds: assessmentResults.assessment.time_taken_seconds
-      },
-      theta_by_chapter: assessmentResults.theta_by_chapter,
-      theta_by_subject: assessmentResults.theta_by_subject,
-      overall_theta: assessmentResults.overall_theta,
-      overall_percentile: assessmentResults.overall_percentile,
-      chapters_explored: assessmentResults.chapters_explored,
-      chapters_confident: assessmentResults.chapters_confident,
-      subject_balance: assessmentResults.subject_balance
-    };
-    
-    res.json(sanitizedResults);
+      status: 'processing',
+      message: 'Assessment submitted. Results will be available shortly.',
+      check_results_at: `/api/assessment/results/${userId}`
+    });
   } catch (error) {
     // Enhanced error logging with context
     // Note: responses might not be defined if error occurs early
@@ -368,12 +395,32 @@ router.get('/results/:userId', authenticateUser, async (req, res) => {
     }
     
     const userData = userDoc.data();
+    const assessmentStatus = userData.assessment?.status || 'not_started';
     
-    if (userData.assessment?.status !== 'completed') {
+    // Handle processing status
+    if (assessmentStatus === 'processing') {
+      return res.json({
+        success: true,
+        status: 'processing',
+        message: 'Assessment is being processed. Please check again in a moment.'
+      });
+    }
+    
+    // Handle error status
+    if (assessmentStatus === 'error') {
+      return res.status(500).json({
+        success: false,
+        error: userData.assessment?.error || 'Assessment processing failed',
+        status: 'error'
+      });
+    }
+    
+    // Only return full results if completed
+    if (assessmentStatus !== 'completed') {
       return res.status(400).json({
         success: false,
         error: 'Assessment not completed',
-        status: userData.assessment?.status || 'not_started'
+        status: assessmentStatus
       });
     }
     

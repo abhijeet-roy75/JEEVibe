@@ -213,6 +213,7 @@ class ApiService {
 
   /// Submit assessment responses
   /// Requires Firebase ID token for authentication
+  /// Returns immediately with processing status (async backend processing)
   static Future<AssessmentResult> submitAssessment({
     required String authToken,
     required List<AssessmentResponse> responses,
@@ -227,10 +228,26 @@ class ApiService {
         body: json.encode({
           'responses': responses.map((r) => r.toJson()).toList(),
         }),
-      ).timeout(const Duration(seconds: 60));
+      ).timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
+        // Backend now returns processing status immediately
+        if (jsonData['status'] == 'processing') {
+          return AssessmentResult(
+            success: true,
+            data: AssessmentData(
+              assessment: {'status': 'processing'},
+              thetaByChapter: {},
+              thetaBySubject: {},
+              overallTheta: 0,
+              overallPercentile: 0,
+              chaptersExplored: 0,
+              chaptersConfident: 0,
+              subjectBalance: {},
+            ),
+          );
+        }
         return AssessmentResult.fromJson(jsonData);
       } else {
         final errorData = json.decode(response.body);
@@ -245,6 +262,58 @@ class ApiService {
       throw Exception('Network error. Please try again.');
     } catch (e) {
       throw Exception('Failed to submit assessment: ${e.toString()}');
+    }
+  }
+
+  /// Get assessment results (for polling)
+  /// Requires Firebase ID token for authentication
+  static Future<AssessmentResult> getAssessmentResults({
+    required String authToken,
+    required String userId,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/assessment/results/$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        
+        // Handle processing status
+        if (jsonData['status'] == 'processing') {
+          return AssessmentResult(
+            success: true,
+            data: AssessmentData(
+              assessment: {'status': 'processing'},
+              thetaByChapter: {},
+              thetaBySubject: {},
+              overallTheta: 0,
+              overallPercentile: 0,
+              chaptersExplored: 0,
+              chaptersConfident: 0,
+              subjectBalance: {},
+            ),
+          );
+        }
+        
+        return AssessmentResult.fromJson(jsonData);
+      } else {
+        final errorData = json.decode(response.body);
+        return AssessmentResult(
+          success: false,
+          error: errorData['error'] ?? 'Failed to fetch assessment results',
+        );
+      }
+    } on SocketException {
+      throw Exception('No internet connection. Please check your network and try again.');
+    } on http.ClientException {
+      throw Exception('Network error. Please try again.');
+    } catch (e) {
+      throw Exception('Failed to fetch assessment results: ${e.toString()}');
     }
   }
 }

@@ -12,6 +12,9 @@ import '../services/firebase/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/latex_widget.dart';
+import '../widgets/app_header.dart';
+import '../widgets/safe_svg_widget.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'assessment_loading_screen.dart';
 
 class AssessmentQuestionScreen extends StatefulWidget {
@@ -182,12 +185,22 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
 
       if (mounted) {
         if (result.success && result.data != null) {
-          // Navigate to loading screen, then to dashboard
+          // Get userId from auth service
+          final currentUser = authService.currentUser;
+          final userId = currentUser?.uid;
+          
+          if (userId == null) {
+            throw Exception('User not authenticated');
+          }
+          
+          // Navigate to loading screen (will poll for results)
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => AssessmentLoadingScreen(
                 assessmentData: result.data!,
+                userId: userId, // Pass userId for polling
+                authToken: token, // Pass token for polling
               ),
             ),
           );
@@ -287,133 +300,184 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
       canPop: false, // Prevent back navigation
       child: Scaffold(
         backgroundColor: AppColors.backgroundLight,
-        appBar: _buildAppBar(),
-        body: SafeArea(
-          child: Column(
-            children: [
-              _buildProgressBar(),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildQuestionHeader(),
+        body: Column(
+          children: [
+            // Combined header with timer, progress, question count, and subject
+            _buildHeader(),
+            // Content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_currentQuestion!.hasImage) ...[
+                      _buildQuestionImage(),
                       const SizedBox(height: 16),
-                      if (_currentQuestion!.hasImage) ...[
-                        _buildQuestionImage(),
-                        const SizedBox(height: 16),
-                      ],
-                      _buildQuestionText(),
-                      const SizedBox(height: 24),
-                      _buildAnswerInput(),
                     ],
-                  ),
+                    _buildQuestionText(),
+                    const SizedBox(height: 24),
+                    _buildAnswerInput(),
+                  ],
                 ),
               ),
-              _buildNavigationButtons(),
-            ],
-          ),
+            ),
+            _buildNavigationButtons(),
+          ],
         ),
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      leading: Container(), // No back button
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.timer, color: AppColors.primaryPurple, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            _formatTime(_remainingSeconds),
-            style: AppTextStyles.headerSmall.copyWith(
-              color: AppColors.primaryPurple,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-      centerTitle: true,
-    );
-  }
-
-  Widget _buildProgressBar() {
+  Widget _buildHeader() {
     final progress = (_currentQuestionIndex + 1) / (_questions?.length ?? 30);
+    final question = _currentQuestion!;
     
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Question ${_currentQuestionIndex + 1} of ${_questions?.length ?? 30}',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                '${((progress * 100).round())}%',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textLight,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: progress,
-            backgroundColor: AppColors.borderGray,
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryPurple),
-            minHeight: 6,
-            borderRadius: BorderRadius.circular(3),
-          ),
-        ],
+      decoration: const BoxDecoration(
+        // Purple to pink gradient matching design
+        gradient: LinearGradient(
+          colors: [Color(0xFF9333EA), Color(0xFFEC4899)], // primaryPurple to secondaryPink
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
       ),
-    );
-  }
-
-  Widget _buildQuestionHeader() {
-    final question = _currentQuestion!;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.cardLightPurple,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.primaryPurple,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              question.subject,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Top row: Logo (left), Title (center), and Timer (right)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // JEEVibe logo on the left
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Padding(
+                        padding: const EdgeInsets.all(6),
+                        child: Image.asset(
+                          'assets/images/JEEVibeLogo.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Title centered
+                  Expanded(
+                    child: Text(
+                      'Initial Assessment',
+                      style: AppTextStyles.headerWhite.copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  // Timer on the right
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.timer, color: Colors.white, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          _formatTime(_remainingSeconds),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              question.chapter,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textMedium,
+            // Progress bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.white.withOpacity(0.3),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                minHeight: 4,
+                borderRadius: BorderRadius.circular(2),
               ),
-              overflow: TextOverflow.ellipsis,
             ),
-          ),
-        ],
+            // Bottom row: Question count (left) and Subject (right)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Question count
+                  Text(
+                    'Question ${_currentQuestionIndex + 1} of ${_questions?.length ?? 30}',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  // Subject
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      question.subject,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -428,8 +492,8 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
       constraints: const BoxConstraints(maxHeight: 300),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: SvgPicture.network(
-          imageUrl,
+        child: SafeSvgWidget(
+          url: imageUrl,
           fit: BoxFit.contain,
           placeholderBuilder: (context) => Container(
             height: 200,
@@ -438,15 +502,13 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
               child: CircularProgressIndicator(color: AppColors.primaryPurple),
             ),
           ),
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              height: 200,
-              color: AppColors.borderGray,
-              child: const Center(
-                child: Icon(Icons.broken_image, color: AppColors.textLight),
-              ),
-            );
-          },
+          errorBuilder: (context, error, stackTrace) => Container(
+            height: 200,
+            color: AppColors.borderGray,
+            child: const Center(
+              child: Icon(Icons.broken_image, color: AppColors.textLight),
+            ),
+          ),
         ),
       ),
     );
@@ -454,7 +516,11 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
 
   Widget _buildQuestionText() {
     final question = _currentQuestion!;
-    final text = question.questionLatex ?? question.questionText;
+    
+    // If question_latex exists, show both question_text and question_latex
+    // Otherwise, just show question_text
+    final hasLatex = question.questionLatex != null && question.questionLatex!.isNotEmpty;
+    final textContent = question.questionTextHtml ?? question.questionText;
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -469,10 +535,58 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
           ),
         ],
       ),
-      child: LaTeXWidget(
-        text: text,
-        textStyle: AppTextStyles.bodyLarge,
-        allowWrapping: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Show question_text/html first if it exists (with HTML parsing)
+          if (textContent.isNotEmpty) ...[
+            Html(
+              data: textContent,
+              style: {
+                "body": Style(
+                  fontSize: FontSize(AppTextStyles.bodyLarge.fontSize ?? 16),
+                  color: AppTextStyles.bodyLarge.color,
+                  lineHeight: LineHeight(AppTextStyles.bodyLarge.height ?? 1.6),
+                ),
+                "p": Style(
+                  margin: Margins.zero,
+                  padding: HtmlPaddings.zero,
+                ),
+                "strong": Style(
+                  fontWeight: FontWeight.bold,
+                ),
+                "b": Style(
+                  fontWeight: FontWeight.bold,
+                ),
+                "i": Style(
+                  fontStyle: FontStyle.italic,
+                ),
+                "em": Style(
+                  fontStyle: FontStyle.italic,
+                ),
+                "u": Style(
+                  textDecoration: TextDecoration.underline,
+                ),
+                "sub": Style(
+                  fontSize: FontSize((AppTextStyles.bodyLarge.fontSize ?? 16) * 0.75),
+                  verticalAlign: VerticalAlign.sub,
+                ),
+                "sup": Style(
+                  fontSize: FontSize((AppTextStyles.bodyLarge.fontSize ?? 16) * 0.75),
+                  verticalAlign: VerticalAlign.sup,
+                ),
+              },
+            ),
+            if (hasLatex) const SizedBox(height: 12),
+          ],
+          // Show question_latex if it exists
+          if (hasLatex)
+            LaTeXWidget(
+              text: question.questionLatex!,
+              textStyle: AppTextStyles.bodyLarge,
+              allowWrapping: true,
+            ),
+        ],
       ),
     );
   }
@@ -514,7 +628,9 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.cardLightPurple : Colors.white,
+                  color: isSelected 
+                      ? AppColors.cardLightPurple 
+                      : Colors.white,
                   border: Border.all(
                     color: isSelected
                         ? AppColors.primaryPurple
@@ -522,40 +638,96 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
                     width: isSelected ? 2 : 1,
                   ),
                   borderRadius: BorderRadius.circular(12),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primaryPurple.withOpacity(0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                 ),
                 child: Row(
                   children: [
+                    // Option ID badge (A, B, C, D)
                     Container(
-                      width: 24,
-                      height: 24,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.primaryPurple
-                              : AppColors.borderMedium,
-                          width: 2,
-                        ),
                         color: isSelected
                             ? AppColors.primaryPurple
-                            : Colors.transparent,
+                            : AppColors.borderGray,
+                        shape: BoxShape.circle,
                       ),
-                      child: isSelected
-                          ? const Icon(
-                              Icons.check,
-                              size: 16,
-                              color: Colors.white,
-                            )
-                          : null,
+                      child: Center(
+                        child: Text(
+                          option.optionId,
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: isSelected ? Colors.white : AppColors.textMedium,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 16),
+                    // Option text
                     Expanded(
-                      child: LaTeXWidget(
-                        text: option.text,
-                        textStyle: AppTextStyles.bodyMedium,
-                        allowWrapping: true,
+                      child: Html(
+                        data: option.text,
+                        style: {
+                          "body": Style(
+                            fontSize: FontSize(AppTextStyles.bodyMedium.fontSize ?? 14),
+                            color: AppTextStyles.bodyMedium.color,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            lineHeight: LineHeight(AppTextStyles.bodyMedium.height ?? 1.5),
+                          ),
+                          "p": Style(
+                            margin: Margins.zero,
+                            padding: HtmlPaddings.zero,
+                          ),
+                          "strong": Style(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          "b": Style(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          "i": Style(
+                            fontStyle: FontStyle.italic,
+                          ),
+                          "em": Style(
+                            fontStyle: FontStyle.italic,
+                          ),
+                          "u": Style(
+                            textDecoration: TextDecoration.underline,
+                          ),
+                          "sub": Style(
+                            fontSize: FontSize((AppTextStyles.bodyMedium.fontSize ?? 14) * 0.75),
+                            verticalAlign: VerticalAlign.sub,
+                          ),
+                          "sup": Style(
+                            fontSize: FontSize((AppTextStyles.bodyMedium.fontSize ?? 14) * 0.75),
+                            verticalAlign: VerticalAlign.sup,
+                          ),
+                        },
                       ),
                     ),
+                    // Checkmark icon when selected
+                    if (isSelected) ...[
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.check_circle,
+                        color: AppColors.primaryPurple,
+                        size: 24,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -625,58 +797,68 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
   }
 
   Widget _buildNavigationButtons() {
-    return Container(
-      padding: const EdgeInsets.all(24.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
+    final canProceed = _hasAnswer && !_isSubmitting;
+    
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
         child: SizedBox(
           width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: _isSubmitting ? null : _nextQuestion,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryPurple,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-            ),
-            child: _isSubmitting
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _isLastQuestion ? 'Submit Assessment' : 'Next Question',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+          height: 48,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: canProceed ? _nextQuestion : null,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: canProceed
+                      ? const LinearGradient(
+                          colors: [Color(0xFF9333EA), Color(0xFFEC4899)], // Purple to pink
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        )
+                      : LinearGradient(
+                          colors: [
+                            Colors.grey.shade400,
+                            Colors.grey.shade500,
+                          ], // Gray when disabled
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
                         ),
-                      ),
-                      if (!_isLastQuestion) ...[
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward, size: 20),
-                      ],
-                    ],
-                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _isLastQuestion ? 'Submit Assessment' : 'Next Question',
+                              style: AppTextStyles.labelMedium.copyWith(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (!_isLastQuestion) ...[
+                              const SizedBox(width: 6),
+                              const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+                            ],
+                          ],
+                        ),
+                ),
+              ),
+            ),
           ),
         ),
       ),

@@ -26,6 +26,39 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
+  // Suppress harmless SVG warnings and LaTeX debug messages
+  // These are informational and don't affect functionality
+  final originalDebugPrint = debugPrint;
+  debugPrint = (String? message, {int? wrapWidth}) {
+    if (message != null) {
+      final lowerMessage = message.toLowerCase();
+      // Suppress SVG warnings (check for various patterns)
+      if (lowerMessage.contains('unhandled element') && 
+          (lowerMessage.contains('metadata') || lowerMessage.contains('style'))) {
+        return;
+      }
+      if (lowerMessage.contains('picture key') && lowerMessage.contains('svg')) {
+        return;
+      }
+      if (lowerMessage.contains('svg loader')) {
+        return;
+      }
+      // Suppress LaTeX debug messages
+      if (lowerMessage.contains('[latex]') || lowerMessage.contains('latex')) {
+        if (lowerMessage.contains('wrapping allowed') ||
+            lowerMessage.contains('fallback') ||
+            lowerMessage.contains('converted latex')) {
+          return;
+        }
+      }
+    }
+    // Use original debugPrint for all other messages
+    originalDebugPrint?.call(message, wrapWidth: wrapWidth);
+  };
+  
+  // Note: print() cannot be overridden in Dart as it's a top-level function
+  // SVG warnings from flutter_svg package will still appear but are harmless
+  
   // Handle errors
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
@@ -144,11 +177,13 @@ class _AppInitializerState extends State<AppInitializer> {
       if (!mounted) return;
       
       // Determine target screen (Assessment Intro is the new home)
-      Widget targetScreen = const AssessmentIntroScreen(); // Profile exists, so go to assessment intro
+      final targetScreen = const AssessmentIntroScreen();
       
-      // If PIN exists, show PIN verification screen, otherwise go directly to target
+      // If PIN exists, show PIN verification screen, otherwise go directly to home
       if (hasPin) {
-        _targetScreen = PinVerificationScreen(targetScreen: targetScreen);
+        _targetScreen = PinVerificationScreen(
+          targetScreen: targetScreen,
+        );
       } else {
         _targetScreen = targetScreen;
       }

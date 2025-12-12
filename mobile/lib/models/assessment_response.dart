@@ -34,6 +34,23 @@ class AssessmentResult {
   });
 
   factory AssessmentResult.fromJson(Map<String, dynamic> json) {
+    // Handle processing status
+    if (json['status'] == 'processing') {
+      return AssessmentResult(
+        success: true,
+        data: AssessmentData(
+          assessment: {'status': 'processing'},
+          thetaByChapter: {},
+          thetaBySubject: {},
+          overallTheta: 0,
+          overallPercentile: 0,
+          chaptersExplored: 0,
+          chaptersConfident: 0,
+          subjectBalance: {},
+        ),
+      );
+    }
+    
     return AssessmentResult(
       success: json['success'] as bool? ?? false,
       error: json['error'] as String?,
