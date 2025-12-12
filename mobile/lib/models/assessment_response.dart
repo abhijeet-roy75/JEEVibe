@@ -42,6 +42,11 @@ class AssessmentResult {
           assessment: {'status': 'processing'},
           thetaByChapter: {},
           thetaBySubject: {},
+          subjectAccuracy: {
+            'physics': {'accuracy': null, 'correct': 0, 'total': 0},
+            'chemistry': {'accuracy': null, 'correct': 0, 'total': 0},
+            'mathematics': {'accuracy': null, 'correct': 0, 'total': 0},
+          },
           overallTheta: 0,
           overallPercentile: 0,
           chaptersExplored: 0,
@@ -65,6 +70,7 @@ class AssessmentData {
   final Map<String, dynamic> assessment;
   final Map<String, dynamic> thetaByChapter;
   final Map<String, dynamic> thetaBySubject;
+  final Map<String, dynamic> subjectAccuracy;
   final double overallTheta;
   final double overallPercentile;
   final int chaptersExplored;
@@ -75,6 +81,7 @@ class AssessmentData {
     required this.assessment,
     required this.thetaByChapter,
     required this.thetaBySubject,
+    required this.subjectAccuracy,
     required this.overallTheta,
     required this.overallPercentile,
     required this.chaptersExplored,
@@ -87,6 +94,11 @@ class AssessmentData {
       assessment: json['assessment'] as Map<String, dynamic>,
       thetaByChapter: json['theta_by_chapter'] as Map<String, dynamic>,
       thetaBySubject: json['theta_by_subject'] as Map<String, dynamic>,
+      subjectAccuracy: json['subject_accuracy'] as Map<String, dynamic>? ?? {
+        'physics': {'accuracy': null, 'correct': 0, 'total': 0},
+        'chemistry': {'accuracy': null, 'correct': 0, 'total': 0},
+        'mathematics': {'accuracy': null, 'correct': 0, 'total': 0},
+      },
       overallTheta: (json['overall_theta'] as num).toDouble(),
       overallPercentile: (json['overall_percentile'] as num).toDouble(),
       chaptersExplored: json['chapters_explored'] as int,

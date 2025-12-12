@@ -456,7 +456,12 @@ router.get('/results/:userId', authenticateUser, async (req, res) => {
       overall_percentile: userData.overall_percentile || 50,
       chapters_explored: userData.chapters_explored || 0,
       chapters_confident: userData.chapters_confident || 0,
-      subject_balance: userData.subject_balance || {}
+      subject_balance: userData.subject_balance || {},
+      subject_accuracy: userData.subject_accuracy || {
+        physics: { accuracy: null, correct: 0, total: 0 },
+        chemistry: { accuracy: null, correct: 0, total: 0 },
+        mathematics: { accuracy: null, correct: 0, total: 0 }
+      }
     });
   } catch (error) {
     console.error('Error fetching assessment results:', {

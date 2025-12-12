@@ -240,6 +240,11 @@ class ApiService {
               assessment: {'status': 'processing'},
               thetaByChapter: {},
               thetaBySubject: {},
+              subjectAccuracy: {
+                'physics': {'accuracy': null, 'correct': 0, 'total': 0},
+                'chemistry': {'accuracy': null, 'correct': 0, 'total': 0},
+                'mathematics': {'accuracy': null, 'correct': 0, 'total': 0},
+              },
               overallTheta: 0,
               overallPercentile: 0,
               chaptersExplored: 0,
@@ -291,6 +296,11 @@ class ApiService {
               assessment: {'status': 'processing'},
               thetaByChapter: {},
               thetaBySubject: {},
+              subjectAccuracy: {
+                'physics': {'accuracy': null, 'correct': 0, 'total': 0},
+                'chemistry': {'accuracy': null, 'correct': 0, 'total': 0},
+                'mathematics': {'accuracy': null, 'correct': 0, 'total': 0},
+              },
               overallTheta: 0,
               overallPercentile: 0,
               chaptersExplored: 0,

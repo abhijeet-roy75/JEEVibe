@@ -26,6 +26,56 @@ const {
 // ============================================================================
 
 /**
+ * Calculate subject-level accuracy (percentage of correct answers per subject)
+ * 
+ * @param {Array} responses - Array of enriched response objects with is_correct and subject
+ * @returns {Object} Dict of {subject: {accuracy: number, correct: number, total: number}}
+ */
+function calculateSubjectAccuracy(responses) {
+  const subjectStats = {
+    physics: { correct: 0, total: 0 },
+    chemistry: { correct: 0, total: 0 },
+    mathematics: { correct: 0, total: 0 }
+  };
+  
+  for (const response of responses) {
+    const { subject, is_correct } = response;
+    
+    if (!subject || typeof is_correct !== 'boolean') {
+      continue;
+    }
+    
+    const subjectLower = subject.toLowerCase();
+    if (subjectStats[subjectLower]) {
+      subjectStats[subjectLower].total++;
+      if (is_correct) {
+        subjectStats[subjectLower].correct++;
+      }
+    }
+  }
+  
+  // Calculate accuracy percentages
+  const result = {};
+  for (const [subject, stats] of Object.entries(subjectStats)) {
+    if (stats.total > 0) {
+      result[subject] = {
+        accuracy: Math.round((stats.correct / stats.total) * 100), // Percentage (0-100)
+        correct: stats.correct,
+        total: stats.total
+      };
+    } else {
+      result[subject] = {
+        accuracy: null,
+        correct: 0,
+        total: 0
+      };
+    }
+  }
+  
+  return result;
+}
+
+/**
  * Group assessment responses by chapter
  * 
  * @param {Array} responses - Array of response objects
@@ -169,6 +219,9 @@ async function processInitialAssessment(userId, enrichedResponses) {
       mathematics: calculateSubjectTheta(thetaEstimates, 'mathematics')
     };
     
+    // Step 3.5: Calculate subject-level accuracy (percentage of correct answers)
+    const subjectAccuracy = calculateSubjectAccuracy(enrichedResponses);
+    
     // Step 4: Calculate weighted overall theta (by JEE chapter importance)
     const overallTheta = calculateWeightedOverallTheta(thetaEstimates);
     const overallPercentile = thetaToPercentile(overallTheta);
@@ -208,6 +261,8 @@ async function processInitialAssessment(userId, enrichedResponses) {
       theta_by_chapter: thetaEstimates,
       // Subject-level theta (DERIVED - for mobile app display)
       theta_by_subject: thetaBySubject,
+      // Subject-level accuracy (percentage of correct answers per subject)
+      subject_accuracy: subjectAccuracy,
       // Overall metrics
       overall_theta: overallTheta,
       overall_percentile: overallPercentile,
@@ -294,6 +349,7 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
         assessment: assessmentResults.assessment,
         theta_by_chapter: assessmentResults.theta_by_chapter,
         theta_by_subject: assessmentResults.theta_by_subject,
+        subject_accuracy: assessmentResults.subject_accuracy,
         overall_theta: assessmentResults.overall_theta,
         overall_percentile: assessmentResults.overall_percentile,
         completed_quiz_count: assessmentResults.completed_quiz_count,
