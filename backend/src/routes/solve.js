@@ -5,9 +5,43 @@
 
 const express = require('express');
 const multer = require('multer');
+const { body, validationResult } = require('express-validator');
 const { solveQuestionFromImage, generateFollowUpQuestions, generateSingleFollowUpQuestion } = require('../services/openai');
+const { authenticateUser } = require('../middleware/auth');
+const logger = require('../utils/logger');
+const { ApiError } = require('../middleware/errorHandler');
 
 const router = express.Router();
+
+/**
+ * Validate image content by checking magic numbers (file signatures)
+ * Prevents spoofed MIME types and ensures file is actually an image
+ */
+function validateImageContent(buffer, declaredMimeType) {
+  if (!buffer || buffer.length < 4) {
+    return false;
+  }
+
+  // File signatures (magic numbers) for different image types
+  const signatures = {
+    'image/jpeg': [[0xFF, 0xD8, 0xFF]],
+    'image/jpg': [[0xFF, 0xD8, 0xFF]],
+    'image/png': [[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]],
+    'image/gif': [[0x47, 0x49, 0x46, 0x38, 0x37, 0x61], [0x47, 0x49, 0x46, 0x38, 0x39, 0x61]], // GIF87a or GIF89a
+    'image/webp': [[0x52, 0x49, 0x46, 0x46]], // RIFF (WebP starts with RIFF)
+  };
+
+  const expectedSignatures = signatures[declaredMimeType];
+  if (!expectedSignatures) {
+    // If we don't have a signature for this type, allow it (for HEIC, etc.)
+    return true;
+  }
+
+  // Check if buffer matches any of the expected signatures
+  return expectedSignatures.some(signature => {
+    return signature.every((byte, index) => buffer[index] === byte);
+  });
+}
 
 // Configure multer for memory storage (no disk writes for POC)
 const storage = multer.memoryStorage();
@@ -24,10 +58,16 @@ const upload = multer({
     
     if (isImage || !file.mimetype) {
       // If no MIME type, accept it and let image processing handle validation
-      console.log('Accepting file:', file.originalname, 'MIME:', file.mimetype);
+      logger.debug('Accepting file', {
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
       cb(null, true);
     } else {
-      console.log('Rejecting file:', file.originalname, 'MIME:', file.mimetype);
+      logger.warn('Rejecting file: Invalid type', {
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
       cb(new Error('Only image files are allowed'), false);
     }
   }
@@ -36,22 +76,29 @@ const upload = multer({
 /**
  * POST /api/solve
  * Upload image, solve question, generate follow-up questions
+ * 
+ * Authentication: Required (Bearer token in Authorization header)
  */
-router.post('/solve', upload.single('image'), async (req, res) => {
+router.post('/solve', authenticateUser, upload.single('image'), async (req, res, next) => {
   try {
+    const userId = req.userId;
+    
     // Validate image
     if (!req.file) {
-      console.log('No file received. Request body keys:', Object.keys(req.body || {}));
-      return res.status(400).json({
-        error: 'No image file provided'
+      logger.warn('No file received in solve request', {
+        requestId: req.id,
+        userId,
+        bodyKeys: Object.keys(req.body || {}),
       });
+      throw new ApiError(400, 'No image file provided');
     }
 
-    console.log('File received:', {
-      originalname: req.file.originalname,
+    logger.info('Image upload received', {
+      requestId: req.id,
+      userId,
+      filename: req.file.originalname,
       mimetype: req.file.mimetype,
       size: req.file.size,
-      fieldname: req.file.fieldname
     });
 
     const imageBuffer = req.file.buffer;
@@ -59,14 +106,43 @@ router.post('/solve', upload.single('image'), async (req, res) => {
 
     // Validate image size
     if (imageSize > 5 * 1024 * 1024) {
-      return res.status(400).json({
-        error: 'Image too large. Maximum size is 5MB.'
-      });
+      throw new ApiError(400, 'Image too large. Maximum size is 5MB.');
+    }
+
+    // Validate image type
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/heic', 'image/webp'];
+    if (!allowedMimeTypes.includes(req.file.mimetype)) {
+      throw new ApiError(400, `Invalid image type. Allowed types: ${allowedMimeTypes.join(', ')}`);
+    }
+
+    // Validate image content (magic numbers/file signatures)
+    if (!validateImageContent(imageBuffer, req.file.mimetype)) {
+      throw new ApiError(400, 'File content does not match declared image type. File may be corrupted or not an image.');
     }
 
     // Step 1: Solve question from image (don't generate follow-up questions yet)
-    console.log('Solving question from image...');
-    const solutionData = await solveQuestionFromImage(imageBuffer);
+    logger.info('Processing image with OpenAI', {
+      requestId: req.id,
+      userId,
+      imageSize,
+    });
+
+    // Add timeout for long-running OpenAI operations (2 minutes)
+    const setTimeoutPromise = promisify(setTimeout);
+    
+    const solutionData = await Promise.race([
+      solveQuestionFromImage(imageBuffer),
+      setTimeoutPromise(120000).then(() => {
+        throw new ApiError(504, 'Request timeout. Image processing took too long. Please try again with a clearer image.');
+      }),
+    ]);
+
+    logger.info('Image processed successfully', {
+      requestId: req.id,
+      userId,
+      subject: solutionData.subject,
+      topic: solutionData.topic,
+    });
 
     // Return solution only (follow-up questions will be generated on demand)
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -79,114 +155,108 @@ router.post('/solve', upload.single('image'), async (req, res) => {
         difficulty: solutionData.difficulty,
         solution: solutionData.solution,
         // No followUpQuestions - will be generated on demand
-      }
+      },
+      requestId: req.id,
     });
   } catch (error) {
-    console.error('Error in /api/solve:', error);
-    
-    // Handle specific error types
-    if (error.message.includes('timeout')) {
-      return res.status(504).json({
-        error: 'Request timed out. Please try again.'
-      });
-    }
-    
-    if (error.message.includes('rate limit')) {
-      return res.status(429).json({
-        error: 'Too many requests. Please wait a moment and try again.'
-      });
-    }
-
-    // Generic error
-    res.status(500).json({
-      error: 'Failed to process question. Please try again.',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    // Error handler middleware will catch this
+    next(error);
   }
 });
 
 /**
  * POST /api/generate-practice-questions
  * Generate follow-up practice questions on demand
+ * 
+ * Authentication: Required (Bearer token in Authorization header)
  */
-router.post('/generate-practice-questions', express.json(), async (req, res) => {
-  try {
-    const { recognizedQuestion, solution, topic, difficulty } = req.body;
-
-    // Validate required fields
-    if (!recognizedQuestion || !solution || !topic || !difficulty) {
-      return res.status(400).json({
-        error: 'Missing required fields: recognizedQuestion, solution, topic, difficulty'
-      });
-    }
-
-    console.log('Generating follow-up questions on demand...');
-    const followUpQuestions = await generateFollowUpQuestions(
-      recognizedQuestion,
-      typeof solution === 'string' ? solution : JSON.stringify(solution),
-      topic,
-      difficulty
-    );
-
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.json({
-      success: true,
-      data: {
-        questions: followUpQuestions
+router.post('/generate-practice-questions', 
+  authenticateUser,
+  [
+    body('recognizedQuestion').notEmpty().withMessage('recognizedQuestion is required'),
+    body('solution').notEmpty().withMessage('solution is required'),
+    body('topic').notEmpty().withMessage('topic is required'),
+    body('difficulty').isIn(['easy', 'medium', 'hard']).withMessage('difficulty must be easy, medium, or hard'),
+  ],
+  async (req, res, next) => {
+    try {
+      // Check validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw new ApiError(400, 'Validation failed', errors.array());
       }
-    });
-  } catch (error) {
-    console.error('Error generating practice questions:', error);
-    
-    if (error.message.includes('timeout')) {
-      return res.status(504).json({
-        error: 'Request timed out. Please try again.'
-      });
-    }
-    
-    if (error.message.includes('rate limit')) {
-      return res.status(429).json({
-        error: 'Too many requests. Please wait a moment and try again.'
-      });
-    }
 
-    res.status(500).json({
-      error: 'Failed to generate practice questions. Please try again.',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+      const { recognizedQuestion, solution, topic, difficulty } = req.body;
+      const userId = req.userId;
+
+      logger.info('Generating follow-up questions', {
+        requestId: req.id,
+        userId,
+        topic,
+        difficulty,
+      });
+
+      const followUpQuestions = await generateFollowUpQuestions(
+        recognizedQuestion,
+        typeof solution === 'string' ? solution : JSON.stringify(solution),
+        topic,
+        difficulty
+      );
+
+      logger.info('Follow-up questions generated', {
+        requestId: req.id,
+        userId,
+        questionCount: followUpQuestions.length,
+      });
+
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.json({
+        success: true,
+        data: {
+          questions: followUpQuestions
+        },
+        requestId: req.id,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 /**
  * POST /api/generate-single-question
  * Generate a single practice question (for lazy loading)
+ * 
+ * Authentication: Required (Bearer token in Authorization header)
  */
-router.post('/generate-single-question', express.json(), async (req, res) => {
-  try {
-    const { recognizedQuestion, solution, topic, difficulty, questionNumber } = req.body;
-
-    // Validate required fields
-    if (!recognizedQuestion || !solution || !topic || !difficulty || !questionNumber) {
-      return res.status(400).json({
-        error: 'Missing required fields: recognizedQuestion, solution, topic, difficulty, questionNumber'
-      });
-    }
-
-    if (![1, 2, 3].includes(questionNumber)) {
-      return res.status(400).json({
-        error: 'questionNumber must be 1, 2, or 3'
-      });
-    }
-
-    console.log(`Generating question ${questionNumber} on demand...`);
-    console.log('Request data:', {
-      recognizedQuestion: recognizedQuestion?.substring(0, 100),
-      topic,
-      difficulty,
-      questionNumber
-    });
-    
+router.post('/generate-single-question',
+  authenticateUser,
+  [
+    body('recognizedQuestion').notEmpty().withMessage('recognizedQuestion is required'),
+    body('solution').notEmpty().withMessage('solution is required'),
+    body('topic').notEmpty().withMessage('topic is required'),
+    body('difficulty').isIn(['easy', 'medium', 'hard']).withMessage('difficulty must be easy, medium, or hard'),
+    body('questionNumber').isInt({ min: 1, max: 3 }).withMessage('questionNumber must be 1, 2, or 3'),
+  ],
+  async (req, res, next) => {
     try {
+      // Check validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw new ApiError(400, 'Validation failed', errors.array());
+      }
+
+      const { recognizedQuestion, solution, topic, difficulty, questionNumber } = req.body;
+      const userId = req.userId;
+
+      logger.info('Generating single question', {
+        requestId: req.id,
+        userId,
+        topic,
+        difficulty,
+        questionNumber,
+      });
+      
       const question = await generateSingleFollowUpQuestion(
         recognizedQuestion,
         typeof solution === 'string' ? solution : JSON.stringify(solution),
@@ -195,51 +265,27 @@ router.post('/generate-single-question', express.json(), async (req, res) => {
         questionNumber
       );
 
-      console.log(`Successfully generated question ${questionNumber}`);
+      logger.info('Single question generated', {
+        requestId: req.id,
+        userId,
+        questionNumber,
+      });
       
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       res.json({
         success: true,
         data: {
           question: question
-        }
+        },
+        requestId: req.id,
       });
     } catch (error) {
-      console.error(`Error in generateSingleFollowUpQuestion for Q${questionNumber}:`, error);
-      throw error; // Re-throw to be caught by outer catch
+      next(error);
     }
-  } catch (error) {
-    console.error('Error generating single question:', error);
-    
-    if (error.message.includes('timeout')) {
-      return res.status(504).json({
-        error: 'Request timed out. Please try again.'
-      });
-    }
-    
-    if (error.message.includes('rate limit')) {
-      return res.status(429).json({
-        error: 'Too many requests. Please wait a moment and try again.'
-      });
-    }
-
-    res.status(500).json({
-      error: 'Failed to generate question. Please try again.',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
   }
-});
+);
 
-/**
- * GET /api/health
- * Health check endpoint
- */
-router.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString()
-  });
-});
+// Health check is now in separate route file (routes/health.js)
 
 module.exports = router;
 

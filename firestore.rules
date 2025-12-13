@@ -3,112 +3,17 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // ========================================
-    // HELPER FUNCTIONS
+    // SECURITY POLICY: NO CLIENT ACCESS
     // ========================================
-    
-    // Check if user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    // Check if user owns the document (document ID matches user UID)
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
+    // All database operations must go through the backend API.
+    // The backend uses Firebase Admin SDK which bypasses these rules.
+    // This ensures all data access is controlled and validated server-side.
     
     // ========================================
-    // USERS COLLECTION
+    // DENY ALL CLIENT ACCESS
     // ========================================
-    // Strategy: Allow reads (for performance), disable writes (force backend API)
-    
-    match /users/{userId} {
-      // Allow users to read their own profile
-      allow read: if isOwner(userId);
-      
-      // Disable all writes - must go through backend API
-      // Backend uses Admin SDK which bypasses these rules
-      allow write: if false;
-    }
-    
-    // ========================================
-    // INITIAL ASSESSMENT QUESTIONS
-    // ========================================
-    // Strategy: Read-only for authenticated users (public questions)
-    
-    match /initial_assessment_questions/{questionId} {
-      // Allow authenticated users to read questions
-      allow read: if isAuthenticated();
-      
-      // Disable writes - only backend can write (via Admin SDK)
-      allow write: if false;
-    }
-    
-    // ========================================
-    // ASSESSMENT RESPONSES
-    // ========================================
-    // Strategy: Users can read their own responses, writes via backend only
-    
-    match /assessment_responses/{userId}/responses/{responseId} {
-      // Allow users to read their own assessment responses
-      allow read: if isOwner(userId);
-      
-      // Disable writes - must go through backend API
-      allow write: if false;
-    }
-    
-    // ========================================
-    // QUIZZES (for future daily quiz feature)
-    // ========================================
-    // Strategy: Users can read their own quizzes, writes via backend only
-    
-    match /quizzes/{userId}/quizzes/{quizId} {
-      // Allow users to read their own quiz history
-      allow read: if isOwner(userId);
-      
-      // Disable writes - must go through backend API
-      allow write: if false;
-    }
-    
-    // ========================================
-    // STUDENT RESPONSES (for daily practice questions)
-    // ========================================
-    // Strategy: Users can read their own responses, writes via backend only
-    
-    match /student_responses/{userId}/responses/{responseId} {
-      // Allow users to read their own question responses
-      allow read: if isOwner(userId);
-      
-      // Disable writes - must go through backend API
-      allow write: if false;
-    }
-    
-    // ========================================
-    // QUESTIONS (for daily practice question bank)
-    // ========================================
-    // Strategy: Read-only for authenticated users
-    
-    match /questions/{questionId} {
-      // Allow authenticated users to read questions
-      allow read: if isAuthenticated();
-      
-      // Disable writes - only backend can write (via Admin SDK)
-      allow write: if false;
-    }
-    
-    // ========================================
-    // SYSTEM EVENTS (backend-only)
-    // ========================================
-    // Strategy: No client access - backend only
-    
-    match /system_events/{eventId} {
-      // No client access - backend only
-      allow read, write: if false;
-    }
-    
-    // ========================================
-    // DEFAULT: DENY ALL
-    // ========================================
-    // Any collection not explicitly defined above is denied
+    // Frontend mobile app cannot connect directly to Firestore.
+    // All operations must go through backend API endpoints.
     
     match /{document=**} {
       allow read, write: if false;

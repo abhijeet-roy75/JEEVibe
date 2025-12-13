@@ -1,10 +1,12 @@
 /// Photo Review Screen - Matches design: 6a Photo Review Screen.png
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../utils/image_compressor.dart';
 import '../services/api_service.dart';
+import '../services/firebase/auth_service.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
 import 'solution_screen.dart';
@@ -23,6 +25,41 @@ class PhotoReviewScreen extends StatelessWidget {
 
   Future<void> _usePhoto(BuildContext context) async {
     try {
+      // Get authentication token with refresh capability
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      // Get token right before use to avoid race conditions
+      String? token;
+      try {
+        token = await authService.getIdToken();
+        // If null, try to refresh
+        if (token == null && authService.currentUser != null) {
+          token = await authService.currentUser!.getIdToken(true); // Force refresh
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Authentication required. Please sign in again.'),
+              backgroundColor: AppColors.errorRed,
+            ),
+          );
+        }
+        return;
+      }
+      
+      if (token == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Authentication required. Please sign in again.'),
+              backgroundColor: AppColors.errorRed,
+            ),
+          );
+        }
+        return;
+      }
+
       // Show loading indicator
       showDialog(
         context: context,
@@ -35,8 +72,11 @@ class PhotoReviewScreen extends StatelessWidget {
       // Compress image
       final compressedFile = await ImageCompressor.compressImage(imageFile);
       
-      // Start solving (but don't wait)
-      final solutionFuture = ApiService.solveQuestion(compressedFile);
+      // Start solving (but don't wait) - use token immediately to avoid race condition
+      final solutionFuture = ApiService.solveQuestion(
+        imageFile: compressedFile,
+        authToken: token!, // Non-null assertion safe here after null check
+      );
       
       if (context.mounted) {
         // Pop loading dialog
@@ -60,10 +100,22 @@ class PhotoReviewScreen extends StatelessWidget {
         // Pop loading dialog if shown
         Navigator.of(context).pop();
         
+        // Handle rate limiting errors specifically
+        final errorMessage = e.toString();
+        String displayMessage;
+        if (errorMessage.contains('Too many requests')) {
+          displayMessage = 'Too many requests. Please wait a moment and try again.';
+        } else if (errorMessage.contains('Authentication')) {
+          displayMessage = 'Authentication required. Please sign in again.';
+        } else {
+          displayMessage = 'Failed to process image: $e';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to process image: $e'),
+            content: Text(displayMessage),
             backgroundColor: AppColors.errorRed,
+            duration: const Duration(seconds: 4),
           ),
         );
       }

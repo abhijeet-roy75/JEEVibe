@@ -1,0 +1,366 @@
+/**
+ * User Profile Routes
+ * 
+ * API endpoints for user profile operations:
+ * - GET /api/users/profile - Get user profile
+ * - POST /api/users/profile - Create or update user profile
+ * - GET /api/users/profile/exists - Check if profile exists
+ * - PATCH /api/users/profile/last-active - Update last active timestamp
+ * - PATCH /api/users/profile/complete - Mark profile as completed
+ */
+
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+const router = express.Router();
+const { db, admin } = require('../config/firebase');
+const { authenticateUser } = require('../middleware/auth');
+const { retryFirestoreOperation } = require('../utils/firestoreRetry');
+const logger = require('../utils/logger');
+const { ApiError } = require('../middleware/errorHandler');
+const { CacheKeys, get: getCache, set: setCache, del: delCache } = require('../utils/cache');
+
+/**
+ * GET /api/users/profile
+ * 
+ * Get the authenticated user's profile
+ * 
+ * Authentication: Required (Bearer token in Authorization header)
+ */
+router.get('/profile', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const cacheKey = CacheKeys.userProfile(userId);
+    
+    // Check cache first
+    const cached = getCache(cacheKey);
+    if (cached) {
+      logger.info('User profile served from cache', {
+        requestId: req.id,
+        userId,
+      });
+      return res.json({
+        success: true,
+        data: cached,
+        cached: true,
+        requestId: req.id,
+      });
+    }
+    
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await retryFirestoreOperation(async () => {
+      return await userRef.get();
+    });
+    
+    if (!userDoc.exists) {
+      throw new ApiError(404, 'User profile not found');
+    }
+    
+    const userData = userDoc.data();
+    
+    // Convert Firestore Timestamps to ISO strings for JSON response
+    const profile = {
+      uid: userId,
+      ...userData,
+      createdAt: userData.createdAt?.toDate?.()?.toISOString() || userData.createdAt,
+      lastActive: userData.lastActive?.toDate?.()?.toISOString() || userData.lastActive,
+      dateOfBirth: userData.dateOfBirth?.toDate?.()?.toISOString() || userData.dateOfBirth,
+    };
+    
+    // Cache for 5 minutes
+    setCache(cacheKey, profile, 300);
+    
+    logger.info('User profile fetched', {
+      requestId: req.id,
+      userId,
+    });
+    
+    res.json({
+      success: true,
+      data: profile,
+      requestId: req.id,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/users/profile
+ * 
+ * Create or update user profile (merge operation)
+ * 
+ * Authentication: Required (Bearer token in Authorization header)
+ * 
+ * Body: User profile object (all fields optional except uid which comes from token)
+ */
+router.post('/profile', 
+  authenticateUser,
+  [
+    body('firstName').optional().isLength({ max: 100 }).trim().escape(),
+    body('lastName').optional().isLength({ max: 100 }).trim().escape(),
+    body('email').optional().isEmail().normalizeEmail(),
+    body('phoneNumber').optional().matches(/^\+?[1-9]\d{1,14}$/).withMessage('Invalid phone number format'),
+    body('weakSubjects').optional().isArray().custom((arr) => {
+      if (!Array.isArray(arr)) {
+        throw new Error('weakSubjects must be an array');
+      }
+      if (arr.length > 10) {
+        throw new Error('Maximum 10 weak subjects allowed');
+      }
+      
+      // Check total size
+      const totalSize = JSON.stringify(arr).length;
+      if (totalSize > 10000) { // 10KB limit
+        throw new Error('weakSubjects array data too large (max 10KB)');
+      }
+      
+      // Validate each item
+      arr.forEach((item, index) => {
+        if (typeof item !== 'string') {
+          throw new Error(`weakSubjects[${index}] must be a string`);
+        }
+        if (item.length === 0) {
+          throw new Error(`weakSubjects[${index}] cannot be empty`);
+        }
+        if (item.length > 50) {
+          throw new Error(`weakSubjects[${index}] must be 50 characters or less`);
+        }
+        // Allow alphanumeric, spaces, hyphens, underscores
+        if (!/^[a-zA-Z0-9\s_-]+$/.test(item)) {
+          throw new Error(`weakSubjects[${index}] contains invalid characters`);
+        }
+      });
+      
+      return true;
+    }),
+    body('strongSubjects').optional().isArray().custom((arr) => {
+      if (!Array.isArray(arr)) {
+        throw new Error('strongSubjects must be an array');
+      }
+      if (arr.length > 10) {
+        throw new Error('Maximum 10 strong subjects allowed');
+      }
+      
+      // Check total size
+      const totalSize = JSON.stringify(arr).length;
+      if (totalSize > 10000) { // 10KB limit
+        throw new Error('strongSubjects array data too large (max 10KB)');
+      }
+      
+      // Validate each item
+      arr.forEach((item, index) => {
+        if (typeof item !== 'string') {
+          throw new Error(`strongSubjects[${index}] must be a string`);
+        }
+        if (item.length === 0) {
+          throw new Error(`strongSubjects[${index}] cannot be empty`);
+        }
+        if (item.length > 50) {
+          throw new Error(`strongSubjects[${index}] must be 50 characters or less`);
+        }
+        // Allow alphanumeric, spaces, hyphens, underscores
+        if (!/^[a-zA-Z0-9\s_-]+$/.test(item)) {
+          throw new Error(`strongSubjects[${index}] contains invalid characters`);
+        }
+      });
+      
+      return true;
+    }),
+  ],
+  async (req, res, next) => {
+    try {
+      // Check validation errors
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        throw new ApiError(400, 'Validation failed', errors.array());
+      }
+
+      const userId = req.userId;
+      const profileData = req.body;
+      
+      // Remove uid from body if present (we use authenticated userId)
+      delete profileData.uid;
+    
+      // Invalidate cache BEFORE saving (prevent race condition)
+      delCache(CacheKeys.userProfile(userId));
+    
+      // Convert ISO date strings to Firestore Timestamps
+      const firestoreData = { ...profileData };
+      
+      // Check if profile exists to determine if we should set createdAt
+      const userRef = db.collection('users').doc(userId);
+      const userDoc = await retryFirestoreOperation(async () => {
+        return await userRef.get();
+      });
+      
+      // Validate and convert createdAt
+      if (firestoreData.createdAt) {
+        const date = new Date(firestoreData.createdAt);
+        if (isNaN(date.getTime())) {
+          throw new ApiError(400, 'Invalid createdAt date format');
+        }
+        firestoreData.createdAt = admin.firestore.Timestamp.fromDate(date);
+      } else if (!userDoc.exists) {
+        // Set createdAt if not provided and this is a new profile
+        firestoreData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+      }
+      
+      // Validate and convert lastActive
+      if (firestoreData.lastActive) {
+        const date = new Date(firestoreData.lastActive);
+        if (isNaN(date.getTime())) {
+          throw new ApiError(400, 'Invalid lastActive date format');
+        }
+        firestoreData.lastActive = admin.firestore.Timestamp.fromDate(date);
+      } else {
+        firestoreData.lastActive = admin.firestore.FieldValue.serverTimestamp();
+      }
+      
+      // Validate and convert dateOfBirth
+      if (firestoreData.dateOfBirth) {
+        const date = new Date(firestoreData.dateOfBirth);
+        if (isNaN(date.getTime())) {
+          throw new ApiError(400, 'Invalid dateOfBirth format');
+        }
+        
+        // Validate date is reasonable (between 5 and 120 years ago)
+        const now = new Date();
+        const minDate = new Date(now.getFullYear() - 120, 0, 1); // 120 years ago
+        const maxDate = new Date(now.getFullYear() - 5, 11, 31); // 5 years ago (minimum age)
+        
+        if (date < minDate || date > maxDate) {
+          throw new ApiError(400, 'dateOfBirth must be between 5 and 120 years ago');
+        }
+        
+        firestoreData.dateOfBirth = admin.firestore.Timestamp.fromDate(date);
+      }
+      
+      await retryFirestoreOperation(async () => {
+        return await userRef.set(firestoreData, { merge: true });
+      });
+      
+      // Fetch updated profile to return
+      const updatedDoc = await retryFirestoreOperation(async () => {
+        return await userRef.get();
+      });
+      
+      const updatedData = updatedDoc.data();
+      const profile = {
+        uid: userId,
+        ...updatedData,
+        createdAt: updatedData.createdAt?.toDate?.()?.toISOString() || updatedData.createdAt,
+        lastActive: updatedData.lastActive?.toDate?.()?.toISOString() || updatedData.lastActive,
+        dateOfBirth: updatedData.dateOfBirth?.toDate?.()?.toISOString() || updatedData.dateOfBirth,
+      };
+      
+      logger.info('User profile saved', {
+        requestId: req.id,
+        userId,
+      });
+      
+      res.json({
+        success: true,
+        data: profile,
+        requestId: req.id,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
+ * GET /api/users/profile/exists
+ * 
+ * Check if user profile exists
+ * 
+ * Authentication: Required (Bearer token in Authorization header)
+ */
+router.get('/profile/exists', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await retryFirestoreOperation(async () => {
+      return await userRef.get();
+    });
+    
+    res.json({
+      success: true,
+      exists: userDoc.exists,
+      requestId: req.id,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PATCH /api/users/profile/last-active
+ * 
+ * Update last active timestamp
+ * 
+ * Authentication: Required (Bearer token in Authorization header)
+ */
+router.patch('/profile/last-active', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    
+    const userRef = db.collection('users').doc(userId);
+    await retryFirestoreOperation(async () => {
+      return await userRef.update({
+        lastActive: admin.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    
+    // Invalidate cache
+    delCache(CacheKeys.userProfile(userId));
+    
+    res.json({
+      success: true,
+      message: 'Last active timestamp updated',
+      requestId: req.id,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PATCH /api/users/profile/complete
+ * 
+ * Mark profile as completed
+ * 
+ * Authentication: Required (Bearer token in Authorization header)
+ */
+router.patch('/profile/complete', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    
+    const userRef = db.collection('users').doc(userId);
+    await retryFirestoreOperation(async () => {
+      return await userRef.update({
+        profileCompleted: true
+      });
+    });
+    
+    // Invalidate cache
+    delCache(CacheKeys.userProfile(userId));
+    
+    logger.info('Profile marked as completed', {
+      requestId: req.id,
+      userId,
+    });
+    
+    res.json({
+      success: true,
+      message: 'Profile marked as completed',
+      requestId: req.id,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+module.exports = router;
+

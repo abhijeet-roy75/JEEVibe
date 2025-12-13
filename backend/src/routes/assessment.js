@@ -15,6 +15,8 @@ const { processInitialAssessment, validateAssessmentResponses } = require('../se
 const { authenticateUser } = require('../middleware/auth');
 const { validateQuestionId, validateStudentAnswer, validateTimeTaken } = require('../utils/validation');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
+const logger = require('../utils/logger');
+const { ApiError } = require('../middleware/errorHandler');
 
 /**
  * GET /api/assessment/questions
@@ -24,7 +26,7 @@ const { retryFirestoreOperation } = require('../utils/firestoreRetry');
  * 
  * Authentication: Required (Bearer token in Authorization header)
  */
-router.get('/questions', authenticateUser, async (req, res) => {
+router.get('/questions', authenticateUser, async (req, res, next) => {
   try {
     // Use authenticated userId from middleware
     const userId = req.userId;
@@ -62,19 +64,11 @@ router.get('/questions', authenticateUser, async (req, res) => {
     res.json({
       success: true,
       count: sanitizedQuestions.length,
-      questions: sanitizedQuestions
+      questions: sanitizedQuestions,
+      requestId: req.id,
     });
   } catch (error) {
-    console.error('Error fetching assessment questions:', {
-      userId: req.userId,
-      error: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to fetch assessment questions'
-    });
+    next(error);
   }
 });
 
@@ -294,7 +288,8 @@ router.post('/submit', authenticateUser, async (req, res) => {
       .then((assessmentResults) => {
         // Results are already saved by processInitialAssessment
         // Just log success
-        console.log('Assessment processing completed:', {
+        logger.info('Assessment processing completed', {
+          requestId: req.id,
           userId,
           overallTheta: assessmentResults.overall_theta,
           timestamp: new Date().toISOString()
@@ -302,7 +297,8 @@ router.post('/submit', authenticateUser, async (req, res) => {
       })
       .catch((error) => {
         // Update status to error
-        console.error('Error processing assessment in background:', {
+        logger.error('Error processing assessment in background', {
+          requestId: req.id,
           userId,
           error: error.message,
           stack: error.stack
@@ -326,38 +322,8 @@ router.post('/submit', authenticateUser, async (req, res) => {
       check_results_at: `/api/assessment/results/${userId}`
     });
   } catch (error) {
-    // Enhanced error logging with context
-    // Note: responses might not be defined if error occurs early
-    const responseCount = (responses && Array.isArray(responses)) ? responses.length : 'unknown';
-    console.error('Error submitting assessment:', {
-      userId: req.userId,
-      error: error.message,
-      stack: error.stack,
-      responseCount: responseCount,
-      timestamp: new Date().toISOString()
-    });
-    
-    // Determine appropriate status code
-    let statusCode = 500;
-    
-    // Check for specific error codes
-    if (error.code === 'ASSESSMENT_ALREADY_COMPLETED' || error.statusCode === 400) {
-      statusCode = 400;
-    } else if (error.message.includes('already completed')) {
-      statusCode = 400;
-    } else if (error.message.includes('not found') || error.code === 5) { // NOT_FOUND
-      statusCode = 404;
-    } else if (error.message.includes('Invalid') || error.message.includes('required') || error.message.includes('missing')) {
-      statusCode = 400;
-    } else if (error.code === 10) { // ABORTED - transaction conflict
-      statusCode = 409; // Conflict
-      error.message = 'Assessment submission conflicted with another request. Please wait a moment and try again.';
-    }
-    
-    res.status(statusCode).json({
-      success: false,
-      error: error.message || 'Failed to process assessment'
-    });
+    // Error handler middleware will catch this
+    next(error);
   }
 });
 
@@ -458,11 +424,19 @@ router.get('/results/:userId', authenticateUser, async (req, res) => {
           userRef.set({
             subject_accuracy: subjectAccuracy
           }, { merge: true }).catch(err => {
-            console.error('Error saving calculated subject_accuracy:', err);
+            logger.error('Error saving calculated subject_accuracy', {
+              requestId: req.id,
+              userId: authenticatedUserId,
+              error: err.message,
+            });
           });
         }
       } catch (calcError) {
-        console.error('Error calculating subject_accuracy from responses:', calcError);
+        logger.error('Error calculating subject_accuracy from responses', {
+          requestId: req.id,
+          userId: authenticatedUserId,
+          error: calcError.message,
+        });
         // Use default if calculation fails
         subjectAccuracy = {
           physics: { accuracy: null, correct: 0, total: 0 },
@@ -512,17 +486,7 @@ router.get('/results/:userId', authenticateUser, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching assessment results:', {
-      userId: req.userId,
-      requestedUserId: paramUserId,
-      error: error.message,
-      stack: error.stack,
-      timestamp: new Date().toISOString()
-    });
-    res.status(500).json({
-      success: false,
-      error: error.message || 'Failed to fetch assessment results'
-    });
+    next(error);
   }
 });
 

@@ -8,6 +8,7 @@ import '../widgets/latex_widget.dart';
 import '../widgets/chemistry_text.dart';
 import '../widgets/app_header.dart';
 import '../services/api_service.dart';
+import '../services/firebase/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
@@ -67,7 +68,27 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
     });
 
     try {
+      // Get authentication token with refresh capability
+      final authService = Provider.of<AuthService>(context, listen: false);
+      
+      // Get token right before use to avoid race conditions
+      String? token;
+      try {
+        token = await authService.getIdToken();
+        // If null, try to refresh
+        if (token == null && authService.currentUser != null) {
+          token = await authService.currentUser!.getIdToken(true); // Force refresh
+        }
+      } catch (e) {
+        throw Exception('Authentication required. Please sign in again.');
+      }
+      
+      if (token == null) {
+        throw Exception('Authentication required. Please sign in again.');
+      }
+
       final question = await ApiService.generateSingleQuestion(
+        authToken: token!, // Non-null assertion safe here after null check
         recognizedQuestion: widget.recognizedQuestion,
         solution: {
           'approach': widget.solution.approach,
@@ -92,8 +113,16 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
       }
     } catch (e) {
       if (mounted) {
+        // Handle rate limiting errors specifically
+        String errorMessage = e.toString();
+        if (errorMessage.contains('Too many requests')) {
+          errorMessage = 'Too many requests. Please wait a moment and try again.';
+        } else if (errorMessage.contains('Authentication')) {
+          errorMessage = 'Authentication required. Please sign in again.';
+        }
+        
         setState(() {
-          _questionErrors[index] = e.toString();
+          _questionErrors[index] = errorMessage;
           _questionLoading[index] = false;
         });
       }

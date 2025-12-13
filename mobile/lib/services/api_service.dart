@@ -14,13 +14,71 @@ class ApiService {
   // static const String baseUrl = 'http://192.168.5.81:3000';
   static const String baseUrl = 'https://jeevibe.onrender.com';
   
+  /// Get valid authentication token with automatic refresh
+  /// Handles token expiration and refresh automatically
+  static Future<String> _getValidToken(dynamic authService) async {
+    var token = await authService.getIdToken();
+    
+    // If token is null, try to refresh
+    if (token == null) {
+      final user = authService.currentUser;
+      if (user != null) {
+        // Force token refresh
+        try {
+          token = await user.getIdToken(true); // true = force refresh
+        } catch (e) {
+          throw Exception('Failed to refresh authentication token. Please sign in again.');
+        }
+      }
+    }
+    
+    if (token == null) {
+      throw Exception('Authentication required. Please sign in again.');
+    }
+    
+    return token;
+  }
+  
+  /// Retry request with exponential backoff for network errors
+  static Future<T> _retryRequest<T>(Future<T> Function() request, {int maxRetries = 3}) async {
+    int attempts = 0;
+    while (attempts < maxRetries) {
+      try {
+        return await request();
+      } catch (e) {
+        attempts++;
+        if (attempts >= maxRetries) rethrow;
+        
+        // Only retry on network errors
+        final errorStr = e.toString();
+        if (errorStr.contains('SocketException') || 
+            errorStr.contains('ClientException') ||
+            errorStr.contains('timeout')) {
+          // Exponential backoff: 2s, 4s, 8s
+          await Future.delayed(Duration(seconds: 2 * attempts));
+          continue;
+        }
+        rethrow; // Don't retry on other errors
+      }
+    }
+    throw Exception('Max retries exceeded');
+  }
+  
   /// Upload image and get solution
-  static Future<Solution> solveQuestion(File imageFile) async {
-    try {
+  /// Requires Firebase ID token for authentication
+  static Future<Solution> solveQuestion({
+    required File imageFile,
+    required String authToken,
+  }) async {
+    return _retryRequest(() async {
+      try {
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl/api/solve'),
       );
+
+      // Add authentication header
+      request.headers['Authorization'] = 'Bearer $authToken';
 
       // Add image file with explicit content type
       final fileExtension = imageFile.path.split('.').last.toLowerCase();
@@ -55,7 +113,10 @@ class ApiService {
               throw Exception('Failed to parse solution data: $e');
             }
           } else {
-            throw Exception('Invalid response format: ${jsonData['error'] ?? 'Unknown error'}');
+            // Handle new error format
+            final errorMsg = jsonData['error'] ?? 'Unknown error';
+            final requestId = jsonData['requestId'];
+            throw Exception('$errorMsg${requestId != null ? ' (Request ID: $requestId)' : ''}');
           }
         } catch (e) {
           if (e is Exception) rethrow;
@@ -64,32 +125,48 @@ class ApiService {
       } else {
         try {
           final errorData = json.decode(response.body);
-          throw Exception(errorData['error'] ?? 'Failed to solve question');
+          final errorMsg = errorData['error'] ?? 'Failed to solve question';
+          final requestId = errorData['requestId'];
+          
+          // Handle rate limiting specifically
+          if (response.statusCode == 429) {
+            throw Exception('Too many requests. Please wait a moment and try again.');
+          }
+          
+          throw Exception('$errorMsg${requestId != null ? ' (Request ID: $requestId)' : ''}');
         } catch (e) {
+          if (e is Exception) rethrow;
           throw Exception('Server error (${response.statusCode}): ${response.body.substring(0, 200)}');
         }
       }
-    } on SocketException {
-      throw Exception('No internet connection. Please check your network and try again.');
-    } on http.ClientException {
-      throw Exception('Network error. Please try again.');
-    } catch (e) {
-      throw Exception('Failed to solve question: ${e.toString()}');
-    }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to solve question: ${e.toString()}');
+      }
+    });
   }
 
   /// Generate a single practice question (for lazy loading)
+  /// Requires Firebase ID token for authentication
   static Future<FollowUpQuestion> generateSingleQuestion({
+    required String authToken,
     required String recognizedQuestion,
     required Map<String, dynamic> solution,
     required String topic,
     required String difficulty,
     required int questionNumber,
   }) async {
-    try {
+    return _retryRequest(() async {
+      try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/generate-single-question'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
         body: json.encode({
           'recognizedQuestion': recognizedQuestion,
           'solution': solution,
@@ -104,23 +181,36 @@ class ApiService {
         if (jsonData['success'] == true && jsonData['data'] != null) {
           return FollowUpQuestion.fromJson(jsonData['data']['question'] as Map<String, dynamic>);
         } else {
-          throw Exception('Invalid response format');
+          final errorMsg = jsonData['error'] ?? 'Invalid response format';
+          final requestId = jsonData['requestId'];
+          throw Exception('$errorMsg${requestId != null ? ' (Request ID: $requestId)' : ''}');
         }
       } else {
         final errorData = json.decode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to generate question');
+        final errorMsg = errorData['error'] ?? 'Failed to generate question';
+        final requestId = errorData['requestId'];
+        
+        // Handle rate limiting
+        if (response.statusCode == 429) {
+          throw Exception('Too many requests. Please wait a moment and try again.');
+        }
+        
+        throw Exception('$errorMsg${requestId != null ? ' (Request ID: $requestId)' : ''}');
       }
-    } on SocketException {
-      throw Exception('No internet connection. Please check your network and try again.');
-    } on http.ClientException {
-      throw Exception('Network error. Please try again.');
-    } catch (e) {
-      throw Exception('Failed to generate question: ${e.toString()}');
-    }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to generate question: ${e.toString()}');
+      }
+    });
   }
 
   /// Generate follow-up practice questions on demand (deprecated - use generateSingleQuestion)
+  /// Requires Firebase ID token for authentication
   static Future<List<FollowUpQuestion>> generatePracticeQuestions({
+    required String authToken,
     required String recognizedQuestion,
     required Map<String, dynamic> solution,
     required String topic,
@@ -129,7 +219,10 @@ class ApiService {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/generate-practice-questions'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
         body: json.encode({
           'recognizedQuestion': recognizedQuestion,
           'solution': solution,
@@ -146,11 +239,21 @@ class ApiService {
               .map((q) => FollowUpQuestion.fromJson(q as Map<String, dynamic>))
               .toList();
         } else {
-          throw Exception('Invalid response format');
+          final errorMsg = jsonData['error'] ?? 'Invalid response format';
+          final requestId = jsonData['requestId'];
+          throw Exception('$errorMsg${requestId != null ? ' (Request ID: $requestId)' : ''}');
         }
       } else {
         final errorData = json.decode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to generate practice questions');
+        final errorMsg = errorData['error'] ?? 'Failed to generate practice questions';
+        final requestId = errorData['requestId'];
+        
+        // Handle rate limiting
+        if (response.statusCode == 429) {
+          throw Exception('Too many requests. Please wait a moment and try again.');
+        }
+        
+        throw Exception('$errorMsg${requestId != null ? ' (Request ID: $requestId)' : ''}');
       }
     } on SocketException {
       throw Exception('No internet connection. Please check your network and try again.');
@@ -200,7 +303,15 @@ class ApiService {
         }
       } else {
         final errorData = json.decode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to fetch assessment questions');
+        final errorMsg = errorData['error'] ?? 'Failed to fetch assessment questions';
+        final requestId = errorData['requestId'];
+        
+        // Handle rate limiting
+        if (response.statusCode == 429) {
+          throw Exception('Too many requests. Please wait a moment and try again.');
+        }
+        
+        throw Exception('$errorMsg${requestId != null ? ' (Request ID: $requestId)' : ''}');
       }
     } on SocketException {
       throw Exception('No internet connection. Please check your network and try again.');
@@ -256,9 +367,20 @@ class ApiService {
         return AssessmentResult.fromJson(jsonData);
       } else {
         final errorData = json.decode(response.body);
+        final errorMsg = errorData['error'] ?? 'Failed to submit assessment';
+        final requestId = errorData['requestId'];
+        
+        // Handle rate limiting
+        if (response.statusCode == 429) {
+          return AssessmentResult(
+            success: false,
+            error: 'Too many requests. Please wait a moment and try again.',
+          );
+        }
+        
         return AssessmentResult(
           success: false,
-          error: errorData['error'] ?? 'Failed to submit assessment',
+          error: errorMsg,
         );
       }
     } on SocketException {
@@ -313,9 +435,20 @@ class ApiService {
         return AssessmentResult.fromJson(jsonData);
       } else {
         final errorData = json.decode(response.body);
+        final errorMsg = errorData['error'] ?? 'Failed to fetch assessment results';
+        final requestId = errorData['requestId'];
+        
+        // Handle rate limiting
+        if (response.statusCode == 429) {
+          return AssessmentResult(
+            success: false,
+            error: 'Too many requests. Please wait a moment and try again.',
+          );
+        }
+        
         return AssessmentResult(
           success: false,
-          error: errorData['error'] ?? 'Failed to fetch assessment results',
+          error: errorMsg,
         );
       }
     } on SocketException {
