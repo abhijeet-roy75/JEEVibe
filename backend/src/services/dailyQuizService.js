@@ -329,6 +329,24 @@ async function generateDailyQuizInternal(userId) {
       });
     });
     
+    // Remove duplicates before balancing
+    const uniqueQuestions = [];
+    const seenQuestionIds = new Set();
+    for (const q of selectedQuestions) {
+      const questionId = q.question_id || q.id;
+      if (seenQuestionIds.has(questionId)) {
+        logger.warn('Duplicate question detected, removing', { 
+          questionId, 
+          chapterKey: q.chapter_key,
+          selectionReason: q.selection_reason 
+        });
+        continue;
+      }
+      seenQuestionIds.add(questionId);
+      uniqueQuestions.push(q);
+    }
+    selectedQuestions = uniqueQuestions;
+    
     // Balance subjects and limit to QUIZ_SIZE
     selectedQuestions = balanceSubjects(selectedQuestions);
     selectedQuestions = selectedQuestions.slice(0, QUIZ_SIZE);

@@ -40,7 +40,7 @@
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "student_id", "order": "ASCENDING" },
-        { "fieldPath": "chapter_key", "order": "ASCENDING" },
+        { "fieldPath": "is_correct", "order": "ASCENDING" },
         { "fieldPath": "answered_at", "order": "DESCENDING" }
       ]
     },
@@ -49,8 +49,17 @@
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "student_id", "order": "ASCENDING" },
-        { "fieldPath": "is_correct", "order": "ASCENDING" },
+        { "fieldPath": "chapter_key", "order": "ASCENDING" },
         { "fieldPath": "answered_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "responses",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "is_correct", "order": "ASCENDING" },
+        { "fieldPath": "answered_at", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
       ]
     },
     {

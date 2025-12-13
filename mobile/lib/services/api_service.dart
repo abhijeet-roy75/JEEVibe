@@ -5,14 +5,16 @@ import 'dart:convert';
 import '../models/solution_model.dart';
 import '../models/assessment_question.dart';
 import '../models/assessment_response.dart';
+import '../models/daily_quiz_question.dart';
 
 class ApiService {
   // Backend URL
-  // For iOS simulator: http://localhost:3000
-  // For real device: http://YOUR_COMPUTER_IP:3000 (ensure same WiFi)
+  // For local development: http://localhost:3000 (iOS simulator) or http://YOUR_COMPUTER_IP:3000 (real device)
+  // For production: https://jeevibe.onrender.com
   // Current IP: 192.168.5.81
-  // static const String baseUrl = 'http://192.168.5.81:3000';
   static const String baseUrl = 'https://jeevibe.onrender.com';
+  // static const String baseUrl = 'http://localhost:3000'; // For local development
+  // static const String baseUrl = 'http://192.168.5.81:3000'; // For real device testing
   
   /// Get valid authentication token with automatic refresh
   /// Handles token expiration and refresh automatically
@@ -458,6 +460,290 @@ class ApiService {
     } catch (e) {
       throw Exception('Failed to fetch assessment results: ${e.toString()}');
     }
+  }
+
+  // ============================================================================
+  // DAILY QUIZ API METHODS
+  // ============================================================================
+
+  /// Generate a new daily quiz or get existing active quiz
+  /// Requires Firebase ID token for authentication
+  static Future<DailyQuiz> generateDailyQuiz({
+    required String authToken,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/daily-quiz/generate'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        ).timeout(const Duration(seconds: 30));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true && jsonData['quiz'] != null) {
+            return DailyQuiz.fromJson(jsonData['quiz'] as Map<String, dynamic>);
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to generate quiz';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to generate quiz: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Start a quiz (marks quiz as started, starts timer)
+  /// Requires Firebase ID token for authentication
+  static Future<void> startDailyQuiz({
+    required String authToken,
+    required String quizId,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/daily-quiz/start'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+          body: json.encode({
+            'quiz_id': quizId,
+          }),
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode != 200) {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to start quiz';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to start quiz: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Submit answer for a question and get immediate feedback
+  /// Requires Firebase ID token for authentication
+  static Future<AnswerFeedback> submitAnswer({
+    required String authToken,
+    required String quizId,
+    required String questionId,
+    required String studentAnswer,
+    required int timeTakenSeconds,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/daily-quiz/submit-answer'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+          body: json.encode({
+            'quiz_id': quizId,
+            'question_id': questionId,
+            'student_answer': studentAnswer,
+            'time_taken_seconds': timeTakenSeconds,
+          }),
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            // Add student_answer to the response
+            final feedbackData = Map<String, dynamic>.from(jsonData);
+            feedbackData['student_answer'] = studentAnswer;
+            return AnswerFeedback.fromJson(feedbackData);
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to submit answer';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to submit answer: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Complete a quiz and update theta values
+  /// Requires Firebase ID token for authentication
+  static Future<Map<String, dynamic>> completeDailyQuiz({
+    required String authToken,
+    required String quizId,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/daily-quiz/complete'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+          body: json.encode({
+            'quiz_id': quizId,
+          }),
+        ).timeout(const Duration(seconds: 30));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to complete quiz';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to complete quiz: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Get detailed quiz result
+  /// Requires Firebase ID token for authentication
+  static Future<Map<String, dynamic>> getDailyQuizResult({
+    required String authToken,
+    required String quizId,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/daily-quiz/result/$quizId'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        ).timeout(const Duration(seconds: 30));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get quiz result';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to get quiz result: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Get daily quiz summary for dashboard
+  /// Requires Firebase ID token for authentication
+  static Future<Map<String, dynamic>> getDailyQuizSummary({
+    required String authToken,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/daily-quiz/summary'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData['summary'] as Map<String, dynamic>;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get summary';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to get summary: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Get daily quiz progress data
+  /// Requires Firebase ID token for authentication
+  static Future<Map<String, dynamic>> getDailyQuizProgress({
+    required String authToken,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/daily-quiz/progress'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData['progress'] as Map<String, dynamic>;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get progress';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to get progress: ${e.toString()}');
+      }
+    });
   }
 }
 

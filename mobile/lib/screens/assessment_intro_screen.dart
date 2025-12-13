@@ -18,6 +18,7 @@ import '../providers/app_state_provider.dart';
 import 'profile/profile_view_screen.dart';
 import 'assessment_instructions_screen.dart';
 import 'camera_screen.dart';
+import 'daily_quiz_loading_screen.dart';
 
 class AssessmentIntroScreen extends StatefulWidget {
   const AssessmentIntroScreen({super.key});
@@ -498,13 +499,12 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: isUnlocked ? () {
-                    // TODO: Navigate to daily practice screen
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => const DailyPracticeScreen(),
-                    //   ),
-                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DailyQuizLoadingScreen(),
+                      ),
+                    );
                   } : null,
                   borderRadius: BorderRadius.circular(12),
                   child: Center(

@@ -237,21 +237,43 @@ async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds =
     }
     
     const subject = parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase(); // Capitalize first letter, lowercase rest
-    const chapter = parts.slice(1).join(' ').replace(/_/g, ' '); // Convert underscores to spaces
+    const chapterFromKey = parts.slice(1).join(' ').replace(/_/g, ' '); // Convert underscores to spaces
     
     // Query questions for this chapter
-    // Use index: subject + chapter + difficulty_b
-    const questionsRef = db.collection('questions')
+    // Try exact match first, then case-insensitive fallback
+    let questionsRef = db.collection('questions')
       .where('subject', '==', subject)
-      .where('chapter', '==', chapter)
+      .where('chapter', '==', chapterFromKey)
       .limit(MAX_CANDIDATES);
     
-    const snapshot = await retryFirestoreOperation(async () => {
+    let snapshot = await retryFirestoreOperation(async () => {
       return await questionsRef.get();
     });
     
+    // If no results, try with capitalized chapter name (Title Case)
+    if (snapshot.empty && chapterFromKey) {
+      const titleCaseChapter = chapterFromKey
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+      
+      questionsRef = db.collection('questions')
+        .where('subject', '==', subject)
+        .where('chapter', '==', titleCaseChapter)
+        .limit(MAX_CANDIDATES);
+      
+      snapshot = await retryFirestoreOperation(async () => {
+        return await questionsRef.get();
+      });
+    }
+    
     if (snapshot.empty) {
-      logger.warn('No questions found for chapter', { chapterKey, subject, chapter });
+      logger.warn('No questions found for chapter', { 
+        chapterKey, 
+        subject, 
+        chapter: chapterFromKey,
+        triedFormats: [chapterFromKey, chapterFromKey.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')]
+      });
       return [];
     }
     

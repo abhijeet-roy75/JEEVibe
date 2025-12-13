@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'providers/daily_quiz_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -21,10 +22,22 @@ import 'services/firebase/pin_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Keep native splash screen visible for at least 3 seconds
+  // The native splash (iOS LaunchScreen/Android launch_background) shows until Flutter draws
+  // By delaying runApp(), we keep the native splash visible longer
+  final splashStartTime = DateTime.now();
+  
   // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Ensure native splash screen shows for at least 3 seconds before Flutter draws first frame
+  final elapsed = DateTime.now().difference(splashStartTime);
+  const minimumSplashDuration = Duration(seconds: 3);
+  if (elapsed < minimumSplashDuration) {
+    await Future.delayed(minimumSplashDuration - elapsed);
+  }
   
   // Suppress harmless SVG warnings and LaTeX debug messages
   // These are informational and don't affect functionality
@@ -85,6 +98,13 @@ void main() async {
         
         // Firestore User Data
         Provider(create: (_) => FirestoreUserService()),
+        
+        // Daily Quiz State
+        ChangeNotifierProxyProvider<AuthService, DailyQuizProvider>(
+          create: (_) => DailyQuizProvider(AuthService()),
+          update: (_, authService, previous) => 
+            previous ?? DailyQuizProvider(authService),
+        ),
       ],
       child: const JEEVibeApp(),
     ),
@@ -122,16 +142,18 @@ class AppInitializer extends StatefulWidget {
 class _AppInitializerState extends State<AppInitializer> {
   bool _isLoading = true;
   Widget? _targetScreen;
+  DateTime? _startTime;
 
   @override
   void initState() {
     super.initState();
+    _startTime = DateTime.now();
     _checkLoginStatus();
   }
 
   Future<void> _checkLoginStatus() async {
-    // 1. Simulate splash delay
-    await Future.delayed(const Duration(seconds: 1));
+    // Record start time for minimum display duration
+    final startTime = DateTime.now();
     
     // 2. Check Auth & Profile
     if (!mounted) return;
@@ -161,6 +183,7 @@ class _AppInitializerState extends State<AppInitializer> {
         await authService.signOut();
         final pinService = PinService();
         await pinService.clearPin(); // Clear any local PIN data too
+        
         if (mounted) {
           setState(() {
             _targetScreen = const WelcomeScreen();
@@ -201,10 +224,43 @@ class _AppInitializerState extends State<AppInitializer> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: Colors.white,
         body: Center(
-          child: CircularProgressIndicator(color: Color(0xFF6200EE)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // App Logo
+              Image.asset(
+                'assets/images/JEEVibeLogo.png',
+                width: 120,
+                height: 120,
+                errorBuilder: (context, error, stackTrace) {
+                  // Fallback if logo not found
+                  return Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6200EE),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'JEEVibe',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 32),
+              const CircularProgressIndicator(color: Color(0xFF6200EE)),
+            ],
+          ),
         ),
       );
     }
