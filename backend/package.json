@@ -7,7 +7,11 @@
     "start": "node src/index.js",
     "dev": "node src/index.js",
     "start:background": "node src/index.js > server.log 2>&1 &",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
     "test:api": "node scripts/test-assessment-api.js",
     "test:theta": "node scripts/test-assessment-theta.js",
     "test:scenarios": "node scripts/test-multiple-scenarios.js",
@@ -36,12 +40,16 @@
     "firebase-admin": "^13.6.0",
     "multer": "^2.0.2",
     "node-cache": "^5.1.2",
-    "opossum": "^6.2.0",
     "openai": "^6.9.1",
+    "opossum": "^6.2.0",
     "uuid": "^9.0.1",
     "winston": "^3.11.0"
   },
   "devDependencies": {
+    "@jest/globals": "^30.2.0",
+    "jest": "^30.2.0",
+    "jest-environment-node": "^30.2.0",
+    "supertest": "^7.1.4",
     "util": "^0.12.5"
   }
 }

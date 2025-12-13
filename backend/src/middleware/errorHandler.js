@@ -10,12 +10,31 @@ const logger = require('../utils/logger');
  * Custom API Error class
  */
 class ApiError extends Error {
-  constructor(statusCode, message, details = null) {
+  constructor(statusCode, message, code = null, details = null) {
     super(message);
     this.statusCode = statusCode;
+    this.code = code || this.generateErrorCode(statusCode, message);
     this.details = details;
     this.name = 'ApiError';
     Error.captureStackTrace(this, this.constructor);
+  }
+  
+  generateErrorCode(statusCode, message) {
+    // Generate error code from message if not provided
+    if (message.includes('not found')) return 'NOT_FOUND';
+    if (message.includes('already completed')) return 'QUIZ_ALREADY_COMPLETED';
+    if (message.includes('not in progress')) return 'QUIZ_NOT_IN_PROGRESS';
+    if (message.includes('not started')) return 'QUIZ_NOT_STARTED';
+    if (message.includes('insufficient')) return 'INSUFFICIENT_QUESTIONS';
+    if (message.includes('assessment')) return 'ASSESSMENT_NOT_COMPLETED';
+    if (message.includes('invalid')) return 'INVALID_INPUT';
+    if (message.includes('timeout')) return 'TIMEOUT_ERROR';
+    if (statusCode === 400) return 'BAD_REQUEST';
+    if (statusCode === 401) return 'UNAUTHORIZED';
+    if (statusCode === 403) return 'FORBIDDEN';
+    if (statusCode === 404) return 'NOT_FOUND';
+    if (statusCode === 409) return 'CONFLICT';
+    return 'INTERNAL_ERROR';
   }
 }
 
@@ -45,8 +64,11 @@ function errorHandler(err, req, res, next) {
   if (err instanceof ApiError) {
     return res.status(err.statusCode).json({
       success: false,
-      error: err.message,
-      details: err.details,
+      error: {
+        code: err.code,
+        message: err.message,
+        details: err.details
+      },
       requestId,
     });
   }
@@ -55,8 +77,11 @@ function errorHandler(err, req, res, next) {
   if (err.name === 'ValidationError' || err.array) {
     return res.status(400).json({
       success: false,
-      error: 'Validation error',
-      details: err.array ? err.array() : err.message,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Validation error',
+        details: err.array ? err.array() : err.message
+      },
       requestId,
     });
   }
@@ -65,8 +90,11 @@ function errorHandler(err, req, res, next) {
   if (err.code && err.code.startsWith('auth/')) {
     return res.status(401).json({
       success: false,
-      error: 'Authentication failed',
-      details: err.message,
+      error: {
+        code: 'AUTHENTICATION_FAILED',
+        message: 'Authentication failed',
+        details: err.message
+      },
       requestId,
     });
   }
@@ -94,9 +122,12 @@ function errorHandler(err, req, res, next) {
 
   res.status(statusCode).json({
     success: false,
-    error: message,
+    error: {
+      code: statusCode === 500 ? 'INTERNAL_ERROR' : 'UNKNOWN_ERROR',
+      message: message,
+      details: process.env.NODE_ENV === 'development' ? { stack: err.stack } : null
+    },
     requestId,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 }
 

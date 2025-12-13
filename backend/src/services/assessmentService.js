@@ -344,6 +344,15 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
       //   }
       // }
       
+      // Create baseline snapshot (deep copy for preservation)
+      const baselineSnapshot = {
+        theta_by_chapter: JSON.parse(JSON.stringify(assessmentResults.theta_by_chapter)),
+        theta_by_subject: JSON.parse(JSON.stringify(assessmentResults.theta_by_subject)),
+        overall_theta: assessmentResults.overall_theta,
+        overall_percentile: assessmentResults.overall_percentile,
+        captured_at: assessmentResults.assessment_completed_at
+      };
+      
       // Update user profile atomically
       transaction.set(userRef, {
         assessment: assessmentResults.assessment,
@@ -363,7 +372,8 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
         chapter_attempt_counts: assessmentResults.chapter_attempt_counts,
         chapters_explored: assessmentResults.chapters_explored,
         chapters_confident: assessmentResults.chapters_confident,
-        subject_balance: assessmentResults.subject_balance
+        subject_balance: assessmentResults.subject_balance,
+        assessment_baseline: baselineSnapshot  // Add baseline snapshot
       }, { merge: true });
       
       // Save individual responses in the same transaction

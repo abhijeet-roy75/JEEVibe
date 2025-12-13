@@ -1,0 +1,78 @@
+name: Backend Tests
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    name: Run Backend Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+      
+      - name: Run unit tests
+        run: |
+          cd backend
+          npm run test:unit
+        env:
+          NODE_ENV: test
+      
+      - name: Run integration tests
+        run: |
+          cd backend
+          npm run test:integration
+        env:
+          NODE_ENV: test
+          # Add test environment variables here if needed
+          # FIREBASE_PROJECT_ID: test-project
+          # FIREBASE_STORAGE_BUCKET: test-bucket
+        continue-on-error: true # Integration tests may need Firebase setup
+      
+      - name: Generate coverage report
+        run: |
+          cd backend
+          npm run test:coverage
+        continue-on-error: true
+      
+      - name: Upload coverage to Codecov
+        if: always()
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false
+          verbose: true
+      
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report-${{ matrix.node-version }}
+          path: backend/coverage/
+          retention-days: 7
+

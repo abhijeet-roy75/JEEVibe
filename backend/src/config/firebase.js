@@ -24,9 +24,14 @@ function initializeFirebase() {
       if (fs.existsSync(resolvedPath)) {
         try {
           const serviceAccount = require(resolvedPath);
+          // Try new Firebase Storage format first, fallback to legacy format
+          const projectId = serviceAccount.project_id || process.env.FIREBASE_PROJECT_ID || 'jeevibe';
+          const storageBucket = `${projectId}.firebasestorage.app`; // New format (preferred)
+          // Fallback: `${projectId}.appspot.com` (legacy format)
+          
           admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
-            storageBucket: serviceAccount.project_id ? `${serviceAccount.project_id}.appspot.com` : `${process.env.FIREBASE_PROJECT_ID || 'jeevibe'}.appspot.com`
+            storageBucket: storageBucket
           });
           console.log('✅ Firebase Admin initialized with service account file:', resolvedPath);
           return admin.app();
@@ -71,7 +76,7 @@ function initializeFirebase() {
           privateKey: privateKey,
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL.trim(),
         }),
-        storageBucket: `${process.env.FIREBASE_PROJECT_ID}.appspot.com`
+        storageBucket: `${process.env.FIREBASE_PROJECT_ID}.firebasestorage.app`
       });
       console.log('✅ Firebase Admin initialized with environment variables');
       return admin.app();

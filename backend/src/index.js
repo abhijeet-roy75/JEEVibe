@@ -148,6 +148,12 @@ app.use('/api/assessment', assessmentRouter);
 const usersRouter = require('./routes/users');
 app.use('/api/users', usersRouter);
 
+const cronRouter = require('./routes/cron');
+app.use('/api/cron', cronRouter);
+
+const dailyQuizRouter = require('./routes/dailyQuiz');
+app.use('/api/daily-quiz', dailyQuizRouter);
+
 // Test endpoints (only in development)
 if (process.env.NODE_ENV !== 'production') {
   const testFirebaseRouter = require('./routes/test-firebase');
@@ -178,6 +184,20 @@ app.get('/', (req, res) => {
         profileExists: 'GET /api/users/profile/exists',
         updateLastActive: 'PATCH /api/users/profile/last-active',
         markComplete: 'PATCH /api/users/profile/complete'
+      },
+      dailyQuiz: {
+        generate: 'GET /api/daily-quiz/generate',
+        start: 'POST /api/daily-quiz/start',
+        submitAnswer: 'POST /api/daily-quiz/submit-answer',
+        complete: 'POST /api/daily-quiz/complete',
+        active: 'GET /api/daily-quiz/active',
+        history: 'GET /api/daily-quiz/history',
+        result: 'GET /api/daily-quiz/result/:quiz_id',
+        question: 'GET /api/daily-quiz/question/:question_id',
+        summary: 'GET /api/daily-quiz/summary',
+        progress: 'GET /api/daily-quiz/progress',
+        stats: 'GET /api/daily-quiz/stats',
+        chapterProgress: 'GET /api/daily-quiz/chapter-progress/:chapter_key'
       }
     }
   });
