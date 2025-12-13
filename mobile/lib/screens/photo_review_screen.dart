@@ -1,0 +1,401 @@
+/// Photo Review Screen - Matches design: 6a Photo Review Screen.png
+import 'dart:io';
+import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
+import '../utils/image_compressor.dart';
+import '../services/api_service.dart';
+import '../widgets/priya_avatar.dart';
+import '../widgets/app_header.dart';
+import 'solution_screen.dart';
+
+class PhotoReviewScreen extends StatelessWidget {
+  final File imageFile;
+
+  const PhotoReviewScreen({
+    super.key,
+    required this.imageFile,
+  });
+
+  void _retakePhoto(BuildContext context) {
+    Navigator.of(context).pop(); // Go back to camera
+  }
+
+  Future<void> _usePhoto(BuildContext context) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryPurple),
+        ),
+      );
+
+      // Compress image
+      final compressedFile = await ImageCompressor.compressImage(imageFile);
+      
+      // Start solving (but don't wait)
+      final solutionFuture = ApiService.solveQuestion(compressedFile);
+      
+      if (context.mounted) {
+        // Pop loading dialog
+        Navigator.of(context).pop();
+        
+        // Pop photo review screen
+        Navigator.of(context).pop();
+        
+        // Navigate to solution screen
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => SolutionScreen(
+              solutionFuture: solutionFuture,
+              imageFile: compressedFile,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        // Pop loading dialog if shown
+        Navigator.of(context).pop();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to process image: $e'),
+            backgroundColor: AppColors.errorRed,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppColors.backgroundGradient,
+        ),
+        child: Column(
+          children: [
+            _buildHeader(context),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildImagePreview(),
+                    const SizedBox(height: AppSpacing.space24),
+                    _buildQualityCheck(),
+                    const SizedBox(height: AppSpacing.space24),
+                    _buildPriyaMaamCard(),
+                    const SizedBox(height: AppSpacing.space32),
+                    _buildButtons(context),
+                    const SizedBox(height: AppSpacing.space16),
+                    _buildBottomText(),
+                    const SizedBox(height: AppSpacing.space32),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return AppHeaderWithIcon(
+      icon: Icons.check,
+      title: 'Looking Good!',
+      subtitle: 'Make sure the question is clear and readable',
+      iconColor: AppColors.successGreen,
+      iconSize: 40, // Further reduced from 48 to match other screens better
+      onClose: () => Navigator.of(context).pop(),
+      bottomPadding: 12, // Further reduced from 16
+    );
+  }
+
+  Widget _buildImagePreview() {
+    return Padding(
+      padding: AppSpacing.screenPadding,
+      child: Column(
+        children: [
+          // Pinch to zoom tooltip
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.textDark,
+              borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.zoom_in, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Pinch to zoom, use tools below to adjust',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Image preview
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              color: AppColors.borderLight,
+              borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+              border: Border.all(color: AppColors.borderGray),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Center(
+                  child: Image.file(
+                    imageFile,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQualityCheck() {
+    return Padding(
+      padding: AppSpacing.screenPadding,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+          border: Border.all(color: AppColors.borderLight),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: AppColors.infoBlue,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Quality Check',
+                        style: AppTextStyles.labelMedium,
+                      ),
+                      Text(
+                        'Automatic analysis of your photo',
+                        style: AppTextStyles.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildCheckItem('Text is readable', true),
+            const SizedBox(height: 12),
+            _buildCheckItem('Good lighting', true),
+            const SizedBox(height: 12),
+            _buildCheckItem('No blur detected', true),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCheckItem(String text, bool isGood) {
+    return Row(
+      children: [
+        Icon(
+          Icons.check_circle,
+          color: isGood ? AppColors.successGreen : AppColors.textGray,
+          size: 20,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: AppTextStyles.bodyMedium,
+          ),
+        ),
+        Text(
+          isGood ? 'Good' : 'Check',
+          style: AppTextStyles.labelSmall.copyWith(
+            color: isGood ? AppColors.successGreen : AppColors.textGray,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPriyaMaamCard() {
+    return Padding(
+      padding: AppSpacing.screenPadding,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: AppColors.priyaCardGradient,
+          borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+          border: Border.all(color: const Color(0xFFE9D5FF), width: 2),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            PriyaAvatar(size: 48),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Priya Ma\'am',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: const Color(0xFF7C3AED),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.auto_awesome,
+                        color: Color(0xFF9333EA),
+                        size: 16,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Perfect! The question is clear and I can read it well. Ready to solve this for you! 💜',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: const Color(0xFF6B21A8),
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButtons(BuildContext context) {
+    return Padding(
+      padding: AppSpacing.screenPadding,
+      child: Column(
+        children: [
+          // Use This Photo button
+          Container(
+            width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: AppColors.ctaGradient,
+              borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+              boxShadow: AppShadows.buttonShadow,
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _usePhoto(context),
+                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.check, color: Colors.white),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Use This Photo',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Retake Photo button
+          Container(
+            width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+              border: Border.all(color: AppColors.borderGray, width: 2),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _retakePhoto(context),
+                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.refresh, color: AppColors.textDark),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Retake Photo',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: AppColors.textDark,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomText() {
+    return Text(
+      'You can always retake if the result isn\'t accurate',
+      style: AppTextStyles.bodySmall.copyWith(
+        color: AppColors.textLight,
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
+}
