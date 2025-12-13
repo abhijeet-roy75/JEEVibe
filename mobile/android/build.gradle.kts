@@ -19,11 +19,9 @@ subprojects {
     project.evaluationDependsOn(":app")
     
     // Suppress Java 8 warnings from dependencies
-    afterEvaluate {
-        tasks.withType<JavaCompile>().configureEach {
-            options.compilerArgs.add("-Xlint:-options")
-            options.compilerArgs.add("-Xlint:-deprecation")
-        }
+    tasks.withType<JavaCompile>().configureEach {
+        options.compilerArgs.add("-Xlint:-options")
+        options.compilerArgs.add("-Xlint:-deprecation")
     }
 }
 
