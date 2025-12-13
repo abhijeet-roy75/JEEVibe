@@ -21,8 +21,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.0.0'
+          flutter-version: '3.24.0'  # Compatible stable version
           channel: 'stable'
+          cache: true
       
       - name: Install dependencies
         run: |
@@ -32,14 +33,17 @@ jobs:
       - name: Run tests
         run: |
           cd mobile
+          chmod +x scripts/run_tests.sh
           ./scripts/run_tests.sh
       
       - name: Upload coverage
         if: always()
+        continue-on-error: true
         uses: codecov/codecov-action@v3
         with:
           file: mobile/coverage/lcov.info
           flags: mobile
           name: mobile-coverage
           fail_ci_if_error: false
+          verbose: true
 
