@@ -6,6 +6,7 @@ import 'create_pin_screen.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../utils/auth_error_helper.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String verificationId;
@@ -29,6 +30,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   Timer? _timer;
   String? _currentVerificationId;
   bool _isDisposed = false;
+  String? _errorMessage;
+  String? _errorSuggestion;
+  bool _isClearingProgrammatically = false;
 
   @override
   void initState() {
@@ -116,10 +120,25 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text('Invalid OTP. Please try again. ($e)')),
-        );
+        final userFriendlyMessage = AuthErrorHelper.getUserFriendlyMessage(e);
+        final suggestion = AuthErrorHelper.getActionableSuggestion(e);
+        
+        setState(() {
+          _isLoading = false;
+          _errorMessage = userFriendlyMessage;
+          _errorSuggestion = suggestion;
+        });
+        
+        // Clear OTP fields on error to allow retry
+        // Set flag to prevent onChanged from clearing error
+        _isClearingProgrammatically = true;
+        _otpController.clear();
+        // Reset flag after a short delay to allow onChanged to process
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) {
+            _isClearingProgrammatically = false;
+          }
+        });
       }
     }
   }
@@ -131,9 +150,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       phoneNumber: widget.phoneNumber,
       verificationCompleted: (_) {},
       verificationFailed: (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Resend Failed: ${e.message}')),
-        );
+        final userFriendlyMessage = AuthErrorHelper.getUserFriendlyMessage(e);
+        final suggestion = AuthErrorHelper.getActionableSuggestion(e);
+        
+        if (mounted) {
+          setState(() {
+            _errorMessage = userFriendlyMessage;
+            _errorSuggestion = suggestion;
+          });
+        }
       },
       codeSent: (verificationId, resendToken) {
         setState(() => _currentVerificationId = verificationId);
@@ -290,7 +315,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 onChanged: (value) {
                   // Guard against state updates after disposal
                   if (!_isDisposed && mounted) {
-                    // Clear any error when user starts typing
+                    // Clear any error when user starts typing (but not when clearing programmatically)
+                    if (_errorMessage != null && !_isClearingProgrammatically && value.isNotEmpty) {
+                      setState(() {
+                        _errorMessage = null;
+                        _errorSuggestion = null;
+                      });
+                    }
                   }
                 },
                 beforeTextPaste: (text) {
@@ -298,7 +329,60 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 },
               ),
               
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+              
+              // Error message display
+              if (_errorMessage != null) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.errorRed.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.errorRed.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: AppColors.errorRed,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _errorMessage!,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.errorRed,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_errorSuggestion != null) ...[
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 28),
+                          child: Text(
+                            _errorSuggestion!,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textLight,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               
               Center(
                 child: _secondsRemaining > 0

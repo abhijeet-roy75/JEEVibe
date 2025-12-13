@@ -23,13 +23,11 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-focus and show numeric keypad after a short delay
+    // Auto-focus and show numeric keypad immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          _pinFocusNode.requestFocus();
-        }
-      });
+      if (mounted) {
+        _pinFocusNode.requestFocus();
+      }
     });
   }
   
@@ -50,6 +48,12 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
           _isConfirming = false;
           _initialPin = '';
         });
+        // Keep keyboard open after error
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted && !_isDisposed) {
+            _pinFocusNode.requestFocus();
+          }
+        });
       }
     } else {
       if (!mounted || _isDisposed) return;
@@ -57,6 +61,12 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
         _initialPin = pin;
         _isConfirming = true;
         _pinController.clear();
+      });
+      // Keep keyboard open when transitioning to confirm mode
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted && !_isDisposed) {
+          _pinFocusNode.requestFocus();
+        }
       });
     }
   }
@@ -119,6 +129,12 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
         setState(() {
           _isConfirming = false;
           _initialPin = '';
+        });
+        // Keep keyboard open after error
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted && !_isDisposed) {
+            _pinFocusNode.requestFocus();
+          }
         });
       }
     }

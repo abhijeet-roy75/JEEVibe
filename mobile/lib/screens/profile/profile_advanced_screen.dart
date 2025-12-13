@@ -74,13 +74,11 @@ class _ProfileAdvancedScreenState extends State<ProfileAdvancedScreen> {
         await userService.saveUserProfile(profile);
 
         if (mounted) {
-          // TEMPORARY: Always show welcome screens for testing
-          // TODO: Revert to checking hasSeenWelcome after testing
           // Check if user has seen welcome screens
-          // final storageService = StorageService();
-          // final hasSeenWelcome = await storageService.hasSeenWelcome();
+          final storageService = StorageService();
+          final hasSeenWelcome = await storageService.hasSeenWelcome();
           
-          // if (!hasSeenWelcome) {
+          if (!hasSeenWelcome) {
             // Show welcome screens for first time
             // WelcomeScreen will handle navigation internally
             Navigator.of(context).pushAndRemoveUntil(
@@ -89,13 +87,13 @@ class _ProfileAdvancedScreenState extends State<ProfileAdvancedScreen> {
               ),
               (route) => false,
             );
-          // } else {
-          //   // User has already seen welcome screens, go directly to assessment intro
-          //   Navigator.of(context).pushAndRemoveUntil(
-          //     MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
-          //     (route) => false,
-          //   );
-          // }
+          } else {
+            // User has already seen welcome screens, go directly to assessment intro
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
+              (route) => false,
+            );
+          }
         }
       } catch (e) {
         if (mounted) {

@@ -3,6 +3,7 @@ import '../../constants/profile_constants.dart';
 import 'profile_advanced_screen.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../auth/create_pin_screen.dart';
 
 class ProfileBasicsScreen extends StatefulWidget {
   const ProfileBasicsScreen({super.key});
@@ -101,7 +102,18 @@ class _ProfileBasicsScreenState extends State<ProfileBasicsScreen> {
                           ),
                           child: IconButton(
                             icon: const Icon(Icons.arrow_back, color: Colors.white),
-                            onPressed: () => Navigator.of(context).pop(),
+                            onPressed: () {
+                              // Check if we can pop, otherwise navigate to create PIN screen
+                              if (Navigator.of(context).canPop()) {
+                                Navigator.of(context).pop();
+                              } else {
+                                // If no route to pop, navigate back to PIN creation
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(builder: (context) => const CreatePinScreen()),
+                                  (route) => false,
+                                );
+                              }
+                            },
                             padding: const EdgeInsets.all(8),
                             constraints: const BoxConstraints(),
                           ),

@@ -1,5 +1,6 @@
 /// Welcome Screen - 3-slide onboarding carousel
 /// Matches designs: 2a, 2b, 2c Welcome Screen.png
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -15,20 +16,100 @@ class WelcomeScreen extends StatefulWidget {
   State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> {
+class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  
+  // For step 2: Shuffling cards
+  late List<String> _shufflingMessages;
+  int _currentMessageIndex = 0;
+  Timer? _shuffleTimer;
+  
+  // For step 3: Snap & Solve card animation
+  late AnimationController _snapCardController;
+  late Animation<double> _snapCardScale;
+  late Animation<double> _snapCardRotation;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Initialize shuffling messages for step 2
+    _shufflingMessages = [
+      'Focus on what matters most',
+      'Practice smarter, not harder',
+      'Adaptive learning for you',
+      'Track your progress daily',
+    ];
+    
+    // Initialize animation controller for step 3
+    _snapCardController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+    
+    _snapCardScale = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _snapCardController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    
+    _snapCardRotation = Tween<double>(begin: -0.02, end: 0.02).animate(
+      CurvedAnimation(
+        parent: _snapCardController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    
+    // Start shuffling animation when on step 2
+    _startShuffling();
+    
+    // Start snap card animation when on step 3
+    _startSnapCardAnimation();
+  }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _shuffleTimer?.cancel();
+    _snapCardController.dispose();
     super.dispose();
+  }
+  
+  void _startShuffling() {
+    _shuffleTimer?.cancel();
+    _shuffleTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (mounted && _currentPage == 1) {
+        setState(() {
+          _currentMessageIndex = (_currentMessageIndex + 1) % _shufflingMessages.length;
+        });
+      }
+    });
+  }
+  
+  void _startSnapCardAnimation() {
+    _snapCardController.repeat(reverse: true);
   }
 
   void _onPageChanged(int page) {
     setState(() {
       _currentPage = page;
     });
+    
+    // Start/stop animations based on current page
+    if (page == 1) {
+      _startShuffling();
+    } else {
+      _shuffleTimer?.cancel();
+    }
+    
+    if (page == 2) {
+      _snapCardController.repeat(reverse: true);
+    } else {
+      _snapCardController.stop();
+      _snapCardController.reset();
+    }
   }
 
   void _nextPage() {
@@ -277,95 +358,31 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 60),
-                    // Two overlapping question cards
-                    Stack(
-                      children: [
-                        // Bottom card
-                        Transform.rotate(
-                          angle: -0.05,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            margin: const EdgeInsets.only(top: 20, left: 20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
+                    // Animated shuffling cards
+                    SizedBox(
+                      height: 200,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 500),
+                        transitionBuilder: (Widget child, Animation<double> animation) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0.0, 0.3),
+                              end: Offset.zero,
+                            ).animate(CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOut,
+                            )),
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Find the derivative of f(x) = 3x²...',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          );
+                        },
+                        child: _buildShufflingCard(
+                          key: ValueKey<int>(_currentMessageIndex),
+                          message: _shufflingMessages[_currentMessageIndex],
                         ),
-                        // Top card
-                        Transform.rotate(
-                          angle: 0.05,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.15),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFF6B35),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    'Hard',
-                                    style: AppTextStyles.labelMedium.copyWith(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'THERMODYNAMICS',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'An ideal gas undergoes isothermal...',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                     const SizedBox(height: 16),
                     // AI adapting badge
@@ -497,6 +514,45 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
+  Widget _buildShufflingCard({required String message, Key? key}) {
+    return Container(
+      key: key,
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: AppColors.ctaGradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryPurple.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.lightbulb_outline,
+            color: Colors.white,
+            size: 48,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: AppTextStyles.headerLarge.copyWith(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAdaptiveFeature({
     required IconData icon,
     required String title,
@@ -580,38 +636,56 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              gradient: AppColors.ctaGradient,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Column(
-                              children: [
-                                const Icon(
-                                  Icons.camera_alt,
-                                  color: Colors.white,
-                                  size: 32,
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Snap & Solve',
-                                  style: AppTextStyles.labelMedium.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                          child: AnimatedBuilder(
+                            animation: _snapCardController,
+                            builder: (context, child) {
+                              return Transform.scale(
+                                scale: _snapCardScale.value,
+                                child: Transform.rotate(
+                                  angle: _snapCardRotation.value,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(20),
+                                    decoration: BoxDecoration(
+                                      gradient: AppColors.ctaGradient,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.primaryPurple.withOpacity(0.4),
+                                          blurRadius: 15,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        const Icon(
+                                          Icons.camera_alt,
+                                          color: Colors.white,
+                                          size: 32,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          'Snap & Solve',
+                                          style: AppTextStyles.labelMedium.copyWith(
+                                            color: Colors.white,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Instant solutions',
+                                          style: AppTextStyles.bodySmall.copyWith(
+                                            color: Colors.white.withOpacity(0.9),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Instant solutions',
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: Colors.white.withOpacity(0.9),
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
                         ),
                         const SizedBox(width: 16),

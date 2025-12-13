@@ -26,13 +26,11 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-focus and show numeric keypad after a short delay
+    // Auto-focus and show numeric keypad immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          _pinFocusNode.requestFocus();
-        }
-      });
+      if (mounted) {
+        _pinFocusNode.requestFocus();
+      }
     });
   }
 
@@ -88,6 +86,12 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
           _errorMessage = 'Incorrect PIN. Please try again.';
           _pinController.clear();
         });
+        // Keep keyboard open after error
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) {
+            _pinFocusNode.requestFocus();
+          }
+        });
       }
     } catch (e) {
       if (!mounted) return;
@@ -96,6 +100,12 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
         _isLoading = false;
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
         _pinController.clear();
+      });
+      // Keep keyboard open after error
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _pinFocusNode.requestFocus();
+        }
       });
     }
   }
