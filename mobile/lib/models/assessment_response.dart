@@ -90,20 +90,44 @@ class AssessmentData {
   });
 
   factory AssessmentData.fromJson(Map<String, dynamic> json) {
-    return AssessmentData(
-      assessment: json['assessment'] as Map<String, dynamic>,
-      thetaByChapter: json['theta_by_chapter'] as Map<String, dynamic>,
-      thetaBySubject: json['theta_by_subject'] as Map<String, dynamic>,
-      subjectAccuracy: json['subject_accuracy'] as Map<String, dynamic>? ?? {
+    // Parse subject_accuracy with proper type handling
+    Map<String, dynamic> subjectAccuracy = {};
+    if (json['subject_accuracy'] != null && json['subject_accuracy'] is Map) {
+      final rawAccuracy = json['subject_accuracy'] as Map<String, dynamic>;
+      for (final entry in rawAccuracy.entries) {
+        final subject = entry.key;
+        final data = entry.value;
+        if (data is Map) {
+          subjectAccuracy[subject] = {
+            'accuracy': data['accuracy'] != null 
+                ? (data['accuracy'] is int ? data['accuracy'] : (data['accuracy'] as num).toInt())
+                : null,
+            'correct': data['correct'] ?? 0,
+            'total': data['total'] ?? 0,
+          };
+        }
+      }
+    }
+    
+    // Default if not provided
+    if (subjectAccuracy.isEmpty) {
+      subjectAccuracy = {
         'physics': {'accuracy': null, 'correct': 0, 'total': 0},
         'chemistry': {'accuracy': null, 'correct': 0, 'total': 0},
         'mathematics': {'accuracy': null, 'correct': 0, 'total': 0},
-      },
-      overallTheta: (json['overall_theta'] as num).toDouble(),
-      overallPercentile: (json['overall_percentile'] as num).toDouble(),
-      chaptersExplored: json['chapters_explored'] as int,
-      chaptersConfident: json['chapters_confident'] as int,
-      subjectBalance: json['subject_balance'] as Map<String, dynamic>,
+      };
+    }
+    
+    return AssessmentData(
+      assessment: json['assessment'] as Map<String, dynamic>,
+      thetaByChapter: json['theta_by_chapter'] as Map<String, dynamic>? ?? {},
+      thetaBySubject: json['theta_by_subject'] as Map<String, dynamic>? ?? {},
+      subjectAccuracy: subjectAccuracy,
+      overallTheta: (json['overall_theta'] as num?)?.toDouble() ?? 0.0,
+      overallPercentile: (json['overall_percentile'] as num?)?.toDouble() ?? 0.0,
+      chaptersExplored: json['chapters_explored'] as int? ?? 0,
+      chaptersConfident: json['chapters_confident'] as int? ?? 0,
+      subjectBalance: json['subject_balance'] as Map<String, dynamic>? ?? {},
     );
   }
 }

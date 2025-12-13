@@ -424,6 +424,54 @@ router.get('/results/:userId', authenticateUser, async (req, res) => {
       });
     }
     
+    // Calculate subject_accuracy if missing (for assessments completed before this feature)
+    let subjectAccuracy = userData.subject_accuracy;
+    if (!subjectAccuracy || 
+        !subjectAccuracy.physics || 
+        subjectAccuracy.physics.accuracy === null ||
+        (subjectAccuracy.physics.total === 0 && userData.theta_by_chapter)) {
+      // Recalculate from stored responses
+      try {
+        const responsesRef = db.collection('assessment_responses')
+          .doc(authenticatedUserId)
+          .collection('responses');
+        
+        const responsesSnapshot = await retryFirestoreOperation(async () => {
+          return await responsesRef.get();
+        });
+        
+        if (!responsesSnapshot.empty) {
+          const { calculateSubjectAccuracy } = require('../services/assessmentService');
+          const enrichedResponses = responsesSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              subject: data.subject,
+              is_correct: data.is_correct === true,
+              question_id: data.question_id
+            };
+          });
+          
+          subjectAccuracy = calculateSubjectAccuracy(enrichedResponses);
+          
+          // Save the calculated accuracy back to user profile (async, don't wait)
+          const userRef = db.collection('users').doc(authenticatedUserId);
+          userRef.set({
+            subject_accuracy: subjectAccuracy
+          }, { merge: true }).catch(err => {
+            console.error('Error saving calculated subject_accuracy:', err);
+          });
+        }
+      } catch (calcError) {
+        console.error('Error calculating subject_accuracy from responses:', calcError);
+        // Use default if calculation fails
+        subjectAccuracy = {
+          physics: { accuracy: null, correct: 0, total: 0 },
+          chemistry: { accuracy: null, correct: 0, total: 0 },
+          mathematics: { accuracy: null, correct: 0, total: 0 }
+        };
+      }
+    }
+    
     // Return assessment results
     res.json({
       success: true,
@@ -457,7 +505,7 @@ router.get('/results/:userId', authenticateUser, async (req, res) => {
       chapters_explored: userData.chapters_explored || 0,
       chapters_confident: userData.chapters_confident || 0,
       subject_balance: userData.subject_balance || {},
-      subject_accuracy: userData.subject_accuracy || {
+      subject_accuracy: subjectAccuracy || {
         physics: { accuracy: null, correct: 0, total: 0 },
         chemistry: { accuracy: null, correct: 0, total: 0 },
         mathematics: { accuracy: null, correct: 0, total: 0 }

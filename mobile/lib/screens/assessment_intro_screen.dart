@@ -14,6 +14,7 @@ import '../services/firebase/auth_service.dart';
 import '../services/api_service.dart';
 import '../models/user_profile.dart';
 import '../models/assessment_response.dart';
+import '../providers/app_state_provider.dart';
 import 'profile/profile_view_screen.dart';
 import 'assessment_instructions_screen.dart';
 import 'camera_screen.dart';
@@ -30,6 +31,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   String _assessmentStatus = 'not_started';
   bool _isLoading = true;
   AssessmentData? _assessmentData;
+  int _remainingSnaps = 5;
 
   @override
   void initState() {
@@ -45,6 +47,19 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
       final user = FirebaseAuth.instance.currentUser;
       UserProfile? profile;
       AssessmentData? assessmentData;
+      
+      // Get remaining snap count from provider
+      int remainingSnaps = 5;
+      try {
+        final appState = Provider.of<AppStateProvider>(context, listen: false);
+        // Ensure provider is initialized
+        if (!appState.isInitialized) {
+          await appState.initialize();
+        }
+        remainingSnaps = appState.snapsRemaining.clamp(0, 5);
+      } catch (e) {
+        debugPrint('Error getting snap count: $e');
+      }
       
       if (user != null) {
         final firestoreService = FirestoreUserService();
@@ -64,6 +79,11 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               
               if (result.success && result.data != null) {
                 assessmentData = result.data;
+                // Debug: Print subject accuracy data
+                debugPrint('Assessment Data - subjectAccuracy: ${assessmentData?.subjectAccuracy}');
+                debugPrint('Physics: ${assessmentData?.subjectAccuracy['physics']}');
+                debugPrint('Chemistry: ${assessmentData?.subjectAccuracy['chemistry']}');
+                debugPrint('Mathematics: ${assessmentData?.subjectAccuracy['mathematics']}');
               }
             }
           } catch (e) {
@@ -77,6 +97,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           _assessmentStatus = status;
           _userProfile = profile;
           _assessmentData = assessmentData;
+          _remainingSnaps = remainingSnaps;
           _isLoading = false;
         });
       }
@@ -117,6 +138,8 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: null,
+      floatingActionButton: _buildFloatingSnapButton(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppColors.backgroundGradient,
@@ -140,9 +163,6 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     const SizedBox(height: 16),
                     // Daily Practice Card (Locked)
                     _buildDailyPracticeCard(),
-                    const SizedBox(height: 16),
-                    // Snap & Solve Card
-                    _buildSnapSolveCard(),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -615,9 +635,21 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   }
 
   Widget _buildResultsCard() {
-    final physicsAccuracy = _assessmentData!.subjectAccuracy['physics']?['accuracy'] as int?;
-    final chemistryAccuracy = _assessmentData!.subjectAccuracy['chemistry']?['accuracy'] as int?;
-    final mathematicsAccuracy = _assessmentData!.subjectAccuracy['mathematics']?['accuracy'] as int?;
+    // Extract accuracy values with proper type handling
+    final physicsData = _assessmentData!.subjectAccuracy['physics'] as Map<String, dynamic>?;
+    final chemistryData = _assessmentData!.subjectAccuracy['chemistry'] as Map<String, dynamic>?;
+    final mathematicsData = _assessmentData!.subjectAccuracy['mathematics'] as Map<String, dynamic>?;
+    
+    final physicsAccuracy = _extractAccuracy(physicsData);
+    final chemistryAccuracy = _extractAccuracy(chemistryData);
+    final mathematicsAccuracy = _extractAccuracy(mathematicsData);
+    
+    // Debug logging
+    debugPrint('Subject Accuracy Data:');
+    debugPrint('  Physics: $physicsData -> $physicsAccuracy');
+    debugPrint('  Chemistry: $chemistryData -> $chemistryAccuracy');
+    debugPrint('  Mathematics: $mathematicsData -> $mathematicsAccuracy');
+    debugPrint('  Full subjectAccuracy map: ${_assessmentData!.subjectAccuracy}');
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -671,53 +703,6 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             _buildSubjectResult('Chemistry', chemistryAccuracy, const Color(0xFF4CAF50)),
             const SizedBox(height: 16),
             _buildSubjectResult('Mathematics', mathematicsAccuracy, const Color(0xFF2196F3)),
-            const SizedBox(height: 24),
-            // Overall Performance
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: AppColors.ctaGradient,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Overall Performance',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${_assessmentData!.overallPercentile.toStringAsFixed(0)}% Percentile',
-                        style: AppTextStyles.headerSmall.copyWith(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.trending_up,
-                      color: Colors.white,
-                      size: 32,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
@@ -811,6 +796,92 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           ),
         ],
       ),
+    );
+  }
+  
+  int? _extractAccuracy(Map<String, dynamic>? data) {
+    if (data == null) return null;
+    
+    final accuracy = data['accuracy'];
+    if (accuracy == null) return null;
+    
+    if (accuracy is int) {
+      return accuracy;
+    } else if (accuracy is num) {
+      return accuracy.toInt();
+    }
+    
+    return null;
+  }
+
+  Widget _buildFloatingSnapButton() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            gradient: AppColors.ctaGradient,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryPurple.withOpacity(0.3),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () async {
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CameraScreen(),
+                  ),
+                );
+                // Refresh snap count when returning from camera
+                _loadData();
+              },
+              borderRadius: BorderRadius.circular(32),
+              child: const Icon(
+                Icons.camera_alt,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+          ),
+        ),
+        // Notification badge with snap count
+        Positioned(
+          top: -4,
+          right: -4,
+          child: Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white,
+                width: 2,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                '$_remainingSnaps',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

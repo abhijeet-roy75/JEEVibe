@@ -472,5 +472,6 @@ module.exports = {
   processInitialAssessment,
   groupResponsesByChapter,
   validateAssessmentResponses,
-  saveAssessmentWithTransaction
+  saveAssessmentWithTransaction,
+  calculateSubjectAccuracy
 };
