@@ -76,14 +76,6 @@ android {
             useLegacyPackaging = true
         }
     }
-    
-    // Disable debug symbol stripping for release builds to avoid errors
-    tasks.named("bundleRelease") {
-        doLast {
-            // This is a workaround for the debug symbol stripping issue
-            // The build will complete successfully even if stripping fails
-        }
-    }
 }
 
 flutter {
