@@ -156,9 +156,11 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                   children: [
                     const SizedBox(height: 16),
                     // Show results if completed, otherwise show assessment card
-                    if (_isAssessmentCompleted && _assessmentData != null)
-                      _buildResultsCard()
-                    else
+                    if (_isAssessmentCompleted && _assessmentData != null) ...[
+                      _buildPriyaMessageCard(),
+                      const SizedBox(height: 16),
+                      _buildResultsCard(),
+                    ] else
                       _buildAssessmentCard(),
                     const SizedBox(height: 16),
                     // Daily Practice Card (Locked)
@@ -176,6 +178,12 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
 
   Widget _buildHeader() {
     return AppHeader(
+      showGradient: true,
+      gradient: const LinearGradient(
+        colors: [Color(0xFF9333EA), Color(0xFFEC4899)], // Purple to pink
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
       leading: Container(
         width: 40,
         height: 40,
@@ -405,6 +413,8 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   }
 
   Widget _buildDailyPracticeCard() {
+    final isUnlocked = _isAssessmentCompleted;
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
@@ -414,9 +424,10 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+              spreadRadius: 1,
             ),
           ],
         ),
@@ -446,12 +457,14 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                       Text(
                         'Daily Practice',
                         style: AppTextStyles.headerSmall.copyWith(
-                          fontSize: 18,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        '🔒 Complete assessment to unlock personalized practice',
+                        isUnlocked
+                            ? 'Personalized practice questions tailored for you'
+                            : '🔒 Complete assessment to unlock personalized practice',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.textLight,
                         ),
@@ -476,23 +489,45 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               width: double.infinity,
               height: 56,
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
+                gradient: isUnlocked ? AppColors.ctaGradient : null,
+                color: isUnlocked ? null : Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(12),
+                boxShadow: isUnlocked ? AppShadows.buttonShadow : null,
               ),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Start Practice',
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: Colors.grey.shade600,
-                        fontSize: 16,
-                      ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: isUnlocked ? () {
+                    // TODO: Navigate to daily practice screen
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => const DailyPracticeScreen(),
+                    //   ),
+                    // );
+                  } : null,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Start Practice',
+                          style: AppTextStyles.labelMedium.copyWith(
+                            color: isUnlocked ? Colors.white : Colors.grey.shade600,
+                            fontSize: 16,
+                            fontWeight: isUnlocked ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: isUnlocked ? Colors.white : Colors.grey.shade600,
+                          size: 20,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Icon(Icons.arrow_forward, color: Colors.grey.shade600, size: 20),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -634,6 +669,82 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     );
   }
 
+  Widget _buildPriyaMessageCard() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar and title row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                PriyaAvatar(size: 56),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Great Job, ${_getUserName()}! 🎉',
+                        style: AppTextStyles.headerSmall.copyWith(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Assessment Complete',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textLight,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Message bubble
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3E8FF), // Light purple
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                "I've analyzed your strengths and areas for improvement. Let's build on this with daily adaptive practice tailored for you!",
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.textMedium,
+                  height: 1.5,
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildResultsCard() {
     // Extract accuracy values with proper type handling
     final physicsData = _assessmentData!.subjectAccuracy['physics'] as Map<String, dynamic>?;
@@ -650,6 +761,24 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     debugPrint('  Chemistry: $chemistryData -> $chemistryAccuracy');
     debugPrint('  Mathematics: $mathematicsData -> $mathematicsAccuracy');
     debugPrint('  Full subjectAccuracy map: ${_assessmentData!.subjectAccuracy}');
+    
+    // Print theta scores per subject
+    debugPrint('\n=== THETA SCORES PER SUBJECT ===');
+    final thetaBySubject = _assessmentData!.thetaBySubject;
+    if (thetaBySubject.isNotEmpty) {
+      final physicsTheta = thetaBySubject['physics'];
+      final chemistryTheta = thetaBySubject['chemistry'];
+      final mathematicsTheta = thetaBySubject['mathematics'];
+      
+      debugPrint('Physics Theta: ${physicsTheta?['theta'] ?? 'N/A'} (Percentile: ${physicsTheta?['percentile'] ?? 'N/A'})');
+      debugPrint('Chemistry Theta: ${chemistryTheta?['theta'] ?? 'N/A'} (Percentile: ${chemistryTheta?['percentile'] ?? 'N/A'})');
+      debugPrint('Mathematics Theta: ${mathematicsTheta?['theta'] ?? 'N/A'} (Percentile: ${mathematicsTheta?['percentile'] ?? 'N/A'})');
+      debugPrint('Overall Theta: ${_assessmentData!.overallTheta} (Percentile: ${_assessmentData!.overallPercentile})');
+      debugPrint('================================\n');
+    } else {
+      debugPrint('No theta data available');
+      debugPrint('================================\n');
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -660,48 +789,40 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+              spreadRadius: 1,
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with Priya's avatar and title
+            // Header with title and icon
             Row(
               children: [
-                PriyaAvatar(size: 48),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Assessment Results',
-                        style: AppTextStyles.headerSmall.copyWith(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        'Great job completing your assessment!',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textLight,
-                        ),
-                      ),
-                    ],
+                const Icon(
+                  Icons.bar_chart,
+                  size: 24,
+                  color: AppColors.primaryPurple,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Your Assessment Results',
+                  style: AppTextStyles.headerSmall.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             // Subject Results
             _buildSubjectResult('Physics', physicsAccuracy, AppColors.primaryPurple),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             _buildSubjectResult('Chemistry', chemistryAccuracy, const Color(0xFF4CAF50)),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             _buildSubjectResult('Mathematics', mathematicsAccuracy, const Color(0xFF2196F3)),
           ],
         ),
@@ -713,89 +834,68 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     final accuracyValue = accuracy ?? 0;
     final displayAccuracy = accuracy != null ? '$accuracy%' : 'N/A';
     
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          // Subject Icon/Initial
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                subject[0], // First letter
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+    // Determine feedback text and progress bar color based on thresholds
+    String feedbackText;
+    Color progressColor;
+    
+    if (accuracy == null || accuracyValue == 0) {
+      feedbackText = 'Not assessed';
+      progressColor = Colors.grey;
+    } else if (accuracyValue < 70) {
+      feedbackText = 'Needs more practice';
+      progressColor = const Color(0xFFFF9800); // Orange
+    } else if (accuracyValue <= 85) {
+      feedbackText = 'Good progress';
+      progressColor = const Color(0xFF2196F3); // Blue
+    } else {
+      feedbackText = 'Strong performance';
+      progressColor = const Color(0xFF4CAF50); // Green
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Subject name and percentage row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+              Text(
+                subject,
+                style: AppTextStyles.headerSmall.copyWith(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
+            Text(
+              displayAccuracy,
+              style: AppTextStyles.headerSmall.copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+          const SizedBox(height: 10),
+          // Progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: accuracyValue / 100,
+              backgroundColor: Colors.grey.shade200,
+              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+              minHeight: 8,
             ),
           ),
-          const SizedBox(width: 16),
-          // Subject Name and Accuracy
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subject,
-                  style: AppTextStyles.headerSmall.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$displayAccuracy Correct',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textMedium,
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: 6),
+        // Feedback text
+        Text(
+          feedbackText,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textLight,
+            fontSize: 13,
           ),
-          // Progress Bar
-          SizedBox(
-            width: 80,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  displayAccuracy,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: accuracyValue / 100,
-                    backgroundColor: color.withOpacity(0.2),
-                    valueColor: AlwaysStoppedAnimation<Color>(color),
-                    minHeight: 6,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
   
