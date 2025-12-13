@@ -99,7 +99,15 @@ router.post('/profile',
     body('firstName').optional().isLength({ max: 100 }).trim().escape(),
     body('lastName').optional().isLength({ max: 100 }).trim().escape(),
     body('email').optional().isEmail().normalizeEmail(),
-    body('phoneNumber').optional().matches(/^\+?[1-9]\d{1,14}$/).withMessage('Invalid phone number format'),
+    body('phoneNumber').optional().custom((value) => {
+      if (value == null || value === '') {
+        return true; // Allow empty/null phoneNumber
+      }
+      if (!/^\+?[1-9]\d{1,14}$/.test(value)) {
+        throw new Error('Invalid phone number format. Must be E.164 format (e.g., +1234567890)');
+      }
+      return true;
+    }),
     body('weakSubjects').optional().isArray().custom((arr) => {
       if (!Array.isArray(arr)) {
         throw new Error('weakSubjects must be an array');

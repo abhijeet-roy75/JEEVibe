@@ -29,8 +29,16 @@ class FirestoreUserService {
       // Convert Firestore Timestamps to ISO strings for JSON
       final jsonData = <String, dynamic>{};
       profileMap.forEach((key, value) {
+        if (value == null) {
+          // Skip null values - don't include in JSON
+          return;
+        }
+        
         if (value is Timestamp) {
           jsonData[key] = value.toDate().toIso8601String();
+        } else if (value is String && value.isEmpty && key == 'phoneNumber') {
+          // Skip empty phoneNumber - backend will use authenticated user's phone
+          return;
         } else {
           jsonData[key] = value;
         }
@@ -50,7 +58,29 @@ class FirestoreUserService {
 
       if (response.statusCode != 200) {
         final errorData = json.decode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to save user profile');
+        String errorMessage = errorData['error'] ?? 'Failed to save user profile';
+        
+        // Include validation details if available
+        if (errorData['details'] != null) {
+          if (errorData['details'] is List) {
+            final details = errorData['details'] as List;
+            if (details.isNotEmpty) {
+              final detailMessages = details.map((d) {
+                if (d is Map && d['msg'] != null) {
+                  return d['msg'];
+                } else if (d is String) {
+                  return d;
+                }
+                return d.toString();
+              }).join(', ');
+              errorMessage = '$errorMessage: $detailMessages';
+            }
+          } else if (errorData['details'] is String) {
+            errorMessage = '$errorMessage: ${errorData['details']}';
+          }
+        }
+        
+        throw Exception(errorMessage);
       }
     } on SocketException {
       throw Exception('No internet connection. Please check your network and try again.');
