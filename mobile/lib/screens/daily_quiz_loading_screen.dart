@@ -17,14 +17,29 @@ class DailyQuizLoadingScreen extends StatefulWidget {
   State<DailyQuizLoadingScreen> createState() => _DailyQuizLoadingScreenState();
 }
 
-class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen> {
+class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
+    with SingleTickerProviderStateMixin {
   String? _error;
   bool _isLoading = true;
+  late AnimationController _avatarAnimationController;
 
   @override
   void initState() {
     super.initState();
+    
+    // Avatar pulsing animation
+    _avatarAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    
     _generateQuiz();
+  }
+
+  @override
+  void dispose() {
+    _avatarAnimationController.dispose();
+    super.dispose();
   }
 
   Future<void> _generateQuiz() async {
@@ -72,43 +87,64 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen> {
   Widget build(BuildContext context) {
     if (_error != null) {
       return Scaffold(
-        backgroundColor: AppColors.backgroundLight,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 64, color: AppColors.errorRed),
-                const SizedBox(height: 16),
-                Text(
-                  'Error',
-                  style: AppTextStyles.headerMedium.copyWith(
-                    color: AppColors.errorRed,
-                  ),
+        body: Container(
+          decoration: const BoxDecoration(
+            // Purple to pink gradient background matching assessment header
+            gradient: LinearGradient(
+              colors: [Color(0xFF9333EA), Color(0xFFEC4899)], // Purple to pink
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.white.withOpacity(0.95),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error',
+                      style: AppTextStyles.headerMedium.copyWith(
+                        color: Colors.white.withOpacity(0.95),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _error!,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _error = null;
+                          _isLoading = true;
+                        });
+                        _generateQuiz();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppColors.primaryPurple,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 16,
+                        ),
+                      ),
+                      child: const Text('Retry'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  _error!,
-                  style: AppTextStyles.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _error = null;
-                      _isLoading = true;
-                    });
-                    _generateQuiz();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryPurple,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Retry'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -116,37 +152,79 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(color: AppColors.primaryPurple),
-            const SizedBox(height: 24),
-            Text(
-              'Generating your personalized quiz...',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textMedium,
+      body: Container(
+        decoration: const BoxDecoration(
+          // Purple to pink gradient background matching assessment header
+          gradient: LinearGradient(
+            colors: [Color(0xFF9333EA), Color(0xFFEC4899)], // Purple to pink
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 40),
+                    // Priya Ma'am Avatar with pulsing animation
+                    AnimatedBuilder(
+                      animation: _avatarAnimationController,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: 1.0 + (_avatarAnimationController.value * 0.05),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.white.withOpacity(
+                                    0.3 + (_avatarAnimationController.value * 0.2),
+                                  ),
+                                  blurRadius: 40,
+                                  spreadRadius: 15,
+                                ),
+                              ],
+                            ),
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: const PriyaAvatar(size: 120),
+                    ),
+                    const SizedBox(height: 40),
+                    // Message text (white for visibility on gradient)
+                    Text(
+                      'I am preparing your personalized daily quiz. This will just take a moment.',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.white.withOpacity(0.95), // White text on gradient
+                        fontSize: 15,
+                        height: 1.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 40),
+                    // Loading spinner
+                    const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      strokeWidth: 3,
+                    ),
+                    const SizedBox(height: 20),
+                    // Purple heart
+                    const Text(
+                      '💜',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 32),
-            const PriyaAvatar(size: 64),
-            const SizedBox(height: 16),
-            Text(
-              'Priya Ma\'am ✨',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.primaryPurple,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'We\'re preparing questions tailored just for you!',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textLight,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+          ),
         ),
       ),
     );

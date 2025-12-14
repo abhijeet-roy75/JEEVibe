@@ -130,18 +130,14 @@ class AppInitializer extends StatefulWidget {
 class _AppInitializerState extends State<AppInitializer> {
   bool _isLoading = true;
   Widget? _targetScreen;
-  DateTime? _startTime;
 
   @override
   void initState() {
     super.initState();
-    _startTime = DateTime.now();
     _checkLoginStatus();
   }
 
   Future<void> _checkLoginStatus() async {
-    // Record start time for minimum display duration
-    final startTime = DateTime.now();
     
     // 2. Check Auth & Profile
     if (!mounted) return;

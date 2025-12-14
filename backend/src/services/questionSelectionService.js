@@ -390,6 +390,63 @@ async function selectQuestionsForChapters(chapterThetas, excludeQuestionIds = ne
   return allSelected;
 }
 
+/**
+ * Fallback: Select any available questions from the database
+ * Used when no questions are found for selected chapters
+ * 
+ * @param {Set<string>} excludeQuestionIds - Question IDs to exclude
+ * @param {number} limit - Maximum number of questions to return
+ * @returns {Promise<Array>} Available question documents
+ */
+async function selectAnyAvailableQuestions(excludeQuestionIds = new Set(), limit = 10) {
+  try {
+    logger.info('Selecting any available questions (fallback)', {
+      excludeCount: excludeQuestionIds.size,
+      limit
+    });
+    
+    // Query all questions, limited by count
+    const questionsRef = db.collection('questions')
+      .limit(limit * 3); // Get more to account for exclusions
+    
+    logger.info('Executing fallback Firestore query', { limit: limit * 3 });
+    const snapshot = await retryFirestoreOperation(async () => {
+      return await questionsRef.get();
+    });
+    logger.info('Fallback Firestore query completed', { resultCount: snapshot.size });
+    
+    if (snapshot.empty) {
+      logger.warn('No questions found in database (fallback)', {});
+      return [];
+    }
+    
+    // Map to question objects
+    let questions = snapshot.docs.map(doc => ({
+      question_id: doc.id,
+      ...doc.data()
+    }));
+    
+    // Filter out excluded questions
+    questions = questions.filter(q => !excludeQuestionIds.has(q.question_id));
+    
+    // Limit to requested count
+    questions = questions.slice(0, limit);
+    
+    logger.info('Fallback questions selected', {
+      selected: questions.length,
+      limit
+    });
+    
+    return questions;
+  } catch (error) {
+    logger.error('Error in fallback question selection', {
+      error: error.message,
+      stack: error.stack
+    });
+    throw error;
+  }
+}
+
 // ============================================================================
 // EXPORTS
 // ============================================================================
@@ -397,6 +454,7 @@ async function selectQuestionsForChapters(chapterThetas, excludeQuestionIds = ne
 module.exports = {
   selectQuestionsForChapter,
   selectQuestionsForChapters,
+  selectAnyAvailableQuestions,
   getRecentQuestionIds,
   calculateFisherInformation,
   calculateIRTProbability,
