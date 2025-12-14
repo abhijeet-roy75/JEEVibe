@@ -220,42 +220,41 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Column(
+          padding: const EdgeInsets.all(24.0),
+          child: Row(
             children: [
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Review Quiz',
-                      style: AppTextStyles.bodyWhite.copyWith(
-                        fontWeight: FontWeight.w600,
+              // Logo on left
+              Text(
+                'JEEVibe',
+                style: AppTextStyles.headerWhite.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              // Message centered
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      'Review All Questions',
+                      style: AppTextStyles.headerWhite.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'Go through your performance question by question',
+                      style: AppTextStyles.bodyWhite.copyWith(fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Review All Questions',
-                style: AppTextStyles.headerWhite.copyWith(fontSize: 24),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Go through your performance question by question',
-                style: AppTextStyles.bodyWhite.copyWith(fontSize: 14),
-              ),
-              const SizedBox(height: 16),
+              // Empty space on right to balance (same width as logo)
+              const SizedBox(width: 80),
             ],
           ),
         ),
