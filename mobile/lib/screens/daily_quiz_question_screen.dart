@@ -145,14 +145,23 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     return '${minutes.toString().padLeft(1, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _handleAnswerSelection(String answer) async {
+  void _handleOptionSelection(String answer) {
+    // For MCQ questions, just select the answer (don't submit yet)
+    final provider = Provider.of<DailyQuizProvider>(context, listen: false);
+    provider.selectAnswer(answer);
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _handleAnswerSubmission(String answer) async {
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
     final currentIndex = provider.currentQuestionIndex;
     final questionState = provider.getQuestionState(currentIndex);
     
     if (questionState?.isAnswered == true) return;
 
-    // C3: Stop timer immediately when answer is selected
+    // C3: Stop timer immediately when answer is submitted
     _timer?.cancel();
     _timer = null;
 
@@ -190,7 +199,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         ErrorHandler.showErrorSnackBar(
           context,
           message: ErrorHandler.getErrorMessage(e),
-          onRetry: () => _handleAnswerSelection(answer),
+          onRetry: () => _handleAnswerSubmission(answer),
         );
       }
     }
@@ -350,7 +359,26 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                         question: question,
                         selectedAnswer: questionState?.selectedAnswer,
                         showAnswerOptions: feedback == null,
-                        onAnswerSelected: feedback == null ? _handleAnswerSelection : null,
+                        onAnswerSelected: feedback == null 
+                            ? (question.isMcq || question.isNumerical) 
+                                ? _handleOptionSelection 
+                                : null
+                            : null,
+                        onAnswerSubmitted: feedback == null 
+                            ? (question.isMcq && questionState?.selectedAnswer != null
+                                ? () => _handleAnswerSubmission(questionState!.selectedAnswer!)
+                                : question.isNumerical
+                                    ? () {
+                                        // For numerical, get the answer from the text field
+                                        // The onAnswerSelected callback will have been called when user types
+                                        final provider = Provider.of<DailyQuizProvider>(context, listen: false);
+                                        final currentState = provider.getQuestionState(provider.currentQuestionIndex);
+                                        if (currentState?.selectedAnswer != null) {
+                                          _handleAnswerSubmission(currentState!.selectedAnswer!);
+                                        }
+                                      }
+                                    : null)
+                            : null,
                         elapsedSeconds: elapsedTime,
                       ),
                       const SizedBox(height: 16),
@@ -436,47 +464,39 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Back button and Daily Quiz pill
+              // Top line with back button and centered title/subtitle
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Daily Quiz',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          'Adaptive Daily Quiz',
+                          style: AppTextStyles.headerWhite.copyWith(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Personalized for your growth',
+                          style: AppTextStyles.bodyWhite.copyWith(
+                            fontSize: 12,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
                   ),
+                  // Spacer to balance the back button
+                  const SizedBox(width: 48),
                 ],
-              ),
-              const SizedBox(height: 16),
-              // Main title
-              Text(
-                'Adaptive Daily Quiz',
-                style: AppTextStyles.headerWhite.copyWith(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              // Subtitle
-              Text(
-                'Personalized for your growth',
-                style: AppTextStyles.bodyWhite.copyWith(
-                  fontSize: 14,
-                  color: Colors.white.withOpacity(0.9),
-                ),
               ),
               const SizedBox(height: 16),
               // Progress card

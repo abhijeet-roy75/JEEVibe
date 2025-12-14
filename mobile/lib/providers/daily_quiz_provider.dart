@@ -224,6 +224,31 @@ class DailyQuizProvider extends ChangeNotifier {
     }
   }
 
+  /// Select an answer without submitting (for MCQ questions)
+  void selectAnswer(String answer) {
+    if (_currentQuiz == null) return;
+    
+    final currentIndex = _currentQuestionIndex;
+    if (currentIndex >= _currentQuiz!.questions.length) return;
+    
+    // Initialize question state if not exists
+    if (!_questionStates.containsKey(currentIndex)) {
+      _questionStates[currentIndex] = QuestionState(
+        startTime: DateTime.now(),
+        elapsedSeconds: 0,
+      );
+    }
+    
+    // Update selected answer
+    final currentState = _questionStates[currentIndex]!;
+    _questionStates[currentIndex] = currentState.copyWith(
+      selectedAnswer: answer,
+    );
+    
+    _saveQuizState();
+    notifyListeners();
+  }
+
   /// Move to next question
   void nextQuestion() {
     if (_currentQuestionIndex < totalQuestions - 1) {

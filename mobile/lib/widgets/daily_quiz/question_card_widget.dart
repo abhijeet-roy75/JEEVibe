@@ -13,6 +13,7 @@ class QuestionCardWidget extends StatefulWidget {
   final String? selectedAnswer;
   final bool showAnswerOptions;
   final Function(String)? onAnswerSelected;
+  final VoidCallback? onAnswerSubmitted;
   final int? elapsedSeconds;
 
   const QuestionCardWidget({
@@ -21,6 +22,7 @@ class QuestionCardWidget extends StatefulWidget {
     this.selectedAnswer,
     this.showAnswerOptions = true,
     this.onAnswerSelected,
+    this.onAnswerSubmitted,
     this.elapsedSeconds,
   });
 
@@ -224,6 +226,27 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
           if (showAnswerOptions && widget.question.options != null) ...[
             const SizedBox(height: 24),
             ...widget.question.options!.map((option) => _buildOption(option)),
+            const SizedBox(height: 24),
+            // Submit button for MCQ questions
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: widget.selectedAnswer != null && widget.selectedAnswer!.isNotEmpty && widget.onAnswerSubmitted != null
+                    ? widget.onAnswerSubmitted
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: widget.selectedAnswer != null && widget.selectedAnswer!.isNotEmpty
+                      ? AppColors.primaryPurple
+                      : AppColors.borderGray,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Submit Answer'),
+              ),
+            ),
           ],
           // Numerical input field
           if (showAnswerOptions && widget.question.isNumerical) ...[
@@ -235,11 +258,17 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
-                onPressed: _numericalController.text.isNotEmpty && onAnswerSelected != null
-                    ? () => onAnswerSelected!(_numericalController.text)
+                onPressed: _numericalController.text.isNotEmpty && widget.onAnswerSubmitted != null
+                    ? () {
+                        if (_numericalController.text.isNotEmpty) {
+                          widget.onAnswerSubmitted?.call();
+                        }
+                      }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryPurple,
+                  backgroundColor: _numericalController.text.isNotEmpty
+                      ? AppColors.primaryPurple
+                      : AppColors.borderGray,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -277,6 +306,10 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
         ),
         style: AppTextStyles.bodyMedium,
         onChanged: (value) {
+          // Store the answer as user types
+          if (value.isNotEmpty && widget.onAnswerSelected != null) {
+            widget.onAnswerSelected!(value);
+          }
           setState(() {}); // Update button state
         },
         onSubmitted: (value) {
