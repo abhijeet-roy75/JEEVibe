@@ -33,6 +33,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
   UserProfile? _userProfile;
   bool _isLoading = true;
   String? _error;
+  Map<String, dynamic>? _streak;
 
   @override
   void initState() {
@@ -74,6 +75,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
       if (mounted) {
         setState(() {
           _quizResult = result;
+          _streak = result['streak'] as Map<String, dynamic>?;
           _isLoading = false;
         });
       }
@@ -93,6 +95,17 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
 
   String _getFormattedDate() {
     return DateFormat('EEEE, MMM d').format(DateTime.now());
+  }
+
+  String _getStreakText() {
+    final currentStreak = _streak?['current_streak'] as int? ?? 0;
+    if (currentStreak <= 0) {
+      return 'Start your streak!';
+    } else if (currentStreak == 1) {
+      return '1-day streak!';
+    } else {
+      return '$currentStreak-day streak!';
+    }
   }
 
   // C5: Add null-safe access with proper type checking
@@ -306,22 +319,8 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hi ${_getUserName()}! 👋',
-                    style: AppTextStyles.headerWhite.copyWith(fontSize: 28),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _getFormattedDate(),
-                    style: AppTextStyles.bodyWhite.copyWith(fontSize: 14),
-                  ),
-                ],
-              ),
+              // Logo on left
               Text(
                 'JEEVibe',
                 style: AppTextStyles.headerWhite.copyWith(
@@ -330,6 +329,29 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
                   letterSpacing: 1.2,
                 ),
               ),
+              // Message centered
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      'Quiz Complete! 🎉',
+                      style: AppTextStyles.headerWhite.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Great effort today',
+                      style: AppTextStyles.bodyWhite.copyWith(fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              // Empty space on right to balance (same width as logo)
+              const SizedBox(width: 80),
             ],
           ),
         ),
@@ -390,7 +412,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
                         color: AppColors.warningAmber, size: 16),
                     const SizedBox(width: 4),
                     Text(
-                      '6-day streak!',
+                      _getStreakText(),
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.warningAmber,
                         fontWeight: FontWeight.w600,

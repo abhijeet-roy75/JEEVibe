@@ -932,6 +932,9 @@ router.get('/result/:quiz_id', authenticateUser, async (req, res, next) => {
       }
     });
     
+    // Get streak data for the result
+    const streak = await getStreak(userId);
+    
     // Map questions with details
     const questionsWithDetails = (quizData.questions || []).map(q => {
       const questionData = questionMap.get(q.question_id);
@@ -1008,6 +1011,7 @@ router.get('/result/:quiz_id', authenticateUser, async (req, res, next) => {
         review_questions: quizData.review_questions || 0,
         questions: questionsWithDetails
       },
+      streak: streak,
       requestId: req.id
     });
   } catch (error) {
