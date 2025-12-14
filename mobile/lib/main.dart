@@ -34,14 +34,28 @@ void main() async {
     if (message != null) {
       final lowerMessage = message.toLowerCase();
       // Suppress SVG warnings (check for various patterns)
-      if (lowerMessage.contains('unhandled element') && 
-          (lowerMessage.contains('metadata') || lowerMessage.contains('style'))) {
-        return;
+      // Suppress "unhandled element" warnings for SVG elements like style, metadata, etc.
+      if (lowerMessage.contains('unhandled element')) {
+        if (lowerMessage.contains('metadata') || 
+            lowerMessage.contains('style') ||
+            lowerMessage.contains('<style')) {
+          return;
+        }
       }
-      if (lowerMessage.contains('picture key') && lowerMessage.contains('svg')) {
-        return;
+      // Suppress "Picture key" warnings related to SVG (can appear with or without "unhandled element")
+      if (lowerMessage.contains('picture key')) {
+        if (lowerMessage.contains('svg') || 
+            lowerMessage.contains('loader') ||
+            lowerMessage.contains('svg loader')) {
+          return;
+        }
       }
+      // Suppress SVG loader messages
       if (lowerMessage.contains('svg loader')) {
+        return;
+      }
+      // Suppress combined messages like "unhandled element <style/>; Picture key: Svg loader"
+      if (lowerMessage.contains('unhandled element') && lowerMessage.contains('picture key')) {
         return;
       }
       // Suppress LaTeX debug messages
