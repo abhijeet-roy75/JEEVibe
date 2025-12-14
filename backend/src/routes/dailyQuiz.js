@@ -468,12 +468,18 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
       }
     }
     
-    // Get final user data for response
+    // Get final user data and quiz data for response
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
     const userData = userDoc.data();
     const newQuizCount = (userData.completed_quiz_count || 0);
+    
+    // Get quiz data again (needed for saving responses)
+    const quizDoc = await retryFirestoreOperation(async () => {
+      return await quizRef.get();
+    });
+    const quizData = quizDoc.data();
     
     // Save individual responses to daily_quiz_responses collection
     const responsesRef = db.collection('daily_quiz_responses')

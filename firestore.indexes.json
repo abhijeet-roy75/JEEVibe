@@ -72,6 +72,14 @@
       ]
     },
     {
+      "collectionGroup": "responses",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "question_id", "order": "ASCENDING" },
+        { "fieldPath": "answered_at", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "quizzes",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
