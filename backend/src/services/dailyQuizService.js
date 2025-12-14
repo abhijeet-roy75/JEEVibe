@@ -451,11 +451,27 @@ async function generateDailyQuizInternal(userId) {
     const thetaByChapter = userData.theta_by_chapter || {};
     logger.info('Learning phase determined', { userId, learningPhase, completedQuizCount, chapterCount: Object.keys(thetaByChapter).length });
     
-    // NOTE: Circuit breaker / recovery quiz logic is DISABLED
-    // We now use a simple daily limit: one quiz per day (enforced in the API route)
-    // The recovery quiz logic was causing issues with limited question banks
-    // If needed in the future, we can re-enable it with better error handling
-    logger.info('Skipping circuit breaker check (daily limit enforced at API level)', { userId });
+    // Check circuit breaker for recovery quiz
+    logger.info('Checking circuit breaker', { userId });
+    const failureCheck = await checkConsecutiveFailures(userId);
+    logger.info('Circuit breaker check complete', { userId, shouldTrigger: failureCheck.shouldTrigger });
+    
+    if (failureCheck.shouldTrigger) {
+      logger.info('Circuit breaker triggered, attempting to generate recovery quiz', { userId });
+      try {
+        const recoveryQuiz = await generateRecoveryQuizWrapper(userId, thetaByChapter);
+        logger.info('Recovery quiz generated successfully', { userId });
+        return recoveryQuiz;
+      } catch (recoveryError) {
+        logger.warn('Recovery quiz generation failed, falling back to normal quiz generation', {
+          userId,
+          error: recoveryError.message
+        });
+        // Fall through to normal quiz generation
+        // This prevents the entire quiz generation from failing when recovery quiz can't be generated
+        // (e.g., due to limited question bank)
+      }
+    }
     
     // Get recent question IDs to exclude
     logger.info('Getting recent question IDs', { userId });
