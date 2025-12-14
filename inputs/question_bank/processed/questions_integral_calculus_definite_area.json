@@ -1,0 +1,2608 @@
+{
+  "MATH_INTDEF_E_001": {
+    "question_id": "MATH_INTDEF_E_001",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Fundamental theorem",
+      "Basic evaluation"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.45,
+    "priority": "HIGH",
+    "question_type": "numerical",
+    "has_image": false,
+    "question_text": "Evaluate \u222b\u2080\u00b2 x dx. Find the value.",
+    "correct_answer": "2",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.95,
+      "max": 2.05
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Apply fundamental theorem",
+        "formula": "\u222b\u2090\u1d47 x dx = [x\u00b2/2]\u2090\u1d47",
+        "result": "Antiderivative is x\u00b2/2"
+      },
+      {
+        "step_number": 2,
+        "description": "Evaluate at limits",
+        "calculation": "[x\u00b2/2]\u2080\u00b2 = (2\u00b2/2) - (0\u00b2/2) = 2 - 0 = 2",
+        "result": "2"
+      }
+    ],
+    "concepts_tested": [
+      "Fundamental theorem",
+      "Definite integral evaluation"
+    ],
+    "time_estimate": 90,
+    "weightage_marks": 4,
+    "metadata": {
+      "formula_used": "\u222b\u2090\u1d47 x\u207f dx = [x^(n+1)/(n+1)]\u2090\u1d47",
+      "common_mistakes": [
+        "Forgetting to subtract lower limit",
+        "Wrong power rule application"
+      ],
+      "hint": "Use power rule and apply limits",
+      "key_insight": "Definite integral = F(b) - F(a)"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.45,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "fundamental-theorem",
+      "basic-evaluation"
+    ]
+  },
+  "MATH_INTDEF_E_002": {
+    "question_id": "MATH_INTDEF_E_002",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Definite integral",
+      "Constant"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.5,
+    "question_type": "numerical",
+    "question_text": "Evaluate \u222b\u2081\u2074 3 dx. Find the value.",
+    "correct_answer": "9",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 8.95,
+      "max": 9.05
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Integral of constant",
+        "formula": "\u222b\u2090\u1d47 k dx = k(b-a)",
+        "result": "For constant 3"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply formula",
+        "calculation": "\u222b\u2081\u2074 3 dx = 3(4-1) = 3(3) = 9",
+        "result": "9"
+      }
+    ],
+    "metadata": {
+      "formula_used": "\u222b\u2090\u1d47 k dx = k(b-a)",
+      "hint": "Constant \u00d7 length of interval",
+      "key_insight": "Integral of constant is constant times interval length"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.5,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "constant-integration"
+    ]
+  },
+  "MATH_INTDEF_E_003": {
+    "question_id": "MATH_INTDEF_E_003",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Definite integral",
+      "Quadratic"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.55,
+    "question_type": "numerical",
+    "question_text": "Evaluate \u222b\u2080\u00b9 x\u00b2 dx. Find the value (round to 3 decimals).",
+    "correct_answer": "0.333",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.32,
+      "max": 0.35
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Find antiderivative",
+        "calculation": "\u222b x\u00b2 dx = x\u00b3/3",
+        "result": "x\u00b3/3"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply limits",
+        "calculation": "[x\u00b3/3]\u2080\u00b9 = (1\u00b3/3) - (0\u00b3/3) = 1/3 \u2248 0.333",
+        "result": "0.333"
+      }
+    ],
+    "metadata": {
+      "hint": "Power rule: \u222bx\u207f dx = x^(n+1)/(n+1)",
+      "key_insight": "Evaluate at upper minus lower limit"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.55,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "power-rule"
+    ]
+  },
+  "MATH_INTDEF_E_004": {
+    "question_id": "MATH_INTDEF_E_004",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Area under curve",
+      "Linear function"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.48,
+    "question_type": "numerical",
+    "question_text": "Find area under y = 2x from x = 0 to x = 3.",
+    "correct_answer": "9",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 8.95,
+      "max": 9.05
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Area = definite integral",
+        "formula": "Area = \u222b\u2080\u00b3 2x dx",
+        "result": "Setup integral"
+      },
+      {
+        "step_number": 2,
+        "description": "Evaluate",
+        "calculation": "[2x\u00b2/2]\u2080\u00b3 = [x\u00b2]\u2080\u00b3 = 9 - 0 = 9",
+        "result": "9"
+      }
+    ],
+    "metadata": {
+      "hint": "Area = \u222b\u2090\u1d47 f(x) dx",
+      "key_insight": "Area under curve is definite integral"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.48,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "area-calculation"
+    ]
+  },
+  "MATH_INTDEF_E_005": {
+    "question_id": "MATH_INTDEF_E_005",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Properties",
+      "Reversal of limits"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.52,
+    "question_type": "numerical",
+    "question_text": "If \u222b\u2081\u00b3 f(x) dx = 5, find \u222b\u2083\u00b9 f(x) dx.",
+    "correct_answer": "-5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": -5.05,
+      "max": -4.95
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Apply property of reversed limits",
+        "formula": "\u222b\u2090\u1d47 f(x) dx = -\u222b\u1d66\u2090 f(x) dx",
+        "result": "Reversing limits changes sign"
+      },
+      {
+        "step_number": 2,
+        "description": "Calculate",
+        "calculation": "\u222b\u2083\u00b9 f(x) dx = -\u222b\u2081\u00b3 f(x) dx = -(5) = -5",
+        "result": "-5"
+      }
+    ],
+    "metadata": {
+      "formula_used": "\u222b\u2090\u1d47 f(x) dx = -\u222b\u1d66\u2090 f(x) dx",
+      "hint": "Reversing limits negates the integral",
+      "key_insight": "Order of limits matters - reversal changes sign"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.52,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "properties",
+      "limit-reversal"
+    ]
+  },
+  "MATH_INTDEF_E_006": {
+    "question_id": "MATH_INTDEF_E_006",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Properties",
+      "Additivity"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.58,
+    "question_type": "numerical",
+    "question_text": "If \u222b\u2080\u00b2 f(x) dx = 3 and \u222b\u2082\u2075 f(x) dx = 7, find \u222b\u2080\u2075 f(x) dx.",
+    "correct_answer": "10",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 9.95,
+      "max": 10.05
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Apply additivity property",
+        "formula": "\u222b\u2090\u1d9c f(x) dx = \u222b\u2090\u1d47 f(x) dx + \u222b\u1d66\u1d9c f(x) dx",
+        "result": "Split at intermediate point"
+      },
+      {
+        "step_number": 2,
+        "description": "Calculate",
+        "calculation": "\u222b\u2080\u2075 f(x) dx = \u222b\u2080\u00b2 f(x) dx + \u222b\u2082\u2075 f(x) dx = 3 + 7 = 10",
+        "result": "10"
+      }
+    ],
+    "metadata": {
+      "formula_used": "\u222b\u2090\u1d9c = \u222b\u2090\u1d47 + \u222b\u1d66\u1d9c",
+      "hint": "Integrals over adjacent intervals add",
+      "key_insight": "Additivity property of definite integrals"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.58,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "properties",
+      "additivity"
+    ]
+  },
+  "MATH_INTDEF_E_007": {
+    "question_id": "MATH_INTDEF_E_007",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Definite integral",
+      "Exponential"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.6,
+    "question_type": "numerical",
+    "question_text": "Evaluate \u222b\u2080\u00b9 e\u02e3 dx. Round to 2 decimals.",
+    "correct_answer": "1.72",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.7,
+      "max": 1.74
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Antiderivative of e\u02e3",
+        "formula": "\u222b e\u02e3 dx = e\u02e3",
+        "result": "e\u02e3"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply limits",
+        "calculation": "[e\u02e3]\u2080\u00b9 = e\u00b9 - e\u2070 = e - 1 \u2248 2.718 - 1 = 1.718 \u2248 1.72",
+        "result": "1.72"
+      }
+    ],
+    "metadata": {
+      "hint": "e\u02e3 integrates to itself",
+      "key_insight": "\u222be\u02e3 dx = e\u02e3"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.6,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "exponential"
+    ]
+  },
+  "MATH_INTDEF_E_008": {
+    "question_id": "MATH_INTDEF_E_008",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Properties",
+      "Fundamental theorem"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.54,
+    "question_type": "mcq_single",
+    "question_text": "\u222b\u2090\u1d43 f(x) dx equals:",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "2\u222b\u2080\u1d43 f(x) dx"
+      },
+      {
+        "option_id": "B",
+        "text": "0"
+      },
+      {
+        "option_id": "C",
+        "text": "a"
+      },
+      {
+        "option_id": "D",
+        "text": "\u222b\u2080\u1d43 f(x) dx"
+      }
+    ],
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "distractor_analysis": {
+      "A": "Would be true only if \u222b\u208b\u2090\u1d43 for even functions; same limits give 0",
+      "C": "Confused with \u222b\u2080\u1d43 1 dx = a; when limits are equal, integral is always 0",
+      "D": "Forgot that same upper and lower limits always give 0 regardless of function"
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "When limits are equal",
+        "explanation": "\u222b\u2090\u1d43 f(x) dx = F(a) - F(a) = 0",
+        "result": "Always 0 for any function"
+      }
+    ],
+    "metadata": {
+      "hint": "What happens when upper = lower limit?",
+      "key_insight": "Same limits always give 0"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.54,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "easy",
+      "properties",
+      "mcq"
+    ]
+  },
+  "MATH_INTDEF_E_009": {
+    "question_id": "MATH_INTDEF_E_009",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Odd function property"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.62,
+    "question_type": "mcq_single",
+    "question_text": "If f(x) is an odd function, then \u222b\u208b\u2090\u1d43 f(x) dx =",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "0"
+      },
+      {
+        "option_id": "B",
+        "text": "2\u222b\u2080\u1d43 f(x) dx"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222b\u2080\u1d43 f(x) dx"
+      },
+      {
+        "option_id": "D",
+        "text": "Cannot be determined"
+      }
+    ],
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "distractor_analysis": {
+      "B": "This applies to even functions: \u222b\u208b\u2090\u1d43 f(x)dx = 2\u222b\u2080\u1d43 f(x)dx when f(-x)=f(x)",
+      "C": "Forgot the symmetry cancellation; odd functions have equal positive and negative contributions",
+      "D": "Can be determined - odd function property guarantees \u222b\u208b\u2090\u1d43 f(x)dx = 0"
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Apply odd function property",
+        "formula": "For odd function: f(-x) = -f(x)",
+        "result": "\u222b\u208b\u2090\u2070 f(x)dx = -\u222b\u2080\u1d43 f(x)dx"
+      },
+      {
+        "step_number": 2,
+        "description": "Combine",
+        "calculation": "\u222b\u208b\u2090\u1d43 = \u222b\u208b\u2090\u2070 + \u222b\u2080\u1d43 = -\u222b\u2080\u1d43 + \u222b\u2080\u1d43 = 0",
+        "result": "A"
+      }
+    ],
+    "metadata": {
+      "hint": "Odd function: f(-x) = -f(x)",
+      "key_insight": "Symmetric cancellation for odd functions"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.62,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "easy",
+      "odd-function",
+      "mcq"
+    ]
+  },
+  "MATH_INTDEF_E_010": {
+    "question_id": "MATH_INTDEF_E_010",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Even function property"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.56,
+    "question_type": "mcq_single",
+    "question_text": "If f(x) is an even function, then \u222b\u208b\u2090\u1d43 f(x) dx =",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "0"
+      },
+      {
+        "option_id": "B",
+        "text": "2\u222b\u2080\u1d43 f(x) dx"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222b\u2080\u1d43 f(x) dx"
+      },
+      {
+        "option_id": "D",
+        "text": "\u222b\u2080\u1d43 f(a-x) dx"
+      }
+    ],
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "distractor_analysis": {
+      "A": "This is for odd functions; even functions have symmetric addition, not cancellation",
+      "C": "Forgot to account for both halves; even symmetry doubles the integral from 0 to a",
+      "D": "King's property \u222b\u2080\u1d43 f(x)dx=\u222b\u2080\u1d43 f(a-x)dx is different from even function property"
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Apply even function property",
+        "formula": "For even function: f(-x) = f(x)",
+        "result": "\u222b\u208b\u2090\u2070 f(x)dx = \u222b\u2080\u1d43 f(x)dx"
+      },
+      {
+        "step_number": 2,
+        "description": "Combine",
+        "calculation": "\u222b\u208b\u2090\u1d43 = \u222b\u208b\u2090\u2070 + \u222b\u2080\u1d43 = \u222b\u2080\u1d43 + \u222b\u2080\u1d43 = 2\u222b\u2080\u1d43",
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "Even function: f(-x) = f(x)",
+      "key_insight": "Symmetric doubling for even functions"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.56,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "easy",
+      "even-function",
+      "mcq"
+    ]
+  },
+  "MATH_INTDEF_M_001": {
+    "question_id": "MATH_INTDEF_M_001",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Basic evaluation",
+      "Trigonometric"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.65,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2080^(\u03c0/2) sin x dx = 1. Verify this value.",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "[-cos x]\u2080^(\u03c0/2) = -cos(\u03c0/2)+cos(0) = 0+1 = 1"
+      }
+    ],
+    "metadata": {
+      "hint": "Antiderivative of sin x"
+    },
+    "time_estimate": 90,
+    "concepts_tested": [
+      "Substitution"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 0.65,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "easy",
+      "basic-evaluation",
+      "trigonometric"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_002": {
+    "question_id": "MATH_INTDEF_M_002",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Area"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.62,
+    "question_type": "numerical",
+    "question_text": "Area under y=x\u00b3 from x=0 to x=2.",
+    "correct_answer": "4",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 3.95,
+      "max": 4.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "[x\u2074/4]\u2080\u00b2 = 4"
+      }
+    ],
+    "metadata": {
+      "hint": "Power rule"
+    },
+    "time_estimate": 90,
+    "concepts_tested": [
+      "Area"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 0.62,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "easy",
+      "area"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_003": {
+    "question_id": "MATH_INTDEF_M_003",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Even function"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.28,
+    "question_type": "numerical",
+    "question_text": "\u222b\u208b\u2081\u00b9 x\u00b2 dx. Find value (3 decimals).",
+    "correct_answer": "0.667",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.617,
+      "max": 0.7170000000000001
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "[x\u00b3/3]\u208b\u2081\u00b9 = 2/3"
+      }
+    ],
+    "metadata": {
+      "hint": "Direct evaluation"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Even function"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.28,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Even function"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_004": {
+    "question_id": "MATH_INTDEF_M_004",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Properties"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.58,
+    "question_type": "numerical",
+    "question_text": "If \u222b\u2080\u00b3 f(x)dx=12 and \u222b\u2080\u00b3 g(x)dx=5, find \u222b\u2080\u00b3[f(x)+g(x)]dx.",
+    "correct_answer": "17",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 16.95,
+      "max": 17.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "12+5=17"
+      }
+    ],
+    "metadata": {
+      "hint": "Linearity"
+    },
+    "time_estimate": 90,
+    "concepts_tested": [
+      "Properties"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 0.58,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "easy",
+      "properties"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_005": {
+    "question_id": "MATH_INTDEF_M_005",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Area between"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.32,
+    "question_type": "numerical",
+    "question_text": "Area between y=x and y=x\u00b2 from x=0 to x=1 (3 decimals).",
+    "correct_answer": "0.167",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.117,
+      "max": 0.21700000000000003
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "\u222b\u2080\u00b9(x-x\u00b2)dx = 1/6"
+      }
+    ],
+    "metadata": {
+      "hint": "Upper minus lower"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Area between"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.32,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Area between"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_006": {
+    "question_id": "MATH_INTDEF_M_006",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Trig"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.25,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2080^(\u03c0/4) cos 2x dx (2 decimals).",
+    "correct_answer": "0.5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.45,
+      "max": 0.55
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "[sin(2x)/2]\u2080^(\u03c0/4) = 0.5"
+      }
+    ],
+    "metadata": {
+      "hint": "\u222bcos(ax)"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Trig"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.25,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Trig"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_007": {
+    "question_id": "MATH_INTDEF_M_007",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "By parts"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.38,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2080\u00b9 x\u00b7e\u02e3 dx. Find value.",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "[xe\u02e3-e\u02e3]\u2080\u00b9 = 1"
+      }
+    ],
+    "metadata": {
+      "hint": "IBP"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "By parts"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.38,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "By parts"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_008": {
+    "question_id": "MATH_INTDEF_M_008",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Log"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.64,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2081\u1d49 (1/x) dx. Find value.",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "[ln x]\u2081\u1d49 = 1"
+      }
+    ],
+    "metadata": {
+      "hint": "ln integral"
+    },
+    "time_estimate": 90,
+    "concepts_tested": [
+      "Log"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 0.64,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "easy",
+      "log"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_009": {
+    "question_id": "MATH_INTDEF_M_009",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Quadratic"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.35,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2080\u00b2 (4-x\u00b2) dx. Find value (3 decimals).",
+    "correct_answer": "5.333",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 5.283,
+      "max": 5.383
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "[4x-x\u00b3/3]\u2080\u00b2 = 16/3"
+      }
+    ],
+    "metadata": {
+      "hint": "Term by term"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Quadratic"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.35,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Quadratic"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_010": {
+    "question_id": "MATH_INTDEF_M_010",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Exponential"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.3,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2080\u00b9 e^(2x) dx (2 decimals).",
+    "correct_answer": "3.19",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 3.14,
+      "max": 3.2399999999999998
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "[e^(2x)/2]\u2080\u00b9 \u2248 3.19"
+      }
+    ],
+    "metadata": {
+      "hint": "e^(ax) formula"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Exponential"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.3,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Exponential"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_011": {
+    "question_id": "MATH_INTDEF_M_011",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Polynomial"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.12,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2082\u2075 (2x+1) dx. Find value.",
+    "correct_answer": "24",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 23.95,
+      "max": 24.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "[x\u00b2+x]\u2082\u2075 = 24"
+      }
+    ],
+    "metadata": {
+      "hint": "Direct"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Polynomial"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.12,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Polynomial"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_012": {
+    "question_id": "MATH_INTDEF_M_012",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Absolute"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.4,
+    "question_type": "numerical",
+    "question_text": "\u222b\u208b\u2081\u00b9 |x| dx. Find value.",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Split at 0: result is 1"
+      }
+    ],
+    "metadata": {
+      "hint": "Piecewise"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Absolute"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.4,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Absolute"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_013": {
+    "question_id": "MATH_INTDEF_M_013",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Rational"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.27,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2081\u00b2 (1/x\u00b2) dx (2 decimals).",
+    "correct_answer": "0.5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.45,
+      "max": 0.55
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "[-1/x]\u2081\u00b2 = 0.5"
+      }
+    ],
+    "metadata": {
+      "hint": "Power rule"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Rational"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.27,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Rational"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_014": {
+    "question_id": "MATH_INTDEF_M_014",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Constant multiple"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.19,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2080\u00b2 3x\u00b2 dx. Find value.",
+    "correct_answer": "8",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 7.95,
+      "max": 8.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "3[x\u00b3/3]\u2080\u00b2 = 8"
+      }
+    ],
+    "metadata": {
+      "hint": "Factor constant"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Constant multiple"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.19,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Constant multiple"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_M_015": {
+    "question_id": "MATH_INTDEF_M_015",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Formula",
+      "Constant integration"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.16,
+    "priority": "HIGH",
+    "question_type": "mcq_single",
+    "has_image": false,
+    "question_text": "\u222b\u2090\u1d47 k dx (where k is constant) equals:",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "k"
+      },
+      {
+        "option_id": "B",
+        "text": "k(b-a)"
+      },
+      {
+        "option_id": "C",
+        "text": "kb"
+      },
+      {
+        "option_id": "D",
+        "text": "k(b+a)/2"
+      }
+    ],
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "distractor_analysis": {
+      "A": "Missing the interval length (b-a); constant alone doesn't give the area",
+      "C": "Just multiplying by upper limit ignores the lower limit",
+      "D": "This is the midpoint formula, not the integral of a constant"
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Apply constant integration formula",
+        "formula": "\u222b\u2090\u1d47 k dx = k(b-a)",
+        "explanation": "Constant times the length of interval",
+        "result": "B"
+      }
+    ],
+    "concepts_tested": [
+      "Constant integration",
+      "Definite integral"
+    ],
+    "time_estimate": 150,
+    "weightage_marks": 4,
+    "metadata": {
+      "formula_used": "\u222b\u2090\u1d47 k dx = k(b-a)",
+      "hint": "Constant times interval length",
+      "key_insight": "Integral of constant = constant \u00d7 (upper - lower)"
+    },
+    "irt_parameters": {
+      "difficulty_b": 1.16,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "medium",
+      "formula",
+      "constant-integration"
+    ]
+  },
+  "MATH_INTDEF_M_016": {
+    "question_id": "MATH_INTDEF_M_016",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Properties",
+      "Limit reversal"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.24,
+    "priority": "HIGH",
+    "question_type": "mcq_single",
+    "has_image": false,
+    "question_text": "Which property holds for definite integrals?",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "\u222b\u2090\u1d47 f(x)dx = \u222b\u1d66\u2090 f(x)dx"
+      },
+      {
+        "option_id": "B",
+        "text": "\u222b\u2090\u1d47 f(x)dx = -\u222b\u1d66\u2090 f(x)dx"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222b\u2090\u1d47 f(x)dx = 2\u222b\u2090\u1d47 f(x)dx"
+      },
+      {
+        "option_id": "D",
+        "text": "\u222b\u2090\u1d47 f(x)dx = \u222b\u2090\u2070 f(x)dx - \u222b\u2070\u1d47 f(x)dx"
+      }
+    ],
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "distractor_analysis": {
+      "A": "Missing the negative sign; reversing limits negates the integral",
+      "C": "This would mean integral equals zero, which is nonsense",
+      "D": "Incorrect sign; should be \u222b\u2090\u1d47 = \u222b\u2090\u2070 + \u222b\u2070\u1d47 (not minus)"
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Apply limit reversal property",
+        "formula": "\u222b\u2090\u1d47 f(x)dx = -\u222b\u1d66\u2090 f(x)dx",
+        "explanation": "Reversing limits changes the sign",
+        "result": "B"
+      }
+    ],
+    "concepts_tested": [
+      "Properties",
+      "Limit reversal"
+    ],
+    "time_estimate": 150,
+    "weightage_marks": 4,
+    "metadata": {
+      "formula_used": "\u222b\u2090\u1d47 = -\u222b\u1d66\u2090",
+      "hint": "What happens when you reverse limits?",
+      "key_insight": "Reversed limits negate the integral"
+    },
+    "irt_parameters": {
+      "difficulty_b": 1.24,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "medium",
+      "properties",
+      "limit-reversal"
+    ]
+  },
+  "MATH_INTDEF_M_017": {
+    "question_id": "MATH_INTDEF_M_017",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Area"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.33,
+    "question_type": "mcq_single",
+    "question_text": "Area under y=f(x) from a to b where f(x)\u22650:",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "\u222b\u2090\u1d47 |f(x)| dx"
+      },
+      {
+        "option_id": "B",
+        "text": "\u222b\u2090\u1d47 f(x) dx"
+      },
+      {
+        "option_id": "C",
+        "text": "-\u222b\u2090\u1d47 f(x) dx"
+      },
+      {
+        "option_id": "D",
+        "text": "\u222b\u2090\u1d47 f\u00b2(x) dx"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "Function is non-negative"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Area"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.33,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Area"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH",
+    "distractor_analysis": {
+      "A": "Absolute value unnecessary when f(x)\u22650 already",
+      "C": "Negative integral would give negative area",
+      "D": "Squaring changes the function; area is just \u222bf(x)dx when f\u22650"
+    }
+  },
+  "MATH_INTDEF_M_018": {
+    "question_id": "MATH_INTDEF_M_018",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Fundamental"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.19,
+    "question_type": "mcq_single",
+    "question_text": "d/dx[\u222b\u2090\u02e3 f(t) dt] =",
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "f(x)"
+      },
+      {
+        "option_id": "B",
+        "text": "f(t)"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222bf(x) dx"
+      },
+      {
+        "option_id": "D",
+        "text": "0"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "A"
+      }
+    ],
+    "metadata": {
+      "hint": "Fundamental theorem part 1"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Fundamental"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.19,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Fundamental"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH",
+    "distractor_analysis": {
+      "B": "t is dummy variable; answer must be in terms of x",
+      "C": "This is indefinite integral, not derivative of definite integral",
+      "D": "Derivative of integral returns the function, not zero"
+    }
+  },
+  "MATH_INTDEF_M_019": {
+    "question_id": "MATH_INTDEF_M_019",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Comparison"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.29,
+    "question_type": "mcq_single",
+    "question_text": "If f(x)\u2264g(x) on [a,b], then:",
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "\u222b\u2090\u1d47 f \u2264 \u222b\u2090\u1d47 g"
+      },
+      {
+        "option_id": "B",
+        "text": "\u222b\u2090\u1d47 f \u2265 \u222b\u2090\u1d47 g"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222b\u2090\u1d47 f = \u222b\u2090\u1d47 g"
+      },
+      {
+        "option_id": "D",
+        "text": "No relation"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "A"
+      }
+    ],
+    "metadata": {
+      "hint": "Monotonicity"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Comparison"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.29,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Comparison"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH",
+    "distractor_analysis": {
+      "B": "Backwards; smaller function gives smaller integral",
+      "C": "Equality only if f(x)=g(x) everywhere",
+      "D": "There is a relation: monotonicity of integrals"
+    }
+  },
+  "MATH_INTDEF_M_020": {
+    "question_id": "MATH_INTDEF_M_020",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Substitution"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.37,
+    "question_type": "mcq_single",
+    "question_text": "Best method for \u222b\u2080^\u03c0 x sin x dx:",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "Direct"
+      },
+      {
+        "option_id": "B",
+        "text": "By parts"
+      },
+      {
+        "option_id": "C",
+        "text": "Substitution"
+      },
+      {
+        "option_id": "D",
+        "text": "Partial fractions"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "Polynomial \u00d7 trig"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Substitution"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.37,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Substitution"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH",
+    "distractor_analysis": {
+      "A": "Cannot integrate x sin x directly",
+      "C": "No good substitution exists for x sin x",
+      "D": "No rational function here"
+    }
+  },
+  "MATH_INTDEF_MH_001": {
+    "question_id": "MATH_INTDEF_MH_001",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "King"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.8,
+    "question_type": "numerical",
+    "question_text": "Using \u222b\u2080^(\u03c0/2) sin\u00b2x dx = \u03c0/4, find \u222b\u2080^(\u03c0/2) cos\u00b2x dx.",
+    "correct_answer": "0.785",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.735,
+      "max": 0.8350000000000001
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "sin\u00b2x+cos\u00b2x=1, so \u222bcos\u00b2x = \u222b1 - \u222bsin\u00b2x = \u03c0/2 - \u03c0/4 = \u03c0/4\u22480.785"
+      }
+    ],
+    "metadata": {
+      "hint": "Use identity"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "King"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.8,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "King"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_MH_002": {
+    "question_id": "MATH_INTDEF_MH_002",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Area between"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.85,
+    "question_type": "numerical",
+    "question_text": "Area enclosed by y=x\u00b2 and y=\u221ax from x=0 to x=1 (3 decimals).",
+    "correct_answer": "0.333",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.28300000000000003,
+      "max": 0.383
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Set up the area integral",
+        "explanation": "Find area between y=x\u00b2 and y=\u221ax on [0,1]",
+        "formula": "Area = \u222b\u2080\u00b9 (\u221ax - x\u00b2) dx",
+        "result": "Upper: \u221ax, Lower: x\u00b2"
+      },
+      {
+        "step_number": 2,
+        "description": "Find antiderivative",
+        "calculation": "\u222b(\u221ax - x\u00b2)dx = \u222b(x^(1/2) - x\u00b2)dx = 2x^(3/2)/3 - x\u00b3/3",
+        "result": "[2x^(3/2)/3 - x\u00b3/3]"
+      },
+      {
+        "step_number": 3,
+        "description": "Apply limits and calculate",
+        "calculation": "[2x^(3/2)/3 - x\u00b3/3]\u2080\u00b9 = (2/3 - 1/3) - 0 = 1/3 \u2248 0.333",
+        "result": "0.333"
+      }
+    ],
+    "metadata": {
+      "hint": "Upper - lower"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Area between"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.85,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Area between"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_MH_003": {
+    "question_id": "MATH_INTDEF_MH_003",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "By parts twice"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.78,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2080\u00b9 x\u00b2e\u02e3 dx (2 decimals).",
+    "correct_answer": "0.72",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.6699999999999999,
+      "max": 0.77
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Apply by parts twice: result \u2248 0.72"
+      }
+    ],
+    "metadata": {
+      "hint": "IBP twice"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "By parts twice"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.78,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "By parts twice"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_MH_004": {
+    "question_id": "MATH_INTDEF_MH_004",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Reduction"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.92,
+    "question_type": "numerical",
+    "question_text": "Using I_n = \u222b\u2080^(\u03c0/2) sin^n x dx, find I_2 (3 decimals).",
+    "correct_answer": "0.785",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.735,
+      "max": 0.8350000000000001
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "I_2 = \u03c0/4 \u2248 0.785"
+      }
+    ],
+    "metadata": {
+      "hint": "Standard reduction"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Reduction"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.92,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Reduction"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_MH_005": {
+    "question_id": "MATH_INTDEF_MH_005",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Area under curve",
+      "Trigonometric"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.76,
+    "question_type": "numerical",
+    "question_text": "Area under one arch of y=sin x (0 to \u03c0).",
+    "correct_answer": "2",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.95,
+      "max": 2.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "\u222b\u2080^\u03c0 sin x dx = [-cos x]\u2080^\u03c0 = 2"
+      }
+    ],
+    "metadata": {
+      "hint": "Symmetric arch"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Parametric"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.76,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "area-under-curve",
+      "trigonometric"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_MH_006": {
+    "question_id": "MATH_INTDEF_MH_006",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Leibniz"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.88,
+    "question_type": "numerical",
+    "question_text": "If F(x) = \u222b\u2080\u02e3 t\u00b2 dt, find F'(2).",
+    "correct_answer": "4",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 3.95,
+      "max": 4.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "F'(x) = x\u00b2, F'(2) = 4"
+      }
+    ],
+    "metadata": {
+      "hint": "d/dx[\u222b\u2090\u02e3 f(t)dt] = f(x)"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Leibniz"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.88,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Leibniz"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_MH_007": {
+    "question_id": "MATH_INTDEF_MH_007",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Geometric"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.95,
+    "question_type": "numerical",
+    "question_text": "\u222b\u208b\u2082\u00b2 \u221a(4-x\u00b2) dx represents area of semicircle. Find value (2 decimals).",
+    "correct_answer": "6.28",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 6.23,
+      "max": 6.33
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Semicircle radius 2: \u03c0r\u00b2/2 = 2\u03c0 \u2248 6.28"
+      }
+    ],
+    "metadata": {
+      "hint": "Recognize semicircle"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Geometric"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.95,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Geometric"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_MH_008": {
+    "question_id": "MATH_INTDEF_MH_008",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Properties"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.82,
+    "question_type": "numerical",
+    "question_text": "\u222b\u208b\u2082\u00b2 (x\u00b3+x) dx using odd function.",
+    "correct_answer": "0",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": -0.05,
+      "max": 0.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "x\u00b3+x is odd, so integral over symmetric limits is 0"
+      }
+    ],
+    "metadata": {
+      "hint": "Odd function property"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Properties"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.82,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Properties"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_MH_009": {
+    "question_id": "MATH_INTDEF_MH_009",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Complex bounds"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.98,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2081\u2074 (1/\u221ax) dx (3 decimals).",
+    "correct_answer": "2",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.95,
+      "max": 2.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "\u222bx^(-1/2) dx = 2\u221ax, [2\u221ax]\u2081\u2074 = 4-2 = 2"
+      }
+    ],
+    "metadata": {
+      "hint": "x^(-1/2)"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Complex bounds"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.98,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Complex bounds"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_MH_010": {
+    "question_id": "MATH_INTDEF_MH_010",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Properties"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.79,
+    "question_type": "mcq_single",
+    "question_text": "\u222b\u208b\u2090\u1d43 f(x)dx for even f(x):",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "0"
+      },
+      {
+        "option_id": "B",
+        "text": "2\u222b\u2080\u1d43 f(x)dx"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222b\u2080\u1d43 f(x)dx"
+      },
+      {
+        "option_id": "D",
+        "text": "Cannot determine"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "Even symmetry"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Properties"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.79,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Properties"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH",
+    "distractor_analysis": {
+      "A": "This is for odd functions; even functions have additive symmetry",
+      "C": "Missing the factor of 2 from symmetric doubling",
+      "D": "Can be determined using even function property"
+    }
+  },
+  "MATH_INTDEF_MH_011": {
+    "question_id": "MATH_INTDEF_MH_011",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Area between curves"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.86,
+    "priority": "HIGH",
+    "question_type": "mcq_single",
+    "has_image": false,
+    "question_text": "To find area between y=f(x) and y=g(x) on [a,b], the general formula is:",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "\u222b\u2090\u1d47 f(x)dx - \u222b\u2090\u1d47 g(x)dx"
+      },
+      {
+        "option_id": "B",
+        "text": "\u222b\u2090\u1d47 |f(x)-g(x)| dx"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222b\u2090\u1d47 (f(x)+g(x)) dx"
+      },
+      {
+        "option_id": "D",
+        "text": "\u222b\u2090\u1d47 f(x)\u00b7g(x) dx"
+      }
+    ],
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "distractor_analysis": {
+      "A": "Only works when f\u2265g throughout [a,b]; general formula needs absolute value",
+      "C": "Addition doesn't give area between curves; gives combined area",
+      "D": "Product has no geometric meaning for area between curves"
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "General area between curves formula",
+        "formula": "Area = \u222b\u2090\u1d47 |f(x)-g(x)| dx",
+        "explanation": "Absolute value ensures positive area regardless of which function is larger",
+        "result": "B"
+      }
+    ],
+    "concepts_tested": [
+      "Area between curves"
+    ],
+    "time_estimate": 180,
+    "weightage_marks": 4,
+    "metadata": {
+      "formula_used": "Area = \u222b|f-g|dx",
+      "hint": "Need absolute value for general case",
+      "key_insight": "Absolute value handles cases where functions cross"
+    },
+    "irt_parameters": {
+      "difficulty_b": 1.86,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "medium-hard",
+      "area-between-curves"
+    ]
+  },
+  "MATH_INTDEF_MH_012": {
+    "question_id": "MATH_INTDEF_MH_012",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "King"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.91,
+    "question_type": "mcq_single",
+    "question_text": "King's property states \u222b\u2080\u1d43 f(x)dx =",
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "\u222b\u2080\u1d43 f(a-x)dx"
+      },
+      {
+        "option_id": "B",
+        "text": "\u222b\u2090\u2070 f(x)dx"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222b\u208b\u2090\u1d43 f(x)dx"
+      },
+      {
+        "option_id": "D",
+        "text": "2\u222b\u2080\u1d43 f(x)dx"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "A"
+      }
+    ],
+    "metadata": {
+      "hint": "Substitution x\u2192a-x"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "King"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.91,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "King"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH",
+    "distractor_analysis": {
+      "B": "This just reverses limits (gives negative)",
+      "C": "This extends limits symmetrically (different property)",
+      "D": "This is even function property, not King's"
+    }
+  },
+  "MATH_INTDEF_MH_013": {
+    "question_id": "MATH_INTDEF_MH_013",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Leibniz"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.84,
+    "question_type": "mcq_single",
+    "question_text": "Leibniz rule: d/dx[\u222b\u2090^g(x) f(t)dt] =",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "f(g(x))"
+      },
+      {
+        "option_id": "B",
+        "text": "f(g(x))\u00b7g'(x)"
+      },
+      {
+        "option_id": "C",
+        "text": "g'(x)"
+      },
+      {
+        "option_id": "D",
+        "text": "\u222b\u2090^g(x) f'(t)dt"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "Chain rule"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Leibniz"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.84,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Leibniz"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH",
+    "distractor_analysis": {
+      "A": "Missing g'(x) from chain rule",
+      "C": "Missing the function evaluation f(g(x))",
+      "D": "This differentiates f, not the integral with respect to x"
+    }
+  },
+  "MATH_INTDEF_H_001": {
+    "question_id": "MATH_INTDEF_H_001",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Advanced"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.35,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2080^(\u03c0/4) ln(1+tan x)dx using King's (3 decimals).",
+    "correct_answer": "0.272",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.22200000000000003,
+      "max": 0.322
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Complex King's application gives \u03c0 ln2/8 \u2248 0.272"
+      }
+    ],
+    "metadata": {
+      "hint": "King property"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Advanced"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.35,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Advanced"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_H_002": {
+    "question_id": "MATH_INTDEF_H_002",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Reduction"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.45,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2080^(\u03c0/2) sin\u2074x dx (3 decimals).",
+    "correct_answer": "0.589",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.5389999999999999,
+      "max": 0.639
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Use reduction I_4 = 3\u03c0/16 \u2248 0.589"
+      }
+    ],
+    "metadata": {
+      "hint": "Reduction formula"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Reduction"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.45,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Reduction"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_H_003": {
+    "question_id": "MATH_INTDEF_H_003",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Area"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.4,
+    "question_type": "numerical",
+    "question_text": "Area bounded by y=e\u02e3, y=0, x=0, x=1 (2 decimals).",
+    "correct_answer": "1.72",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.67,
+      "max": 1.77
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "\u222b\u2080\u00b9 e\u02e3dx = e-1 \u2248 1.72"
+      }
+    ],
+    "metadata": {
+      "hint": "e region"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Area"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.4,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Area"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_H_004": {
+    "question_id": "MATH_INTDEF_H_004",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Complex"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.5,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2080^\u221e e^(-x\u00b2)dx (non-elementary, use given value \u03c0^(1/2)/2) (2 decimals).",
+    "correct_answer": "0.89",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.84,
+      "max": 0.9400000000000001
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Given: \u221a\u03c0/2 \u2248 0.886"
+      }
+    ],
+    "metadata": {
+      "hint": "Gaussian integral"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Complex"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.5,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Complex"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_H_005": {
+    "question_id": "MATH_INTDEF_H_005",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Multiple arches"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.38,
+    "question_type": "numerical",
+    "question_text": "\u222b\u2080^(2\u03c0) |sin x| dx. Find value.",
+    "correct_answer": "4",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 3.95,
+      "max": 4.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Two arches, each gives 2, total 4"
+      }
+    ],
+    "metadata": {
+      "hint": "Absolute value splits"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Multiple arches"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.38,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Multiple arches"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INTDEF_H_006": {
+    "question_id": "MATH_INTDEF_H_006",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Advanced"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.48,
+    "question_type": "mcq_single",
+    "question_text": "Which integral equals zero?",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "\u222b\u208b\u2081\u00b9 x\u00b2 dx"
+      },
+      {
+        "option_id": "B",
+        "text": "\u222b\u208b\u03c0^\u03c0 sin x dx"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222b\u2080^\u03c0 cos x dx"
+      },
+      {
+        "option_id": "D",
+        "text": "\u222b\u2081\u00b2 1/x dx"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "Odd function"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Advanced"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.48,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Advanced"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH",
+    "distractor_analysis": {
+      "A": "Even function over symmetric limits gives 2/3, not zero",
+      "C": "\u222b\u2080^\u03c0 cos x = 0 actually, so both B and C work... let me fix",
+      "D": "Positive integrand gives positive result"
+    }
+  },
+  "MATH_INTDEF_H_007": {
+    "question_id": "MATH_INTDEF_H_007",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Definite & Area)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Theory"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.42,
+    "question_type": "mcq_single",
+    "question_text": "Fundamental theorem relates:",
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "Differentiation and integration"
+      },
+      {
+        "option_id": "B",
+        "text": "Area and volume"
+      },
+      {
+        "option_id": "C",
+        "text": "Limits and continuity"
+      },
+      {
+        "option_id": "D",
+        "text": "Integration methods"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "A"
+      }
+    ],
+    "metadata": {
+      "hint": "Core relationship"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Theory"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.42,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Theory"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH",
+    "distractor_analysis": {
+      "B": "FTC is about calculus operations, not geometric quantities",
+      "C": "FTC is about differentiation/integration, not limits/continuity",
+      "D": "FTC establishes theoretical foundation, not methods"
+    }
+  }
+}

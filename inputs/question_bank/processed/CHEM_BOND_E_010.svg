@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
+  <defs>
+    <style>
+      .atom { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; }
+      .title { font-family: Arial, sans-serif; font-size: 22px; font-weight: bold; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; }
+      .caption { font-family: Arial, sans-serif; font-size: 12px; }
+      .bond { stroke: black; stroke-width: 2.5; fill: none; }
+    </style>
+  </defs>
+  
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" class="title">Benzene Resonance Structures (C₆H₆)</text>
+  
+  <!-- Structure 1 -->
+  <g id="structure1" transform="translate(200, 200)">
+    <text x="0" y="-130" text-anchor="middle" class="subtitle">Kekulé Structure 1</text>
+    
+    <!-- Hexagon vertices (60° apart) -->
+    <!-- Top -->
+    <line x1="0" y1="-80" x2="70" y2="-40" class="bond"/>
+    <line x1="-5" y1="-75" x2="65" y2="-35" class="bond"/>
+    
+    <line x1="70" y1="-40" x2="70" y2="40" class="bond"/>
+    
+    <line x1="70" y1="40" x2="0" y2="80" class="bond"/>
+    <line x1="65" y1="35" x2="-5" y2="75" class="bond"/>
+    
+    <line x1="0" y1="80" x2="-70" y2="40" class="bond"/>
+    
+    <line x1="-70" y1="40" x2="-70" y2="-40" class="bond"/>
+    <line x1="-65" y1="35" x2="-65" y2="-35" class="bond"/>
+    
+    <line x1="-70" y1="-40" x2="0" y2="-80" class="bond"/>
+    
+    <!-- C labels -->
+    <text x="0" y="-95" text-anchor="middle" class="atom">C</text>
+    <text x="85" y="-35" text-anchor="middle" class="atom">C</text>
+    <text x="85" y="50" text-anchor="middle" class="atom">C</text>
+    <text x="0" y="100" text-anchor="middle" class="atom">C</text>
+    <text x="-85" y="50" text-anchor="middle" class="atom">C</text>
+    <text x="-85" y="-35" text-anchor="middle" class="atom">C</text>
+    
+    <!-- H labels -->
+    <text x="0" y="-120" text-anchor="middle" class="atom">H</text>
+    <text x="110" y="-50" text-anchor="middle" class="atom">H</text>
+    <text x="110" y="60" text-anchor="middle" class="atom">H</text>
+    <text x="0" y="125" text-anchor="middle" class="atom">H</text>
+    <text x="-110" y="60" text-anchor="middle" class="atom">H</text>
+    <text x="-110" y="-50" text-anchor="middle" class="atom">H</text>
+  </g>
+  
+  <!-- Structure 2 -->
+  <g id="structure2" transform="translate(600, 200)">
+    <text x="0" y="-130" text-anchor="middle" class="subtitle">Kekulé Structure 2</text>
+    
+    <!-- Hexagon with alternating double bonds (shifted) -->
+    <line x1="0" y1="-80" x2="70" y2="-40" class="bond"/>
+    
+    <line x1="70" y1="-40" x2="70" y2="40" class="bond"/>
+    <line x1="65" y1="-35" x2="65" y2="35" class="bond"/>
+    
+    <line x1="70" y1="40" x2="0" y2="80" class="bond"/>
+    
+    <line x1="0" y1="80" x2="-70" y2="40" class="bond"/>
+    <line x1="-5" y1="75" x2="-65" y2="35" class="bond"/>
+    
+    <line x1="-70" y1="40" x2="-70" y2="-40" class="bond"/>
+    
+    <line x1="-70" y1="-40" x2="0" y2="-80" class="bond"/>
+    <line x1="-65" y1="-35" x2="-5" y2="-75" class="bond"/>
+    
+    <!-- C labels -->
+    <text x="0" y="-95" text-anchor="middle" class="atom">C</text>
+    <text x="85" y="-35" text-anchor="middle" class="atom">C</text>
+    <text x="85" y="50" text-anchor="middle" class="atom">C</text>
+    <text x="0" y="100" text-anchor="middle" class="atom">C</text>
+    <text x="-85" y="50" text-anchor="middle" class="atom">C</text>
+    <text x="-85" y="-35" text-anchor="middle" class="atom">C</text>
+    
+    <!-- H labels -->
+    <text x="0" y="-120" text-anchor="middle" class="atom">H</text>
+    <text x="110" y="-50" text-anchor="middle" class="atom">H</text>
+    <text x="110" y="60" text-anchor="middle" class="atom">H</text>
+    <text x="0" y="125" text-anchor="middle" class="atom">H</text>
+    <text x="-110" y="60" text-anchor="middle" class="atom">H</text>
+    <text x="-110" y="-50" text-anchor="middle" class="atom">H</text>
+  </g>
+  
+  <!-- Caption -->
+  <text x="400" y="380" text-anchor="middle" class="caption">Bond order = 1.5 (average of single and double bonds)</text>
+</svg>

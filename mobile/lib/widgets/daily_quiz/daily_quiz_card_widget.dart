@@ -119,38 +119,47 @@ class DailyQuizCardWidget extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             height: 56,
-            child: ElevatedButton(
-              onPressed: canStartQuiz ? onStartQuiz : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: canStartQuiz ? null : AppColors.borderGray,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                disabledBackgroundColor: AppColors.borderGray,
-              ).copyWith(
-                backgroundColor: canStartQuiz 
-                    ? MaterialStateProperty.all<Color>(Colors.transparent)
-                    : null,
-              ),
-              child: Container(
-                decoration: canStartQuiz
-                    ? BoxDecoration(
-                        gradient: AppColors.ctaGradient,
+            child: canStartQuiz
+                ? Container(
+                    decoration: BoxDecoration(
+                      gradient: AppColors.ctaGradient,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: onStartQuiz,
                         borderRadius: BorderRadius.circular(12),
-                      )
-                    : null,
-                child: Center(
-                  child: Text(
-                    hasActiveQuiz ? 'Continue Quiz' : 'Start Today\'s Quiz',
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                        child: Center(
+                          child: Text(
+                            hasActiveQuiz ? 'Continue Quiz' : 'Start Today\'s Quiz',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : ElevatedButton(
+                    onPressed: null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.borderGray,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      disabledBackgroundColor: AppColors.borderGray,
+                    ),
+                    child: Text(
+                      hasActiveQuiz ? 'Continue Quiz' : 'Start Today\'s Quiz',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
           ),
         ],
       ),

@@ -397,30 +397,57 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hi ${_getUserName()}! 👋',
-                    style: AppTextStyles.headerWhite.copyWith(fontSize: 28),
+              // Circular logo on left
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Image.asset(
+                      'assets/images/JEEVibeLogo_240.png',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.book, color: AppColors.primaryPurple);
+                      },
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _getFormattedDate(),
-                    style: AppTextStyles.bodyWhite.copyWith(fontSize: 14),
-                  ),
-                ],
-              ),
-              Text(
-                'JEEVibe',
-                style: AppTextStyles.headerWhite.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
                 ),
               ),
+              const SizedBox(width: 16),
+              // Centered greeting and date
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Hi ${_getUserName()}! 👋',
+                      style: AppTextStyles.headerWhite.copyWith(fontSize: 28),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _getFormattedDate(),
+                      style: AppTextStyles.bodyWhite.copyWith(fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              // Empty space on right to balance the logo
+              const SizedBox(width: 48),
             ],
           ),
         ),

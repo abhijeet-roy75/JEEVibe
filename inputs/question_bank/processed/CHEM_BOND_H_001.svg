@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; }
+      .label { font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; }
+      .caption { font-family: Arial, sans-serif; font-size: 12px; }
+      .orbital { stroke: black; stroke-width: 2.5; }
+      .electron-up { fill: black; }
+      .electron-down { fill: black; }
+      .para { fill: #e74c3c; font-weight: bold; }
+      .dia { fill: #3498db; font-weight: bold; }
+    </style>
+  </defs>
+  
+  <!-- Main Title -->
+  <text x="400" y="30" text-anchor="middle" class="title">NO vs NO⁺: Why NO is Paramagnetic and NO⁺ is Diamagnetic</text>
+  
+  <!-- NO (15 electrons) - Left side -->
+  <g id="NO" transform="translate(200, 100)">
+    <text x="0" y="0" text-anchor="middle" class="subtitle">NO (15 electrons)</text>
+    
+    <!-- Molecular orbitals -->
+    <line x1="-60" y1="80" x2="60" y2="80" class="orbital"/>
+    <text x="-80" y="85" text-anchor="end" class="label">σ2s</text>
+    <circle cx="-30" cy="75" r="4" class="electron-up"/>
+    <circle cx="-20" cy="75" r="4" class="electron-down"/>
+    
+    <line x1="-60" y1="120" x2="60" y2="120" class="orbital"/>
+    <text x="-80" y="125" text-anchor="end" class="label">σ*2s</text>
+    <circle cx="-30" cy="115" r="4" class="electron-up"/>
+    <circle cx="-20" cy="115" r="4" class="electron-down"/>
+    
+    <line x1="-60" y1="180" x2="60" y2="180" class="orbital"/>
+    <text x="-80" y="185" text-anchor="end" class="label">π2p</text>
+    <circle cx="-40" cy="175" r="4" class="electron-up"/>
+    <circle cx="-30" cy="175" r="4" class="electron-down"/>
+    <circle cx="-10" cy="175" r="4" class="electron-up"/>
+    <circle cx="0" cy="175" r="4" class="electron-down"/>
+    
+    <line x1="-60" y1="230" x2="60" y2="230" class="orbital"/>
+    <text x="-80" y="235" text-anchor="end" class="label">σ2p</text>
+    <circle cx="-30" cy="225" r="4" class="electron-up"/>
+    <circle cx="-20" cy="225" r="4" class="electron-down"/>
+    
+    <!-- π*2p with UNPAIRED electron -->
+    <line x1="-60" y1="300" x2="60" y2="300" class="orbital"/>
+    <text x="-80" y="305" text-anchor="end" class="label">π*2p</text>
+    <circle cx="-30" cy="295" r="4" class="electron-up"/>
+    <text x="80" y="305" text-anchor="start" class="para" style="font-size: 13px;">← Unpaired!</text>
+    
+    <line x1="-60" y1="360" x2="60" y2="360" class="orbital"/>
+    <text x="-80" y="365" text-anchor="end" class="label">σ*2p</text>
+    
+    <text x="0" y="410" text-anchor="middle" class="subtitle para">PARAMAGNETIC</text>
+    <text x="0" y="430" text-anchor="middle" class="caption">Bond Order = 2.5</text>
+  </g>
+  
+  <!-- NO+ (14 electrons) - Right side -->
+  <g id="NO_plus" transform="translate(600, 100)">
+    <text x="0" y="0" text-anchor="middle" class="subtitle">NO⁺ (14 electrons)</text>
+    
+    <!-- Molecular orbitals -->
+    <line x1="-60" y1="80" x2="60" y2="80" class="orbital"/>
+    <text x="-80" y="85" text-anchor="end" class="label">σ2s</text>
+    <circle cx="-30" cy="75" r="4" class="electron-up"/>
+    <circle cx="-20" cy="75" r="4" class="electron-down"/>
+    
+    <line x1="-60" y1="120" x2="60" y2="120" class="orbital"/>
+    <text x="-80" y="125" text-anchor="end" class="label">σ*2s</text>
+    <circle cx="-30" cy="115" r="4" class="electron-up"/>
+    <circle cx="-20" cy="115" r="4" class="electron-down"/>
+    
+    <line x1="-60" y1="180" x2="60" y2="180" class="orbital"/>
+    <text x="-80" y="185" text-anchor="end" class="label">π2p</text>
+    <circle cx="-40" cy="175" r="4" class="electron-up"/>
+    <circle cx="-30" cy="175" r="4" class="electron-down"/>
+    <circle cx="-10" cy="175" r="4" class="electron-up"/>
+    <circle cx="0" cy="175" r="4" class="electron-down"/>
+    
+    <line x1="-60" y1="230" x2="60" y2="230" class="orbital"/>
+    <text x="-80" y="235" text-anchor="end" class="label">σ2p</text>
+    <circle cx="-30" cy="225" r="4" class="electron-up"/>
+    <circle cx="-20" cy="225" r="4" class="electron-down"/>
+    
+    <!-- π*2p EMPTY (no unpaired) -->
+    <line x1="-60" y1="300" x2="60" y2="300" class="orbital"/>
+    <text x="-80" y="305" text-anchor="end" class="label">π*2p</text>
+    <text x="80" y="305" text-anchor="start" class="dia" style="font-size: 13px;">← Empty (all paired)</text>
+    
+    <line x1="-60" y1="360" x2="60" y2="360" class="orbital"/>
+    <text x="-80" y="365" text-anchor="end" class="label">σ*2p</text>
+    
+    <text x="0" y="410" text-anchor="middle" class="subtitle dia">DIAMAGNETIC</text>
+    <text x="0" y="430" text-anchor="middle" class="caption">Bond Order = 3.0</text>
+  </g>
+  
+  <!-- Bottom explanation -->
+  <text x="400" y="560" text-anchor="middle" class="caption">NO has 1 unpaired electron in π*2p → paramagnetic | NO⁺ removes this electron → all paired → diamagnetic</text>
+</svg>

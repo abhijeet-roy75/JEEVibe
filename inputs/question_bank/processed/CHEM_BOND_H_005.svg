@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 650" width="700" height="650">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; }
+      .formula { font-family: Courier, monospace; font-size: 14px; }
+      .box-title { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; }
+      .box-text { font-family: Arial, sans-serif; font-size: 13px; }
+      .impact { font-family: Arial, sans-serif; font-size: 12px; font-style: italic; }
+      .caption { font-family: Arial, sans-serif; font-size: 12px; }
+    </style>
+  </defs>
+  
+  <!-- Title -->
+  <text x="350" y="30" text-anchor="middle" class="title">Lattice Energy: Factors Affecting Magnitude</text>
+  
+  <!-- Formula box -->
+  <rect x="50" y="50" width="600" height="40" fill="#ecf0f1" stroke="#34495e" stroke-width="2" rx="5"/>
+  <text x="350" y="75" text-anchor="middle" class="formula">U = (N_A M z₊z₋ e²) / (4πε₀r₀) × (1 - 1/n)</text>
+  
+  <!-- Factor boxes in order of importance -->
+  
+  <!-- 1. Charge Product (MOST SIGNIFICANT) -->
+  <rect x="50" y="120" width="270" height="120" fill="#ffe6e6" stroke="#e74c3c" stroke-width="3" rx="8"/>
+  <text x="185" y="145" text-anchor="middle" class="box-title" fill="#c0392b">Charge Product (z₊ × z₋)</text>
+  <text x="185" y="170" text-anchor="middle" class="box-text" font-weight="bold" fill="#c0392b">MOST SIGNIFICANT</text>
+  <text x="185" y="195" text-anchor="middle" class="impact">Quadratic effect:</text>
+  <text x="185" y="215" text-anchor="middle" class="impact">2× charge → 4× energy</text>
+  
+  <!-- 2. Interionic Distance -->
+  <rect x="380" y="120" width="270" height="120" fill="#fff4e6" stroke="#f39c12" stroke-width="3" rx="8"/>
+  <text x="515" y="145" text-anchor="middle" class="box-title" fill="#d68910">Interionic Distance (r₀)</text>
+  <text x="515" y="170" text-anchor="middle" class="box-text" font-weight="bold" fill="#d68910">Significant</text>
+  <text x="515" y="195" text-anchor="middle" class="impact">Inverse linear:</text>
+  <text x="515" y="215" text-anchor="middle" class="impact">Smaller r₀ → Higher U</text>
+  
+  <!-- 3. Madelung Constant -->
+  <rect x="50" y="270" width="270" height="120" fill="#fff9e6" stroke="#f9ca24" stroke-width="2" rx="8"/>
+  <text x="185" y="295" text-anchor="middle" class="box-title" fill="#9a7d0a">Madelung Constant (M)</text>
+  <text x="185" y="320" text-anchor="middle" class="box-text" font-weight="bold" fill="#9a7d0a">Moderate</text>
+  <text x="185" y="345" text-anchor="middle" class="impact">Structure-dependent:</text>
+  <text x="185" y="365" text-anchor="middle" class="impact">Ranges 1.6 - 1.8</text>
+  
+  <!-- 4. Born Exponent -->
+  <rect x="380" y="270" width="270" height="120" fill="#e8f8f5" stroke="#27ae60" stroke-width="2" rx="8"/>
+  <text x="515" y="295" text-anchor="middle" class="box-title" fill="#1e8449">Born Exponent (n)</text>
+  <text x="515" y="320" text-anchor="middle" class="box-text" font-weight="bold" fill="#1e8449">Minor</text>
+  <text x="515" y="345" text-anchor="middle" class="impact">Correction term:</text>
+  <text x="515" y="365" text-anchor="middle" class="impact">Appears in (1 - 1/n)</text>
+  
+  <!-- Importance arrow -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#e74c3c" />
+    </marker>
+  </defs>
+  <line x1="20" y1="180" x2="20" y2="330" stroke="#e74c3c" stroke-width="4" marker-end="url(#arrowhead)"/>
+  <text x="10" y="255" text-anchor="middle" class="box-text" fill="#c0392b" 
+        transform="rotate(-90 10 255)" font-weight="bold">Decreasing Impact</text>
+  
+  <!-- Example comparison -->
+  <rect x="50" y="430" width="600" height="80" fill="#fff9e6" stroke="#f39c12" stroke-width="2" rx="5"/>
+  <text x="350" y="455" text-anchor="middle" class="box-title">Example Comparison</text>
+  <text x="350" y="480" text-anchor="middle" class="caption">MgO (2+ × 2−) vs NaCl (1+ × 1−)</text>
+  <text x="350" y="500" text-anchor="middle" class="caption">Charge effect dominates: 4× vs 1× → MgO has ~4× higher lattice energy</text>
+  
+  <!-- Key insight -->
+  <text x="350" y="550" text-anchor="middle" class="caption" font-weight="bold">Key Insight: Charge product has QUADRATIC effect, making it the dominant factor</text>
+  
+  <!-- Footer note -->
+  <text x="350" y="590" text-anchor="middle" class="caption" style="font-size: 11px; fill: #7f8c8d;">Example: LiF (small ions, high charge density) has lattice energy ~1000 kJ/mol</text>
+  <text x="350" y="610" text-anchor="middle" class="caption" style="font-size: 11px; fill: #7f8c8d;">vs CsI (large ions, low charge density) ~600 kJ/mol</text>
+</svg>

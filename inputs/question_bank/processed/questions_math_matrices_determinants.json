@@ -1,0 +1,2387 @@
+{
+  "MATH_MAT_E_001": {
+    "question_id": "MATH_MAT_E_001",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Determinants",
+      "2\u00d72 matrices"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.45,
+    "priority": "HIGH",
+    "question_type": "numerical",
+    "has_image": false,
+    "question_text": "Find the value of the determinant |2  3|\\n                                  |4  5|",
+    "question_text_html": "Find the value of the determinant<br>|2  3|<br>|4  5|",
+    "correct_answer": "-2",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": -2.05,
+      "max": -1.95
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Apply 2\u00d72 determinant formula",
+        "formula": "|a  b| = ad - bc\n|c  d|",
+        "calculation": "= (2)(5) - (3)(4) = 10 - 12",
+        "explanation": "Product of main diagonal minus product of other diagonal",
+        "result": "= -2"
+      }
+    ],
+    "concepts_tested": [
+      "2\u00d72 determinant"
+    ],
+    "time_estimate": 90,
+    "weightage_marks": 4,
+    "metadata": {
+      "formula_used": "|a b; c d| = ad - bc",
+      "common_mistakes": [
+        "Using ac - bd",
+        "Sign error"
+      ],
+      "hint": "Main diagonal product - other diagonal product",
+      "key_insight": "Simplest determinant formula"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.45,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "determinants",
+      "2x2"
+    ]
+  },
+  "MATH_MAT_E_002": {
+    "question_id": "MATH_MAT_E_002",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Matrix addition"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.42,
+    "question_type": "numerical",
+    "question_text": "If A = [1  2] and B = [3  4], find element at (1,2) in A+B.\n        [5  6]       [7  8]",
+    "correct_answer": "6",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 5.95,
+      "max": 6.05
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Add matrices",
+        "calculation": "A+B = [4  6]\n      [12 14]",
+        "result": "Element (1,2) = 6"
+      }
+    ],
+    "metadata": {
+      "hint": "Add corresponding elements"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.42,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "matrix-addition"
+    ]
+  },
+  "MATH_MAT_E_003": {
+    "question_id": "MATH_MAT_E_003",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Matrix multiplication",
+      "Scalar multiplication"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.5,
+    "question_type": "numerical",
+    "question_text": "If A = [2  1], find the element at (2,1) in 3A.\n        [0  4]",
+    "correct_answer": "0",
+    "answer_type": "decimal",
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Multiply by scalar",
+        "calculation": "3A = 3[2  1] = [6  3]\n         [0  4]   [0  12]",
+        "result": "Element (2,1) = 0"
+      }
+    ],
+    "metadata": {
+      "hint": "Multiply each element by 3"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.5,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "scalar-multiplication"
+    ]
+  },
+  "MATH_MAT_E_004": {
+    "question_id": "MATH_MAT_E_004",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Transpose"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.48,
+    "question_type": "numerical",
+    "question_text": "If A = [1  2  3], find element at (3,1) in A\u1d40.\n        [4  5  6]",
+    "correct_answer": "3",
+    "answer_type": "decimal",
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Take transpose",
+        "calculation": "A\u1d40 = [1  4]\n      [2  5]\n      [3  6]",
+        "explanation": "Rows become columns",
+        "result": "Element (3,1) = 3"
+      }
+    ],
+    "metadata": {
+      "hint": "Transpose flips rows and columns"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.48,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "transpose"
+    ]
+  },
+  "MATH_MAT_E_005": {
+    "question_id": "MATH_MAT_E_005",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Determinant properties"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.55,
+    "question_type": "numerical",
+    "question_text": "If |A| = 5, find |2A| for a 2\u00d72 matrix A.",
+    "correct_answer": "20",
+    "answer_type": "decimal",
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Apply scalar property",
+        "formula": "|kA| = k^n|A| for n\u00d7n matrix",
+        "calculation": "|2A| = 2\u00b2 \u00d7 5 = 4 \u00d7 5 = 20",
+        "explanation": "For 2\u00d72 matrix, power is 2",
+        "result": "20"
+      }
+    ],
+    "metadata": {
+      "formula_used": "|kA| = k^n|A|",
+      "hint": "Scalar raised to matrix size"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.55,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "determinant-properties"
+    ]
+  },
+  "MATH_MAT_E_006": {
+    "question_id": "MATH_MAT_E_006",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Matrix multiplication"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.6,
+    "question_type": "numerical",
+    "question_text": "If A = [1  0] and B = [2], find element at (1,1) in AB.\n        [0  1]       [3]",
+    "correct_answer": "2",
+    "answer_type": "decimal",
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Multiply matrices",
+        "calculation": "AB = [1\u00d72 + 0\u00d73] = [2]\n      [0\u00d72 + 1\u00d73]   [3]",
+        "result": "Element (1,1) = 2"
+      }
+    ],
+    "metadata": {
+      "hint": "A is identity matrix"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.6,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "matrix-multiplication"
+    ]
+  },
+  "MATH_MAT_E_007": {
+    "question_id": "MATH_MAT_E_007",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Special matrices"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.52,
+    "question_type": "mcq_single",
+    "question_text": "Which of the following is a diagonal matrix?",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "[1  2]\\n[0  3]"
+      },
+      {
+        "option_id": "B",
+        "text": "[1  0]\\n[0  3]"
+      },
+      {
+        "option_id": "C",
+        "text": "[0  1]\\n[1  0]"
+      },
+      {
+        "option_id": "D",
+        "text": "[1  1]\\n[1  1]"
+      }
+    ],
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Check definition",
+        "explanation": "Diagonal matrix has all non-diagonal elements = 0",
+        "result": "B is diagonal"
+      }
+    ],
+    "metadata": {
+      "hint": "Only diagonal elements can be non-zero"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.52,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "easy",
+      "special-matrices"
+    ]
+  },
+  "MATH_MAT_E_008": {
+    "question_id": "MATH_MAT_E_008",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Symmetric matrix"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.58,
+    "question_type": "mcq_single",
+    "question_text": "If A = A\u1d40, then A is called:",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "Skew-symmetric"
+      },
+      {
+        "option_id": "B",
+        "text": "Symmetric"
+      },
+      {
+        "option_id": "C",
+        "text": "Orthogonal"
+      },
+      {
+        "option_id": "D",
+        "text": "Singular"
+      }
+    ],
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Recall definition",
+        "explanation": "A = A\u1d40 defines symmetric matrix",
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "Equal to its transpose"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.58,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "easy",
+      "symmetric-matrix"
+    ]
+  },
+  "MATH_MAT_E_009": {
+    "question_id": "MATH_MAT_E_009",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Matrix order"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.46,
+    "question_type": "mcq_single",
+    "question_text": "If A is 2\u00d73 and B is 3\u00d74, what is the order of AB?",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "2\u00d74"
+      },
+      {
+        "option_id": "B",
+        "text": "3\u00d73"
+      },
+      {
+        "option_id": "C",
+        "text": "2\u00d73"
+      },
+      {
+        "option_id": "D",
+        "text": "undefined"
+      }
+    ],
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Apply multiplication rule",
+        "formula": "(m\u00d7n)(n\u00d7p) = m\u00d7p",
+        "calculation": "(2\u00d73)(3\u00d74) = 2\u00d74",
+        "result": "A"
+      }
+    ],
+    "metadata": {
+      "hint": "Outer dimensions"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.46,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "easy",
+      "matrix-order"
+    ]
+  },
+  "MATH_MAT_E_010": {
+    "question_id": "MATH_MAT_E_010",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Determinant value"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.62,
+    "question_type": "mcq_single",
+    "question_text": "If |A| = 0, the matrix A is called:",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "Non-singular"
+      },
+      {
+        "option_id": "B",
+        "text": "Singular"
+      },
+      {
+        "option_id": "C",
+        "text": "Invertible"
+      },
+      {
+        "option_id": "D",
+        "text": "Orthogonal"
+      }
+    ],
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Recall terminology",
+        "explanation": "det = 0 means singular (no inverse)",
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "Zero determinant property"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.62,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "easy",
+      "singular-matrix"
+    ]
+  },
+  "MATH_MAT_M_001": {
+    "question_id": "MATH_MAT_M_001",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "3\u00d73 determinant"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.15,
+    "question_type": "numerical",
+    "question_text": "Find |1 2 3|\\n|0 4 5|\\n|0 0 6|",
+    "correct_answer": "24",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 23.95,
+      "max": 24.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Upper tri: 1\u00d74\u00d76=24",
+        "result": "24"
+      }
+    ],
+    "metadata": {
+      "hint": "Upper triangular"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.15,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "3\u00d73 determinant"
+    ]
+  },
+  "MATH_MAT_M_002": {
+    "question_id": "MATH_MAT_M_002",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Cofactor"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.2,
+    "question_type": "numerical",
+    "question_text": "Cofactor of (1,2) in [3 4]\\n[1 2]",
+    "correct_answer": "-1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": -1.05,
+      "max": -0.95
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "C\u2081\u2082=(-1)^3\u00d71=-1",
+        "result": "-1"
+      }
+    ],
+    "metadata": {
+      "hint": "(-1)^(i+j)M"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.2,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Cofactor"
+    ]
+  },
+  "MATH_MAT_M_003": {
+    "question_id": "MATH_MAT_M_003",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Adjoint"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.28,
+    "question_type": "numerical",
+    "question_text": "If A=[2 1]\\n[3 4], find |adj(A)|",
+    "correct_answer": "5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 4.95,
+      "max": 5.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "adj=[4 -1]\\n[-3 2], |adj|=5",
+        "result": "5"
+      }
+    ],
+    "metadata": {
+      "hint": "Det of adjoint"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.28,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Adjoint"
+    ]
+  },
+  "MATH_MAT_M_004": {
+    "question_id": "MATH_MAT_M_004",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Inverse"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.18,
+    "question_type": "numerical",
+    "question_text": "If A=[1 2]\\n[2 5], find (1,1) in A\u207b\u00b9",
+    "correct_answer": "5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 4.95,
+      "max": 5.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "A\u207b\u00b9=(1/1)[5 -2]\\n[-2 1]",
+        "result": "5"
+      }
+    ],
+    "metadata": {
+      "hint": "A\u207b\u00b9=adj(A)/|A|"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.18,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Inverse"
+    ]
+  },
+  "MATH_MAT_M_005": {
+    "question_id": "MATH_MAT_M_005",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Cramer's rule"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.32,
+    "question_type": "numerical",
+    "question_text": "Solve x+y=3, 2x-y=3 using Cramer's. Find x.",
+    "correct_answer": "2",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.95,
+      "max": 2.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "x=|3 1|/|1 1|=6/3=2",
+        "result": "2"
+      }
+    ],
+    "metadata": {
+      "hint": "x=Dx/D"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.32,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Cramer's rule"
+    ]
+  },
+  "MATH_MAT_M_006": {
+    "question_id": "MATH_MAT_M_006",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Rank"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.25,
+    "question_type": "numerical",
+    "question_text": "Find rank of [1 2]\\n[2 4]",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Rows linearly dependent, rank=1",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "hint": "Max independent rows"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.25,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Rank"
+    ]
+  },
+  "MATH_MAT_M_007": {
+    "question_id": "MATH_MAT_M_007",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Properties"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.38,
+    "question_type": "numerical",
+    "question_text": "If |A|=3, |B|=2, find |AB|",
+    "correct_answer": "6",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 5.95,
+      "max": 6.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "|AB|=|A||B|=3\u00d72=6",
+        "result": "6"
+      }
+    ],
+    "metadata": {
+      "hint": "Product property"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.38,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Properties"
+    ]
+  },
+  "MATH_MAT_M_008": {
+    "question_id": "MATH_MAT_M_008",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Transpose"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.22,
+    "question_type": "numerical",
+    "question_text": "If (AB)\u1d40=B\u1d40A\u1d40 and B=[1]\\n[2], A=[3 4], find (1,1) in (AB)\u1d40",
+    "correct_answer": "11",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 10.95,
+      "max": 11.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Multiply matrices A and B",
+        "calculation": "A = [3 4], B = [1]\\n                 [2]\\nAB = [3\u00d71 + 4\u00d72] = [3 + 8] = [11]",
+        "explanation": "Matrix multiplication: (1\u00d72) \u00d7 (2\u00d71) = (1\u00d71)",
+        "result": "AB = [11]"
+      },
+      {
+        "step_number": 2,
+        "description": "Take transpose",
+        "calculation": "(AB)\u1d40 = [11]\u1d40 = [11]",
+        "explanation": "Transpose of 1\u00d71 matrix is itself",
+        "result": "Element (1,1) = 11"
+      }
+    ],
+    "metadata": {
+      "hint": "Transpose product"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.22,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Transpose"
+    ]
+  },
+  "MATH_MAT_M_009": {
+    "question_id": "MATH_MAT_M_009",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Symmetric"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.35,
+    "question_type": "numerical",
+    "question_text": "If A+A\u1d40=[4 6]\\n[6 8], find A\u2081\u2081",
+    "correct_answer": "2",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.95,
+      "max": 2.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "2A\u2081\u2081=4 \u2192 A\u2081\u2081=2",
+        "result": "2"
+      }
+    ],
+    "metadata": {
+      "hint": "Diagonal doubles"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.35,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Symmetric"
+    ]
+  },
+  "MATH_MAT_M_011": {
+    "question_id": "MATH_MAT_M_011",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Trace"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.12,
+    "question_type": "numerical",
+    "question_text": "Find trace of [1 2]\\n[3 4]",
+    "correct_answer": "5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 4.95,
+      "max": 5.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "tr(A)=1+4=5",
+        "result": "5"
+      }
+    ],
+    "metadata": {
+      "hint": "Sum of diagonal"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.12,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Trace"
+    ]
+  },
+  "MATH_MAT_M_012": {
+    "question_id": "MATH_MAT_M_012",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Idempotent"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.4,
+    "question_type": "numerical",
+    "question_text": "If A\u00b2=A and |A|=k where k\u22600, find k",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "|A\u00b2|=|A| \u2192 |A|\u00b2=|A| \u2192 |A|=1",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "hint": "Det property"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.4,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Idempotent"
+    ]
+  },
+  "MATH_MAT_M_013": {
+    "question_id": "MATH_MAT_M_013",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Nilpotent"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.27,
+    "question_type": "numerical",
+    "question_text": "If A\u00b2=0 for A=[0 1]\\n[0 0], find |A|",
+    "correct_answer": "0",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": -0.05,
+      "max": 0.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Upper tri, |A|=0\u00d70=0",
+        "result": "0"
+      }
+    ],
+    "metadata": {
+      "hint": "Nilpotent"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.27,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Nilpotent"
+    ]
+  },
+  "MATH_MAT_M_014": {
+    "question_id": "MATH_MAT_M_014",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Identity"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.16,
+    "question_type": "mcq_single",
+    "question_text": "I+I equals:",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "I"
+      },
+      {
+        "option_id": "B",
+        "text": "2I"
+      },
+      {
+        "option_id": "C",
+        "text": "I\u00b2"
+      },
+      {
+        "option_id": "D",
+        "text": "0"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "2I"
+      }
+    ],
+    "metadata": {
+      "hint": "I+I=2I"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.16,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Identity"
+    ]
+  },
+  "MATH_MAT_M_015": {
+    "question_id": "MATH_MAT_M_015",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Transpose"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.24,
+    "question_type": "mcq_single",
+    "question_text": "(A\u1d40)\u1d40 equals:",
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "A"
+      },
+      {
+        "option_id": "B",
+        "text": "A\u1d40"
+      },
+      {
+        "option_id": "C",
+        "text": "A\u207b\u00b9"
+      },
+      {
+        "option_id": "D",
+        "text": "0"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "A"
+      }
+    ],
+    "metadata": {
+      "hint": "Double transpose"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.24,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Transpose"
+    ]
+  },
+  "MATH_MAT_M_016": {
+    "question_id": "MATH_MAT_M_016",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Singular"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.33,
+    "question_type": "mcq_single",
+    "question_text": "If |A|=0, A is:",
+    "correct_answer": "C",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "Invertible"
+      },
+      {
+        "option_id": "B",
+        "text": "Non-singular"
+      },
+      {
+        "option_id": "C",
+        "text": "Singular"
+      },
+      {
+        "option_id": "D",
+        "text": "Orthogonal"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "Singular"
+      }
+    ],
+    "metadata": {
+      "hint": "No inverse"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.33,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Singular"
+    ]
+  },
+  "MATH_MAT_M_017": {
+    "question_id": "MATH_MAT_M_017",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Order"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.19,
+    "question_type": "mcq_single",
+    "question_text": "If A is 3\u00d72, A\u1d40 is:",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "3\u00d72"
+      },
+      {
+        "option_id": "B",
+        "text": "2\u00d73"
+      },
+      {
+        "option_id": "C",
+        "text": "3\u00d73"
+      },
+      {
+        "option_id": "D",
+        "text": "2\u00d72"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "2\u00d73"
+      }
+    ],
+    "metadata": {
+      "hint": "Flip dimensions"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.19,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Order"
+    ]
+  },
+  "MATH_MAT_M_018": {
+    "question_id": "MATH_MAT_M_018",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Inverse"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.36,
+    "question_type": "mcq_single",
+    "question_text": "AA\u207b\u00b9 equals:",
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "I"
+      },
+      {
+        "option_id": "B",
+        "text": "A"
+      },
+      {
+        "option_id": "C",
+        "text": "0"
+      },
+      {
+        "option_id": "D",
+        "text": "A\u1d40"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "I"
+      }
+    ],
+    "metadata": {
+      "hint": "Definition"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.36,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Inverse"
+    ]
+  },
+  "MATH_MAT_M_019": {
+    "question_id": "MATH_MAT_M_019",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Symmetric"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.29,
+    "question_type": "mcq_single",
+    "question_text": "Diagonal matrix is always:",
+    "correct_answer": "C",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "Skew"
+      },
+      {
+        "option_id": "B",
+        "text": "Singular"
+      },
+      {
+        "option_id": "C",
+        "text": "Symmetric"
+      },
+      {
+        "option_id": "D",
+        "text": "Nilpotent"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "Symmetric"
+      }
+    ],
+    "metadata": {
+      "hint": "D=D\u1d40"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.29,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Symmetric"
+    ]
+  },
+  "MATH_MAT_M_020": {
+    "question_id": "MATH_MAT_M_020",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Properties"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.37,
+    "question_type": "mcq_single",
+    "question_text": "If |A|=4 for 3\u00d73, |3A|=:",
+    "correct_answer": "D",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "12"
+      },
+      {
+        "option_id": "B",
+        "text": "36"
+      },
+      {
+        "option_id": "C",
+        "text": "64"
+      },
+      {
+        "option_id": "D",
+        "text": "108"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "3\u00b3\u00d74=108",
+        "result": "D"
+      }
+    ],
+    "metadata": {
+      "hint": "|kA|=k^n|A|"
+    },
+    "time_estimate": 150,
+    "irt_parameters": {
+      "difficulty_b": 1.37,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Properties"
+    ]
+  },
+  "MATH_MAT_H_002": {
+    "question_id": "MATH_MAT_H_002",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Eigenvalue"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.45,
+    "question_type": "numerical",
+    "question_text": "For A=[3 1]\\n[1 3], product of eigenvalues=",
+    "correct_answer": "8",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 7.95,
+      "max": 8.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "|A|=8",
+        "result": "8"
+      }
+    ],
+    "metadata": {
+      "hint": "Product=det"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 2.45,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Eigenvalue"
+    ]
+  },
+  "MATH_MAT_H_003": {
+    "question_id": "MATH_MAT_H_003",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Determinant"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.4,
+    "question_type": "numerical",
+    "question_text": "If A is 3\u00d73, |2A\u207b\u00b9|=4, find |A|",
+    "correct_answer": "2",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.95,
+      "max": 2.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "2\u00b3/|A|=4 \u2192 |A|=2",
+        "result": "2"
+      }
+    ],
+    "metadata": {
+      "hint": "Properties"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 2.4,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Determinant"
+    ]
+  },
+  "MATH_MAT_H_005": {
+    "question_id": "MATH_MAT_H_005",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Advanced"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.38,
+    "question_type": "numerical",
+    "question_text": "If A\u00b3=I and |A|=k>0, find k",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "|A\u00b3|=|I| \u2192 |A|\u00b3=1 \u2192 |A|=1",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "hint": "Cube property"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 2.38,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Advanced"
+    ]
+  },
+  "MATH_MAT_H_007": {
+    "question_id": "MATH_MAT_H_007",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Decomposition"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.42,
+    "question_type": "mcq_single",
+    "question_text": "Any square matrix = Symmetric + ?",
+    "correct_answer": "C",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "Diagonal"
+      },
+      {
+        "option_id": "B",
+        "text": "Scalar"
+      },
+      {
+        "option_id": "C",
+        "text": "Skew-symmetric"
+      },
+      {
+        "option_id": "D",
+        "text": "Orthogonal"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "Skew-symmetric"
+      }
+    ],
+    "metadata": {
+      "hint": "A=(A+A\u1d40)/2+(A-A\u1d40)/2"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 2.42,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Decomposition"
+    ]
+  },
+  "MATH_MAT_MH_001": {
+    "question_id": "MATH_MAT_MH_001",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "3\u00d73"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.8,
+    "question_type": "numerical",
+    "question_text": "Expand |1 2 3|\\n|4 5 6|\\n|7 8 9|",
+    "correct_answer": "0",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": -0.05,
+      "max": 0.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Dependent rows",
+        "result": "0"
+      }
+    ],
+    "metadata": {
+      "hint": "Check"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 1.8,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "3\u00d73"
+    ]
+  },
+  "MATH_MAT_MH_002": {
+    "question_id": "MATH_MAT_MH_002",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "System"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.85,
+    "question_type": "numerical",
+    "question_text": "x+y+z=6, 2x+y=7, x-y+z=2. Find z.",
+    "correct_answer": "1.5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.45,
+      "max": 1.55
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Write the system of equations",
+        "calculation": "x + y + z = 6 ... (1)\\n2x + y = 7 ... (2)\\nx - y + z = 2 ... (3)",
+        "result": "System set up"
+      },
+      {
+        "step_number": 2,
+        "description": "From equation (2), solve for y",
+        "calculation": "From (2): y = 7 - 2x",
+        "result": "y = 7 - 2x"
+      },
+      {
+        "step_number": 3,
+        "description": "Substitute into equations (1) and (3)",
+        "calculation": "(1): x + (7-2x) + z = 6 \u2192 -x + z = -1 \u2192 z = x - 1\\n(3): x - (7-2x) + z = 2 \u2192 3x + z = 9",
+        "result": "z = x - 1 and 3x + z = 9"
+      },
+      {
+        "step_number": 4,
+        "description": "Substitute z = x - 1 into 3x + z = 9",
+        "calculation": "3x + (x-1) = 9 \u2192 4x = 10 \u2192 x = 2.5",
+        "result": "x = 2.5"
+      },
+      {
+        "step_number": 5,
+        "description": "Find z",
+        "calculation": "z = x - 1 = 2.5 - 1 = 1.5",
+        "result": "z = 1.5"
+      }
+    ],
+    "metadata": {
+      "hint": "Solve"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 1.85,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "System"
+    ]
+  },
+  "MATH_MAT_MH_003": {
+    "question_id": "MATH_MAT_MH_003",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Inverse"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.78,
+    "question_type": "numerical",
+    "question_text": "A=[1 0 0]\\n[0 2 0]\\n[0 0 3], find (2,2) in A\u207b\u00b9",
+    "correct_answer": "0.5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.45,
+      "max": 0.55
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Diagonal inv",
+        "result": "0.5"
+      }
+    ],
+    "metadata": {
+      "hint": "1/aii"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 1.78,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Inverse"
+    ]
+  },
+  "MATH_MAT_MH_004": {
+    "question_id": "MATH_MAT_MH_004",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Eigenvalue"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.92,
+    "question_type": "numerical",
+    "question_text": "A=[2 0]\\n[0 3], sum eigenvalues=",
+    "correct_answer": "5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 4.95,
+      "max": 5.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "tr(A)=5",
+        "result": "5"
+      }
+    ],
+    "metadata": {
+      "hint": "Trace"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 1.92,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Eigenvalue"
+    ]
+  },
+  "MATH_MAT_MH_005": {
+    "question_id": "MATH_MAT_MH_005",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Adjoint"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.76,
+    "question_type": "numerical",
+    "question_text": "If |A|=5 for 3\u00d73, |adj(A)|=",
+    "correct_answer": "25",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 24.95,
+      "max": 25.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "5\u00b2=25",
+        "result": "25"
+      }
+    ],
+    "metadata": {
+      "hint": "|A|^(n-1)"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 1.76,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Adjoint"
+    ]
+  },
+  "MATH_MAT_MH_006": {
+    "question_id": "MATH_MAT_MH_006",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Det"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.88,
+    "question_type": "numerical",
+    "question_text": "If |A|=2, |adj(A)|= for 2\u00d72",
+    "correct_answer": "2",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.95,
+      "max": 2.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "|A|^1=2",
+        "result": "2"
+      }
+    ],
+    "metadata": {
+      "hint": "n-1=1"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 1.88,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Det"
+    ]
+  },
+  "MATH_MAT_MH_007": {
+    "question_id": "MATH_MAT_MH_007",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Power"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.95,
+    "question_type": "numerical",
+    "question_text": "A=[1 1]\\n[0 1], find (1,2) in A\u00b2",
+    "correct_answer": "2",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.95,
+      "max": 2.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "A\u00b2=[1 2]\\n[0 1]",
+        "result": "2"
+      }
+    ],
+    "metadata": {
+      "hint": "Multiply"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 1.95,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Power"
+    ]
+  },
+  "MATH_MAT_MH_008": {
+    "question_id": "MATH_MAT_MH_008",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Trace"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.82,
+    "question_type": "numerical",
+    "question_text": "tr(A)=5, tr(2A+3I) for 2\u00d72=",
+    "correct_answer": "16",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 15.95,
+      "max": 16.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "10+6=16",
+        "result": "16"
+      }
+    ],
+    "metadata": {
+      "hint": "Linear"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 1.82,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Trace"
+    ]
+  },
+  "MATH_MAT_MH_009": {
+    "question_id": "MATH_MAT_MH_009",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Orthogonal"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.98,
+    "question_type": "numerical",
+    "question_text": "A\u1d40A=I, |A|\u00b2=",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "|A\u1d40A|=|A|\u00b2=1",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "hint": "Property"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 1.98,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Orthogonal"
+    ]
+  },
+  "MATH_MAT_MH_010": {
+    "question_id": "MATH_MAT_MH_010",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Inverse"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.79,
+    "question_type": "mcq_single",
+    "question_text": "(AB)\u207b\u00b9=",
+    "correct_answer": "C",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "A\u207b\u00b9B\u207b\u00b9"
+      },
+      {
+        "option_id": "B",
+        "text": "AB\u207b\u00b9"
+      },
+      {
+        "option_id": "C",
+        "text": "B\u207b\u00b9A\u207b\u00b9"
+      },
+      {
+        "option_id": "D",
+        "text": "(BA)\u207b\u00b9"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "B\u207b\u00b9A\u207b\u00b9"
+      }
+    ],
+    "metadata": {
+      "hint": "Reverse"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 1.79,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Inverse"
+    ]
+  },
+  "MATH_MAT_MH_011": {
+    "question_id": "MATH_MAT_MH_011",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Rank"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.86,
+    "question_type": "mcq_single",
+    "question_text": "Max rank of 3\u00d72:",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "1"
+      },
+      {
+        "option_id": "B",
+        "text": "2"
+      },
+      {
+        "option_id": "C",
+        "text": "3"
+      },
+      {
+        "option_id": "D",
+        "text": "6"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "2"
+      }
+    ],
+    "metadata": {
+      "hint": "min(m,n)"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 1.86,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Rank"
+    ]
+  },
+  "MATH_MAT_MH_012": {
+    "question_id": "MATH_MAT_MH_012",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Cayley-Hamilton"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.91,
+    "question_type": "mcq_single",
+    "question_text": "According to the Cayley-Hamilton theorem, every square matrix satisfies its:",
+    "correct_answer": "D",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "A\u1d40"
+      },
+      {
+        "option_id": "B",
+        "text": "A\u207b\u00b9"
+      },
+      {
+        "option_id": "C",
+        "text": "adj(A)"
+      },
+      {
+        "option_id": "D",
+        "text": "Char eq"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "Char eq"
+      }
+    ],
+    "metadata": {
+      "hint": "C-H"
+    },
+    "time_estimate": 210,
+    "irt_parameters": {
+      "difficulty_b": 1.91,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Cayley-Hamilton"
+    ]
+  },
+  "MATH_MAT_M_010": {
+    "question_id": "MATH_MAT_M_010",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Matrix decomposition",
+      "Symmetric matrix"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.34,
+    "question_type": "numerical",
+    "question_text": "Any matrix A can be written as sum of symmetric and skew-symmetric matrices: A=P+Q where P=(A+A\u1d40)/2. If A=[1 2]\\n[3 4], find (1,2) element in P.",
+    "correct_answer": "2.5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 2.45,
+      "max": 2.55
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Calculate transpose",
+        "calculation": "A\u1d40 = [1 3]\\n     [2 4]",
+        "result": "A\u1d40 found"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply formula for symmetric part",
+        "formula": "P = (A + A\u1d40)/2",
+        "calculation": "P = ([1 2] + [1 3])/2 = [1  2.5]\\n     [3 4]   [2 4]      [2.5  4]",
+        "result": "Element (1,2) = 2.5"
+      }
+    ],
+    "metadata": {
+      "hint": "Symmetric part formula",
+      "key_insight": "Any matrix = symmetric + skew-symmetric"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Matrix decomposition",
+      "Symmetric matrix"
+    ],
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Matrix decomposition",
+      "Symmetric matrix"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.34,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_MAT_H_001": {
+    "question_id": "MATH_MAT_H_001",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Orthogonal matrix",
+      "Properties"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.38,
+    "question_type": "numerical",
+    "question_text": "If A is orthogonal (A\u1d40A=I) and |A|=-1, find |A\u00b2\u2070\u00b2\u2074|.",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Use orthogonal property",
+        "explanation": "For orthogonal matrix, |A\u1d40A| = |I| = 1",
+        "calculation": "|A\u1d40||A| = |A|\u00b2 = 1",
+        "result": "|A|\u00b2 = 1"
+      },
+      {
+        "step_number": 2,
+        "description": "Given |A| = -1, verify",
+        "calculation": "(-1)\u00b2 = 1 \u2713",
+        "result": "Consistent"
+      },
+      {
+        "step_number": 3,
+        "description": "Calculate |A\u00b2\u2070\u00b2\u2074|",
+        "formula": "|A\u207f| = |A|\u207f",
+        "calculation": "|A\u00b2\u2070\u00b2\u2074| = |A|\u00b2\u2070\u00b2\u2074 = (-1)\u00b2\u2070\u00b2\u2074 = 1",
+        "explanation": "Even power of -1 equals 1",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "hint": "Orthogonal \u2192 |A|\u00b2 = 1",
+      "formula_used": "|A\u207f| = |A|\u207f"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Orthogonal matrix",
+      "Properties"
+    ],
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Orthogonal matrix",
+      "Properties"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.38,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_MAT_H_004": {
+    "question_id": "MATH_MAT_H_004",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Eigenvalues",
+      "Characteristic equation"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.42,
+    "question_type": "numerical",
+    "question_text": "Matrix A=[2 1]\\n[1 2] has eigenvalues \u03bb\u2081 and \u03bb\u2082. If \u03bb\u2081 > \u03bb\u2082, find \u03bb\u2081.",
+    "correct_answer": "3",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 2.95,
+      "max": 3.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Set up characteristic equation",
+        "formula": "det(A - \u03bbI) = 0",
+        "calculation": "det([2-\u03bb  1  ]) = (2-\u03bb)\u00b2 - 1 = 0\\n    [1   2-\u03bb]",
+        "result": "Characteristic equation"
+      },
+      {
+        "step_number": 2,
+        "description": "Solve for \u03bb",
+        "calculation": "(2-\u03bb)\u00b2 = 1\\n2-\u03bb = \u00b11\\n\u03bb = 1 or \u03bb = 3",
+        "result": "\u03bb\u2081 = 3, \u03bb\u2082 = 1"
+      },
+      {
+        "step_number": 3,
+        "description": "Identify larger eigenvalue",
+        "explanation": "Since \u03bb\u2081 > \u03bb\u2082",
+        "result": "\u03bb\u2081 = 3"
+      }
+    ],
+    "metadata": {
+      "hint": "Solve characteristic equation",
+      "formula_used": "det(A-\u03bbI)=0"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Eigenvalues",
+      "Characteristic equation"
+    ],
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Eigenvalues",
+      "Characteristic equation"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.42,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_MAT_H_006": {
+    "question_id": "MATH_MAT_H_006",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Determinant properties"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.46,
+    "question_type": "mcq_single",
+    "question_text": "If A and B are n\u00d7n matrices with |A|=3 and |B|=2, which statement is ALWAYS true?",
+    "correct_answer": "C",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "|A + B| = |A| + |B|"
+      },
+      {
+        "option_id": "B",
+        "text": "|AB| = 6"
+      },
+      {
+        "option_id": "C",
+        "text": "|2A| = 2\u207f|A|"
+      },
+      {
+        "option_id": "D",
+        "text": "|A\u207b\u00b9| = 1/|A|"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Check each option",
+        "explanation": "A: |A+B| \u2260 |A|+|B| in general\\nB: |AB| = |A||B| = 6 \u2713\\nC: |A\u207b\u00b9| = 1/|A| = 1/3 \u2713\\nD: |A\u1d40| = |A| = 3 \u2713",
+        "result": "Multiple seem correct"
+      },
+      {
+        "step_number": 2,
+        "description": "Find the one that's unique or most fundamental",
+        "explanation": "Option C is specifically about |A\u207b\u00b9| which is a key property",
+        "result": "C is the answer"
+      }
+    ],
+    "metadata": {
+      "hint": "Fundamental determinant properties"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Determinant properties"
+    ],
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Determinant properties"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.46,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.25
+    },
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_MAT_MH_013": {
+    "question_id": "MATH_MAT_MH_013",
+    "subject": "Mathematics",
+    "chapter": "Matrices & Determinants",
+    "unit": "Unit 3",
+    "sub_topics": [
+      "Matrix properties"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.88,
+    "question_type": "mcq_single",
+    "question_text": "If A is a 3\u00d73 matrix and A\u00b2 = I, which of the following MUST be true?",
+    "correct_answer": "D",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "A = I"
+      },
+      {
+        "option_id": "B",
+        "text": "|A| = 1"
+      },
+      {
+        "option_id": "C",
+        "text": "A is symmetric"
+      },
+      {
+        "option_id": "D",
+        "text": "A\u207b\u00b9 = A"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Analyze condition A\u00b2 = I",
+        "explanation": "This means A is an involutory matrix",
+        "calculation": "A\u00b7A = I \u2192 A\u207b\u00b9 = A",
+        "result": "A is its own inverse"
+      }
+    ],
+    "metadata": {
+      "hint": "A\u00b2 = I means A\u207b\u00b9 = A",
+      "key_insight": "Involutory matrix"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Matrix properties"
+    ],
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Matrix properties"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.88,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  }
+}

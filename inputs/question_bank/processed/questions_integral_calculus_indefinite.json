@@ -1,0 +1,2832 @@
+{
+  "MATH_INT_E_001": {
+    "question_id": "MATH_INT_E_001",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Standard integrals",
+      "Power rule"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.45,
+    "priority": "HIGH",
+    "question_type": "numerical",
+    "has_image": false,
+    "question_text": "Evaluate \u222bx\u00b2 dx. Find the coefficient of x\u00b3 in the result.",
+    "question_text_html": "Evaluate \u222bx\u00b2 dx. Find the coefficient of x\u00b3 in the result.",
+    "correct_answer": "0.333",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.32,
+      "max": 0.35
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Apply power rule for integration",
+        "formula": "\u222bx\u207f dx = x^(n+1)/(n+1) + C, for n \u2260 -1",
+        "explanation": "For x\u00b2, n = 2",
+        "result": "Power rule can be applied"
+      },
+      {
+        "step_number": 2,
+        "description": "Calculate the integral",
+        "calculation": "\u222bx\u00b2 dx = x^(2+1)/(2+1) + C = x\u00b3/3 + C",
+        "explanation": "Add 1 to exponent and divide by new exponent",
+        "result": "x\u00b3/3 + C"
+      },
+      {
+        "step_number": 3,
+        "description": "Find coefficient of x\u00b3",
+        "calculation": "Coefficient of x\u00b3 is 1/3 \u2248 0.333",
+        "result": "0.333"
+      }
+    ],
+    "concepts_tested": [
+      "Power rule for integration",
+      "Standard integrals"
+    ],
+    "time_estimate": 90,
+    "weightage_marks": 4,
+    "metadata": {
+      "formula_used": "\u222bx\u207f dx = x^(n+1)/(n+1) + C",
+      "common_mistakes": [
+        "Forgetting +C",
+        "Wrong exponent manipulation"
+      ],
+      "hint": "Use power rule: add 1 to exponent, divide by new exponent",
+      "key_insight": "Integration is reverse of differentiation"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.45,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "standard-integrals",
+      "power-rule"
+    ]
+  },
+  "MATH_INT_E_002": {
+    "question_id": "MATH_INT_E_002",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Standard integrals",
+      "Exponential"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.5,
+    "question_type": "numerical",
+    "question_text": "Evaluate \u222be^x dx. What is the coefficient of e^x in the result (excluding C)?",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Recall standard integral of e^x",
+        "formula": "\u222be^x dx = e^x + C",
+        "explanation": "Exponential function e^x is its own derivative and integral",
+        "result": "Standard formula"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply the formula",
+        "calculation": "\u222be^x dx = e^x + C",
+        "result": "e^x + C"
+      },
+      {
+        "step_number": 3,
+        "description": "Identify coefficient",
+        "calculation": "Coefficient of e^x is 1",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "formula_used": "\u222be^x dx = e^x + C",
+      "hint": "e^x integrates to itself",
+      "key_insight": "e^x is special: derivative = integral"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.5,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "exponential",
+      "standard-integrals"
+    ]
+  },
+  "MATH_INT_E_003": {
+    "question_id": "MATH_INT_E_003",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Trigonometric integrals"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.55,
+    "question_type": "numerical",
+    "question_text": "Evaluate \u222bsin x dx. If the result is -cos x + C, what is the coefficient of cos x?",
+    "correct_answer": "-1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": -1.05,
+      "max": -0.95
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Recall standard trigonometric integral",
+        "formula": "\u222bsin x dx = -cos x + C",
+        "explanation": "Derivative of -cos x is sin x",
+        "result": "Standard formula"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply the formula",
+        "calculation": "\u222bsin x dx = -cos x + C",
+        "result": "-cos x + C"
+      },
+      {
+        "step_number": 3,
+        "description": "Identify coefficient of cos x",
+        "calculation": "Coefficient is -1",
+        "result": "-1"
+      }
+    ],
+    "metadata": {
+      "formula_used": "\u222bsin x dx = -cos x + C",
+      "hint": "Check derivative of -cos x",
+      "key_insight": "Sign matters in trig integrals"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.55,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "trigonometric-integrals"
+    ]
+  },
+  "MATH_INT_E_004": {
+    "question_id": "MATH_INT_E_004",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Trigonometric integrals"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.48,
+    "question_type": "numerical",
+    "question_text": "Evaluate \u222bcos x dx. If the result is sin x + C, what is the coefficient of sin x?",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Recall standard trigonometric integral",
+        "formula": "\u222bcos x dx = sin x + C",
+        "explanation": "Derivative of sin x is cos x",
+        "result": "Standard formula"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply the formula",
+        "calculation": "\u222bcos x dx = sin x + C",
+        "result": "sin x + C"
+      },
+      {
+        "step_number": 3,
+        "description": "Identify coefficient",
+        "calculation": "Coefficient of sin x is 1",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "formula_used": "\u222bcos x dx = sin x + C",
+      "hint": "Derivative of sin x is cos x",
+      "key_insight": "Cosine integrates to sine"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.48,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "trigonometric-integrals"
+    ]
+  },
+  "MATH_INT_E_005": {
+    "question_id": "MATH_INT_E_005",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Standard integrals",
+      "Reciprocal"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.52,
+    "question_type": "numerical",
+    "question_text": "Evaluate \u222b(1/x) dx. If result is ln|x| + C, the coefficient of ln|x| is:",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Recall standard integral of 1/x",
+        "formula": "\u222b(1/x) dx = ln|x| + C",
+        "explanation": "This is the exception to power rule (n = -1)",
+        "result": "Standard formula"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply the formula",
+        "calculation": "\u222b(1/x) dx = ln|x| + C",
+        "result": "ln|x| + C"
+      },
+      {
+        "step_number": 3,
+        "description": "Identify coefficient",
+        "calculation": "Coefficient of ln|x| is 1",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "formula_used": "\u222b(1/x) dx = ln|x| + C",
+      "hint": "Special case: n = -1",
+      "key_insight": "Power rule doesn't work for 1/x, gives natural log"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.52,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "standard-integrals",
+      "logarithmic"
+    ]
+  },
+  "MATH_INT_E_006": {
+    "question_id": "MATH_INT_E_006",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Basic substitution",
+      "Linear function"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.58,
+    "question_type": "numerical",
+    "question_text": "Evaluate \u222b(2x + 3) dx. Find the coefficient of x\u00b2 in the result.",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Integrate term by term",
+        "formula": "\u222b(f + g) dx = \u222bf dx + \u222bg dx",
+        "calculation": "\u222b(2x + 3) dx = \u222b2x dx + \u222b3 dx",
+        "result": "Split into two integrals"
+      },
+      {
+        "step_number": 2,
+        "description": "Integrate each term",
+        "calculation": "\u222b2x dx = 2\u00b7(x\u00b2/2) = x\u00b2, \u222b3 dx = 3x",
+        "result": "x\u00b2 + 3x + C"
+      },
+      {
+        "step_number": 3,
+        "description": "Find coefficient of x\u00b2",
+        "calculation": "Coefficient of x\u00b2 is 1",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "formula_used": "Linearity of integration",
+      "hint": "Integrate each term separately",
+      "key_insight": "Integration is linear"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.58,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "linearity",
+      "polynomial"
+    ]
+  },
+  "MATH_INT_E_007": {
+    "question_id": "MATH_INT_E_007",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Constant multiple rule"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.6,
+    "question_type": "numerical",
+    "question_text": "Evaluate \u222b3x\u00b2 dx. Find the coefficient of x\u00b3.",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Factor out constant",
+        "formula": "\u222bk\u00b7f(x) dx = k\u00b7\u222bf(x) dx",
+        "calculation": "\u222b3x\u00b2 dx = 3\u222bx\u00b2 dx",
+        "result": "Constant factored out"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply power rule",
+        "calculation": "3\u222bx\u00b2 dx = 3\u00b7(x\u00b3/3) = x\u00b3",
+        "result": "x\u00b3 + C"
+      },
+      {
+        "step_number": 3,
+        "description": "Find coefficient",
+        "calculation": "Coefficient of x\u00b3 is 1",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "formula_used": "Constant multiple rule",
+      "hint": "Pull constant outside integral",
+      "key_insight": "Constants can be factored out"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.6,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.0
+    },
+    "tags": [
+      "easy",
+      "constant-multiple"
+    ]
+  },
+  "MATH_INT_E_008": {
+    "question_id": "MATH_INT_E_008",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Standard integrals"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.54,
+    "question_type": "mcq_single",
+    "question_text": "\u222bsec\u00b2x dx equals:",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "tan x + C"
+      },
+      {
+        "option_id": "B",
+        "text": "sec x + C"
+      },
+      {
+        "option_id": "C",
+        "text": "-tan x + C"
+      },
+      {
+        "option_id": "D",
+        "text": "cot x + C"
+      }
+    ],
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Recall standard integral",
+        "formula": "\u222bsec\u00b2x dx = tan x + C",
+        "explanation": "Derivative of tan x is sec\u00b2x",
+        "result": "A"
+      }
+    ],
+    "metadata": {
+      "formula_used": "\u222bsec\u00b2x dx = tan x + C",
+      "hint": "What differentiates to sec\u00b2x?",
+      "key_insight": "d/dx(tan x) = sec\u00b2x"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.54,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "easy",
+      "trigonometric",
+      "mcq"
+    ]
+  },
+  "MATH_INT_E_009": {
+    "question_id": "MATH_INT_E_009",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Properties",
+      "Constant of integration"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.62,
+    "question_type": "mcq_single",
+    "question_text": "If \u222bf(x) dx = F(x) + C, then C represents:",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "A variable"
+      },
+      {
+        "option_id": "B",
+        "text": "An arbitrary constant"
+      },
+      {
+        "option_id": "C",
+        "text": "Zero"
+      },
+      {
+        "option_id": "D",
+        "text": "The function value"
+      }
+    ],
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Understand indefinite integral",
+        "explanation": "Indefinite integral represents family of functions differing by a constant",
+        "result": "B: An arbitrary constant"
+      }
+    ],
+    "metadata": {
+      "hint": "Why do we add +C?",
+      "key_insight": "Derivative of constant is zero, so integration needs +C"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.62,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "easy",
+      "properties",
+      "constant",
+      "mcq"
+    ]
+  },
+  "MATH_INT_E_010": {
+    "question_id": "MATH_INT_E_010",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Integration vs differentiation"
+    ],
+    "difficulty": "easy",
+    "difficulty_irt": 0.56,
+    "question_type": "mcq_single",
+    "question_text": "d/dx[\u222bf(x) dx] equals:",
+    "options": [
+      {
+        "option_id": "A",
+        "text": "0"
+      },
+      {
+        "option_id": "B",
+        "text": "f(x)"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222bf(x) dx"
+      },
+      {
+        "option_id": "D",
+        "text": "f'(x)"
+      }
+    ],
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Apply fundamental theorem",
+        "formula": "d/dx[\u222bf(x) dx] = f(x)",
+        "explanation": "Differentiation and integration are inverse operations",
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "formula_used": "Fundamental theorem of calculus",
+      "hint": "Integration and differentiation are inverse",
+      "key_insight": "They cancel each other out"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.56,
+      "discrimination_a": 1.6,
+      "guessing_c": 0.25
+    },
+    "tags": [
+      "easy",
+      "fundamental-theorem",
+      "mcq"
+    ]
+  },
+  "MATH_INT_M_001": {
+    "question_id": "MATH_INT_M_001",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Substitution"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.15,
+    "question_type": "numerical",
+    "question_text": "\u222b2x\u00b7e^(x\u00b2) dx = e^(x\u00b2)+C. Find coefficient of e^(x\u00b2).",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Substitution: u=x\u00b2, du=2x dx"
+      },
+      {
+        "step_number": 2,
+        "calculation": "\u222be^u du = e^u = e^(x\u00b2)+C",
+        "result": "Coefficient is 1"
+      }
+    ],
+    "metadata": {
+      "hint": "u=x\u00b2"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Substitution"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.15,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Substitution"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_002": {
+    "question_id": "MATH_INT_M_002",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Chain rule"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.2,
+    "question_type": "numerical",
+    "question_text": "\u222bsin(2x) dx = -(1/2)cos(2x)+C. Find coefficient of cos(2x).",
+    "correct_answer": "0.5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.45,
+      "max": 0.55
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Use substitution",
+        "calculation": "Let u = -x\u00b2, then du = -2x dx, so x dx = -(1/2)du",
+        "result": "Substitution prepared"
+      },
+      {
+        "step_number": 2,
+        "description": "Integrate",
+        "calculation": "\u222be^u \u00b7 (-(1/2))du = -(1/2)e^u + C = -(1/2)e^(-x\u00b2) + C",
+        "result": "Integration complete"
+      },
+      {
+        "step_number": 3,
+        "description": "Find coefficient",
+        "calculation": "Coefficient of e^(-x\u00b2) is -1/2 = -0.5",
+        "result": "-0.5"
+      }
+    ],
+    "metadata": {
+      "hint": "Chain"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Chain rule"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.2,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Chain rule"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_003": {
+    "question_id": "MATH_INT_M_003",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "By parts"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.28,
+    "question_type": "numerical",
+    "question_text": "\u222bx\u00b7e^x dx result has term ke^x where k is constant. Find |k|.",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "formula": "\u222budv=uv-\u222bvdu",
+        "calc": "=(x-1)e^x+C",
+        "result": "|k|=1"
+      }
+    ],
+    "metadata": {
+      "hint": "By parts"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "By parts"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.28,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "By parts"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_004": {
+    "question_id": "MATH_INT_M_004",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Standard"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.18,
+    "question_type": "numerical",
+    "question_text": "\u222bdx/(x\u00b2-4). Using partial fractions, coefficient of ln|x-2| is:",
+    "correct_answer": "0.25",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.2,
+      "max": 0.3
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Use substitution",
+        "calculation": "Let u = 1 + ln x, then du = (1/x)dx",
+        "result": "Substitution: u = 1 + ln x"
+      },
+      {
+        "step_number": 2,
+        "description": "Integrate",
+        "calculation": "\u222bu du = u\u00b2/2 + C = (1 + ln x)\u00b2/2 + C",
+        "result": "Result obtained"
+      },
+      {
+        "step_number": 3,
+        "description": "Find coefficient",
+        "calculation": "Coefficient of (1 + ln x)\u00b2 is 1/2 = 0.5",
+        "result": "0.5"
+      }
+    ],
+    "metadata": {
+      "hint": "Partial fractions"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Standard"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.18,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Standard"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_005": {
+    "question_id": "MATH_INT_M_005",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Trig"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.32,
+    "question_type": "numerical",
+    "question_text": "\u222btan x dx = -ln|cos x|+C. Coefficient of ln|cos x|?",
+    "correct_answer": "-1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": -1.05,
+      "max": -0.95
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "\u222b(sin x/cos x)dx, u=cos x",
+        "result": "-1"
+      }
+    ],
+    "metadata": {
+      "hint": "tan=sin/cos"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Trig"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.32,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Trig"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_006": {
+    "question_id": "MATH_INT_M_006",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Standard form"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.25,
+    "question_type": "numerical",
+    "question_text": "\u222bdx/(x\u00b2+9). Result=(1/a)tan\u207b\u00b9(x/a)+C. Find a.",
+    "correct_answer": "3",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 2.95,
+      "max": 3.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Use substitution",
+        "calculation": "Let u = 1/x, then du = -(1/x\u00b2)dx, so (1/x\u00b2)dx = -du",
+        "result": "Substitution prepared"
+      },
+      {
+        "step_number": 2,
+        "description": "Integrate",
+        "calculation": "\u222bsin(u)\u00b7(-du) = -\u222bsin(u)du = -(-cos u) + C = cos(1/x) + C",
+        "result": "Integration complete"
+      },
+      {
+        "step_number": 3,
+        "description": "Find coefficient",
+        "calculation": "Coefficient of cos(1/x) is 1",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "hint": "a\u00b2=9"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Standard form"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.25,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Standard form"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_007": {
+    "question_id": "MATH_INT_M_007",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Exponential"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.38,
+    "question_type": "numerical",
+    "question_text": "\u222b2^x dx = 2^x/ln(2) + C. Find ln(2) approximately.",
+    "correct_answer": "0.693",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.6429999999999999,
+      "max": 0.743
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "formula": "\u222ba^x=a^x/ln(a)",
+        "result": "ln(2)\u22480.693"
+      }
+    ],
+    "metadata": {
+      "hint": "Natural log of 2"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Exponential"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.38,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Exponential"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_008": {
+    "question_id": "MATH_INT_M_008",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Identity"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.22,
+    "question_type": "numerical",
+    "question_text": "\u222bsin\u00b2x dx using identity. Coefficient of x in result?",
+    "correct_answer": "0.5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.45,
+      "max": 0.55
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "sin\u00b2x=(1-cos2x)/2",
+        "result": "x/2, coeff=0.5"
+      }
+    ],
+    "metadata": {
+      "hint": "sin\u00b2x identity"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Identity"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.22,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Identity"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_009": {
+    "question_id": "MATH_INT_M_009",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Polynomial"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.35,
+    "question_type": "numerical",
+    "question_text": "\u222b(x+2)\u00b2 dx expanded. Coefficient of x\u00b3?",
+    "correct_answer": "0.333",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.28300000000000003,
+      "max": 0.383
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Use Weierstrass substitution",
+        "explanation": "Let t = tan(x/2), then cos x = (1-t\u00b2)/(1+t\u00b2), dx = 2dt/(1+t\u00b2)",
+        "result": "Substitution set up"
+      },
+      {
+        "step_number": 2,
+        "description": "Simplify and integrate",
+        "calculation": "After substitution and simplification: \u222b(2dt)/(3-t\u00b2)",
+        "explanation": "This requires partial fractions",
+        "result": "Complex but solvable"
+      },
+      {
+        "step_number": 3,
+        "description": "Final result",
+        "calculation": "After partial fractions: (1/\u221a3)ln|(\u221a3+tan(x/2))/(\u221a3-tan(x/2))| + C",
+        "result": "Coefficient is 1/\u221a3 \u2248 0.577"
+      }
+    ],
+    "metadata": {
+      "hint": "Expand first"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Polynomial"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.35,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Polynomial"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_010": {
+    "question_id": "MATH_INT_M_010",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Standard"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.3,
+    "question_type": "numerical",
+    "question_text": "\u222bdx/\u221a(x\u00b2-4) = ln|x+\u221a(x\u00b2-4)|+C. Coefficient of ln|x+\u221a(x\u00b2-4)|?",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Recognize standard integral form",
+        "formula": "\u222bdx/\u221a(x\u00b2-a\u00b2) = ln|x + \u221a(x\u00b2-a\u00b2)| + C",
+        "calculation": "For a\u00b2 = 4, a = 2",
+        "result": "Standard formula applies"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply formula",
+        "calculation": "\u222bdx/\u221a(x\u00b2-4) = ln|x + \u221a(x\u00b2-4)| + C",
+        "result": "Coefficient is 1"
+      }
+    ],
+    "metadata": {
+      "hint": "Derivative"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Standard"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.3,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Standard"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_011": {
+    "question_id": "MATH_INT_M_011",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Linear sub"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.12,
+    "question_type": "numerical",
+    "question_text": "\u222bdx/(2x+1). Coefficient of ln|2x+1|?",
+    "correct_answer": "0.5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.45,
+      "max": 0.55
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "u=2x+1, du=2dx",
+        "result": "(1/2)ln|2x+1|, coeff=0.5"
+      }
+    ],
+    "metadata": {
+      "hint": "u=2x+1"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Linear sub"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.12,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Linear sub"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_012": {
+    "question_id": "MATH_INT_M_012",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Inverse trig"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.4,
+    "question_type": "numerical",
+    "question_text": "\u222bdx/\u221a(1-x\u00b2) = sin\u207b\u00b9(x)+C. Coefficient?",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "formula": "Standard",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "hint": "Standard"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Inverse trig"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.4,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Inverse trig"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_013": {
+    "question_id": "MATH_INT_M_013",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Reciprocal sqrt"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.27,
+    "question_type": "numerical",
+    "question_text": "\u222bdx/\u221a(x\u00b2+1) = sinh\u207b\u00b9(x)+C = ln(x+\u221a(x\u00b2+1))+C. Coefficient of main term?",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Recognize logarithmic derivative",
+        "explanation": "d/dx[ln|f(x)|] = f'(x)/f(x)",
+        "result": "Pattern identified"
+      },
+      {
+        "step_number": 2,
+        "description": "Integrate directly",
+        "formula": "\u222bf'(x)/f(x) dx = ln|f(x)| + C",
+        "calculation": "Direct integration gives ln|f(x)|",
+        "result": "ln|f(x)| + C"
+      },
+      {
+        "step_number": 3,
+        "description": "Answer",
+        "result": "Coefficient is 1"
+      }
+    ],
+    "metadata": {
+      "hint": "Hyperbolic or log form"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Reciprocal sqrt"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.27,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Reciprocal sqrt"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_014": {
+    "question_id": "MATH_INT_M_014",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Power"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.19,
+    "question_type": "numerical",
+    "question_text": "\u222bx\u2074 dx. Coefficient of x\u2075?",
+    "correct_answer": "0.2",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.15000000000000002,
+      "max": 0.25
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Use substitution",
+        "calculation": "Let u = x+1, then du = dx, and \u221a(x+1) = u^(1/2)",
+        "result": "Substitution prepared"
+      },
+      {
+        "step_number": 2,
+        "description": "Integrate",
+        "formula": "\u222bu^(1/2) du = u^(3/2)/(3/2) + C = (2/3)u^(3/2) + C",
+        "calculation": "= (2/3)(x+1)^(3/2) + C",
+        "result": "Integration complete"
+      },
+      {
+        "step_number": 3,
+        "description": "Find coefficient",
+        "calculation": "Coefficient of (x+1)^(3/2) is 2/3 \u2248 0.667",
+        "result": "0.667"
+      }
+    ],
+    "metadata": {
+      "hint": "Power rule"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Power"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.19,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Power"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_015": {
+    "question_id": "MATH_INT_M_015",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Formula"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.16,
+    "question_type": "mcq_single",
+    "question_text": "\u222be^(ax) dx =",
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "e^(ax)/a+C"
+      },
+      {
+        "option_id": "B",
+        "text": "a\u00b7e^(ax)+C"
+      },
+      {
+        "option_id": "C",
+        "text": "e^(ax)+C"
+      },
+      {
+        "option_id": "D",
+        "text": "e^(ax)/a\u00b2+C"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "A"
+      }
+    ],
+    "metadata": {
+      "hint": "Chain rule"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Formula"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.16,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Formula"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_016": {
+    "question_id": "MATH_INT_M_016",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Comparison"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.24,
+    "question_type": "mcq_single",
+    "question_text": "\u222bx\u00b2/(x\u00b3+1) dx. Using substitution u=x\u00b3+1, find coefficient of ln|x\u00b3+1|.",
+    "correct_answer": "0.333",
+    "answer_type": "single_choice",
+    "answer_range": {
+      "min": 0.32,
+      "max": 0.35
+    },
+    "options": [
+      {
+        "option_id": "A",
+        "text": "\u222bx dx"
+      },
+      {
+        "option_id": "B",
+        "text": "\u222b1/x dx"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222be^x dx"
+      },
+      {
+        "option_id": "D",
+        "text": "\u222bx\u00b2 dx"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Substitute u = x\u00b3+1",
+        "calculation": "du = 3x\u00b2 dx, so x\u00b2 dx = (1/3)du",
+        "result": "Substitution set up"
+      },
+      {
+        "step_number": 2,
+        "description": "Integrate",
+        "calculation": "\u222b(1/3)(du/u) = (1/3)ln|u| + C = (1/3)ln|x\u00b3+1| + C",
+        "result": "Coefficient is 1/3 \u2248 0.333"
+      }
+    ],
+    "metadata": {
+      "hint": "1/x"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Comparison"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.24,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Comparison"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_017": {
+    "question_id": "MATH_INT_M_017",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "By parts"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.33,
+    "question_type": "mcq_single",
+    "question_text": "Integration by parts uses:",
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "\u222budv=uv-\u222bvdu"
+      },
+      {
+        "option_id": "B",
+        "text": "\u222budv=uv+\u222bvdu"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222budv=u+v"
+      },
+      {
+        "option_id": "D",
+        "text": "\u222budv=uv"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "A"
+      }
+    ],
+    "metadata": {
+      "hint": "ILATE"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "By parts"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.33,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "By parts"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_018": {
+    "question_id": "MATH_INT_M_018",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Trig"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.19,
+    "question_type": "mcq_single",
+    "question_text": "\u222bcsc\u00b2x dx =",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "cot x+C"
+      },
+      {
+        "option_id": "B",
+        "text": "-cot x+C"
+      },
+      {
+        "option_id": "C",
+        "text": "tan x+C"
+      },
+      {
+        "option_id": "D",
+        "text": "sec x+C"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "d/dx(cot)=-csc\u00b2"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Trig"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.19,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Trig"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_019": {
+    "question_id": "MATH_INT_M_019",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Property"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.29,
+    "question_type": "mcq_single",
+    "question_text": "\u222b[f(x)+g(x)]dx =",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "\u222bf(x)dx\u00b7\u222bg(x)dx"
+      },
+      {
+        "option_id": "B",
+        "text": "\u222bf(x)dx+\u222bg(x)dx"
+      },
+      {
+        "option_id": "C",
+        "text": "\u222bf(x)dx/\u222bg(x)dx"
+      },
+      {
+        "option_id": "D",
+        "text": "None"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "Linearity"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Property"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.29,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Property"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_M_020": {
+    "question_id": "MATH_INT_M_020",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Substitution"
+    ],
+    "difficulty": "medium",
+    "difficulty_irt": 1.37,
+    "question_type": "mcq_single",
+    "question_text": "For \u222bf(g(x))\u00b7g'(x)dx, best method is:",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "By parts"
+      },
+      {
+        "option_id": "B",
+        "text": "Substitution u=g(x)"
+      },
+      {
+        "option_id": "C",
+        "text": "Partial fractions"
+      },
+      {
+        "option_id": "D",
+        "text": "Direct"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "Chain rule reverse"
+    },
+    "time_estimate": 150,
+    "concepts_tested": [
+      "Substitution"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.37,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium",
+      "Substitution"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_001": {
+    "question_id": "MATH_INT_MH_001",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "By parts"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.8,
+    "question_type": "numerical",
+    "question_text": "\u222bx\u00b2\u00b7e^x dx = (x\u00b2-2x+2)e^x+C. Find constant term coefficient with e^x.",
+    "correct_answer": "2",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.95,
+      "max": 2.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Use substitution",
+        "calculation": "Let u = 1 + \u221ax, then \u221ax = u-1, du = (1/(2\u221ax))dx, so dx = 2\u221ax du = 2(u-1)du",
+        "result": "Substitution prepared"
+      },
+      {
+        "step_number": 2,
+        "description": "Simplify and integrate",
+        "calculation": "\u222b(2(u-1)du)/((u-1)\u00b7u) = \u222b(2du)/u = 2ln|u| + C",
+        "result": "Simplified to basic integral"
+      },
+      {
+        "step_number": 3,
+        "description": "Substitute back",
+        "calculation": "2ln|1+\u221ax| + C",
+        "result": "Coefficient is 2"
+      }
+    ],
+    "metadata": {
+      "hint": "Apply twice"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "By parts"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.8,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "By parts"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_002": {
+    "question_id": "MATH_INT_MH_002",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Trig sub"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.85,
+    "question_type": "numerical",
+    "question_text": "\u222bdx/\u221a(4-x\u00b2) = sin\u207b\u00b9(x/a)+C. Find a.",
+    "correct_answer": "2",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.95,
+      "max": 2.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Use Integration by Parts",
+        "explanation": "Choose u = x, dv = cos x dx",
+        "calculation": "Then du = dx, v = sin x",
+        "result": "Parts identified"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply formula \u222budv = uv - \u222bvdu",
+        "calculation": "\u222bx cos x dx = x sin x - \u222bsin x dx = x sin x - (-cos x) + C",
+        "result": "= x sin x + cos x + C"
+      },
+      {
+        "step_number": 3,
+        "description": "Find coefficient",
+        "calculation": "Coefficient of x sin x is 1",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "hint": "Compare"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Trig sub"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.85,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Trig sub"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_003": {
+    "question_id": "MATH_INT_MH_003",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Partial frac"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.78,
+    "question_type": "numerical",
+    "question_text": "\u222b(2x+3)/(x\u00b2-x-2)dx. Decompose to A/(x-2)+B/(x+1). Find A (as decimal).",
+    "correct_answer": "1.4",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 1.3499999999999999,
+      "max": 1.45
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "2x+3=A(x+1)+B(x-2), solve",
+        "result": "A=7/5=1.4"
+      }
+    ],
+    "metadata": {
+      "hint": "Coefficients"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Partial frac"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.78,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Partial frac"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_004": {
+    "question_id": "MATH_INT_MH_004",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Completion"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.92,
+    "question_type": "mcq_single",
+    "question_text": "\u222bdx/(x\u00b2+2x+2) equals:",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "ln|x\u00b2+2x+2| + C"
+      },
+      {
+        "option_id": "B",
+        "text": "tan\u207b\u00b9(x+1) + C"
+      },
+      {
+        "option_id": "C",
+        "text": "(1/2)tan\u207b\u00b9(x+1) + C"
+      },
+      {
+        "option_id": "D",
+        "text": "sin\u207b\u00b9(x+1) + C"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Complete the square",
+        "calculation": "x\u00b2+2x+2 = (x+1)\u00b2 + 1",
+        "result": "Standard form (x+1)\u00b2+1"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply formula",
+        "formula": "\u222bdx/(u\u00b2+1) = tan\u207b\u00b9(u) + C",
+        "calculation": "= tan\u207b\u00b9(x+1) + C",
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "x\u00b2+6x+9=..."
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Completion"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.92,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Completion"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_005": {
+    "question_id": "MATH_INT_MH_005",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Split"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.76,
+    "question_type": "numerical",
+    "question_text": "\u222b(x+1)/x\u00b2 dx = ln|x|-1/x+C. Coefficient of ln|x|?",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Split: \u222b1/x + \u222b1/x\u00b2",
+        "result": "1"
+      }
+    ],
+    "metadata": {
+      "hint": "Separate"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Split"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.76,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Split"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_006": {
+    "question_id": "MATH_INT_MH_006",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Square"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.88,
+    "question_type": "numerical",
+    "question_text": "\u222bdx/(x ln x) = ln|ln x| + C. Coefficient of ln|ln x|?",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Substitute u = ln x",
+        "calculation": "du = (1/x)dx, so dx = x du",
+        "explanation": "But we have dx/(x ln x) = du/(x\u00b7u) = du/u when dx=(1/x)x du... Actually: du/dx = 1/x, so dx = x du is wrong. Let me recalc: u=ln x, du=(1/x)dx",
+        "result": "\u222b(1/u)du"
+      },
+      {
+        "step_number": 2,
+        "description": "Integrate",
+        "calculation": "\u222bdu/u = ln|u| + C = ln|ln x| + C",
+        "result": "Coefficient is 1"
+      }
+    ],
+    "metadata": {
+      "hint": "Complete square"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Square"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.88,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Square"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_007": {
+    "question_id": "MATH_INT_MH_007",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Log int"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.95,
+    "question_type": "numerical",
+    "question_text": "\u222bln(x)dx = x ln(x)-x+C by parts. Coefficient of x (not x ln x)?",
+    "correct_answer": "-1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": -1.05,
+      "max": -0.95
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Use substitution",
+        "calculation": "Let u = x\u00b3, then du = 3x\u00b2 dx, so x\u00b2 dx = (1/3)du",
+        "result": "Substitution prepared"
+      },
+      {
+        "step_number": 2,
+        "description": "Integrate",
+        "calculation": "\u222be^u \u00b7 (1/3)du = (1/3)e^u + C = (1/3)e^(x\u00b3) + C",
+        "result": "Integration complete"
+      },
+      {
+        "step_number": 3,
+        "description": "Find coefficient",
+        "calculation": "Coefficient of e^(x\u00b3) is 1/3 \u2248 0.333",
+        "result": "0.333"
+      }
+    ],
+    "metadata": {
+      "hint": "u=ln x"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Log int"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.95,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Log int"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_008": {
+    "question_id": "MATH_INT_MH_008",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Tan square"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.82,
+    "question_type": "numerical",
+    "question_text": "\u222btan\u00b2x dx = tan x - x + C. Coefficient of x?",
+    "correct_answer": "-1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": -1.05,
+      "max": -0.95
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "tan\u00b2=sec\u00b2-1",
+        "result": "-1"
+      }
+    ],
+    "metadata": {
+      "hint": "Identity"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Tan square"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.82,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Tan square"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_009": {
+    "question_id": "MATH_INT_MH_009",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "e^x factor"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.98,
+    "question_type": "numerical",
+    "question_text": "\u222be^x(x+1)dx can be recognized as d/dx[xe^x]. Result is xe^x+C. Verify: coefficient of x term with e^x?",
+    "correct_answer": "1",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.95,
+      "max": 1.05
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Use Integration by Parts twice",
+        "explanation": "Let I = \u222be^(4x)\u00b7sin(5x) dx",
+        "result": "Setup for repeated IBP"
+      },
+      {
+        "step_number": 2,
+        "description": "First IBP: u = sin(5x), dv = e^(4x)dx",
+        "calculation": "I = (1/4)e^(4x)\u00b7sin(5x) - (5/4)\u222be^(4x)\u00b7cos(5x)dx",
+        "result": "After first application"
+      },
+      {
+        "step_number": 3,
+        "description": "Second IBP on \u222be^(4x)\u00b7cos(5x)dx",
+        "calculation": "After second IBP and solving for I:",
+        "result": "I = e^(4x)/(4\u00b2+5\u00b2) \u00b7 (4sin(5x) - 5cos(5x)) + C"
+      },
+      {
+        "step_number": 4,
+        "description": "Simplify coefficient",
+        "calculation": "4\u00b2 + 5\u00b2 = 16 + 25 = 41, so coefficient of e^(4x) term is 1/41 \u2248 0.024",
+        "result": "0.024 (answer 0.02 is within tolerance)"
+      }
+    ],
+    "metadata": {
+      "hint": "Recognize pattern"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "e^x factor"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.98,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "e^x factor"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_010": {
+    "question_id": "MATH_INT_MH_010",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Method"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.79,
+    "question_type": "mcq_single",
+    "question_text": "Best method for \u222bx\u00b2\u00b7sin(x)dx:",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "Substitution"
+      },
+      {
+        "option_id": "B",
+        "text": "By parts"
+      },
+      {
+        "option_id": "C",
+        "text": "Partial fractions"
+      },
+      {
+        "option_id": "D",
+        "text": "Direct"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "Polynomial \u00d7 trig"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Method"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.79,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Method"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_011": {
+    "question_id": "MATH_INT_MH_011",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Formula"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.86,
+    "question_type": "mcq_single",
+    "question_text": "\u222bdx/(x\u00b2-4). Using partial fractions, coefficient of ln|(x-2)/(x+2)| is:",
+    "correct_answer": "0.25",
+    "answer_type": "single_choice",
+    "answer_range": {
+      "min": 0.24,
+      "max": 0.26
+    },
+    "options": [
+      {
+        "option_id": "A",
+        "text": "ln(x+\u221a(x\u00b2+a\u00b2))+C"
+      },
+      {
+        "option_id": "B",
+        "text": "sin\u207b\u00b9(x/a)+C"
+      },
+      {
+        "option_id": "C",
+        "text": "tan\u207b\u00b9(x/a)+C"
+      },
+      {
+        "option_id": "D",
+        "text": "sec\u207b\u00b9(x/a)+C"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Partial fractions",
+        "calculation": "1/(x\u00b2-4) = 1/((x-2)(x+2)) = (1/4)[1/(x-2) - 1/(x+2)]",
+        "result": "Decomposed"
+      },
+      {
+        "step_number": 2,
+        "description": "Integrate",
+        "calculation": "= (1/4)[ln|x-2| - ln|x+2|] + C = (1/4)ln|(x-2)/(x+2)| + C",
+        "result": "Coefficient is 1/4 = 0.25"
+      }
+    ],
+    "metadata": {
+      "hint": "Hyperbolic"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Formula"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.86,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Formula"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_012": {
+    "question_id": "MATH_INT_MH_012",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Partial"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.91,
+    "question_type": "mcq_single",
+    "question_text": "When to use partial fractions:",
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "Rational functions"
+      },
+      {
+        "option_id": "B",
+        "text": "Trigonometric"
+      },
+      {
+        "option_id": "C",
+        "text": "Exponential"
+      },
+      {
+        "option_id": "D",
+        "text": "Logarithmic"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "A"
+      }
+    ],
+    "metadata": {
+      "hint": "P(x)/Q(x)"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Partial"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.91,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Partial"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_MH_013": {
+    "question_id": "MATH_INT_MH_013",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Identity"
+    ],
+    "difficulty": "medium-hard",
+    "difficulty_irt": 1.84,
+    "question_type": "mcq_single",
+    "question_text": "cos\u00b2x can be written as:",
+    "correct_answer": "D",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "(1-cos2x)/2"
+      },
+      {
+        "option_id": "B",
+        "text": "(1+cos2x)/2"
+      },
+      {
+        "option_id": "C",
+        "text": "1-sin\u00b2x"
+      },
+      {
+        "option_id": "D",
+        "text": "Both B and C"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "D"
+      }
+    ],
+    "metadata": {
+      "hint": "Two forms"
+    },
+    "time_estimate": 180,
+    "concepts_tested": [
+      "Identity"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 1.84,
+      "discrimination_a": 1.7,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "medium-hard",
+      "Identity"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_H_001": {
+    "question_id": "MATH_INT_H_001",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Advanced by parts"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.35,
+    "question_type": "numerical",
+    "question_text": "\u222be^x\u00b7sin(x)dx requires repeated by parts. Final form ae^x\u00b7sin(x)+be^x\u00b7cos(x)+C. Find a.",
+    "correct_answer": "0.5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.45,
+      "max": 0.55
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "Apply by parts twice, solve algebraically"
+      },
+      {
+        "step_number": 2,
+        "result": "(1/2)e^x(sin x - cos x)+C, a=0.5"
+      }
+    ],
+    "metadata": {
+      "hint": "Circular"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Advanced by parts"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.35,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Advanced by parts"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_H_002": {
+    "question_id": "MATH_INT_H_002",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Reduction formula"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.45,
+    "question_type": "numerical",
+    "question_text": "For I_n=\u222bsin^n(x)dx, reduction gives I_n in terms of I_{n-2}. For I_2, coefficient of x?",
+    "correct_answer": "0.5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.45,
+      "max": 0.55
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Multiply numerator and denominator by x^(n-1)",
+        "calculation": "\u222bdx/(x(x^n+1)) = \u222b(x^(n-1)dx)/(x^n(x^n+1))",
+        "explanation": "This sets up for substitution",
+        "result": "Prepared for substitution"
+      },
+      {
+        "step_number": 2,
+        "description": "Substitute u = x^n",
+        "calculation": "du = nx^(n-1)dx, so x^(n-1)dx = (1/n)du",
+        "result": "\u222b(1/n)(du)/(u(u+1))"
+      },
+      {
+        "step_number": 3,
+        "description": "Use partial fractions",
+        "calculation": "1/(u(u+1)) = 1/u - 1/(u+1)",
+        "result": "Decomposed"
+      },
+      {
+        "step_number": 4,
+        "description": "Integrate",
+        "calculation": "(1/n)[ln|u| - ln|u+1|] + C = (1/n)ln|x^n/(x^n+1)| + C",
+        "result": "Coefficient is 1/n"
+      }
+    ],
+    "metadata": {
+      "hint": "Multiply by x^(n-1)/x^(n-1) first",
+      "key_insight": "Advanced technique: prepare for substitution with clever multiplication"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Reduction formula"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.45,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Reduction formula"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_H_003": {
+    "question_id": "MATH_INT_H_003",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Partial complex"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.4,
+    "question_type": "numerical",
+    "question_text": "\u222bdx/((x-1)(x\u00b2+1)). Partial fractions A/(x-1)+(Bx+C)/(x\u00b2+1). Find A.",
+    "correct_answer": "0.5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.45,
+      "max": 0.55
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "calc": "1=A(x\u00b2+1)+(Bx+C)(x-1), set x=1",
+        "result": "A=0.5"
+      }
+    ],
+    "metadata": {
+      "hint": "Cover-up at x=1"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Partial complex"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.4,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Partial complex"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_H_004": {
+    "question_id": "MATH_INT_H_004",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Trig substitution"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.5,
+    "question_type": "numerical",
+    "question_text": "\u222b\u221a(x\u00b2+9) dx = (x/2)\u221a(x\u00b2+9) + (9/2)ln|x+\u221a(x\u00b2+9)|+C. Find coefficient of x\u221a(x\u00b2+9).",
+    "correct_answer": "0.5",
+    "answer_type": "decimal",
+    "answer_range": {
+      "min": 0.45,
+      "max": 0.55
+    },
+    "options": null,
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Use standard integral formula",
+        "formula": "\u222b\u221a(x\u00b2+a\u00b2) dx = (x/2)\u221a(x\u00b2+a\u00b2) + (a\u00b2/2)ln|x+\u221a(x\u00b2+a\u00b2)| + C",
+        "result": "For a=3"
+      },
+      {
+        "step_number": 2,
+        "description": "Apply with a=3",
+        "calculation": "= (x/2)\u221a(x\u00b2+9) + (9/2)ln|x+\u221a(x\u00b2+9)| + C",
+        "result": "Coefficient of x\u221a(x\u00b2+9) is 1/2 = 0.5"
+      }
+    ],
+    "metadata": {
+      "hint": "Sec substitution"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Trig substitution"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.5,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.0
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Trig substitution"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_H_005": {
+    "question_id": "MATH_INT_H_005",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Weierstrass"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.38,
+    "question_type": "mcq_single",
+    "question_text": "\u222be^x(tan x + sec\u00b2x) dx equals:",
+    "correct_answer": "B",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "e^x tan\u00b2x + C"
+      },
+      {
+        "option_id": "B",
+        "text": "e^x tan x + C"
+      },
+      {
+        "option_id": "C",
+        "text": "e^x sec x + C"
+      },
+      {
+        "option_id": "D",
+        "text": "e^x(tan x + sec x) + C"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Recognize pattern",
+        "explanation": "d/dx(e^x tan x) = e^x tan x + e^x sec\u00b2x = e^x(tan x + sec\u00b2x)",
+        "result": "Direct integration gives e^x tan x + C"
+      },
+      {
+        "step_number": 2,
+        "description": "Answer",
+        "result": "B"
+      }
+    ],
+    "metadata": {
+      "hint": "Half-angle sub"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Weierstrass"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.38,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Weierstrass"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_H_006": {
+    "question_id": "MATH_INT_H_006",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Advanced"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.48,
+    "question_type": "mcq_single",
+    "question_text": "For \u222bf(x)\u00b7f'(x)dx, best approach:",
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "Substitution u=f(x)"
+      },
+      {
+        "option_id": "B",
+        "text": "By parts"
+      },
+      {
+        "option_id": "C",
+        "text": "Partial fractions"
+      },
+      {
+        "option_id": "D",
+        "text": "Trig substitution"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "result": "A"
+      }
+    ],
+    "metadata": {
+      "hint": "Chain rule"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Advanced"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.48,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Advanced"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  },
+  "MATH_INT_H_007": {
+    "question_id": "MATH_INT_H_007",
+    "subject": "Mathematics",
+    "chapter": "Integral Calculus (Indefinite)",
+    "unit": "Unit 8",
+    "sub_topics": [
+      "Theory"
+    ],
+    "difficulty": "hard",
+    "difficulty_irt": 2.42,
+    "question_type": "mcq_single",
+    "question_text": "ILATE rule in by parts prioritizes:",
+    "correct_answer": "A",
+    "answer_type": "single_choice",
+    "answer_range": null,
+    "options": [
+      {
+        "option_id": "A",
+        "text": "Which function to choose as u (to differentiate)"
+      },
+      {
+        "option_id": "B",
+        "text": "The order of term evaluation"
+      },
+      {
+        "option_id": "C",
+        "text": "Whether to use substitution instead"
+      },
+      {
+        "option_id": "D",
+        "text": "The constant of integration"
+      }
+    ],
+    "solution_steps": [
+      {
+        "step_number": 1,
+        "description": "Understand ILATE rule",
+        "explanation": "I(nverse) > L(ogarithmic) > A(lgebraic) > T(rigonometric) > E(xponential)",
+        "result": "Priority order for choosing u"
+      },
+      {
+        "step_number": 2,
+        "description": "Purpose of rule",
+        "explanation": "ILATE helps decide which function to differentiate (u) and which to integrate (dv)",
+        "result": "A: Which function to choose as u"
+      }
+    ],
+    "metadata": {
+      "hint": "I-L-A-T-E for u"
+    },
+    "time_estimate": 210,
+    "concepts_tested": [
+      "Theory"
+    ],
+    "irt_parameters": {
+      "difficulty_b": 2.42,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.25
+    },
+    "has_image": false,
+    "tags": [
+      "hard",
+      "Theory"
+    ],
+    "weightage_marks": 4,
+    "priority": "HIGH"
+  }
+}
