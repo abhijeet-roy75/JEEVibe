@@ -223,14 +223,10 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
           padding: const EdgeInsets.all(24.0),
           child: Row(
             children: [
-              // Logo on left
-              Text(
-                'JEEVibe',
-                style: AppTextStyles.headerWhite.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
+              // Back button on left
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
               ),
               // Message centered
               Expanded(
@@ -253,8 +249,8 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
                   ],
                 ),
               ),
-              // Empty space on right to balance (same width as logo)
-              const SizedBox(width: 80),
+              // Empty space on right to balance (same width as back button)
+              const SizedBox(width: 48),
             ],
           ),
         ),
