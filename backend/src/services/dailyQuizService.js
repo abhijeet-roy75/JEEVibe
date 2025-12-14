@@ -457,8 +457,20 @@ async function generateDailyQuizInternal(userId) {
     logger.info('Circuit breaker check complete', { userId, shouldTrigger: failureCheck.shouldTrigger });
     
     if (failureCheck.shouldTrigger) {
-      logger.info('Circuit breaker triggered, generating recovery quiz', { userId });
-      return await generateRecoveryQuizWrapper(userId, thetaByChapter);
+      logger.info('Circuit breaker triggered, attempting to generate recovery quiz', { userId });
+      try {
+        const recoveryQuiz = await generateRecoveryQuizWrapper(userId, thetaByChapter);
+        logger.info('Recovery quiz generated successfully', { userId });
+        return recoveryQuiz;
+      } catch (recoveryError) {
+        logger.warn('Recovery quiz generation failed, falling back to normal quiz generation', {
+          userId,
+          error: recoveryError.message
+        });
+        // Fall through to normal quiz generation
+        // This prevents the entire quiz generation from failing when recovery quiz can't be generated
+        // (e.g., due to limited question bank)
+      }
     }
     
     // Get recent question IDs to exclude

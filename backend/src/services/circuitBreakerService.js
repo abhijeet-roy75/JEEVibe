@@ -245,16 +245,24 @@ async function generateRecoveryQuiz(userId, chapterThetas, excludeQuestionIds) {
   try {
     const recoveryQuestions = [];
     
-    // Get review questions (1)
-    const reviewQuestions = await getReviewQuestions(userId, RECOVERY_QUIZ_CONFIG.review);
-    reviewQuestions.forEach(q => {
-      recoveryQuestions.push({
-        ...q,
-        selection_reason: 'review',
-        difficulty_category: 'review'
+    // Get review questions (1) - but don't fail if this fails
+    let reviewQuestions = [];
+    try {
+      reviewQuestions = await getReviewQuestions(userId, RECOVERY_QUIZ_CONFIG.review);
+      reviewQuestions.forEach(q => {
+        recoveryQuestions.push({
+          ...q,
+          selection_reason: 'review',
+          difficulty_category: 'review'
+        });
+        excludeQuestionIds.add(q.question_id);
       });
-      excludeQuestionIds.add(q.question_id);
-    });
+    } catch (reviewError) {
+      logger.warn('Failed to get review questions for recovery quiz, continuing without them', {
+        userId,
+        error: reviewError.message
+      });
+    }
     
     // Select chapters for easy and medium questions
     // Use chapters where student is struggling (low theta)

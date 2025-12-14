@@ -427,23 +427,40 @@ async function selectAnyAvailableQuestions(excludeQuestionIds = new Set(), limit
     }));
     
     // Filter out excluded questions
-    questions = questions.filter(q => !excludeQuestionIds.has(q.question_id));
+    let filteredQuestions = questions.filter(q => !excludeQuestionIds.has(q.question_id));
     
-    // Limit to requested count
-    questions = questions.slice(0, limit);
-    
-    logger.info('Fallback questions selected', {
-      selected: questions.length,
-      limit
+    logger.info('Filtered available questions', { 
+      initialCount: snapshot.size, 
+      filteredCount: filteredQuestions.length,
+      excludeCount: excludeQuestionIds.size
     });
     
-    return questions;
+    // If all questions were excluded, return questions anyway (ignore exclusions)
+    // This ensures we can still generate a quiz even if all questions were recently answered
+    if (filteredQuestions.length === 0 && questions.length > 0) {
+      logger.warn('All questions were excluded, returning questions anyway (ignoring exclusions for fallback)', {
+        totalQuestions: questions.length,
+        excludeCount: excludeQuestionIds.size
+      });
+      filteredQuestions = questions;
+    }
+    
+    // Limit to requested count
+    const selectedQuestions = filteredQuestions.slice(0, limit);
+    
+    logger.info('Fallback questions selected', {
+      selected: selectedQuestions.length,
+      limit,
+      hadToIgnoreExclusions: filteredQuestions.length === questions.length && excludeQuestionIds.size > 0
+    });
+    
+    return selectedQuestions;
   } catch (error) {
     logger.error('Error in fallback question selection', {
       error: error.message,
       stack: error.stack
     });
-    throw error;
+    return []; // Return empty array instead of throwing to allow graceful degradation
   }
 }
 
