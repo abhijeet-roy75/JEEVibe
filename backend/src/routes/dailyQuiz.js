@@ -43,7 +43,7 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
     
-    // Check if user has active quiz
+    // Check if user has active quiz (in progress)
     const activeQuizRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
@@ -71,6 +71,46 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
           generated_at: activeQuiz.generated_at,
           is_recovery_quiz: activeQuiz.is_recovery_quiz || false
         },
+        requestId: req.id
+      });
+    }
+    
+    // Check daily limit: one quiz per day (resets at midnight)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(today);
+    todayEnd.setHours(23, 59, 59, 999);
+    
+    const todayQuizzesRef = db.collection('daily_quizzes')
+      .doc(userId)
+      .collection('quizzes')
+      .where('status', '==', 'completed')
+      .where('completed_at', '>=', admin.firestore.Timestamp.fromDate(today))
+      .where('completed_at', '<=', admin.firestore.Timestamp.fromDate(todayEnd))
+      .limit(1);
+    
+    const todayQuizzesSnapshot = await retryFirestoreOperation(async () => {
+      return await todayQuizzesRef.get();
+    });
+    
+    if (!todayQuizzesSnapshot.empty) {
+      const completedQuiz = todayQuizzesSnapshot.docs[0].data();
+      const completedQuizId = todayQuizzesSnapshot.docs[0].id;
+      
+      // User has already completed a quiz today
+      return res.status(429).json({
+        success: false,
+        error: {
+          code: 'DAILY_LIMIT_REACHED',
+          message: 'You have already completed your daily quiz today. Come back tomorrow for a new quiz!',
+          details: 'Daily quiz limit: 1 quiz per day (resets at midnight)'
+        },
+        completed_quiz: {
+          quiz_id: completedQuizId,
+          quiz_number: completedQuiz.quiz_number,
+          completed_at: completedQuiz.completed_at?.toDate?.()?.toISOString() || completedQuiz.completed_at
+        },
+        next_quiz_available: new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow at midnight
         requestId: req.id
       });
     }
