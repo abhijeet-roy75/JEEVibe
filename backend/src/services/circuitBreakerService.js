@@ -15,6 +15,7 @@ const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
 const { selectQuestionsForChapter, selectAnyAvailableQuestions } = require('./questionSelectionService');
 const { getReviewQuestions } = require('./spacedRepetitionService');
+const { formatChapterKey } = require('./thetaCalculationService');
 
 // ============================================================================
 // CONSTANTS
