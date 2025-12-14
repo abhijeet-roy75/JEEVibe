@@ -330,7 +330,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
             body: Column(
             children: [
               // Header
-              _buildHeader(progress, elapsedTime, quiz.totalQuestions, currentIndex + 1),
+              _buildHeader(progress, elapsedTime, quiz.totalQuestions, currentIndex + 1, quiz),
               // Main content
               Expanded(
                 child: SingleChildScrollView(
@@ -351,6 +351,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                         selectedAnswer: questionState?.selectedAnswer,
                         showAnswerOptions: feedback == null,
                         onAnswerSelected: feedback == null ? _handleAnswerSelection : null,
+                        elapsedSeconds: elapsedTime,
                       ),
                       const SizedBox(height: 16),
                       // Detailed explanation (if answered)
@@ -416,7 +417,10 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     );
   }
 
-  Widget _buildHeader(double progress, int elapsedTime, int totalQuestions, int currentQuestion) {
+  Widget _buildHeader(double progress, int elapsedTime, int totalQuestions, int currentQuestion, DailyQuiz quiz) {
+    final answeredCount = quiz.questions.where((q) => q.answered).length;
+    final correctCount = quiz.questions.where((q) => q.isCorrect == true).length;
+    
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -430,41 +434,95 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Back button and Daily Quiz pill
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Daily Quiz',
-                    style: AppTextStyles.headerWhite.copyWith(fontSize: 20),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time, color: Colors.white, size: 18),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatTime(elapsedTime),
-                        style: AppTextStyles.bodyWhite.copyWith(fontSize: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'Daily Quiz',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              // Progress bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  backgroundColor: Colors.white.withOpacity(0.3),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                  minHeight: 6,
+              const SizedBox(height: 16),
+              // Main title
+              Text(
+                'Adaptive Daily Quiz',
+                style: AppTextStyles.headerWhite.copyWith(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
+              // Subtitle
               Text(
-                'Question $currentQuestion of $totalQuestions',
-                style: AppTextStyles.bodyWhite.copyWith(fontSize: 14),
+                'Personalized for your growth',
+                style: AppTextStyles.bodyWhite.copyWith(
+                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.9),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Progress card
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Question $currentQuestion/$totalQuestions',
+                            style: AppTextStyles.bodyWhite.copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              backgroundColor: Colors.white.withOpacity(0.3),
+                              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                              minHeight: 4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      '$correctCount correct',
+                      style: AppTextStyles.bodyWhite.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -582,33 +640,40 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem('Answered', '$answeredCount/${quiz.totalQuestions}'),
-          Container(width: 1, height: 20, color: AppColors.borderGray),
-          _buildStatItem('Correct', '$correctCount'),
-          Container(width: 1, height: 20, color: AppColors.borderGray),
-          _buildStatItem('Progress', quiz.totalQuestions > 0 
-              ? '${((currentIndex + 1) / quiz.totalQuestions * 100).toInt()}%'
-              : '0%'),
+          _buildStatItem(
+            icon: Icons.my_location,
+            text: '$answeredCount/${quiz.totalQuestions} answered',
+            color: AppColors.primaryPurple,
+          ),
+          _buildStatItem(
+            icon: Icons.check_circle,
+            text: '$correctCount correct',
+            color: AppColors.successGreen,
+          ),
+          _buildStatItem(
+            icon: Icons.local_fire_department,
+            text: 'Stay focused!',
+            color: AppColors.warningAmber,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
-    return Column(
+  Widget _buildStatItem({
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Row(
       children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(width: 6),
         Text(
-          value,
-          style: AppTextStyles.bodyMedium.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.primaryPurple,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
+          text,
           style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textLight,
+            color: AppColors.textMedium,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
