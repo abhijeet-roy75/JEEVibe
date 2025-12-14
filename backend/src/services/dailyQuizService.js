@@ -267,8 +267,18 @@ async function generateDailyQuizInternal(userId) {
     const excludeQuestionIds = await getRecentQuestionIds(userId);
     
     // Get review questions (1 per quiz)
-    const reviewQuestions = await getReviewQuestions(userId, REVIEW_QUESTIONS_PER_QUIZ);
-    reviewQuestions.forEach(q => excludeQuestionIds.add(q.question_id));
+    // If review questions fail (e.g., missing index), continue without them
+    let reviewQuestions = [];
+    try {
+      reviewQuestions = await getReviewQuestions(userId, REVIEW_QUESTIONS_PER_QUIZ);
+      reviewQuestions.forEach(q => excludeQuestionIds.add(q.question_id));
+    } catch (error) {
+      logger.warn('Failed to get review questions, continuing without them', {
+        userId,
+        error: error.message
+      });
+      reviewQuestions = []; // Continue without review questions
+    }
     
     let selectedQuestions = [];
     
@@ -357,16 +367,28 @@ async function generateDailyQuizInternal(userId) {
         userId,
         selected: selectedQuestions.length,
         required: QUIZ_SIZE,
-        learningPhase
+        learningPhase,
+        note: 'This may be due to limited question bank. Consider adding more questions to the database.'
       });
       
-      // For production, we should either:
-      // 1. Throw error and let frontend handle
-      // 2. Fill with fallback questions
-      // For now, we'll proceed with available questions but log warning
+      // If we have some questions, proceed with partial quiz
+      // If we have zero questions, throw error
       if (selectedQuestions.length === 0) {
-        throw new Error('No questions available for quiz generation. Please ensure question bank is populated.');
+        throw new Error(
+          'No questions available for quiz generation. ' +
+          'This is likely due to:\n' +
+          '1. Limited question bank - not all chapters have questions yet\n' +
+          '2. All available questions were recently answered\n' +
+          'Please ensure question bank is populated with questions for the chapters in your assessment.'
+        );
       }
+      
+      // Log that we're proceeding with partial quiz
+      logger.info('Proceeding with partial quiz due to limited question bank', {
+        userId,
+        questionsCount: selectedQuestions.length,
+        required: QUIZ_SIZE
+      });
     }
     
     // Assign positions

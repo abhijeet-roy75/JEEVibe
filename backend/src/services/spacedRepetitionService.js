@@ -114,27 +114,43 @@ async function getReviewQuestions(userId, limit = MAX_REVIEW_QUESTIONS) {
     
     const cutoffTimestamp = admin.firestore.Timestamp.fromDate(cutoffDate);
     
-    // Query daily quiz responses
-    const dailyQuizResponsesRef = db.collection('daily_quiz_responses')
-      .doc(userId)
-      .collection('responses')
-      .where('answered_at', '>=', cutoffTimestamp)
-      .where('is_correct', '==', false); // Only incorrect answers
+    let dailyQuizSnapshot;
+    let assessmentSnapshot;
     
-    const dailyQuizSnapshot = await retryFirestoreOperation(async () => {
-      return await dailyQuizResponsesRef.get();
-    });
-    
-    // Query assessment responses
-    const assessmentResponsesRef = db.collection('assessment_responses')
-      .doc(userId)
-      .collection('responses')
-      .where('answered_at', '>=', cutoffTimestamp)
-      .where('is_correct', '==', false);
-    
-    const assessmentSnapshot = await retryFirestoreOperation(async () => {
-      return await assessmentResponsesRef.get();
-    });
+    try {
+      // Query daily quiz responses
+      const dailyQuizResponsesRef = db.collection('daily_quiz_responses')
+        .doc(userId)
+        .collection('responses')
+        .where('answered_at', '>=', cutoffTimestamp)
+        .where('is_correct', '==', false); // Only incorrect answers
+      
+      dailyQuizSnapshot = await retryFirestoreOperation(async () => {
+        return await dailyQuizResponsesRef.get();
+      });
+      
+      // Query assessment responses
+      const assessmentResponsesRef = db.collection('assessment_responses')
+        .doc(userId)
+        .collection('responses')
+        .where('answered_at', '>=', cutoffTimestamp)
+        .where('is_correct', '==', false);
+      
+      assessmentSnapshot = await retryFirestoreOperation(async () => {
+        return await assessmentResponsesRef.get();
+      });
+    } catch (queryError) {
+      // Handle missing index error gracefully
+      if (queryError.message && queryError.message.includes('index')) {
+        logger.warn('Review questions query requires Firestore index. Skipping review questions for now.', {
+          userId,
+          error: queryError.message,
+          note: 'Deploy firestore indexes using: firebase deploy --only firestore:indexes'
+        });
+        return []; // Return empty array to allow quiz generation to continue
+      }
+      throw queryError; // Re-throw if it's a different error
+    }
     
     // Combine all incorrect responses
     const allResponses = [];
