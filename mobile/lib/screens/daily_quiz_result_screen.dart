@@ -320,15 +320,41 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
           padding: const EdgeInsets.all(24.0),
           child: Row(
             children: [
-              // Logo on left
-              Text(
-                'JEEVibe',
-                style: AppTextStyles.headerWhite.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
+              // Logo on left (circular)
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/JEEVibeLogo_240.png',
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.white,
+                        child: const Icon(
+                          Icons.school,
+                          color: Color(0xFF9333EA),
+                          size: 24,
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
+              const SizedBox(width: 12),
               // Message centered
               Expanded(
                 child: Column(
@@ -350,8 +376,8 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
                   ],
                 ),
               ),
-              // Empty space on right to balance (same width as logo)
-              const SizedBox(width: 80),
+              // Empty space on right to balance (same width as logo + spacing)
+              const SizedBox(width: 60),
             ],
           ),
         ),
