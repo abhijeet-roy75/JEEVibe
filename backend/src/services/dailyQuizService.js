@@ -61,48 +61,158 @@ function getLearningPhase(completedQuizCount) {
 
 /**
  * Select chapters for exploration phase
- * Prioritizes chapters with fewer attempts
+ * Prioritizes chapters with fewer attempts, ensuring subject diversity
  * 
  * @param {Object} chapterThetas - Object mapping chapterKey to theta data
  * @param {number} count - Number of chapters to select
  * @returns {Array} Selected chapter keys
  */
 function selectChaptersForExploration(chapterThetas, count = 7) {
-  const chapters = Object.entries(chapterThetas)
-    .map(([key, data]) => ({
-      chapter_key: key,
-      attempts: data.attempts || 0,
-      theta: data.theta || 0
-    }))
-    .sort((a, b) => {
-      // Prioritize chapters with fewer attempts
+  // Group chapters by subject
+  const chaptersBySubject = {
+    physics: [],
+    chemistry: [],
+    mathematics: []
+  };
+  
+  // Extract subject from chapter key (format: "subject_chapter_name")
+  Object.entries(chapterThetas).forEach(([key, data]) => {
+    const subject = key.split('_')[0]?.toLowerCase();
+    if (subject && chaptersBySubject[subject]) {
+      chaptersBySubject[subject].push({
+        chapter_key: key,
+        attempts: data.attempts || 0,
+        theta: data.theta || 0
+      });
+    }
+  });
+  
+  // Sort each subject's chapters by attempts (fewer attempts first), then by theta
+  Object.keys(chaptersBySubject).forEach(subject => {
+    chaptersBySubject[subject].sort((a, b) => {
       if (a.attempts !== b.attempts) {
         return a.attempts - b.attempts;
       }
-      // Secondary: prioritize lower theta (weaker areas)
       return a.theta - b.theta;
     });
+  });
   
-  return chapters.slice(0, count).map(c => c.chapter_key);
+  // Select chapters ensuring subject diversity
+  // Target distribution: ~35% physics, ~30% chemistry, ~35% mathematics
+  const selected = [];
+  const subjectTargets = {
+    physics: Math.ceil(count * 0.35),
+    chemistry: Math.ceil(count * 0.30),
+    mathematics: Math.ceil(count * 0.35)
+  };
+  
+  // Round-robin selection to ensure diversity
+  const subjectKeys = ['physics', 'chemistry', 'mathematics'];
+  let subjectIndex = 0;
+  let selectedCount = 0;
+  
+  while (selectedCount < count) {
+    let progressMade = false;
+    
+    // Try each subject in round-robin
+    for (let i = 0; i < subjectKeys.length && selectedCount < count; i++) {
+      const subject = subjectKeys[(subjectIndex + i) % subjectKeys.length];
+      const subjectChapters = chaptersBySubject[subject];
+      const subjectSelected = selected.filter(c => {
+        const cSubject = c.split('_')[0]?.toLowerCase();
+        return cSubject === subject;
+      }).length;
+      
+      // Check if we've reached target for this subject or no more chapters available
+      if (subjectSelected >= subjectTargets[subject] || subjectChapters.length === 0) {
+        continue;
+      }
+      
+      // Select the next chapter from this subject
+      const nextChapter = subjectChapters.shift();
+      if (nextChapter) {
+        selected.push(nextChapter.chapter_key);
+        selectedCount++;
+        progressMade = true;
+      }
+    }
+    
+    // If no progress made, break to avoid infinite loop
+    if (!progressMade) {
+      break;
+    }
+    
+    subjectIndex = (subjectIndex + 1) % subjectKeys.length;
+  }
+  
+  // If we still need more chapters, fill from any available
+  if (selectedCount < count) {
+    const remaining = [];
+    Object.values(chaptersBySubject).forEach(subjectChapters => {
+      remaining.push(...subjectChapters);
+    });
+    
+    remaining.sort((a, b) => {
+      if (a.attempts !== b.attempts) {
+        return a.attempts - b.attempts;
+      }
+      return a.theta - b.theta;
+    });
+    
+    while (selectedCount < count && remaining.length > 0) {
+      const nextChapter = remaining.shift();
+      if (!selected.includes(nextChapter.chapter_key)) {
+        selected.push(nextChapter.chapter_key);
+        selectedCount++;
+      }
+    }
+  }
+  
+  logger.info('Chapters selected for exploration with subject diversity', {
+    selected,
+    subjectDistribution: {
+      physics: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'physics').length,
+      chemistry: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'chemistry').length,
+      mathematics: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'mathematics').length
+    }
+  });
+  
+  return selected;
 }
 
 /**
  * Select chapters for exploitation phase (deliberate practice)
- * Prioritizes weak chapters (low theta)
+ * Prioritizes weak chapters (low theta), ensuring subject diversity
  * 
  * @param {Object} chapterThetas - Object mapping chapterKey to theta data
  * @param {number} count - Number of chapters to select
  * @returns {Array} Selected chapter keys
  */
 function selectChaptersForExploitation(chapterThetas, count = 6) {
-  const chapters = Object.entries(chapterThetas)
+  // Group chapters by subject
+  const chaptersBySubject = {
+    physics: [],
+    chemistry: [],
+    mathematics: []
+  };
+  
+  // Extract subject from chapter key and filter for explored chapters (>= 2 attempts)
+  Object.entries(chapterThetas)
     .filter(([_, data]) => (data.attempts || 0) >= 2) // At least 2 attempts (explored)
-    .map(([key, data]) => ({
-      chapter_key: key,
-      theta: data.theta || 0,
-      attempts: data.attempts || 0
-    }))
-    .sort((a, b) => {
+    .forEach(([key, data]) => {
+      const subject = key.split('_')[0]?.toLowerCase();
+      if (subject && chaptersBySubject[subject]) {
+        chaptersBySubject[subject].push({
+          chapter_key: key,
+          theta: data.theta || 0,
+          attempts: data.attempts || 0
+        });
+      }
+    });
+  
+  // Sort each subject's chapters by theta (lower = weaker = priority), then by attempts
+  Object.keys(chaptersBySubject).forEach(subject => {
+    chaptersBySubject[subject].sort((a, b) => {
       // Prioritize lower theta (weaker areas)
       if (Math.abs(a.theta - b.theta) > 0.1) {
         return a.theta - b.theta;
@@ -110,8 +220,89 @@ function selectChaptersForExploitation(chapterThetas, count = 6) {
       // Secondary: prioritize more attempts (more data)
       return b.attempts - a.attempts;
     });
+  });
   
-  return chapters.slice(0, count).map(c => c.chapter_key);
+  // Select chapters ensuring subject diversity
+  // Target distribution: ~35% physics, ~30% chemistry, ~35% mathematics
+  const selected = [];
+  const subjectTargets = {
+    physics: Math.ceil(count * 0.35),
+    chemistry: Math.ceil(count * 0.30),
+    mathematics: Math.ceil(count * 0.35)
+  };
+  
+  // Round-robin selection to ensure diversity
+  const subjectKeys = ['physics', 'chemistry', 'mathematics'];
+  let subjectIndex = 0;
+  let selectedCount = 0;
+  
+  while (selectedCount < count) {
+    let progressMade = false;
+    
+    // Try each subject in round-robin
+    for (let i = 0; i < subjectKeys.length && selectedCount < count; i++) {
+      const subject = subjectKeys[(subjectIndex + i) % subjectKeys.length];
+      const subjectChapters = chaptersBySubject[subject];
+      const subjectSelected = selected.filter(c => {
+        const cSubject = c.split('_')[0]?.toLowerCase();
+        return cSubject === subject;
+      }).length;
+      
+      // Check if we've reached target for this subject or no more chapters available
+      if (subjectSelected >= subjectTargets[subject] || subjectChapters.length === 0) {
+        continue;
+      }
+      
+      // Select the next chapter from this subject
+      const nextChapter = subjectChapters.shift();
+      if (nextChapter) {
+        selected.push(nextChapter.chapter_key);
+        selectedCount++;
+        progressMade = true;
+      }
+    }
+    
+    // If no progress made, break to avoid infinite loop
+    if (!progressMade) {
+      break;
+    }
+    
+    subjectIndex = (subjectIndex + 1) % subjectKeys.length;
+  }
+  
+  // If we still need more chapters, fill from any available
+  if (selectedCount < count) {
+    const remaining = [];
+    Object.values(chaptersBySubject).forEach(subjectChapters => {
+      remaining.push(...subjectChapters);
+    });
+    
+    remaining.sort((a, b) => {
+      if (Math.abs(a.theta - b.theta) > 0.1) {
+        return a.theta - b.theta;
+      }
+      return b.attempts - a.attempts;
+    });
+    
+    while (selectedCount < count && remaining.length > 0) {
+      const nextChapter = remaining.shift();
+      if (!selected.includes(nextChapter.chapter_key)) {
+        selected.push(nextChapter.chapter_key);
+        selectedCount++;
+      }
+    }
+  }
+  
+  logger.info('Chapters selected for exploitation with subject diversity', {
+    selected,
+    subjectDistribution: {
+      physics: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'physics').length,
+      chemistry: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'chemistry').length,
+      mathematics: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'mathematics').length
+    }
+  });
+  
+  return selected;
 }
 
 // ============================================================================
