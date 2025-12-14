@@ -8,7 +8,7 @@ import '../../theme/app_text_styles.dart';
 import '../safe_svg_widget.dart';
 import 'package:flutter_html/flutter_html.dart';
 
-class QuestionCardWidget extends StatelessWidget {
+class QuestionCardWidget extends StatefulWidget {
   final DailyQuizQuestion question;
   final String? selectedAnswer;
   final bool showAnswerOptions;
@@ -21,6 +21,13 @@ class QuestionCardWidget extends StatelessWidget {
     this.showAnswerOptions = true,
     this.onAnswerSelected,
   });
+
+  @override
+  State<QuestionCardWidget> createState() => _QuestionCardWidgetState();
+}
+
+class _QuestionCardWidgetState extends State<QuestionCardWidget> {
+  final TextEditingController _numericalController = TextEditingController();
 
   Color _getSubjectColor(String? subject) {
     switch (subject?.toLowerCase()) {
@@ -53,7 +60,17 @@ class QuestionCardWidget extends StatelessWidget {
   }
 
   @override
+  void dispose() {
+    _numericalController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final question = widget.question;
+    final selectedAnswer = widget.selectedAnswer;
+    final showAnswerOptions = widget.showAnswerOptions;
+    final onAnswerSelected = widget.onAnswerSelected;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
@@ -84,7 +101,7 @@ class QuestionCardWidget extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                '${question.subject} • ${question.chapter}',
+                '${widget.question.subject} • ${widget.question.chapter}',
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -104,7 +121,7 @@ class QuestionCardWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  'Question ${question.position}',
+                  'Question ${widget.question.position}',
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.primaryPurple,
                   ),
@@ -127,9 +144,9 @@ class QuestionCardWidget extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           // Question text
-          if (question.questionTextHtml != null)
+          if (widget.question.questionTextHtml != null)
             Html(
-              data: question.questionTextHtml,
+              data: widget.question.questionTextHtml,
               style: {
                 'body': Style(
                   margin: Margins.zero,
@@ -139,20 +156,78 @@ class QuestionCardWidget extends StatelessWidget {
             )
           else
             Text(
-              question.questionText,
+              widget.question.questionText,
               style: AppTextStyles.bodyLarge.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
-          if (question.hasImage) ...[
+          if (widget.question.hasImage) ...[
             const SizedBox(height: 16),
-            SafeSvgWidget(url: question.imageUrl!),
+            SafeSvgWidget(url: widget.question.imageUrl!),
           ],
-          if (showAnswerOptions && question.options != null) ...[
+          if (showAnswerOptions && widget.question.options != null) ...[
             const SizedBox(height: 24),
-            ...question.options!.map((option) => _buildOption(option)),
+            ...widget.question.options!.map((option) => _buildOption(option)),
+          ],
+          // Numerical input field
+          if (showAnswerOptions && widget.question.isNumerical) ...[
+            const SizedBox(height: 24),
+            _buildNumericalInput(),
+            const SizedBox(height: 16),
+            // Submit button for numerical questions
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _numericalController.text.isNotEmpty && onAnswerSelected != null
+                    ? () => onAnswerSelected!(_numericalController.text)
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryPurple,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Submit Answer'),
+              ),
+            ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildNumericalInput() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(
+          color: AppColors.borderGray,
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        controller: _numericalController,
+        keyboardType: TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          hintText: 'Enter your answer',
+          hintStyle: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textLight,
+          ),
+          border: InputBorder.none,
+        ),
+        style: AppTextStyles.bodyMedium,
+        onChanged: (value) {
+          setState(() {}); // Update button state
+        },
+        onSubmitted: (value) {
+          if (value.isNotEmpty && widget.onAnswerSelected != null) {
+            widget.onAnswerSelected!(value);
+          }
+        },
       ),
     );
   }
@@ -161,12 +236,12 @@ class QuestionCardWidget extends StatelessWidget {
     final optionId = option.optionId;
     final optionText = option.text;
     final optionHtml = option.html;
-    final isSelected = selectedAnswer == optionId;
+    final isSelected = widget.selectedAnswer == optionId;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: onAnswerSelected != null ? () => onAnswerSelected!(optionId) : null,
+        onTap: widget.onAnswerSelected != null ? () => widget.onAnswerSelected!(optionId) : null,
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(16),

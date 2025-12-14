@@ -29,9 +29,12 @@ function validateUserId(userId) {
 }
 
 /**
- * Validate assessment question ID format
- * Format: ASSESS_{SUBJECT}_{CHAPTER}_{NUMBER}
- * Example: ASSESS_PHY_MECH_001
+ * Validate question ID format
+ * Supports both assessment questions (ASSESS_*) and daily quiz questions (various formats)
+ * Examples: 
+ *   - ASSESS_PHY_MECH_001 (assessment)
+ *   - CHEM_BOND_E_001 (daily quiz)
+ *   - PHY_MAGN_E_004 (daily quiz)
  * 
  * @param {string} questionId - Question ID to validate
  * @returns {string} Validated questionId
@@ -44,12 +47,20 @@ function validateQuestionId(questionId) {
   
   const trimmed = questionId.trim();
   
-  // Pattern: ASSESS_{SUBJECT}_{CHAPTER}_{3_DIGITS}
-  if (!/^ASSESS_[A-Z]+_[A-Z]+_\d{3}$/.test(trimmed)) {
-    throw new Error('Invalid question_id format: must match ASSESS_{SUBJECT}_{CHAPTER}_{NUMBER}');
+  // Allow various formats:
+  // 1. Assessment format: ASSESS_{SUBJECT}_{CHAPTER}_{3_DIGITS}
+  // 2. Daily quiz format: {SUBJECT}_{CHAPTER}_{DIFFICULTY}_{NUMBER} (e.g., CHEM_BOND_E_001)
+  // 3. Daily quiz format: {SUBJECT}_{CHAPTER}_{NUMBER} (e.g., PHY_MAGN_E_004)
+  // 4. Any alphanumeric with underscores and dashes (for flexibility)
+  const assessmentPattern = /^ASSESS_[A-Z]+_[A-Z]+_\d{3}$/;
+  const dailyQuizPattern = /^[A-Z]+(_[A-Z]+)+(_[A-Z0-9]+)*$/;
+  const flexiblePattern = /^[A-Za-z0-9_-]+$/;
+  
+  if (assessmentPattern.test(trimmed) || dailyQuizPattern.test(trimmed) || flexiblePattern.test(trimmed)) {
+    return trimmed;
   }
   
-  return trimmed;
+  throw new Error('Invalid question_id format: must be a valid question identifier');
 }
 
 /**
