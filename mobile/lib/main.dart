@@ -22,22 +22,10 @@ import 'services/firebase/pin_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Keep native splash screen visible for at least 3 seconds
-  // The native splash (iOS LaunchScreen/Android launch_background) shows until Flutter draws
-  // By delaying runApp(), we keep the native splash visible longer
-  final splashStartTime = DateTime.now();
-  
   // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
-  // Ensure native splash screen shows for at least 3 seconds before Flutter draws first frame
-  final elapsed = DateTime.now().difference(splashStartTime);
-  const minimumSplashDuration = Duration(seconds: 3);
-  if (elapsed < minimumSplashDuration) {
-    await Future.delayed(minimumSplashDuration - elapsed);
-  }
   
   // Suppress harmless SVG warnings and LaTeX debug messages
   // These are informational and don't affect functionality

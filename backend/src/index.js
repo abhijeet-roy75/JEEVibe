@@ -18,22 +18,28 @@ logger.info('🔥 Firebase connected');
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection', {
+  const errorInfo = {
     promise: promise.toString(),
     reason: reason instanceof Error ? {
       message: reason.message,
       stack: reason.stack,
     } : reason,
-  });
+  };
+  logger.error('Unhandled Rejection', errorInfo);
+  // Also log to console for Render.com visibility
+  console.error('UNHANDLED REJECTION:', JSON.stringify(errorInfo, null, 2));
   // Don't exit, just log the error
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception', {
+  const errorInfo = {
     message: error.message,
     stack: error.stack,
-  });
+  };
+  logger.error('Uncaught Exception', errorInfo);
+  // Also log to console for Render.com visibility
+  console.error('UNCAUGHT EXCEPTION:', JSON.stringify(errorInfo, null, 2));
   // Don't exit immediately, log and continue
 });
 

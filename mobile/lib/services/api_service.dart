@@ -490,9 +490,18 @@ class ApiService {
             throw Exception(errorMsg);
           }
         } else {
-          final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to generate quiz';
-          throw Exception(errorMsg);
+          try {
+            final errorData = json.decode(response.body);
+            final errorMsg = errorData['error']?['message'] ?? 
+                           errorData['error'] ?? 
+                           'Failed to generate quiz';
+            final requestId = errorData['requestId'];
+            print('API Error: $errorMsg (Status: ${response.statusCode}, Request ID: $requestId)');
+            throw Exception('$errorMsg${requestId != null ? ' (Request ID: $requestId)' : ''}');
+          } catch (e) {
+            if (e is Exception) rethrow;
+            throw Exception('Server error (${response.statusCode}): ${response.body.substring(0, 200)}');
+          }
         }
       } on SocketException {
         throw Exception('No internet connection. Please check your network and try again.');

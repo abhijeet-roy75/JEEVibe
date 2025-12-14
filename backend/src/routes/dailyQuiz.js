@@ -76,7 +76,14 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
     }
     
     // Generate new quiz
+    logger.info('Generating daily quiz', { userId, requestId: req.id });
     const quizData = await generateDailyQuiz(userId);
+    logger.info('Daily quiz generated successfully', { 
+      userId, 
+      quizId: quizData.quiz_id,
+      questionCount: quizData.questions?.length || 0,
+      requestId: req.id 
+    });
     
     // Save quiz to Firestore atomically using transaction to prevent concurrent generation
     const quizRef = db.collection('daily_quizzes')

@@ -46,8 +46,8 @@ function errorHandler(err, req, res, next) {
   // Ensure requestId exists (might not if error occurs before requestId middleware)
   const requestId = req.id || 'unknown';
   
-  // Log error with context
-  logger.error('Request error', {
+  // Log error with context - use console.error for Render.com visibility
+  const errorInfo = {
     requestId,
     method: req.method || 'unknown',
     path: req.path || 'unknown',
@@ -57,8 +57,16 @@ function errorHandler(err, req, res, next) {
       stack: err.stack,
       statusCode: err.statusCode || 500,
       details: err.details,
+      code: err.code,
+      name: err.name,
     },
-  });
+  };
+  
+  // Log to winston
+  logger.error('Request error', errorInfo);
+  
+  // Also log to console for Render.com (winston console transport might not capture all errors)
+  console.error('ERROR:', JSON.stringify(errorInfo, null, 2));
 
   // Handle ApiError (known errors)
   if (err instanceof ApiError) {
@@ -108,8 +116,11 @@ function errorHandler(err, req, res, next) {
     
     return res.status(statusCode).json({
       success: false,
-      error: 'Database error',
-      details: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred',
+      error: {
+        code: 'DATABASE_ERROR',
+        message: 'Database error',
+        details: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred'
+      },
       requestId,
     });
   }
