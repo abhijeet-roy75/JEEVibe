@@ -226,13 +226,15 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
     const feedback = generateFeedback(questionData, validation.isCorrect, validation.validatedAnswer);
     
     // Prepare response data
+    // Note: Cannot use FieldValue.serverTimestamp() inside arrays, so use Timestamp.now() instead
+    const now = admin.firestore.Timestamp.now();
     const responseData = {
       question_id: validatedQuestionId,
       student_answer: validation.validatedAnswer,
       correct_answer: questionData.correct_answer,
       is_correct: validation.isCorrect,
       time_taken_seconds: validatedTime,
-      answered_at: admin.firestore.FieldValue.serverTimestamp(),
+      answered_at: now,
       feedback: feedback
     };
     
