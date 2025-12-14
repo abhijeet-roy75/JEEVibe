@@ -212,6 +212,8 @@ function scoreQuestions(questions, theta) {
  */
 async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds = new Set(), count = 1) {
   try {
+    logger.info('Selecting questions for chapter', { chapterKey, theta, excludeCount: excludeQuestionIds.size, count });
+    
     // Validate chapter key format
     if (!chapterKey || typeof chapterKey !== 'string') {
       logger.warn('Invalid chapter key provided', { chapterKey });
@@ -237,18 +239,22 @@ async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds =
     }
     
     const subject = parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase(); // Capitalize first letter, lowercase rest
+    logger.info('Parsed chapter key', { chapterKey, subject, parts });
     const chapterFromKey = parts.slice(1).join(' ').replace(/_/g, ' '); // Convert underscores to spaces
     
     // Query questions for this chapter
     // Try exact match first, then case-insensitive fallback
+    logger.info('Querying Firestore for questions', { chapterKey, subject, chapter: chapterFromKey });
     let questionsRef = db.collection('questions')
       .where('subject', '==', subject)
       .where('chapter', '==', chapterFromKey)
       .limit(MAX_CANDIDATES);
     
+    logger.info('Executing Firestore query (exact match)', { chapterKey });
     let snapshot = await retryFirestoreOperation(async () => {
       return await questionsRef.get();
     });
+    logger.info('Firestore query completed (exact match)', { chapterKey, resultCount: snapshot.size });
     
     // If no results, try with capitalized chapter name (Title Case)
     if (snapshot.empty && chapterFromKey) {
@@ -257,14 +263,17 @@ async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds =
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
       
+      logger.info('Trying Title Case chapter name', { chapterKey, titleCaseChapter });
       questionsRef = db.collection('questions')
         .where('subject', '==', subject)
         .where('chapter', '==', titleCaseChapter)
         .limit(MAX_CANDIDATES);
       
+      logger.info('Executing Firestore query (Title Case)', { chapterKey });
       snapshot = await retryFirestoreOperation(async () => {
         return await questionsRef.get();
       });
+      logger.info('Firestore query completed (Title Case)', { chapterKey, resultCount: snapshot.size });
     }
     
     if (snapshot.empty) {

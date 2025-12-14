@@ -32,7 +32,7 @@ const EXPLORATION_PHASE_QUIZZES = 14; // Quizzes 0-13 are exploration
 const REVIEW_QUESTIONS_PER_QUIZ = 1; // Number of review questions
 const EXPLORATION_QUESTIONS_PER_QUIZ = 7; // Exploration questions in exploration phase
 const DELIBERATE_PRACTICE_QUESTIONS_PER_QUIZ = 6; // Deliberate practice in exploitation phase
-const QUIZ_GENERATION_TIMEOUT_MS = 30000; // 30 seconds timeout for quiz generation
+const QUIZ_GENERATION_TIMEOUT_MS = 60000; // 60 seconds timeout for quiz generation
 
 // Subject distribution targets
 const SUBJECT_DISTRIBUTION = {
@@ -234,8 +234,11 @@ async function generateDailyQuiz(userId) {
 
 async function generateDailyQuizInternal(userId) {
   try {
+    logger.info('Starting quiz generation internal', { userId });
+    
     // Get user data
     const userRef = db.collection('users').doc(userId);
+    logger.info('Fetching user data', { userId });
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
@@ -245,6 +248,7 @@ async function generateDailyQuizInternal(userId) {
     }
     
     const userData = userDoc.data();
+    logger.info('User data fetched', { userId, hasAssessment: !!userData.assessment?.completed_at });
     
     // Check if assessment completed
     if (!userData.assessment?.completed_at) {
@@ -254,9 +258,12 @@ async function generateDailyQuizInternal(userId) {
     const completedQuizCount = userData.completed_quiz_count || 0;
     const learningPhase = getLearningPhase(completedQuizCount);
     const thetaByChapter = userData.theta_by_chapter || {};
+    logger.info('Learning phase determined', { userId, learningPhase, completedQuizCount, chapterCount: Object.keys(thetaByChapter).length });
     
     // Check circuit breaker
+    logger.info('Checking circuit breaker', { userId });
     const failureCheck = await checkConsecutiveFailures(userId);
+    logger.info('Circuit breaker check complete', { userId, shouldTrigger: failureCheck.shouldTrigger });
     
     if (failureCheck.shouldTrigger) {
       logger.info('Circuit breaker triggered, generating recovery quiz', { userId });
@@ -264,14 +271,18 @@ async function generateDailyQuizInternal(userId) {
     }
     
     // Get recent question IDs to exclude
+    logger.info('Getting recent question IDs', { userId });
     const excludeQuestionIds = await getRecentQuestionIds(userId);
+    logger.info('Recent question IDs fetched', { userId, excludeCount: excludeQuestionIds.size });
     
     // Get review questions (1 per quiz)
     // If review questions fail (e.g., missing index), continue without them
     let reviewQuestions = [];
     try {
+      logger.info('Getting review questions', { userId });
       reviewQuestions = await getReviewQuestions(userId, REVIEW_QUESTIONS_PER_QUIZ);
       reviewQuestions.forEach(q => excludeQuestionIds.add(q.question_id));
+      logger.info('Review questions fetched', { userId, reviewCount: reviewQuestions.length });
     } catch (error) {
       logger.warn('Failed to get review questions, continuing without them', {
         userId,
@@ -283,12 +294,15 @@ async function generateDailyQuizInternal(userId) {
     let selectedQuestions = [];
     
     if (learningPhase === 'exploration') {
+      logger.info('Exploration phase: selecting chapters', { userId });
       // Exploration phase: Map ability across topics
       const selectedChapters = selectChaptersForExploration(thetaByChapter, EXPLORATION_QUESTIONS_PER_QUIZ);
+      logger.info('Chapters selected for exploration', { userId, selectedChapters, count: selectedChapters.length });
       
       if (selectedChapters.length === 0) {
         // Fallback: use all available chapters
         selectedChapters.push(...Object.keys(thetaByChapter).slice(0, EXPLORATION_QUESTIONS_PER_QUIZ));
+        logger.info('Using fallback chapters', { userId, selectedChapters });
       }
       
       // Build chapter thetas map for selection
@@ -298,21 +312,26 @@ async function generateDailyQuizInternal(userId) {
         chapterThetasMap[chapterKey] = chapterData?.theta || 0.0;
       });
       
+      logger.info('Selecting exploration questions', { userId, chapterCount: Object.keys(chapterThetasMap).length, chapters: Object.keys(chapterThetasMap) });
       // Select questions for selected chapters
       const explorationQuestions = await selectQuestionsForChapters(
         chapterThetasMap,
         excludeQuestionIds,
         { questionsPerChapter: 1 }
       );
+      logger.info('Exploration questions selected', { userId, questionCount: explorationQuestions.length });
       
       selectedQuestions.push(...explorationQuestions);
     } else {
+      logger.info('Exploitation phase: selecting weak chapters', { userId });
       // Exploitation phase: Focus on weak areas
       const selectedChapters = selectChaptersForExploitation(thetaByChapter, DELIBERATE_PRACTICE_QUESTIONS_PER_QUIZ);
+      logger.info('Weak chapters selected', { userId, selectedChapters, count: selectedChapters.length });
       
       if (selectedChapters.length === 0) {
         // Fallback: use all available chapters
         selectedChapters.push(...Object.keys(thetaByChapter).slice(0, DELIBERATE_PRACTICE_QUESTIONS_PER_QUIZ));
+        logger.info('Using fallback chapters', { userId, selectedChapters });
       }
       
       const chapterThetasMap = {};
@@ -321,11 +340,13 @@ async function generateDailyQuizInternal(userId) {
         chapterThetasMap[chapterKey] = chapterData?.theta || 0.0;
       });
       
+      logger.info('Selecting practice questions', { userId, chapterCount: Object.keys(chapterThetasMap).length, chapters: Object.keys(chapterThetasMap) });
       const practiceQuestions = await selectQuestionsForChapters(
         chapterThetasMap,
         excludeQuestionIds,
         { questionsPerChapter: 1 }
       );
+      logger.info('Practice questions selected', { userId, questionCount: practiceQuestions.length });
       
       selectedQuestions.push(...practiceQuestions);
     }
@@ -338,6 +359,8 @@ async function generateDailyQuizInternal(userId) {
         chapter_key: q.chapter_key || formatChapterKey(q.subject, q.chapter)
       });
     });
+    
+    logger.info('Processing selected questions', { userId, selectedCount: selectedQuestions.length });
     
     // Remove duplicates before balancing
     const uniqueQuestions = [];
@@ -356,10 +379,14 @@ async function generateDailyQuizInternal(userId) {
       uniqueQuestions.push(q);
     }
     selectedQuestions = uniqueQuestions;
+    logger.info('Duplicates removed', { userId, uniqueCount: selectedQuestions.length });
     
     // Balance subjects and limit to QUIZ_SIZE
+    logger.info('Balancing subjects', { userId });
     selectedQuestions = balanceSubjects(selectedQuestions);
+    logger.info('Subjects balanced', { userId, balancedCount: selectedQuestions.length });
     selectedQuestions = selectedQuestions.slice(0, QUIZ_SIZE);
+    logger.info('Questions limited to quiz size', { userId, finalCount: selectedQuestions.length });
     
     // Validate quiz size
     if (selectedQuestions.length < QUIZ_SIZE) {

@@ -479,7 +479,7 @@ class ApiService {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $authToken',
           },
-        ).timeout(const Duration(seconds: 30));
+        ).timeout(const Duration(seconds: 60));
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
