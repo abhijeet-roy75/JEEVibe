@@ -145,6 +145,14 @@
         { "fieldPath": "chapters_covered", "arrayConfig": "CONTAINS" },
         { "fieldPath": "completed_at", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "quizzes",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "generated_at", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
