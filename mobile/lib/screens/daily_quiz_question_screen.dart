@@ -380,6 +380,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                                     : null)
                             : null,
                         elapsedSeconds: elapsedTime,
+                        feedback: feedback,
                       ),
                       const SizedBox(height: 16),
                       // Detailed explanation (if answered)

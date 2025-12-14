@@ -15,6 +15,7 @@ class QuestionCardWidget extends StatefulWidget {
   final Function(String)? onAnswerSelected;
   final VoidCallback? onAnswerSubmitted;
   final int? elapsedSeconds;
+  final AnswerFeedback? feedback;
 
   const QuestionCardWidget({
     super.key,
@@ -24,6 +25,7 @@ class QuestionCardWidget extends StatefulWidget {
     this.onAnswerSelected,
     this.onAnswerSubmitted,
     this.elapsedSeconds,
+    this.feedback,
   });
 
   @override
@@ -223,11 +225,14 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
             const SizedBox(height: 16),
             SafeSvgWidget(url: widget.question.imageUrl!),
           ],
-          if (showAnswerOptions && widget.question.options != null) ...[
+          // Show options when answering or reviewing
+          if (widget.question.options != null && (showAnswerOptions || widget.feedback != null)) ...[
             const SizedBox(height: 24),
             ...widget.question.options!.map((option) => _buildOption(option)),
+          ],
+          // Submit button for MCQ questions (only when answering, not reviewing)
+          if (showAnswerOptions && widget.question.options != null) ...[
             const SizedBox(height: 24),
-            // Submit button for MCQ questions
             SizedBox(
               width: double.infinity,
               height: 48,
@@ -326,23 +331,81 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
     final optionText = option.text;
     final optionHtml = option.html;
     final isSelected = widget.selectedAnswer == optionId;
+    
+    // Determine option state when reviewing
+    final feedback = widget.feedback;
+    final isReviewing = feedback != null;
+    final isCorrectAnswer = feedback != null && feedback.correctAnswer == optionId;
+    final isStudentAnswer = feedback != null && feedback.studentAnswer == optionId;
+    final isWrongAnswer = isReviewing && isStudentAnswer && !feedback.isCorrect;
+    
+    // Determine colors and styling
+    Color borderColor;
+    Color backgroundColor;
+    Color circleColor;
+    Color textColor;
+    String? labelText;
+    IconData? labelIcon;
+    Color? labelColor;
+    
+    if (isReviewing) {
+      if (isCorrectAnswer) {
+        // Correct answer: green
+        borderColor = AppColors.successGreen;
+        backgroundColor = AppColors.successBackground;
+        circleColor = AppColors.successGreen;
+        textColor = AppColors.textDark;
+        labelText = 'Correct';
+        labelIcon = Icons.check_circle;
+        labelColor = AppColors.successGreen;
+      } else if (isWrongAnswer) {
+        // Student's wrong answer: red
+        borderColor = AppColors.errorRed;
+        backgroundColor = AppColors.errorBackground;
+        circleColor = AppColors.errorRed;
+        textColor = AppColors.textDark;
+        labelText = 'Your answer';
+        labelIcon = Icons.close;
+        labelColor = AppColors.errorRed;
+      } else {
+        // Other options: gray
+        borderColor = AppColors.borderGray;
+        backgroundColor = Colors.white;
+        circleColor = AppColors.borderGray.withOpacity(0.2);
+        textColor = AppColors.textDark;
+        labelText = null;
+        labelIcon = null;
+        labelColor = null;
+      }
+    } else {
+      // Not reviewing: use selection state
+      borderColor = isSelected
+          ? AppColors.primaryPurple
+          : AppColors.borderGray;
+      backgroundColor = isSelected
+          ? AppColors.primaryPurple.withOpacity(0.1)
+          : Colors.white;
+      circleColor = isSelected
+          ? AppColors.primaryPurple.withOpacity(0.2)
+          : AppColors.borderGray.withOpacity(0.2);
+      textColor = AppColors.textDark;
+      labelText = null;
+      labelIcon = null;
+      labelColor = null;
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: widget.onAnswerSelected != null ? () => widget.onAnswerSelected!(optionId) : null,
+        onTap: widget.onAnswerSelected != null && !isReviewing ? () => widget.onAnswerSelected!(optionId) : null,
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primaryPurple.withOpacity(0.1)
-                : Colors.white,
+            color: backgroundColor,
             border: Border.all(
-              color: isSelected
-                  ? AppColors.primaryPurple
-                  : AppColors.borderGray,
-              width: isSelected ? 2 : 1,
+              color: borderColor,
+              width: (isReviewing && (isCorrectAnswer || isWrongAnswer)) || isSelected ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(12),
           ),
@@ -352,18 +415,16 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primaryPurple.withOpacity(0.2)
-                      : AppColors.borderGray.withOpacity(0.2),
+                  color: circleColor,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     optionId,
                     style: AppTextStyles.labelMedium.copyWith(
-                      color: isSelected
-                          ? AppColors.primaryPurple
-                          : AppColors.textDark,
+                      color: isReviewing && (isCorrectAnswer || isWrongAnswer)
+                          ? Colors.white
+                          : (isSelected ? AppColors.primaryPurple : AppColors.textDark),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -386,6 +447,23 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                         style: AppTextStyles.bodyMedium,
                       ),
               ),
+              // Label for correct/wrong answers
+              if (labelText != null && labelIcon != null && labelColor != null) ...[
+                const SizedBox(width: 8),
+                Icon(
+                  labelIcon,
+                  color: labelColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  labelText,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: labelColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
