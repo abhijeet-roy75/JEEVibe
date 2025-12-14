@@ -13,7 +13,7 @@
 const { db, admin } = require('../config/firebase');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
-const { selectQuestionsForChapter } = require('./questionSelectionService');
+const { selectQuestionsForChapter, selectAnyAvailableQuestions } = require('./questionSelectionService');
 const { getReviewQuestions } = require('./spacedRepetitionService');
 
 // ============================================================================
@@ -338,22 +338,56 @@ async function generateRecoveryQuiz(userId, chapterThetas, excludeQuestionIds) {
       });
       
       // If we have at least some questions, proceed with what we have
-      // Otherwise, throw error to trigger fallback
+      // Otherwise, try fallback to get any available questions
       if (totalCount === 0) {
-        throw new Error('Could not generate recovery quiz: no questions available');
+        logger.warn('Recovery quiz found no questions through normal selection, trying fallback', { userId });
+        
+        try {
+          const fallbackQuestions = await selectAnyAvailableQuestions(
+            excludeQuestionIds,
+            RECOVERY_QUIZ_CONFIG.total
+          );
+          
+          if (fallbackQuestions.length > 0) {
+            logger.info('Recovery quiz using fallback questions', { 
+              userId, 
+              count: fallbackQuestions.length 
+            });
+            
+            // Add fallback questions as recovery questions
+            fallbackQuestions.forEach(q => {
+              recoveryQuestions.push({
+                ...q,
+                selection_reason: 'recovery_fallback',
+                difficulty_category: 'medium', // Default to medium for fallback
+                chapter_key: q.chapter_key || formatChapterKey(q.subject, q.chapter)
+              });
+            });
+          } else {
+            throw new Error('Could not generate recovery quiz: no questions available (even from fallback)');
+          }
+        } catch (fallbackError) {
+          logger.error('Recovery quiz fallback also failed', {
+            userId,
+            error: fallbackError.message
+          });
+          throw new Error('Could not generate recovery quiz: no questions available');
+        }
       }
     }
     
     // Shuffle questions
     recoveryQuestions.sort(() => Math.random() - 0.5);
     
+    const finalCount = recoveryQuestions.length;
     logger.info('Recovery quiz generated', {
       userId,
-      total_questions: totalCount,
-      easy: easyCount,
-      medium: mediumCount,
-      review: reviewCount,
-      meets_requirement: totalCount >= RECOVERY_QUIZ_CONFIG.total
+      total_questions: finalCount,
+      easy: recoveryQuestions.filter(q => q.difficulty_category === 'easy').length,
+      medium: recoveryQuestions.filter(q => q.difficulty_category === 'medium').length,
+      review: recoveryQuestions.filter(q => q.difficulty_category === 'review').length,
+      fallback: recoveryQuestions.filter(q => q.selection_reason === 'recovery_fallback').length,
+      meets_requirement: finalCount >= RECOVERY_QUIZ_CONFIG.total
     });
     
     return recoveryQuestions;
