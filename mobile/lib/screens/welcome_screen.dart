@@ -200,34 +200,28 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                     shape: BoxShape.circle,
                     gradient: AppColors.ctaGradient,
                   ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Emoji (using text emoji as placeholder)
-                      const Text(
-                        '👩‍🏫',
-                        style: TextStyle(fontSize: 80),
-                      ),
-                      // Priya Ma'am badge at bottom of circle
-                      Positioned(
-                        bottom: 20,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/priya_maam.jpeg',
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        // Fallback to emoji if image fails to load
+                        return Container(
+                          decoration: const BoxDecoration(
                             gradient: AppColors.ctaGradient,
-                            borderRadius: BorderRadius.circular(20),
+                            shape: BoxShape.circle,
                           ),
-                          child: Text(
-                            'Priya Ma\'am',
-                            style: AppTextStyles.labelMedium.copyWith(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                          child: const Center(
+                            child: Text(
+                              '👩‍🏫',
+                              style: TextStyle(fontSize: 80),
                             ),
                           ),
-                        ),
-                      ),
-                    ],
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 40),
