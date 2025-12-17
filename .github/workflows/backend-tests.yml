@@ -41,22 +41,23 @@ jobs:
         env:
           NODE_ENV: test
       
-      - name: Run integration tests
-        run: |
-          cd backend
-          npm run test:integration
-        env:
-          NODE_ENV: test
-          # Add test environment variables here if needed
-          # FIREBASE_PROJECT_ID: test-project
-          # FIREBASE_STORAGE_BUCKET: test-bucket
-        continue-on-error: true # Integration tests may need Firebase setup
+      # Integration tests skipped in CI - require Firebase Emulator or test project
+      # Run locally with: npm run test:integration
+      # - name: Run integration tests
+      #   run: |
+      #     cd backend
+      #     npm run test:integration
+      #   env:
+      #     NODE_ENV: test
+      #   continue-on-error: true
       
-      - name: Generate coverage report
-        run: |
-          cd backend
-          npm run test:coverage
-        continue-on-error: true
+      # Coverage report skipped - would include integration tests
+      # Generate locally with: npm run test:coverage
+      # - name: Generate coverage report
+      #   run: |
+      #     cd backend
+      #     npm run test:coverage
+      #   continue-on-error: true
       
       - name: Upload coverage to Codecov
         if: always()

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Building JEEVibe for iOS (TestFlight)"
+echo "🚀 Building JEEVibe for iOS Archive (Xcode)"
 echo ""
 
 # Navigate to mobile directory
@@ -18,21 +18,28 @@ cd ios
 pod install
 cd ..
 
-echo "🍎 Building IPA directly..."
-flutter build ipa --release
+echo "📦 Building iOS app for Xcode Archive..."
+flutter build ios --release
 
 echo ""
 echo "✅ Build complete!"
 echo ""
-echo "📦 IPA location:"
-echo "   $(pwd)/build/ios/ipa/jeevibe_mobile.ipa"
+echo "📤 Next steps to archive and upload:"
 echo ""
-echo "📤 Upload using Transporter app:"
-echo "   1. Open Transporter app (from Mac App Store)"
-echo "   2. Drag the .ipa file into Transporter"
-echo "   3. Click 'Deliver'"
+echo "1. Open Xcode workspace:"
+echo "   open ios/Runner.xcworkspace"
 echo ""
-echo "💡 Note: This creates an IPA file, not an Xcode archive."
-echo "   To see archive in Xcode Organizer, use: ./scripts/build_ios_archive.sh"
+echo "2. In Xcode:"
+echo "   - Select 'Any iOS Device' from device dropdown (top left)"
+echo "   - Product → Archive"
+echo "   - Wait for archive to complete (~2-3 minutes)"
+echo ""
+echo "3. In the Organizer window that appears:"
+echo "   - Select your archive"
+echo "   - Click 'Distribute App'"
+echo "   - Choose 'App Store Connect'"
+echo "   - Follow the wizard to upload to TestFlight"
+echo ""
+echo "💡 Tip: You can also access Organizer anytime via Window → Organizer (Cmd+Shift+O)"
 echo ""
 

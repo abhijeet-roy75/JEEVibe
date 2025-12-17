@@ -11,6 +11,19 @@
 
 const request = require('supertest');
 
+// Mock multer to prevent "argument handler must be a function" error
+jest.mock('multer', () => {
+  const multer = () => ({
+    single: () => (req, res, next) => next(),
+    array: () => (req, res, next) => next(),
+    fields: () => (req, res, next) => next(),
+    none: () => (req, res, next) => next(),
+    any: () => (req, res, next) => next(),
+  });
+  multer.memoryStorage = () => ({});
+  return multer;
+});
+
 // Mock Firebase for integration tests
 // In real integration tests, you'd use Firebase Emulator or test project
 jest.mock('../../../src/config/firebase', () => {
@@ -80,6 +93,21 @@ jest.mock('../../../src/middleware/auth', () => ({
     req.user = { uid: 'test-user-id' };
     next();
   },
+  authenticateUser: (req, res, next) => {
+    // Mock user authentication - always pass
+    req.userId = 'test-user-id';
+    next();
+  },
+}));
+
+// Mock OpenAI service to prevent real API calls
+jest.mock('../../../src/services/openai', () => ({
+  solveQuestionFromImage: jest.fn(() => Promise.resolve({
+    solution: 'Test solution',
+    explanation: 'Test explanation',
+  })),
+  generateFollowUpQuestions: jest.fn(() => Promise.resolve([])),
+  generateSingleFollowUpQuestion: jest.fn(() => Promise.resolve({})),
 }));
 
 // Import app after mocks
