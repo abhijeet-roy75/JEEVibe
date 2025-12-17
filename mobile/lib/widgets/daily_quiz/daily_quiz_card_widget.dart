@@ -153,7 +153,7 @@ class DailyQuizCardWidget extends StatelessWidget {
                       disabledBackgroundColor: AppColors.borderGray,
                     ),
                     child: Text(
-                      hasActiveQuiz ? 'Continue Quiz' : 'Start Today\'s Quiz',
+                      'Completed for Today',
                       style: AppTextStyles.labelMedium.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

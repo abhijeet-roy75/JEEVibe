@@ -30,7 +30,7 @@ class _ProfileAdvancedScreenState extends State<ProfileAdvancedScreen> {
   String? _studyMode;
   String? _coachingInstitute;
   String? _coachingBranch;
-  String? _preferredLanguage;
+  String? _preferredLanguage = 'English'; // Default to English for first release
   
   final List<String> _weakSubjects = []; 
 
@@ -290,19 +290,19 @@ class _ProfileAdvancedScreenState extends State<ProfileAdvancedScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Preferred Language
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  decoration: _inputDecoration('Preferred Language'),
-                  dropdownColor: Colors.white,
-                  items: ProfileConstants.languages.map((String value) {
-                    return DropdownMenuItem<String>(value: value, child: Text(value, style: AppTextStyles.bodyMedium));
-                  }).toList(),
-                  onChanged: (v) => setState(() => _preferredLanguage = v),
-                  validator: (v) => v == null ? 'Required' : null,
-                  onSaved: (v) => _preferredLanguage = v,
-                ),
-                const SizedBox(height: 16),
+                // Preferred Language - Hidden for first release (defaults to English)
+                // DropdownButtonFormField<String>(
+                //   isExpanded: true,
+                //   decoration: _inputDecoration('Preferred Language'),
+                //   dropdownColor: Colors.white,
+                //   items: ProfileConstants.languages.map((String value) {
+                //     return DropdownMenuItem<String>(value: value, child: Text(value, style: AppTextStyles.bodyMedium));
+                //   }).toList(),
+                //   onChanged: (v) => setState(() => _preferredLanguage = v),
+                //   validator: (v) => v == null ? 'Required' : null,
+                //   onSaved: (v) => _preferredLanguage = v,
+                // ),
+                // const SizedBox(height: 16),
 
                 // Weak Subjects (Multi-select)
                 Text('Subjects you find difficult (Select all that apply)', style: AppTextStyles.bodyMedium),

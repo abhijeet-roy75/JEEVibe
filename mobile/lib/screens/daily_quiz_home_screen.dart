@@ -337,6 +337,25 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
     final hasActiveQuiz = provider.hasActiveQuiz;
     
+    // Check if quiz was completed today
+    bool canStartQuiz = true;
+    final summary = provider.summary;
+    if (summary != null) {
+      final lastQuizCompleted = summary['last_quiz_completed_at'] as String?;
+      if (lastQuizCompleted != null) {
+        try {
+          final lastDate = DateTime.parse(lastQuizCompleted);
+          final now = DateTime.now();
+          final daysSinceLastQuiz = now.difference(lastDate).inDays;
+          // Disable if quiz was completed today (0 days since last quiz)
+          canStartQuiz = daysSinceLastQuiz > 0;
+        } catch (e) {
+          // Invalid date, allow quiz
+          canStartQuiz = true;
+        }
+      }
+    }
+    
     // C8: Get dynamic quiz size from summary or current quiz
     int? questionCount;
     int? estimatedTimeMinutes;
@@ -358,7 +377,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
     
     return DailyQuizCardWidget(
       hasActiveQuiz: hasActiveQuiz,
-      canStartQuiz: true,
+      canStartQuiz: canStartQuiz,
       questionCount: questionCount,
       estimatedTimeMinutes: estimatedTimeMinutes,
       onStartQuiz: () {

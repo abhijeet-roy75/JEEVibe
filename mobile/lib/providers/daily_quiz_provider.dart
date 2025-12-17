@@ -239,10 +239,10 @@ class DailyQuizProvider extends ChangeNotifier {
       );
     }
     
-    // Update selected answer
+    // Update selected answer - convert empty string to null
     final currentState = _questionStates[currentIndex]!;
     _questionStates[currentIndex] = currentState.copyWith(
-      selectedAnswer: answer,
+      selectedAnswer: answer.isEmpty ? null : answer,
     );
     
     _saveQuizState();

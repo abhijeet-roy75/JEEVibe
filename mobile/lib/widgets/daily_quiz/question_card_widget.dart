@@ -33,7 +33,41 @@ class QuestionCardWidget extends StatefulWidget {
 }
 
 class _QuestionCardWidgetState extends State<QuestionCardWidget> {
-  final TextEditingController _numericalController = TextEditingController();
+  late TextEditingController _numericalController;
+  String? _lastQuestionId; // Track question ID to reinitialize controller on question change
+  bool _controllerInitialized = false; // Track if controller has been initialized for current question
+  
+  @override
+  void initState() {
+    super.initState();
+    _lastQuestionId = widget.question.questionId;
+    // Initialize controller - only use selectedAnswer if it exists (for restoring saved state)
+    // Once initialized, controller is completely independent
+    _numericalController = TextEditingController(text: widget.selectedAnswer ?? '');
+    _controllerInitialized = true;
+  }
+  
+  @override
+  void didUpdateWidget(QuestionCardWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // ONLY reinitialize controller if the QUESTION changed (not just selectedAnswer)
+    // This prevents the controller from being reset when user is typing
+    if (widget.question.questionId != _lastQuestionId) {
+      _lastQuestionId = widget.question.questionId;
+      _controllerInitialized = false; // Reset flag for new question
+      _numericalController.text = widget.selectedAnswer ?? '';
+      _controllerInitialized = true;
+    }
+    // CRITICAL: DO NOT sync controller with selectedAnswer changes
+    // Controller is the source of truth while user is editing
+    // Even if selectedAnswer prop changes, we ignore it to prevent circular updates
+  }
+  
+  @override
+  void dispose() {
+    _numericalController.dispose();
+    super.dispose();
+  }
 
   Color _getSubjectColor(String? subject) {
     switch (subject?.toLowerCase()) {
@@ -69,12 +103,6 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
     final minutes = seconds ~/ 60;
     final secs = seconds % 60;
     return '${minutes}:${secs.toString().padLeft(2, '0')}';
-  }
-
-  @override
-  void dispose() {
-    _numericalController.dispose();
-    super.dispose();
   }
 
   @override
@@ -259,28 +287,35 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
             _buildNumericalInput(),
             const SizedBox(height: 16),
             // Submit button for numerical questions
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _numericalController.text.isNotEmpty && widget.onAnswerSubmitted != null
-                    ? () {
-                        if (_numericalController.text.isNotEmpty) {
-                          widget.onAnswerSubmitted?.call();
-                        }
-                      }
-                    : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _numericalController.text.isNotEmpty
-                      ? AppColors.primaryPurple
-                      : AppColors.borderGray,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            // Use ValueListenableBuilder to update button without setState
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _numericalController,
+              builder: (context, value, child) {
+                final hasText = value.text.isNotEmpty;
+                return SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: hasText && widget.onAnswerSubmitted != null
+                        ? () {
+                            if (_numericalController.text.isNotEmpty) {
+                              widget.onAnswerSubmitted?.call();
+                            }
+                          }
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: hasText
+                          ? AppColors.primaryPurple
+                          : AppColors.borderGray,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Submit Answer'),
                   ),
-                ),
-                child: const Text('Submit Answer'),
-              ),
+                );
+              },
             ),
           ],
         ],
@@ -301,7 +336,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
       ),
       child: TextField(
         controller: _numericalController,
-        keyboardType: TextInputType.numberWithOptions(decimal: true),
+        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
         decoration: InputDecoration(
           hintText: 'Enter your answer',
           hintStyle: AppTextStyles.bodyMedium.copyWith(
@@ -311,14 +346,14 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
         ),
         style: AppTextStyles.bodyMedium,
         onChanged: (value) {
-          // Store the answer as user types
-          if (value.isNotEmpty && widget.onAnswerSelected != null) {
+          // Update provider state - DO NOT call setState here
+          // The button will update via ValueListenableBuilder below
+          if (widget.onAnswerSelected != null) {
             widget.onAnswerSelected!(value);
           }
-          setState(() {}); // Update button state
         },
         onSubmitted: (value) {
-          if (value.isNotEmpty && widget.onAnswerSelected != null) {
+          if (widget.onAnswerSelected != null) {
             widget.onAnswerSelected!(value);
           }
         },

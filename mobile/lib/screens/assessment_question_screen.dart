@@ -29,6 +29,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
   int _currentQuestionIndex = 0;
   Map<int, AssessmentResponse> _responses = {};
   Map<int, DateTime> _questionStartTimes = {};
+  Map<int, TextEditingController> _numericalControllers = {}; // Store controllers per question
   Timer? _timer;
   int _remainingSeconds = 45 * 60; // 45 minutes in seconds
   bool _isLoading = true;
@@ -45,6 +46,10 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    // Dispose all controllers
+    for (var controller in _numericalControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -121,13 +126,12 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
     final startTime = _questionStartTimes[_currentQuestionIndex] ?? DateTime.now();
     final timeTaken = DateTime.now().difference(startTime).inSeconds;
 
-    setState(() {
-      _responses[_currentQuestionIndex] = AssessmentResponse(
-        questionId: question.questionId,
-        studentAnswer: answer,
-        timeTakenSeconds: timeTaken,
-      );
-    });
+    // Update response without setState to avoid circular rebuilds
+    _responses[_currentQuestionIndex] = AssessmentResponse(
+      questionId: question.questionId,
+      studentAnswer: answer,
+      timeTakenSeconds: timeTaken,
+    );
   }
 
   void _nextQuestion() {
@@ -517,9 +521,8 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
   Widget _buildQuestionText() {
     final question = _currentQuestion!;
     
-    // If question_latex exists, show both question_text and question_latex
-    // Otherwise, just show question_text
-    final hasLatex = question.questionLatex != null && question.questionLatex!.isNotEmpty;
+    // Show question_text/html which already contains formatted LaTeX
+    // No need to show question_latex separately as it's already embedded in question_text
     final textContent = question.questionTextHtml ?? question.questionText;
     
     return Container(
@@ -535,58 +538,42 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Show question_text/html first if it exists (with HTML parsing)
-          if (textContent.isNotEmpty) ...[
-            Html(
-              data: textContent,
-              style: {
-                "body": Style(
-                  fontSize: FontSize(AppTextStyles.bodyLarge.fontSize ?? 16),
-                  color: AppTextStyles.bodyLarge.color,
-                  lineHeight: LineHeight(AppTextStyles.bodyLarge.height ?? 1.6),
-                ),
-                "p": Style(
-                  margin: Margins.zero,
-                  padding: HtmlPaddings.zero,
-                ),
-                "strong": Style(
-                  fontWeight: FontWeight.bold,
-                ),
-                "b": Style(
-                  fontWeight: FontWeight.bold,
-                ),
-                "i": Style(
-                  fontStyle: FontStyle.italic,
-                ),
-                "em": Style(
-                  fontStyle: FontStyle.italic,
-                ),
-                "u": Style(
-                  textDecoration: TextDecoration.underline,
-                ),
-                "sub": Style(
-                  fontSize: FontSize((AppTextStyles.bodyLarge.fontSize ?? 16) * 0.75),
-                  verticalAlign: VerticalAlign.sub,
-                ),
-                "sup": Style(
-                  fontSize: FontSize((AppTextStyles.bodyLarge.fontSize ?? 16) * 0.75),
-                  verticalAlign: VerticalAlign.sup,
-                ),
-              },
-            ),
-            if (hasLatex) const SizedBox(height: 12),
-          ],
-          // Show question_latex if it exists
-          if (hasLatex)
-            LaTeXWidget(
-              text: question.questionLatex!,
-              textStyle: AppTextStyles.bodyLarge,
-              allowWrapping: true,
-            ),
-        ],
+      child: Html(
+        data: textContent,
+        style: {
+          "body": Style(
+            fontSize: FontSize(AppTextStyles.bodyLarge.fontSize ?? 16),
+            color: AppTextStyles.bodyLarge.color,
+            lineHeight: LineHeight(AppTextStyles.bodyLarge.height ?? 1.6),
+          ),
+          "p": Style(
+            margin: Margins.zero,
+            padding: HtmlPaddings.zero,
+          ),
+          "strong": Style(
+            fontWeight: FontWeight.bold,
+          ),
+          "b": Style(
+            fontWeight: FontWeight.bold,
+          ),
+          "i": Style(
+            fontStyle: FontStyle.italic,
+          ),
+          "em": Style(
+            fontStyle: FontStyle.italic,
+          ),
+          "u": Style(
+            textDecoration: TextDecoration.underline,
+          ),
+          "sub": Style(
+            fontSize: FontSize((AppTextStyles.bodyLarge.fontSize ?? 16) * 0.75),
+            verticalAlign: VerticalAlign.sub,
+          ),
+          "sup": Style(
+            fontSize: FontSize((AppTextStyles.bodyLarge.fontSize ?? 16) * 0.75),
+            verticalAlign: VerticalAlign.sup,
+          ),
+        },
       ),
     );
   }
@@ -739,10 +726,13 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
   }
 
   Widget _buildNumericalInput(String currentAnswer) {
-    final controller = TextEditingController(text: currentAnswer);
-    controller.selection = TextSelection.fromPosition(
-      TextPosition(offset: currentAnswer.length),
-    );
+    // Get or create controller for this question
+    // Controller persists across rebuilds and is only created once per question
+    if (!_numericalControllers.containsKey(_currentQuestionIndex)) {
+      _numericalControllers[_currentQuestionIndex] = TextEditingController(text: currentAnswer);
+    }
+    
+    final controller = _numericalControllers[_currentQuestionIndex]!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -756,10 +746,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
         const SizedBox(height: 12),
         TextField(
           controller: controller,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d*')),
-          ],
+          keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
           decoration: InputDecoration(
             hintText: 'Enter numerical value',
             filled: true,
@@ -780,9 +767,8 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
           ),
           style: AppTextStyles.bodyLarge,
           onChanged: (value) {
-            if (value.isNotEmpty) {
-              _recordAnswer(value);
-            }
+            // ALWAYS update answer, even if empty, to properly handle deletion
+            _recordAnswer(value);
           },
         ),
         const SizedBox(height: 8),

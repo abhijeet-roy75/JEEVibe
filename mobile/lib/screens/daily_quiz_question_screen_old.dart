@@ -2,6 +2,7 @@
 /// Displays questions one at a time with immediate feedback
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../models/daily_quiz_question.dart';
@@ -35,6 +36,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
   Map<int, String?> _selectedAnswers = {};
   Map<int, AnswerFeedback?> _answerFeedbacks = {};
   Map<int, bool> _showDetailedExplanation = {};
+  Map<int, TextEditingController> _numericalControllers = {}; // Controllers for numerical inputs
   bool _isSubmitting = false;
   bool _quizStarted = false;
   String? _error;
@@ -49,6 +51,9 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
   void dispose() {
     for (var timer in _questionTimers.values) {
       timer?.cancel();
+    }
+    for (var controller in _numericalControllers.values) {
+      controller.dispose();
     }
     super.dispose();
   }
@@ -662,8 +667,19 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
   }
 
   Widget _buildNumericalInput(AnswerFeedback? feedback) {
+    // Get or create controller for this question
+    // Controller persists across rebuilds
+    if (!_numericalControllers.containsKey(_currentQuestionIndex)) {
+      final initialValue = _selectedAnswers[_currentQuestionIndex] ?? '';
+      _numericalControllers[_currentQuestionIndex] = TextEditingController(text: initialValue);
+    }
+    
+    final controller = _numericalControllers[_currentQuestionIndex]!;
+    
     return TextField(
+      controller: controller,
       enabled: feedback == null,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
       decoration: InputDecoration(
         hintText: 'Enter your answer',
         border: OutlineInputBorder(
@@ -680,7 +696,6 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         ),
       ),
       onChanged: (value) => _selectAnswer(value),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
     );
   }
 

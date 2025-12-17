@@ -356,6 +356,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                       ],
                       // Question card
                       QuestionCardWidget(
+                        key: ValueKey('question_${question.questionId}'),
                         question: question,
                         selectedAnswer: questionState?.selectedAnswer,
                         showAnswerOptions: feedback == null,
