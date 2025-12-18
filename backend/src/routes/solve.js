@@ -5,6 +5,7 @@
 
 const express = require('express');
 const multer = require('multer');
+const { promisify } = require('util');
 const { body, validationResult } = require('express-validator');
 const { solveQuestionFromImage, generateFollowUpQuestions, generateSingleFollowUpQuestion } = require('../services/openai');
 const { authenticateUser } = require('../middleware/auth');
