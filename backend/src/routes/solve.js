@@ -11,6 +11,29 @@ const { authenticateUser } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
 
+
+/**
+ * Handle OpenAI errors by mapping them to ApiError
+ */
+function handleOpenAIError(error, next) {
+  if (error.status) {
+    if (error.status === 401) {
+      // 500 because it's a server config error, not client's fault
+      return next(new ApiError(500, 'AI Service Configuration Error: Authentication Failed'));
+    }
+    if (error.status === 429) {
+      return next(new ApiError(429, 'System is busy (Rate Limit), please try again later'));
+    }
+    if (error.status >= 500) {
+      return next(new ApiError(502, 'AI Service temporarily unavailable'));
+    }
+    // For other errors (400, etc), pass through message if safe?
+    // 400 from OpenAI means bad request (our prompt often).
+    return next(new ApiError(error.status, error.message));
+  }
+  next(error);
+}
+
 const router = express.Router();
 
 /**
@@ -52,10 +75,10 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     // Accept images - check MIME type or file extension
-    const isImage = 
+    const isImage =
       file.mimetype && file.mimetype.startsWith('image/') ||
       /\.(jpg|jpeg|png|gif|heic|webp)$/i.test(file.originalname || file.fieldname);
-    
+
     if (isImage || !file.mimetype) {
       // If no MIME type, accept it and let image processing handle validation
       logger.debug('Accepting file', {
@@ -82,7 +105,7 @@ const upload = multer({
 router.post('/solve', authenticateUser, upload.single('image'), async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     // Validate image
     if (!req.file) {
       logger.warn('No file received in solve request', {
@@ -129,7 +152,7 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
 
     // Add timeout for long-running OpenAI operations (2 minutes)
     const setTimeoutPromise = promisify(setTimeout);
-    
+
     const solutionData = await Promise.race([
       solveQuestionFromImage(imageBuffer),
       setTimeoutPromise(120000).then(() => {
@@ -159,8 +182,7 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
       requestId: req.id,
     });
   } catch (error) {
-    // Error handler middleware will catch this
-    next(error);
+    handleOpenAIError(error, next);
   }
 });
 
@@ -170,7 +192,7 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
  * 
  * Authentication: Required (Bearer token in Authorization header)
  */
-router.post('/generate-practice-questions', 
+router.post('/generate-practice-questions',
   authenticateUser,
   [
     body('recognizedQuestion').notEmpty().withMessage('recognizedQuestion is required'),
@@ -218,7 +240,7 @@ router.post('/generate-practice-questions',
         requestId: req.id,
       });
     } catch (error) {
-      next(error);
+      handleOpenAIError(error, next);
     }
   }
 );
@@ -256,7 +278,7 @@ router.post('/generate-single-question',
         difficulty,
         questionNumber,
       });
-      
+
       const question = await generateSingleFollowUpQuestion(
         recognizedQuestion,
         typeof solution === 'string' ? solution : JSON.stringify(solution),
@@ -270,7 +292,7 @@ router.post('/generate-single-question',
         userId,
         questionNumber,
       });
-      
+
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
       res.json({
         success: true,
@@ -280,7 +302,7 @@ router.post('/generate-single-question',
         requestId: req.id,
       });
     } catch (error) {
-      next(error);
+      handleOpenAIError(error, next);
     }
   }
 );

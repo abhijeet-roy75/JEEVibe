@@ -104,7 +104,7 @@ OUTPUT FORMAT (strict JSON):
     // COMPREHENSIVE VALIDATION: Validate entire solution response
     console.log('[LaTeX Validation] Validating solution response...');
     const fullValidation = validateSolutionResponse(solutionData);
-    
+
     if (!fullValidation.valid) {
       console.error('[LaTeX Validation] Issues found:', fullValidation.errors);
       console.warn('[LaTeX Validation] Content has been normalized, continuing with processed data');
@@ -115,16 +115,16 @@ OUTPUT FORMAT (strict JSON):
     // Normalize LaTeX markers in solution data using validator service
     const normalizeLaTeX = (text) => {
       if (typeof text !== 'string') return text;
-      
+
       try {
         const normalized = validateAndNormalizeLaTeX(text);
-        
+
         // Validate delimiters and log any issues
         const validation = validateDelimiters(normalized);
         if (!validation.balanced) {
           console.warn('[LaTeX] Delimiter balance warning:', validation.errors);
         }
-        
+
         return normalized;
       } catch (error) {
         console.error('[LaTeX] Normalization error:', error);
@@ -209,7 +209,7 @@ OUTPUT FORMAT (strict JSON):
     };
   } catch (error) {
     console.error('Error solving question from image:', error);
-    throw new Error(`Failed to solve question: ${error.message}`);
+    throw error;
   }
 }
 
@@ -272,7 +272,7 @@ async function generateFollowUpQuestions(originalQuestion, solution, topic, diff
     // Normalize LaTeX markers in all questions using validator service
     const normalizeLaTeX = (text) => {
       if (typeof text !== 'string') return text;
-      
+
       try {
         return validateAndNormalizeLaTeX(text);
       } catch (error) {
@@ -334,7 +334,7 @@ async function generateFollowUpQuestions(originalQuestion, solution, topic, diff
     return validQuestions.slice(0, 3); // Return max 3 valid questions
   } catch (error) {
     console.error('Error generating follow-up questions:', error);
-    throw new Error(`Failed to generate follow-up questions: ${error.message}`);
+    throw error;
   }
 }
 
@@ -442,7 +442,7 @@ Generate Question ${questionNumber} NOW in strict JSON object format.`;
     // Normalize LaTeX markers using validator service
     const normalizeLaTeX = (text) => {
       if (typeof text !== 'string') return text;
-      
+
       try {
         return validateAndNormalizeLaTeX(text);
       } catch (error) {
@@ -480,7 +480,7 @@ Generate Question ${questionNumber} NOW in strict JSON object format.`;
     return data;
   } catch (error) {
     console.error(`Error generating question ${questionNumber}:`, error);
-    throw new Error(`Failed to generate question ${questionNumber}: ${error.message}`);
+    throw error;
   }
 }
 
