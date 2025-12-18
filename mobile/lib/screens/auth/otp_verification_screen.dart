@@ -2,7 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../services/firebase/auth_service.dart';
+import '../../services/firebase/firestore_user_service.dart';
+import '../../services/firebase/pin_service.dart';
 import 'create_pin_screen.dart';
+import 'pin_verification_screen.dart';
+import '../assessment_intro_screen.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -89,34 +93,81 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     });
     
     final authService = Provider.of<AuthService>(context, listen: false);
+    final firestoreService = Provider.of<FirestoreUserService>(context, listen: false);
+    final pinService = PinService();
     
     try {
-      await authService.signInWithSMSCode(
+      final userCredential = await authService.signInWithSMSCode(
         verificationId: _currentVerificationId!,
         smsCode: otp,
       );
       
       if (mounted) {
-        // Hide keyboard and remove focus before navigation
-        // Check if FocusNode has focus before unfocusing
+        // Hide keyboard and remove focus before awaiting async checks
         try {
           if (_otpFocusNode.hasFocus) {
             _otpFocusNode.unfocus();
           }
         } catch (e) {
-          // Ignore if FocusNode is already disposed
+          // Ignore
         }
         FocusScope.of(context).unfocus();
-        // Wait longer to ensure FocusNode is fully detached from widget tree
+        
+        // Smart Login Logic: Check if user already has a profile
+        bool hasProfile = false;
+        try {
+          if (userCredential.user != null) {
+            final profile = await firestoreService.getUserProfile(userCredential.user!.uid);
+            hasProfile = profile != null;
+          }
+        } catch (e) {
+          debugPrint('Error checking profile: $e');
+        }
+        
+        if (!mounted || _isDisposed) return;
+        
+        // Wait to ensure FocusNode is fully detached
         await Future.delayed(const Duration(milliseconds: 600));
         
         if (!mounted || _isDisposed) return;
 
-        // Navigate to Create PIN
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const CreatePinScreen()),
-          (route) => false,
-        );
+        if (hasProfile) {
+          // User exists - Check if PIN is set on this device
+          final hasPin = await pinService.pinExists();
+          
+          if (!mounted) return;
+          
+          // Target screen is always Home for existing users
+          final targetScreen = const AssessmentIntroScreen(); 
+          
+          if (hasPin) {
+             // PIN exists - Verify it locally before going Home
+             Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => PinVerificationScreen(
+                  targetScreen: targetScreen,
+                ),
+              ),
+              (route) => false,
+            );
+          } else {
+             // PIN missing (e.g. new phone) - Create it then go Home
+             Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => CreatePinScreen(
+                  targetScreen: targetScreen,
+                ),
+              ),
+              (route) => false,
+            );
+          }
+        } else {
+          // New User - Standard flow: Create PIN -> Profile Setup
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const CreatePinScreen()),
+            (route) => false,
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -130,10 +181,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         });
         
         // Clear OTP fields on error to allow retry
-        // Set flag to prevent onChanged from clearing error
         _isClearingProgrammatically = true;
         _otpController.clear();
-        // Reset flag after a short delay to allow onChanged to process
         Future.delayed(const Duration(milliseconds: 100), () {
           if (mounted) {
             _isClearingProgrammatically = false;

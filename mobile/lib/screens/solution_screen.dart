@@ -147,8 +147,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
                     const SizedBox(height: AppSpacing.space24),
                     _buildPriyaTip(solution),
                     const SizedBox(height: AppSpacing.space32),
-                    _buildPracticeSection(solution),
-                    const SizedBox(height: AppSpacing.space32),
+                    // Practice section hidden as per request
+                    // _buildPracticeSection(solution),
+                    // const SizedBox(height: AppSpacing.space32),
                     _buildActionButtons(solution),
                     const SizedBox(height: AppSpacing.space32),
                   ],

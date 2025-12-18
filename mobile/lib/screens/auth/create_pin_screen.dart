@@ -6,7 +6,12 @@ import '../../theme/app_text_styles.dart';
 import '../../services/firebase/pin_service.dart';
 
 class CreatePinScreen extends StatefulWidget {
-  const CreatePinScreen({super.key});
+  final Widget? targetScreen;
+
+  const CreatePinScreen({
+    super.key,
+    this.targetScreen,
+  });
 
   @override
   State<CreatePinScreen> createState() => _CreatePinScreenState();
@@ -115,11 +120,18 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
       
       if (!mounted || _isDisposed) return;
 
-      // Navigate to Profile Setup
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const ProfileBasicsScreen()),
-        (route) => false,
-      );
+      // Navigate to Target Screen (if provided) or Profile Setup
+      if (widget.targetScreen != null) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => widget.targetScreen!),
+          (route) => false,
+        );
+      } else {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const ProfileBasicsScreen()),
+          (route) => false,
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -260,6 +260,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         
                         const SizedBox(height: 32),
                         
+                        /*
                         // Get API Token Button (for testing)
                         Container(
                           width: double.infinity,
@@ -307,6 +308,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         ),
                         
                         const SizedBox(height: 16),
+                        */
                         
                         // Sign Out Button
                         Container(

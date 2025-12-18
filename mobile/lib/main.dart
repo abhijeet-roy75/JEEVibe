@@ -113,12 +113,84 @@ void main() async {
   );
 }
 
-class JEEVibeApp extends StatelessWidget {
+class JEEVibeApp extends StatefulWidget {
   const JEEVibeApp({super.key});
+
+  @override
+  State<JEEVibeApp> createState() => _JEEVibeAppState();
+}
+
+class _JEEVibeAppState extends State<JEEVibeApp> with WidgetsBindingObserver {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  bool _isLockScreenShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkAndLockApp();
+    }
+  }
+
+  Future<void> _checkAndLockApp() async {
+    // Only lock if not already showing lock screen
+    if (_isLockScreenShown) return;
+
+    final context = _navigatorKey.currentContext;
+    if (context == null) return;
+
+    // Access providers via context or instances if available
+    // Note: Provider might not be available if widget tree isn't fully built
+    // But since this is resume, it should be fine.
+    
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      if (authService.isAuthenticated) {
+        final pinService = PinService();
+        final hasPin = await pinService.pinExists();
+        
+        if (hasPin && mounted) {
+          // Show Lock Screen
+          setState(() {
+            _isLockScreenShown = true;
+          });
+          
+          _navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (context) => PinVerificationScreen(
+                isUnlockMode: true,
+              ),
+            ),
+          ).then((_) {
+             // Reset flag when lock screen is popped (unlocked)
+             if (mounted) {
+               setState(() {
+                 _isLockScreenShown = false;
+               });
+             }
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error checking lock status: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       title: 'JEEVibe',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

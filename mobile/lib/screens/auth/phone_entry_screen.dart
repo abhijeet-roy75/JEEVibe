@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'otp_verification_screen.dart';
 import '../../services/firebase/auth_service.dart';
+import '../../services/storage_service.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -21,6 +22,24 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   PhoneNumber _number = PhoneNumber(isoCode: 'IN');
   String? _phoneNumber;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCountryCode();
+  }
+
+  Future<void> _loadCountryCode() async {
+    final storageService = StorageService();
+    final savedCountry = await storageService.getCountryCode();
+    
+    if (mounted) {
+      setState(() {
+        _initialCountry = savedCountry;
+        _number = PhoneNumber(isoCode: savedCountry);
+      });
+    }
+  }
 
   Future<void> _sendOTP() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -181,6 +200,11 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     onInputChanged: (PhoneNumber number) {
                       _number = number;
                       _phoneNumber = number.phoneNumber;
+                      // Save country code when changed
+                      if (number.isoCode != null && number.isoCode != _initialCountry) {
+                        _initialCountry = number.isoCode!;
+                        StorageService().setCountryCode(_initialCountry);
+                      }
                     },
                     selectorConfig: const SelectorConfig(
                       selectorType: PhoneInputSelectorType.BOTTOM_SHEET,

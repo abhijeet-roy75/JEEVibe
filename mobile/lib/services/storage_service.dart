@@ -20,6 +20,7 @@ class StorageService {
   static const String _keyFirstLaunchDate = '${_keyPrefix}first_launch_date';
   static const String _keyAppVersion = '${_keyPrefix}app_version';
   static const String _keyAssessmentStatus = '${_keyPrefix}assessment_status';
+  static const String _keyCountryCode = '${_keyPrefix}country_code';
 
   // Constants
   static const int defaultSnapLimit = 5;
@@ -400,6 +401,29 @@ class StorageService {
       }
     } catch (e) {
       debugPrint('Error setting assessment status: $e');
+    }
+  }
+
+  // ===== COUNTRY CODE METHODS =====
+
+  /// Get stored country code (default 'IN')
+  Future<String> getCountryCode() async {
+    try {
+      final prefs = await _preferences;
+      return prefs.getString(_keyCountryCode) ?? 'IN';
+    } catch (e) {
+      debugPrint('Error getting country code: $e');
+      return 'IN';
+    }
+  }
+
+  /// Set country code
+  Future<void> setCountryCode(String code) async {
+    try {
+      final prefs = await _preferences;
+      await prefs.setString(_keyCountryCode, code);
+    } catch (e) {
+      debugPrint('Error setting country code: $e');
     }
   }
 

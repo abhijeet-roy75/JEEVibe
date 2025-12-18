@@ -5,11 +5,13 @@ import '../../theme/app_text_styles.dart';
 import '../../services/firebase/pin_service.dart';
 
 class PinVerificationScreen extends StatefulWidget {
-  final Widget targetScreen;
+  final Widget? targetScreen;
+  final bool isUnlockMode;
   
   const PinVerificationScreen({
     super.key,
-    required this.targetScreen,
+    this.targetScreen,
+    this.isUnlockMode = false,
   });
 
   @override
@@ -63,7 +65,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
       if (!mounted) return;
 
       if (isValid) {
-        // Success - navigate to target screen
+        // Success - navigate to target screen or pop if unlocking
         // Remove focus before navigation to prevent dispose errors
         if (_pinFocusNode.hasFocus) {
           _pinFocusNode.unfocus();
@@ -74,11 +76,18 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
         
         if (!mounted) return;
 
-        // Use pushAndRemoveUntil to ensure clean navigation
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => widget.targetScreen),
-          (route) => false,
-        );
+        if (widget.isUnlockMode) {
+          Navigator.of(context).pop(); // Unlock app
+        } else if (widget.targetScreen != null) {
+          // Use pushAndRemoveUntil to ensure clean navigation
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => widget.targetScreen!),
+            (route) => false,
+          );
+        } else {
+          // Fallback if no target screen provided (should not happen in normal flow)
+          Navigator.of(context).pop(); 
+        }
       } else {
         // Invalid PIN
         setState(() {
