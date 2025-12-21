@@ -83,8 +83,8 @@ function seededRandom(seed) {
   const a = 1664525;
   const c = 1013904223;
   const m = Math.pow(2, 32);
-  
-  return function() {
+
+  return function () {
     state = (a * state + c) % m;
     return state / m;
   };
@@ -99,12 +99,12 @@ function seededRandom(seed) {
  */
 function seededShuffle(array, randomFn) {
   const shuffled = [...array];
-  
+
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(randomFn() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  
+
   return shuffled;
 }
 
@@ -115,10 +115,10 @@ function seededShuffle(array, randomFn) {
  * @returns {string} Block name ('warmup', 'core', 'challenge')
  */
 function getQuestionBlock(question) {
-  const difficultyB = question.irt_parameters?.difficulty_b || 
-                      question.difficulty_b || 
-                      0.9; // Default to medium
-  
+  const difficultyB = question.irt_parameters?.difficulty_b ||
+    question.difficulty_b ||
+    0.9; // Default to medium
+
   if (difficultyB <= 0.8) {
     return 'warmup';
   } else if (difficultyB <= 1.1) {
@@ -141,7 +141,7 @@ function getQuestionBlock(question) {
 function findQuestionsInAdjacentRange(allQuestions, blockConfig, selectedIds, needed) {
   const extras = [];
   const available = allQuestions.filter(q => !selectedIds.has(q.question_id));
-  
+
   // Try to find questions close to the block's difficulty range
   // For warmup (0.6-0.8), try 0.5-0.9
   // For core (0.8-1.1), try 0.7-1.2
@@ -157,7 +157,7 @@ function findQuestionsInAdjacentRange(allQuestions, blockConfig, selectedIds, ne
     minRange = 1.0;
     maxRange = 1.4;
   }
-  
+
   // Filter questions in adjacent range, sorted by distance from block range
   const candidates = available
     .map(q => {
@@ -172,7 +172,7 @@ function findQuestionsInAdjacentRange(allQuestions, blockConfig, selectedIds, ne
     .sort((a, b) => a.distance - b.distance)
     .slice(0, needed)
     .map(item => item.question);
-  
+
   return candidates;
 }
 
@@ -184,12 +184,12 @@ function findQuestionsInAdjacentRange(allQuestions, blockConfig, selectedIds, ne
  */
 function calculateAverageDifficulty(questions) {
   if (questions.length === 0) return 0;
-  
+
   const sum = questions.reduce((acc, q) => {
     const difficultyB = q.irt_parameters?.difficulty_b || q.difficulty_b || 0.9;
     return acc + difficultyB;
   }, 0);
-  
+
   return sum / questions.length;
 }
 
@@ -203,17 +203,17 @@ function validateDifficultyProgression(sequence) {
   const warmupAvg = calculateAverageDifficulty(sequence.slice(0, 10));
   const coreAvg = calculateAverageDifficulty(sequence.slice(10, 22));
   const challengeAvg = calculateAverageDifficulty(sequence.slice(22));
-  
+
   const warnings = [];
-  
+
   if (warmupAvg > coreAvg) {
     warnings.push(`Warmup block avg difficulty (${warmupAvg.toFixed(2)}) > Core block (${coreAvg.toFixed(2)})`);
   }
-  
+
   if (coreAvg > challengeAvg) {
     warnings.push(`Core block avg difficulty (${coreAvg.toFixed(2)}) > Challenge block (${challengeAvg.toFixed(2)})`);
   }
-  
+
   return {
     valid: warnings.length === 0,
     warnings,
@@ -237,14 +237,14 @@ function groupBySubject(questions) {
     chemistry: [],
     mathematics: []
   };
-  
+
   for (const question of questions) {
     const subject = question.subject?.toLowerCase() || 'unknown';
     if (groups[subject]) {
       groups[subject].push(question);
     }
   }
-  
+
   return groups;
 }
 
@@ -259,18 +259,18 @@ function groupBySubject(questions) {
 function selectBalancedQuestions(subjectGroups, targetDistribution, randomFn) {
   const selected = [];
   const selectedIds = new Set(); // Track IDs within this selection to prevent duplicates
-  
+
   for (const [subject, targetCount] of Object.entries(targetDistribution)) {
     const available = (subjectGroups[subject] || [])
       .filter(q => !selectedIds.has(q.question_id)); // Exclude already selected in this batch
     const shuffled = seededShuffle(available, randomFn);
     const toSelect = shuffled.slice(0, Math.min(targetCount, shuffled.length));
-    
+
     // Add to tracking
     toSelect.forEach(q => selectedIds.add(q.question_id));
     selected.push(...toSelect);
   }
-  
+
   return selected;
 }
 
@@ -285,35 +285,35 @@ function interleaveBySubject(questions, randomFn) {
   if (questions.length <= 2) {
     return questions;
   }
-  
+
   const result = [];
   const remaining = [...questions];
-  
+
   while (remaining.length > 0) {
     // Get subjects of last 2 questions
     const recentSubjects = result.slice(-2).map(q => q.subject?.toLowerCase());
-    
+
     // Find questions that won't create 3+ consecutive same subject
     let validNext = remaining.filter(q => {
       const subject = q.subject?.toLowerCase();
       // If last 2 are same subject, don't allow that subject
-      if (recentSubjects.length >= 2 && 
-          recentSubjects[0] === recentSubjects[1] && 
-          recentSubjects[0] === subject) {
+      if (recentSubjects.length >= 2 &&
+        recentSubjects[0] === recentSubjects[1] &&
+        recentSubjects[0] === subject) {
         return false;
       }
       return true;
     });
-    
+
     // If no valid options (shouldn't happen often), take any
     if (validNext.length === 0) {
       validNext = remaining;
     }
-    
+
     // Randomly select from valid options
     const randomIndex = Math.floor(randomFn() * validNext.length);
     const chosen = validNext[randomIndex];
-    
+
     // Validate chosen question is in remaining array
     const chosenIndex = remaining.indexOf(chosen);
     if (chosenIndex === -1) {
@@ -322,11 +322,11 @@ function interleaveBySubject(questions, randomFn) {
         `This indicates a bug in the interleaving algorithm.`
       );
     }
-    
+
     result.push(chosen);
     remaining.splice(chosenIndex, 1);
   }
-  
+
   return result;
 }
 
@@ -352,15 +352,15 @@ function stratifyAndRandomize(questions, userId) {
   if (!questions || questions.length === 0) {
     throw new Error('Questions array is required');
   }
-  
+
   if (!userId) {
     throw new Error('User ID is required for deterministic randomization');
   }
-  
+
   // Generate deterministic seed
   const seed = generateSeedFromUserId(userId);
   const randomFn = seededRandom(seed);
-  
+
   // Step 1: Categorize questions by difficulty block
   // First, deduplicate questions by question_id (in case of duplicates in input)
   const uniqueQuestions = [];
@@ -374,39 +374,39 @@ function stratifyAndRandomize(questions, userId) {
     seenIds.add(qId);
     uniqueQuestions.push(question);
   }
-  
+
   const questionsByBlock = {
     warmup: [],
     core: [],
     challenge: []
   };
-  
+
   // Track questions added to blocks to prevent same question in multiple blocks
   const questionsInBlocks = new Set();
-  
+
   for (const question of uniqueQuestions) {
     const qId = question.question_id;
-    
+
     // Skip if already added to a block (shouldn't happen, but defensive)
     if (questionsInBlocks.has(qId)) {
       console.warn(`Question ${qId} already categorized into a block, skipping duplicate`);
       continue;
     }
-    
+
     const block = getQuestionBlock(question);
     questionsByBlock[block].push(question);
     questionsInBlocks.add(qId);
   }
-  
+
   // Step 2-4: Process each block
   const processedBlocks = {};
   // Track ALL selected question IDs across ALL blocks to prevent duplicates
   const allSelectedIds = new Set();
-  
+
   for (const [blockName, blockConfig] of Object.entries(BLOCK_CONFIG)) {
     const blockQuestions = questionsByBlock[blockName];
     const targetDistribution = BLOCK_SUBJECT_DISTRIBUTION[blockName];
-    
+
     // Deduplicate blockQuestions (defensive - in case same question appears multiple times)
     const uniqueBlockQuestions = [];
     const blockQuestionIds = new Set();
@@ -416,22 +416,22 @@ function stratifyAndRandomize(questions, userId) {
         uniqueBlockQuestions.push(q);
       }
     }
-    
+
     // Group by subject
     const subjectGroups = groupBySubject(uniqueBlockQuestions);
-    
+
     // Select balanced questions (excluding already selected questions)
     let selected = selectBalancedQuestions(subjectGroups, targetDistribution, randomFn)
       .filter(q => !allSelectedIds.has(q.question_id));
-    
+
     // If not enough questions in block, supplement from adjacent difficulty ranges
     if (selected.length < blockConfig.target_count) {
       const needed = blockConfig.target_count - selected.length;
       const blockSelectedIds = new Set(selected.map(q => q.question_id));
-      
+
       // Try to find questions in adjacent difficulty range first (excluding all previously selected)
       const extras = findQuestionsInAdjacentRange(questions, blockConfig, allSelectedIds, needed);
-      
+
       // If still not enough, log warning and use any available questions
       if (selected.length + extras.length < blockConfig.target_count) {
         const stillNeeded = blockConfig.target_count - selected.length - extras.length;
@@ -439,18 +439,18 @@ function stratifyAndRandomize(questions, userId) {
         const fallback = questions
           .filter(q => !allSelectedIds.has(q.question_id) && !currentBlockIds.has(q.question_id))
           .slice(0, stillNeeded);
-        
+
         console.warn(
           `Block ${blockName} has only ${selected.length + extras.length} questions, ` +
           `need ${blockConfig.target_count}. Using ${fallback.length} fallback questions.`
         );
-        
+
         selected = [...selected, ...extras, ...fallback];
       } else {
         selected = [...selected, ...extras];
       }
     }
-    
+
     // Final deduplication pass for selected (defensive - should not be needed)
     const deduplicatedSelected = [];
     const blockSelectedIds = new Set();
@@ -467,7 +467,7 @@ function stratifyAndRandomize(questions, userId) {
       allSelectedIds.add(q.question_id);
       deduplicatedSelected.push(q);
     }
-    
+
     // If we removed duplicates, we might be short on questions - supplement if needed
     if (deduplicatedSelected.length < selected.length) {
       const removedCount = selected.length - deduplicatedSelected.length;
@@ -475,7 +475,7 @@ function stratifyAndRandomize(questions, userId) {
         `Block ${blockName}: Removed ${removedCount} duplicate(s). ` +
         `Had ${selected.length}, now have ${deduplicatedSelected.length}, need ${blockConfig.target_count}`
       );
-      
+
       // If we're now short, supplement with more questions
       if (deduplicatedSelected.length < blockConfig.target_count) {
         const stillNeeded = blockConfig.target_count - deduplicatedSelected.length;
@@ -483,11 +483,11 @@ function stratifyAndRandomize(questions, userId) {
         const supplement = questions
           .filter(q => !allSelectedIds.has(q.question_id) && !currentBlockIds.has(q.question_id))
           .slice(0, stillNeeded);
-        
+
         console.warn(
           `Block ${blockName}: Supplementing with ${supplement.length} additional question(s) after duplicate removal`
         );
-        
+
         // Add supplements to tracking and selected
         supplement.forEach(q => {
           allSelectedIds.add(q.question_id);
@@ -495,25 +495,25 @@ function stratifyAndRandomize(questions, userId) {
         });
       }
     }
-    
+
     selected = deduplicatedSelected;
-    
+
     // Shuffle within block
     selected = seededShuffle(selected, randomFn);
-    
+
     // Interleave to prevent subject clustering
     selected = interleaveBySubject(selected, randomFn);
-    
+
     processedBlocks[blockName] = selected;
   }
-  
+
   // Step 5: Concatenate blocks in order
   const finalSequence = [
     ...processedBlocks.warmup,
     ...processedBlocks.core,
     ...processedBlocks.challenge
   ];
-  
+
   // Final deduplication pass (defensive - should not be needed if code is correct)
   const finalDeduplicated = [];
   const finalSeenIds = new Set();
@@ -525,7 +525,7 @@ function stratifyAndRandomize(questions, userId) {
     finalSeenIds.add(question.question_id);
     finalDeduplicated.push(question);
   }
-  
+
   // Validate final sequence has exactly 30 questions
   if (finalDeduplicated.length !== 30) {
     throw new Error(
@@ -535,7 +535,7 @@ function stratifyAndRandomize(questions, userId) {
       `${finalSequence.length - finalDeduplicated.length} duplicate(s) removed.`
     );
   }
-  
+
   // Validate no duplicate questions (should pass after deduplication)
   const questionIds = new Set();
   for (const question of finalDeduplicated) {
@@ -544,14 +544,14 @@ function stratifyAndRandomize(questions, userId) {
     }
     questionIds.add(question.question_id);
   }
-  
+
   // Validate difficulty progression
   const progressionCheck = validateDifficultyProgression(finalSequence);
   if (!progressionCheck.valid) {
     console.warn('Difficulty progression warnings:', progressionCheck.warnings);
     console.warn('Difficulty stats:', progressionCheck.stats);
   }
-  
+
   // Add position and block metadata to each question
   let position = 1;
   for (const question of finalDeduplicated) {
@@ -560,7 +560,7 @@ function stratifyAndRandomize(questions, userId) {
     question._block_position = position <= 10 ? position : (position <= 22 ? position - 10 : position - 22);
     position++;
   }
-  
+
   return finalDeduplicated;
 }
 
@@ -579,35 +579,34 @@ async function getRandomizedAssessmentQuestions(userId, db) {
     const snapshot = await retryFirestoreOperation(async () => {
       return await questionsRef.get();
     });
-    
+
     if (snapshot.empty) {
       throw new Error('No assessment questions found in database');
     }
-    
+
+    const { normalizeQuestion } = require('./questionSelectionService');
     const questions = [];
     const questionIdSet = new Set(); // Track to prevent duplicates
-    
+
     snapshot.forEach(doc => {
       const data = doc.data();
       const questionId = data.question_id || doc.id;
-      
+
       // Skip if we've already seen this question_id (database might have duplicates)
       if (questionIdSet.has(questionId)) {
         console.warn(`Duplicate question_id found in database: ${questionId}, skipping duplicate`);
         return;
       }
-      
+
       questionIdSet.add(questionId);
-      questions.push({
-        question_id: questionId,
-        subject: data.subject,
-        chapter: data.chapter,
-        difficulty: data.difficulty,
-        irt_parameters: data.irt_parameters,
-        ...data // Include all question data
-      });
+
+      // Normalize question data
+      const normalized = normalizeQuestion(doc.id, data);
+      if (normalized) {
+        questions.push(normalized);
+      }
     });
-    
+
     // Validate question count before processing
     if (questions.length < 30) {
       throw new Error(
@@ -615,7 +614,7 @@ async function getRandomizedAssessmentQuestions(userId, db) {
         `Please ensure database has at least 30 questions in initial_assessment_questions collection.`
       );
     }
-    
+
     if (questions.length > 30) {
       console.warn(
         `More than 30 questions found (${questions.length}). Using first 30 unique questions.`
@@ -632,10 +631,10 @@ async function getRandomizedAssessmentQuestions(userId, db) {
       }
       questions = unique30;
     }
-    
+
     // Apply stratified randomization
     const randomized = stratifyAndRandomize(questions, userId);
-    
+
     return randomized;
   } catch (error) {
     console.error('Error fetching randomized assessment questions:', error);
@@ -651,7 +650,7 @@ module.exports = {
   // Main functions
   stratifyAndRandomize,
   getRandomizedAssessmentQuestions,
-  
+
   // Helper functions
   generateSeedFromUserId,
   getQuestionBlock,
@@ -660,7 +659,7 @@ module.exports = {
   findQuestionsInAdjacentRange,
   calculateAverageDifficulty,
   validateDifficultyProgression,
-  
+
   // Constants
   BLOCK_CONFIG,
   BLOCK_SUBJECT_DISTRIBUTION

@@ -42,18 +42,18 @@ const { getStreak, updateStreak } = require('../services/streakService');
 router.get('/generate', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     // Check if user has active quiz (in progress)
     const activeQuizRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
       .where('status', '==', 'in_progress')
       .limit(1);
-    
+
     const activeQuizSnapshot = await retryFirestoreOperation(async () => {
       return await activeQuizRef.get();
     });
-    
+
     if (!activeQuizSnapshot.empty) {
       const activeQuiz = activeQuizSnapshot.docs[0].data();
       return res.json({
@@ -74,13 +74,13 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
         requestId: req.id
       });
     }
-    
+
     // Check daily limit: one quiz per day (resets at midnight)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayEnd = new Date(today);
     todayEnd.setHours(23, 59, 59, 999);
-    
+
     const todayQuizzesRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
@@ -88,11 +88,11 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
       .where('completed_at', '>=', admin.firestore.Timestamp.fromDate(today))
       .where('completed_at', '<=', admin.firestore.Timestamp.fromDate(todayEnd))
       .limit(1);
-    
+
     const todayQuizzesSnapshot = await retryFirestoreOperation(async () => {
       return await todayQuizzesRef.get();
     });
-    
+
     /*
     if (!todayQuizzesSnapshot.empty) {
       const completedQuiz = todayQuizzesSnapshot.docs[0].data();
@@ -116,25 +116,25 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
       });
     }
     */
-    
+
     // Generate new quiz
     logger.info('Generating daily quiz', { userId, requestId: req.id });
     const quizData = await generateDailyQuiz(userId);
-    logger.info('Daily quiz generated successfully', { 
-      userId, 
+    logger.info('Daily quiz generated successfully', {
+      userId,
       quizId: quizData.quiz_id,
       questionCount: quizData.questions?.length || 0,
-      requestId: req.id 
+      requestId: req.id
     });
-    
+
     // Save quiz to Firestore atomically using transaction to prevent concurrent generation
     const quizRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
       .doc(quizData.quiz_id);
-    
+
     let savedQuizData = null;
-    
+
     // Use transaction to atomically check and create quiz
     // Note: We already checked for active quiz above, so this prevents duplicate quiz_id creation
     try {
@@ -142,13 +142,13 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
         return await db.runTransaction(async (transaction) => {
           // Check if quiz already exists (another request might have created it with same ID)
           const quizDoc = await transaction.get(quizRef);
-          
+
           if (quizDoc.exists) {
             // Quiz already exists, get existing data
             savedQuizData = quizDoc.data();
             return; // Exit transaction without creating
           }
-          
+
           // Create new quiz atomically
           transaction.set(quizRef, {
             ...quizData,
@@ -169,7 +169,7 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
               };
             })
           });
-          
+
           savedQuizData = quizData; // Mark as saved
         });
       });
@@ -178,7 +178,7 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
       const existingQuizDoc = await retryFirestoreOperation(async () => {
         return await quizRef.get();
       });
-      
+
       if (existingQuizDoc.exists) {
         savedQuizData = existingQuizDoc.data();
       } else {
@@ -186,14 +186,14 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
         throw error;
       }
     }
-    
+
     // If quiz was already created by another request, use existing data
     if (savedQuizData && savedQuizData !== quizData) {
       const sanitizedQuestions = (savedQuizData.questions || []).map(q => {
         const { correct_answer, correct_answer_text, solution_text, solution_steps, ...sanitized } = q;
         return sanitized;
       });
-      
+
       return res.json({
         success: true,
         quiz: {
@@ -207,13 +207,25 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
         requestId: req.id
       });
     }
-    
+
     // Return sanitized quiz (without answers)
     const sanitizedQuestions = quizData.questions.map(q => {
       const { correct_answer, correct_answer_text, solution_text, solution_steps, ...sanitized } = q;
       return sanitized;
     });
-    
+
+    // Log questions for debugging
+    if (sanitizedQuestions) {
+      sanitizedQuestions.forEach((q, i) => {
+        logger.info(`Sending Question ${i + 1}`, {
+          id: q.question_id,
+          type: q.question_type,
+          has_options: !!q.options,
+          options_count: q.options?.length
+        });
+      });
+    }
+
     res.json({
       success: true,
       quiz: {
@@ -247,37 +259,37 @@ router.post('/start', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { quiz_id } = req.body;
-    
+
     if (!quiz_id) {
       throw new ApiError(400, 'quiz_id is required', 'MISSING_QUIZ_ID');
     }
-    
+
     const quizRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
       .doc(quiz_id);
-    
+
     const quizDoc = await retryFirestoreOperation(async () => {
       return await quizRef.get();
     });
-    
+
     if (!quizDoc.exists) {
       throw new ApiError(404, `Quiz ${quiz_id} not found`, 'QUIZ_NOT_FOUND');
     }
-    
+
     const quizData = quizDoc.data();
-    
+
     if (quizData.status !== 'in_progress') {
       throw new ApiError(400, `Quiz ${quiz_id} is not in progress. Status: ${quizData.status}`, 'QUIZ_NOT_IN_PROGRESS');
     }
-    
+
     // Update quiz with started_at timestamp
     await retryFirestoreOperation(async () => {
       return await quizRef.update({
         started_at: admin.firestore.FieldValue.serverTimestamp()
       });
     });
-    
+
     res.json({
       success: true,
       message: 'Quiz started',
@@ -312,13 +324,13 @@ router.post('/submit-answer', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { quiz_id, question_id, student_answer, time_taken_seconds } = req.body;
-    
+
     if (!quiz_id || !question_id || student_answer === undefined || time_taken_seconds === undefined) {
       throw new ApiError(400, 'quiz_id, question_id, student_answer, and time_taken_seconds are required', 'MISSING_REQUIRED_FIELDS');
     }
-    
+
     const feedback = await submitAnswer(userId, quiz_id, question_id, student_answer, time_taken_seconds);
-    
+
     res.json({
       success: true,
       ...feedback,
@@ -346,25 +358,25 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { quiz_id } = req.body;
-    
+
     if (!quiz_id) {
       throw new ApiError(400, 'quiz_id is required', 'MISSING_QUIZ_ID');
     }
-    
+
     // Get quiz and responses
     const quizRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
       .doc(quiz_id);
     const userRef = db.collection('users').doc(userId);
-    
+
     // Get all responses first (before transaction)
     const responses = await getQuizResponses(userId, quiz_id);
-    
+
     if (responses.length === 0) {
       throw new ApiError(400, 'No responses found in quiz', 'NO_RESPONSES_FOUND');
     }
-    
+
     // Calculate quiz statistics
     const correctCount = responses.filter(r => r.is_correct).length;
     const totalCount = responses.length;
@@ -372,7 +384,7 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
     const totalTime = responses.reduce((sum, r) => sum + (r.time_taken_seconds || 0), 0);
     const avgTimePerQuestion = totalCount > 0 ? Math.round(totalTime / totalCount) : 0;
     const quizPassed = accuracy >= 0.5;
-    
+
     // Group responses by chapter
     const responsesByChapter = {};
     responses.forEach(response => {
@@ -386,42 +398,42 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
       }
       responsesByChapter[chapterKey].push(response);
     });
-    
+
     // Use transaction to atomically complete quiz and update user
     await retryFirestoreOperation(async () => {
       return await db.runTransaction(async (transaction) => {
         // Read quiz and user documents in transaction
         const quizDoc = await transaction.get(quizRef);
         const userDoc = await transaction.get(userRef);
-        
+
         if (!quizDoc.exists) {
           throw new ApiError(404, `Quiz ${quiz_id} not found`, 'QUIZ_NOT_FOUND');
         }
-        
+
         const quizData = quizDoc.data();
-        
+
         // Check if already completed (atomic check)
         if (quizData.status === 'completed') {
           throw new ApiError(400, `Quiz ${quiz_id} is already completed`, 'QUIZ_ALREADY_COMPLETED');
         }
-        
+
         if (!userDoc.exists) {
           throw new ApiError(404, `User ${userId} not found`, 'USER_NOT_FOUND');
         }
-        
+
         const userData = userDoc.data();
         const completedQuizCount = userData.completed_quiz_count || 0;
         const newQuizCount = completedQuizCount + 1;
-        
+
         // Calculate learning phase
-        const assessmentDate = userData.assessment?.completed_at 
+        const assessmentDate = userData.assessment?.completed_at
           ? new Date(userData.assessment.completed_at)
           : new Date();
         const currentDate = new Date();
         const daysSinceAssessment = Math.floor((currentDate - assessmentDate) / (1000 * 60 * 60 * 24));
         const learningPhase = newQuizCount < 14 ? 'exploration' : 'exploitation';
         const chaptersCovered = Object.keys(responsesByChapter);
-        
+
         // Update quiz document atomically
         transaction.update(quizRef, {
           status: 'completed',
@@ -435,7 +447,7 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
           deliberate_practice_questions: responses.filter(r => r.selection_reason === 'deliberate_practice').length,
           review_questions: responses.filter(r => r.selection_reason === 'review').length
         });
-        
+
         // Update user document atomically
         transaction.update(userRef, {
           completed_quiz_count: newQuizCount,
@@ -448,7 +460,7 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
         });
       });
     });
-    
+
     // Update chapter thetas (outside transaction - these can fail without blocking completion)
     const chapterUpdates = await Promise.all(
       Object.entries(responsesByChapter).map(async ([chapterKey, chapterResponses]) => {
@@ -464,7 +476,7 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
         }
       })
     );
-    
+
     // Update subject and overall theta
     try {
       await updateSubjectAndOverallTheta(userId);
@@ -474,7 +486,7 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
         error: error.message
       });
     }
-    
+
     // Update practice streak
     try {
       await updateStreak(userId);
@@ -484,7 +496,7 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
         error: error.message
       });
     }
-    
+
     // Update failure count (circuit breaker)
     try {
       await updateFailureCount(userId, quizPassed);
@@ -494,7 +506,7 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
         error: error.message
       });
     }
-    
+
     // Update review intervals for incorrect answers
     for (const response of responses) {
       if (!response.is_correct && response.question_id) {
@@ -509,34 +521,34 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
         }
       }
     }
-    
+
     // Get final user data and quiz data for response
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
     const userData = userDoc.data();
     const newQuizCount = (userData.completed_quiz_count || 0);
-    
+
     // Get quiz data again (needed for saving responses)
     const quizDoc = await retryFirestoreOperation(async () => {
       return await quizRef.get();
     });
     const quizData = quizDoc.data();
-    
+
     // Save individual responses to daily_quiz_responses collection
     const responsesRef = db.collection('daily_quiz_responses')
       .doc(userId)
       .collection('responses');
-    
+
     let batch = db.batch(); // Initialize first batch
     let batchCount = 0;
-    
+
     for (const response of responses) {
       const responseId = `${quiz_id}_${response.question_id}`;
       const responseRef = responsesRef.doc(responseId);
-      
+
       const questionData = quizData.questions?.find(q => q.question_id === response.question_id) || {};
-      
+
       batch.set(responseRef, {
         response_id: responseId,
         student_id: userId,
@@ -546,33 +558,33 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
         question_position: questionData.position || 0,
         learning_phase: quizData.learning_phase,
         selection_reason: questionData.selection_reason || 'unknown',
-        
+
         // Chapter metadata
         subject: questionData.subject,
         chapter: questionData.chapter,
         chapter_key: response.chapter_key,
-        
+
         // IRT parameters (denormalized)
         difficulty_b: response.questionIRT.b,
         discrimination_a: response.questionIRT.a,
         guessing_c: response.questionIRT.c,
-        
+
         // Response details
         student_answer: response.student_answer,
         correct_answer: response.correct_answer,
         is_correct: response.is_correct,
         time_taken_seconds: response.time_taken_seconds,
-        
+
         // Review interval (for spaced repetition)
         review_interval: response.is_correct ? null : 1, // Start at 1 day if incorrect
-        
+
         // Timestamps
         answered_at: admin.firestore.FieldValue.serverTimestamp(),
         created_at: admin.firestore.FieldValue.serverTimestamp()
       });
-      
+
       batchCount++;
-      
+
       // Firestore batch limit is 500
       if (batchCount >= 500) {
         await retryFirestoreOperation(async () => {
@@ -582,14 +594,14 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
         batchCount = 0;
       }
     }
-    
+
     // Commit remaining batch
     if (batchCount > 0) {
       await retryFirestoreOperation(async () => {
         return await batch.commit();
       });
     }
-    
+
     logger.info('Quiz completed', {
       userId,
       quizId: quiz_id,
@@ -598,7 +610,7 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
       correctCount,
       totalCount
     });
-    
+
     res.json({
       success: true,
       message: 'Quiz completed',
@@ -628,18 +640,18 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
 router.get('/active', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     const activeQuizRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
       .where('status', '==', 'in_progress')
       .orderBy('generated_at', 'desc')
       .limit(1);
-    
+
     const activeQuizSnapshot = await retryFirestoreOperation(async () => {
       return await activeQuizRef.get();
     });
-    
+
     if (activeQuizSnapshot.empty) {
       return res.json({
         success: true,
@@ -648,16 +660,16 @@ router.get('/active', authenticateUser, async (req, res, next) => {
         requestId: req.id
       });
     }
-    
+
     const activeQuiz = activeQuizSnapshot.docs[0].data();
     const quizId = activeQuizSnapshot.docs[0].id;
-    
+
     // Sanitize questions (remove answers)
     const sanitizedQuestions = (activeQuiz.questions || []).map(q => {
       const { correct_answer, correct_answer_text, solution_text, solution_steps, ...sanitized } = q;
       return sanitized;
     });
-    
+
     res.json({
       success: true,
       has_active_quiz: true,
@@ -692,15 +704,15 @@ router.get('/active', authenticateUser, async (req, res, next) => {
 router.get('/progress', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     // Get user data for overall theta
     const userRef = db.collection('users').doc(userId);
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
-    
+
     const userData = userDoc.exists ? userDoc.data() : {};
-    
+
     // Get all progress data in parallel
     const [chapterProgress, subjectProgress, cumulativeStats, streak] = await Promise.all([
       getChapterProgress(userId),
@@ -708,7 +720,7 @@ router.get('/progress', authenticateUser, async (req, res, next) => {
       getCumulativeStats(userId),
       getStreak(userId)
     ]);
-    
+
     res.json({
       success: true,
       progress: {
@@ -744,7 +756,7 @@ router.get('/stats', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
     const days = parseInt(req.query.days) || 30;
-    
+
     const [accuracyTrends, chapterProgress, subjectProgress, cumulativeStats, streak] = await Promise.all([
       getAccuracyTrends(userId, days),
       getChapterProgress(userId),
@@ -752,13 +764,13 @@ router.get('/stats', authenticateUser, async (req, res, next) => {
       getCumulativeStats(userId),
       getStreak(userId)
     ]);
-    
+
     // Calculate chapter improvements
     const chapterImprovements = Object.values(chapterProgress)
       .filter(ch => ch.theta_change > 0)
       .sort((a, b) => b.theta_change - a.theta_change)
       .slice(0, 5); // Top 5 improvements
-    
+
     res.json({
       success: true,
       stats: {
@@ -799,7 +811,7 @@ router.get('/history', authenticateUser, async (req, res, next) => {
     const userId = req.userId;
     const limit = Math.min(parseInt(req.query.limit) || 20, 50);
     const offset = parseInt(req.query.offset) || 0;
-    
+
     // Validate and parse date parameters
     function validateDate(dateString, paramName) {
       if (!dateString) return null;
@@ -809,15 +821,15 @@ router.get('/history', authenticateUser, async (req, res, next) => {
       }
       return date;
     }
-    
+
     const startDate = validateDate(req.query.start_date, 'start_date');
     const endDate = validateDate(req.query.end_date, 'end_date');
-    
+
     // Validate date range
     if (startDate && endDate && startDate > endDate) {
       throw new ApiError(400, 'start_date must be before or equal to end_date', 'INVALID_DATE_RANGE');
     }
-    
+
     // Validate pagination parameters
     if (limit < 1 || limit > 50) {
       throw new ApiError(400, 'limit must be between 1 and 50', 'INVALID_LIMIT');
@@ -825,21 +837,21 @@ router.get('/history', authenticateUser, async (req, res, next) => {
     if (offset < 0) {
       throw new ApiError(400, 'offset must be >= 0', 'INVALID_OFFSET');
     }
-    
+
     // Firestore doesn't support efficient offset for large values
     // For offsets > 100, recommend cursor-based pagination
     if (offset > 100) {
-      throw new ApiError(400, 
+      throw new ApiError(400,
         'Offset > 100 not supported. Use cursor-based pagination with last_quiz_id parameter for better performance',
         'OFFSET_TOO_LARGE'
       );
     }
-    
+
     const quizzesRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
       .where('status', '==', 'completed');
-    
+
     // Apply date filters if provided
     let query = quizzesRef;
     if (startDate) {
@@ -848,19 +860,19 @@ router.get('/history', authenticateUser, async (req, res, next) => {
     if (endDate) {
       query = query.where('completed_at', '<=', admin.firestore.Timestamp.fromDate(endDate));
     }
-    
+
     // Order by completed_at descending and apply pagination
     query = query
       .orderBy('completed_at', 'desc')
       .limit(limit + offset);
-    
+
     const snapshot = await retryFirestoreOperation(async () => {
       return await query.get();
     });
-    
+
     // Apply offset manually (Firestore doesn't support offset directly)
     const allQuizzes = snapshot.docs.slice(offset, offset + limit);
-    
+
     const quizzes = allQuizzes.map(doc => {
       const data = doc.data();
       return {
@@ -879,7 +891,7 @@ router.get('/history', authenticateUser, async (req, res, next) => {
         review_questions: data.review_questions || 0
       };
     });
-    
+
     // Get total count (for pagination info) - apply same filters
     let countQuery = quizzesRef;
     if (startDate) {
@@ -888,13 +900,13 @@ router.get('/history', authenticateUser, async (req, res, next) => {
     if (endDate) {
       countQuery = countQuery.where('completed_at', '<=', admin.firestore.Timestamp.fromDate(endDate));
     }
-    
+
     const totalSnapshot = await retryFirestoreOperation(async () => {
       return await countQuery.count().get();
     });
     const total = totalSnapshot.data().count;
     const hasMore = offset + limit < total;
-    
+
     res.json({
       success: true,
       quizzes: quizzes,
@@ -927,45 +939,45 @@ router.get('/result/:quiz_id', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { quiz_id } = req.params;
-    
+
     const quizRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
       .doc(quiz_id);
-    
+
     const quizDoc = await retryFirestoreOperation(async () => {
       return await quizRef.get();
     });
-    
+
     if (!quizDoc.exists) {
       throw new ApiError(404, `Quiz ${quiz_id} not found`, 'QUIZ_NOT_FOUND');
     }
-    
+
     const quizData = quizDoc.data();
-    
+
     // Security: Verify quiz belongs to authenticated user (defense in depth)
     if (quizData.student_id && quizData.student_id !== userId) {
       throw new ApiError(403, 'Access denied: Quiz belongs to another user', 'FORBIDDEN');
     }
-    
+
     // Only return results for completed quizzes
     if (quizData.status !== 'completed') {
       throw new ApiError(400, `Quiz ${quiz_id} is not completed. Status: ${quizData.status}`, 'QUIZ_NOT_COMPLETED');
     }
-    
+
     // Get full question details from questions collection using batch read
     const questionIds = (quizData.questions || []).map(q => q.question_id).filter(Boolean);
-    
+
     if (questionIds.length === 0) {
       throw new ApiError(400, 'Quiz has no questions', 'NO_QUESTIONS_IN_QUIZ');
     }
-    
+
     // Batch read all questions at once (fixes N+1 query problem)
     const questionRefs = questionIds.map(id => db.collection('questions').doc(id));
     const questionDocs = await retryFirestoreOperation(async () => {
       return await db.getAll(...questionRefs);
     });
-    
+
     // Create lookup map for O(1) access
     const questionMap = new Map();
     questionDocs.forEach(doc => {
@@ -973,14 +985,14 @@ router.get('/result/:quiz_id', authenticateUser, async (req, res, next) => {
         questionMap.set(doc.id, doc.data());
       }
     });
-    
+
     // Get streak data for the result
     const streak = await getStreak(userId);
-    
+
     // Map questions with details
     const questionsWithDetails = (quizData.questions || []).map(q => {
       const questionData = questionMap.get(q.question_id);
-      
+
       if (questionData) {
         // Full question data available
         return {
@@ -993,19 +1005,19 @@ router.get('/result/:quiz_id', authenticateUser, async (req, res, next) => {
           question_type: questionData.question_type,
           options: questionData.options || [],
           image_url: questionData.image_url,
-          
+
           // Response data
           student_answer: q.student_answer,
           correct_answer: q.correct_answer || questionData.correct_answer,
           correct_answer_text: questionData.correct_answer_text,
           is_correct: q.is_correct,
           time_taken_seconds: q.time_taken_seconds,
-          
+
           // Solution data
           solution_text: questionData.solution_text,
           solution_steps: questionData.solution_steps || [],
           concepts_tested: questionData.concepts_tested || [],
-          
+
           // Metadata
           selection_reason: q.selection_reason,
           chapter_key: q.chapter_key
@@ -1031,7 +1043,7 @@ router.get('/result/:quiz_id', authenticateUser, async (req, res, next) => {
         };
       }
     });
-    
+
     res.json({
       success: true,
       quiz: {
@@ -1091,21 +1103,21 @@ router.get('/question/:question_id', authenticateUser, async (req, res, next) =>
       }
       return questionId;
     }
-    
+
     const question_id = validateQuestionId(req.params.question_id);
     const includeSolution = req.query.include_solution !== 'false';
-    
+
     const questionRef = db.collection('questions').doc(question_id);
     const questionDoc = await retryFirestoreOperation(async () => {
       return await questionRef.get();
     });
-    
+
     if (!questionDoc.exists) {
       throw new ApiError(404, `Question ${question_id} not found`, 'QUESTION_NOT_FOUND');
     }
-    
+
     const questionData = questionDoc.data();
-    
+
     const response = {
       success: true,
       question: {
@@ -1139,13 +1151,13 @@ router.get('/question/:question_id', authenticateUser, async (req, res, next) =>
       },
       requestId: req.id
     };
-    
+
     // Include solution if requested
     if (includeSolution) {
       response.question.solution_text = questionData.solution_text;
       response.question.solution_steps = questionData.solution_steps || [];
     }
-    
+
     res.json(response);
   } catch (error) {
     next(error);
@@ -1170,7 +1182,7 @@ router.get('/summary', authenticateUser, async (req, res, next) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayTimestamp = admin.firestore.Timestamp.fromDate(today);
-    
+
     // Get active quiz
     const activeQuizRef = db.collection('daily_quizzes')
       .doc(userId)
@@ -1178,17 +1190,17 @@ router.get('/summary', authenticateUser, async (req, res, next) => {
       .where('status', '==', 'in_progress')
       .orderBy('generated_at', 'desc')
       .limit(1);
-    
+
     const activeQuizSnapshot = await retryFirestoreOperation(async () => {
       return await activeQuizRef.get();
     });
-    
+
     let activeQuiz = null;
     if (!activeQuizSnapshot.empty) {
       const quizDoc = activeQuizSnapshot.docs[0];
       const quizData = quizDoc.data();
       const answeredCount = (quizData.questions || []).filter(q => q.answered).length;
-      
+
       activeQuiz = {
         quiz_id: quizDoc.id,
         quiz_number: quizData.quiz_number,
@@ -1198,26 +1210,26 @@ router.get('/summary', authenticateUser, async (req, res, next) => {
         generated_at: quizData.generated_at
       };
     }
-    
+
     // Get today's completed quizzes
     const todayQuizzesRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
       .where('status', '==', 'completed')
       .where('completed_at', '>=', todayTimestamp);
-    
+
     const todayQuizzesSnapshot = await retryFirestoreOperation(async () => {
       return await todayQuizzesRef.get();
     });
-    
+
     const todayQuizzes = todayQuizzesSnapshot.docs.map(doc => doc.data());
-    
+
     // Calculate today's stats with proper validation
     const accuracySum = todayQuizzes.reduce((sum, q) => {
       const acc = typeof q.accuracy === 'number' && !isNaN(q.accuracy) ? q.accuracy : 0;
       return sum + acc;
     }, 0);
-    
+
     const todayStats = {
       quizzes_completed: todayQuizzes.length,
       questions_solved: todayQuizzes.reduce((sum, q) => {
@@ -1226,29 +1238,29 @@ router.get('/summary', authenticateUser, async (req, res, next) => {
       }, 0),
       accuracy: todayQuizzes.length > 0 ? accuracySum / todayQuizzes.length : 0,
       time_spent_minutes: todayQuizzes.reduce((sum, q) => {
-        const time = typeof q.total_time_seconds === 'number' && !isNaN(q.total_time_seconds) 
-          ? q.total_time_seconds 
+        const time = typeof q.total_time_seconds === 'number' && !isNaN(q.total_time_seconds)
+          ? q.total_time_seconds
           : 0;
         return sum + Math.round(time / 60);
       }, 0)
     };
-    
+
     // Get streak
     const streak = await getStreak(userId);
-    
+
     // Get user data for next quiz availability
     const userRef = db.collection('users').doc(userId);
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
-    
+
     const userData = userDoc.exists ? userDoc.data() : {};
     const assessmentCompleted = userData.assessment?.completed_at;
     const lastQuizCompleted = userData.last_quiz_completed_at?.toDate?.() || userData.last_quiz_completed_at;
-    
+
     // Check if next quiz is available (can generate new quiz if no active quiz)
     const nextQuizAvailable = assessmentCompleted && !activeQuiz;
-    
+
     res.json({
       success: true,
       summary: {
@@ -1282,7 +1294,7 @@ router.get('/summary', authenticateUser, async (req, res, next) => {
 router.get('/chapter-progress/:chapter_key', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     // Validate chapter_key parameter
     function validateChapterKey(chapterKey) {
       if (!chapterKey || typeof chapterKey !== 'string') {
@@ -1296,35 +1308,35 @@ router.get('/chapter-progress/:chapter_key', authenticateUser, async (req, res, 
       }
       return chapterKey;
     }
-    
+
     const chapter_key = validateChapterKey(req.params.chapter_key);
-    
+
     // Get user data
     const userRef = db.collection('users').doc(userId);
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
-    
+
     if (!userDoc.exists) {
       throw new ApiError(404, `User ${userId} not found`, 'USER_NOT_FOUND');
     }
-    
+
     const userData = userDoc.data();
     const thetaByChapter = userData.theta_by_chapter || {};
     const baseline = userData.assessment_baseline?.theta_by_chapter || {};
-    
+
     const currentData = thetaByChapter[chapter_key];
     const baselineData = baseline[chapter_key];
-    
+
     if (!currentData) {
       throw new ApiError(404, `Chapter ${chapter_key} not found in user progress`, 'CHAPTER_NOT_FOUND');
     }
-    
+
     // Parse chapter key to get subject and chapter name
     const parts = chapter_key.split('_');
     const subject = parts[0]?.charAt(0).toUpperCase() + parts[0]?.slice(1) || '';
     const chapter = parts.slice(1).join(' ').replace(/_/g, ' ') || '';
-    
+
     // Get recent quizzes that covered this chapter
     const recentQuizzesRef = db.collection('daily_quizzes')
       .doc(userId)
@@ -1333,16 +1345,16 @@ router.get('/chapter-progress/:chapter_key', authenticateUser, async (req, res, 
       .where('chapters_covered', 'array-contains', chapter_key)
       .orderBy('completed_at', 'desc')
       .limit(10);
-    
+
     const recentQuizzesSnapshot = await retryFirestoreOperation(async () => {
       return await recentQuizzesRef.get();
     });
-    
+
     const recentQuizzes = recentQuizzesSnapshot.docs.map(doc => {
       const quizData = doc.data();
       const chapterQuestions = (quizData.questions || []).filter(q => q.chapter_key === chapter_key);
       const chapterCorrect = chapterQuestions.filter(q => q.is_correct).length;
-      
+
       return {
         quiz_id: doc.id,
         quiz_number: quizData.quiz_number,
@@ -1352,14 +1364,14 @@ router.get('/chapter-progress/:chapter_key', authenticateUser, async (req, res, 
         correct_count: chapterCorrect
       };
     });
-    
+
     // Calculate status
     const percentile = currentData.percentile || 50;
     let status = 'untested';
     if (percentile >= 70) status = 'strong';
     else if (percentile >= 40) status = 'average';
     else if (percentile > 0) status = 'weak';
-    
+
     res.json({
       success: true,
       chapter: {

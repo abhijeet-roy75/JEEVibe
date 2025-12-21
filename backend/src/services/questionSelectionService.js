@@ -208,9 +208,15 @@ function scoreQuestions(questions, theta) {
 function normalizeQuestion(id, data) {
   if (!data) return null;
 
+  // Ensure all top-level IDs and strings are actually strings and never null
   const q = {
     ...data,
-    question_id: id || data.question_id || data.id
+    question_id: String(id || data.question_id || data.id || "unknown_" + Math.random().toString(36).substr(2, 9)),
+    subject: String(data.subject || data.subject_id || 'Unknown'),
+    chapter: String(data.chapter || data.chapter_name || 'Unknown'),
+    chapter_key: String(data.chapter_key || ''),
+    question_type: String(data.question_type || 'mcq_single'),
+    question_text: String(data.question_text || data.text || '')
   };
 
   // 1. Transform options to standardized List format
@@ -218,48 +224,59 @@ function normalizeQuestion(id, data) {
     if (typeof q.options === 'object' && !Array.isArray(q.options)) {
       // Map format: {"A": "Text"} or {"A": {"text": "Text"}}
       q.options = Object.entries(q.options)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, value]) => ({
-          option_id: key,
-          text: typeof value === 'object' ? (value.text || value.description || '') : value.toString(),
-          html: typeof value === 'object' ? (value.html || value.rich_text || null) : null
-        }));
+        .filter(([key, value]) => key !== null && key !== undefined)
+        .sort(([a], [b]) => String(a).localeCompare(String(b)))
+        .map(([key, value], index) => {
+          const isObj = typeof value === 'object' && value !== null;
+          return {
+            option_id: String(key || String.fromCharCode(65 + index)),
+            text: String(isObj ? (value.text || value.description || '') : (value !== undefined && value !== null ? value : '')),
+            html: isObj ? (value.html || value.rich_text || null) : null
+          };
+        });
     } else if (Array.isArray(q.options)) {
-      // Array format: check for missing option_id
-      q.options = q.options.map((opt, index) => {
-        if (typeof opt === 'string') {
+      // Array format: check for missing option_id or nulls
+      q.options = q.options
+        .filter(opt => opt !== null && opt !== undefined)
+        .map((opt, index) => {
+          if (typeof opt === 'string' || typeof opt === 'number') {
+            return {
+              option_id: String.fromCharCode(65 + index),
+              text: String(opt)
+            };
+          }
+          if (typeof opt === 'object') {
+            return {
+              ...opt,
+              option_id: String(opt.option_id || opt.id || opt.key || String.fromCharCode(65 + index)),
+              text: String(opt.text || opt.description || opt.value || ''),
+              html: opt.html || opt.rich_text || null
+            };
+          }
+          // Fallback for weird types
           return {
             option_id: String.fromCharCode(65 + index),
-            text: opt
+            text: String(opt || '')
           };
-        }
-        if (typeof opt === 'object' && opt !== null) {
-          return {
-            ...opt,
-            option_id: opt.option_id || opt.id || opt.key || String.fromCharCode(65 + index),
-            text: opt.text || opt.description || opt.value || ''
-          };
-        }
-        return opt;
-      });
+        });
     }
   } else if (q.question_type !== 'numerical') {
     q.options = [];
   }
 
-  // 2. Ensure basic fields match mobile app expectations (null safety for Dart)
-  q.question_type = q.question_type || 'mcq_single';
-  q.subject = q.subject || 'Unknown';
-  q.chapter = q.chapter || 'Unknown';
-  q.question_text = q.question_text || q.text || '';
-
-  // 3. IRT parameters normalization
+  // 2. IRT parameters normalization
   if (q.irt_parameters) {
+    const p = q.irt_parameters;
     q.irt_parameters = {
-      discrimination_a: parseFloat(q.irt_parameters.discrimination_a || q.irt_parameters.a || 1.5),
-      difficulty_b: parseFloat(q.irt_parameters.difficulty_b !== undefined ? q.irt_parameters.difficulty_b : (q.irt_parameters.b || 0)),
-      guessing_c: parseFloat(q.irt_parameters.guessing_c !== undefined ? q.irt_parameters.guessing_c : (q.irt_parameters.c || (q.question_type === 'mcq_single' ? 0.25 : 0.0)))
+      discrimination_a: Number(p.discrimination_a || p.a || 1.5),
+      difficulty_b: Number(p.difficulty_b !== undefined ? p.difficulty_b : (p.b !== undefined ? p.b : 0)),
+      guessing_c: Number(p.guessing_c !== undefined ? p.guessing_c : (p.c !== undefined ? p.c : (q.question_type === 'mcq_single' ? 0.25 : 0.0)))
     };
+
+    // Safety check for NaN
+    if (isNaN(q.irt_parameters.discrimination_a)) q.irt_parameters.discrimination_a = 1.5;
+    if (isNaN(q.irt_parameters.difficulty_b)) q.irt_parameters.difficulty_b = 0;
+    if (isNaN(q.irt_parameters.guessing_c)) q.irt_parameters.guessing_c = 0.25;
   }
 
   return q;

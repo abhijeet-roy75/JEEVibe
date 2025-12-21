@@ -96,6 +96,21 @@ async function verifyQuizGeneration(userId) {
         console.log(`  [!] Question ${i + 1} (${q.question_id}): ${issues.join(', ')}`);
         schemaErrors++;
       }
+
+      // Debug: log types for first question
+      if (i === 0) {
+        console.log('\n--- Debug: First Question Types ---');
+        ['question_id', 'subject', 'chapter', 'question_type', 'question_text', 'chapter_key', 'options'].forEach(key => {
+          console.log(`${key}: ${typeof q[key]} (${q[key] === null ? 'null' : (q[key] === undefined ? 'undefined' : 'value present')})`);
+        });
+        if (q.options && q.options.length > 0) {
+          console.log('--- Debug: First Option Types ---');
+          ['option_id', 'text'].forEach(key => {
+            console.log(`  ${key}: ${typeof q.options[0][key]} (${q.options[0][key] === null ? 'null' : (q.options[0][key] === undefined ? 'undefined' : 'value present')})`);
+          });
+        }
+        console.log('--------------------------------\n');
+      }
     });
 
     if (schemaErrors === 0) {
