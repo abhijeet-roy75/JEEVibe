@@ -25,7 +25,7 @@ const RECENCY_FILTER_DAYS = 30; // Don't show questions answered in last 30 days
 const MAX_CANDIDATES = 50; // Maximum candidates to evaluate before selecting
 
 // ============================================================================
-// FISHER INFORMATION CALCULATION
+// FISCHER INFORMATION CALCULATION
 // ============================================================================
 
 /**
@@ -198,6 +198,73 @@ function scoreQuestions(questions, theta) {
   }).sort((a, b) => b.score - a.score); // Sort descending by score
 }
 
+/**
+ * Normalize question document from Firestore to mobile-app compatible schema
+ * 
+ * @param {string} id - Question ID
+ * @param {Object} data - Firestore document data
+ * @returns {Object} Normalized question object
+ */
+function normalizeQuestion(id, data) {
+  if (!data) return null;
+
+  const q = {
+    ...data,
+    question_id: id || data.question_id || data.id
+  };
+
+  // 1. Transform options to standardized List format
+  if (q.options) {
+    if (typeof q.options === 'object' && !Array.isArray(q.options)) {
+      // Map format: {"A": "Text"} or {"A": {"text": "Text"}}
+      q.options = Object.entries(q.options)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, value]) => ({
+          option_id: key,
+          text: typeof value === 'object' ? (value.text || value.description || '') : value.toString(),
+          html: typeof value === 'object' ? (value.html || value.rich_text || null) : null
+        }));
+    } else if (Array.isArray(q.options)) {
+      // Array format: check for missing option_id
+      q.options = q.options.map((opt, index) => {
+        if (typeof opt === 'string') {
+          return {
+            option_id: String.fromCharCode(65 + index),
+            text: opt
+          };
+        }
+        if (typeof opt === 'object' && opt !== null) {
+          return {
+            ...opt,
+            option_id: opt.option_id || opt.id || opt.key || String.fromCharCode(65 + index),
+            text: opt.text || opt.description || opt.value || ''
+          };
+        }
+        return opt;
+      });
+    }
+  } else if (q.question_type !== 'numerical') {
+    q.options = [];
+  }
+
+  // 2. Ensure basic fields match mobile app expectations (null safety for Dart)
+  q.question_type = q.question_type || 'mcq_single';
+  q.subject = q.subject || 'Unknown';
+  q.chapter = q.chapter || 'Unknown';
+  q.question_text = q.question_text || q.text || '';
+
+  // 3. IRT parameters normalization
+  if (q.irt_parameters) {
+    q.irt_parameters = {
+      discrimination_a: parseFloat(q.irt_parameters.discrimination_a || q.irt_parameters.a || 1.5),
+      difficulty_b: parseFloat(q.irt_parameters.difficulty_b !== undefined ? q.irt_parameters.difficulty_b : (q.irt_parameters.b || 0)),
+      guessing_c: parseFloat(q.irt_parameters.guessing_c !== undefined ? q.irt_parameters.guessing_c : (q.irt_parameters.c || (q.question_type === 'mcq_single' ? 0.25 : 0.0)))
+    };
+  }
+
+  return q;
+}
+
 // ============================================================================
 // QUESTION SELECTION
 // ============================================================================
@@ -281,10 +348,9 @@ async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds =
       return [];
     }
 
-    let questions = snapshot.docs.map(doc => ({
-      question_id: doc.id,
-      ...doc.data()
-    }));
+    let questions = snapshot.docs
+      .map(doc => normalizeQuestion(doc.id, doc.data()))
+      .filter(q => q !== null);
 
     // Filter out excluded questions (recently answered)
     questions = questions.filter(q => !excludeQuestionIds.has(q.question_id));
@@ -304,10 +370,9 @@ async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds =
         threshold: DIFFICULTY_MATCH_THRESHOLD
       });
       // Fallback: use all questions if none match
-      questions = snapshot.docs.map(doc => ({
-        question_id: doc.id,
-        ...doc.data()
-      })).filter(q => !excludeQuestionIds.has(q.question_id));
+      questions = snapshot.docs
+        .map(doc => normalizeQuestion(doc.id, doc.data()))
+        .filter(q => q !== null && !excludeQuestionIds.has(q.question_id));
     }
 
     // Score and rank questions
@@ -395,10 +460,7 @@ async function selectQuestionsForChapters(chapterThetas, excludeQuestionIds = ne
  */
 async function selectAnyAvailableQuestions(excludeQuestionIds = new Set(), limit = 10) {
   try {
-    logger.info('Selecting any available questions (fallback)', {
-      excludeCount: excludeQuestionIds.size,
-      limit
-    });
+    logger.info(`selectAnyAvailableQuestions called with limit=${limit}`);
 
     // Query all questions, limited by count
     const questionsRef = db.collection('questions')
@@ -416,10 +478,9 @@ async function selectAnyAvailableQuestions(excludeQuestionIds = new Set(), limit
     }
 
     // Map to question objects
-    let questions = snapshot.docs.map(doc => ({
-      question_id: doc.id,
-      ...doc.data()
-    }));
+    let questions = snapshot.docs
+      .map(doc => normalizeQuestion(doc.id, doc.data()))
+      .filter(q => q !== null);
 
     // Filter out excluded questions
     let filteredQuestions = questions.filter(q => !excludeQuestionIds.has(q.question_id));
@@ -459,6 +520,10 @@ async function selectAnyAvailableQuestions(excludeQuestionIds = new Set(), limit
   }
 }
 
+async function getRecentQuestionIdsFromResponses(userId, days = RECENCY_FILTER_DAYS) {
+  return await getRecentQuestionIds(userId, days);
+}
+
 // ============================================================================
 // EXPORTS
 // ============================================================================
@@ -471,6 +536,6 @@ module.exports = {
   calculateFisherInformation,
   calculateIRTProbability,
   filterByDifficultyMatch,
-  scoreQuestions
+  scoreQuestions,
+  normalizeQuestion
 };
-

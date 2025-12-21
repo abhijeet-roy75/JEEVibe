@@ -13,6 +13,7 @@
 const { db, admin } = require('../config/firebase');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
+const { normalizeQuestion } = require('./questionSelectionService');
 
 // ============================================================================
 // CONSTANTS
@@ -34,25 +35,25 @@ const MAX_REVIEW_QUESTIONS = 2; // Maximum review questions per quiz
  */
 function getNextReviewInterval(currentInterval, wasCorrect) {
   const intervals = REVIEW_INTERVALS;
-  
+
   if (!wasCorrect) {
     // Reset to first interval if incorrect
     return intervals[0];
   }
-  
+
   // Find current interval index
   const currentIndex = intervals.indexOf(currentInterval);
-  
+
   if (currentIndex === -1) {
     // Current interval not in list, start from beginning
     return intervals[0];
   }
-  
+
   if (currentIndex === intervals.length - 1) {
     // Already at max interval, stay there
     return intervals[currentIndex];
   }
-  
+
   // Move to next interval
   return intervals[currentIndex + 1];
 }
@@ -68,10 +69,10 @@ function isDueForReview(lastAnsweredDate, reviewInterval) {
   if (!lastAnsweredDate) {
     return false; // Never answered, not a review question
   }
-  
+
   const now = new Date();
   const daysSinceLastAnswer = Math.floor((now - lastAnsweredDate) / (1000 * 60 * 60 * 24));
-  
+
   return daysSinceLastAnswer >= reviewInterval;
 }
 
@@ -86,11 +87,11 @@ function getDaysOverdue(lastAnsweredDate, reviewInterval) {
   if (!lastAnsweredDate) {
     return 0;
   }
-  
+
   const now = new Date();
   const daysSinceLastAnswer = Math.floor((now - lastAnsweredDate) / (1000 * 60 * 60 * 24));
   const overdue = daysSinceLastAnswer - reviewInterval;
-  
+
   return Math.max(0, overdue);
 }
 
@@ -111,12 +112,12 @@ async function getReviewQuestions(userId, limit = MAX_REVIEW_QUESTIONS) {
     // Get all responses from daily quizzes and assessments
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - 30); // Look back 30 days max
-    
+
     const cutoffTimestamp = admin.firestore.Timestamp.fromDate(cutoffDate);
-    
+
     let dailyQuizSnapshot;
     let assessmentSnapshot;
-    
+
     try {
       // Query daily quiz responses
       const dailyQuizResponsesRef = db.collection('daily_quiz_responses')
@@ -124,18 +125,18 @@ async function getReviewQuestions(userId, limit = MAX_REVIEW_QUESTIONS) {
         .collection('responses')
         .where('answered_at', '>=', cutoffTimestamp)
         .where('is_correct', '==', false); // Only incorrect answers
-      
+
       dailyQuizSnapshot = await retryFirestoreOperation(async () => {
         return await dailyQuizResponsesRef.get();
       });
-      
+
       // Query assessment responses
       const assessmentResponsesRef = db.collection('assessment_responses')
         .doc(userId)
         .collection('responses')
         .where('answered_at', '>=', cutoffTimestamp)
         .where('is_correct', '==', false);
-      
+
       assessmentSnapshot = await retryFirestoreOperation(async () => {
         return await assessmentResponsesRef.get();
       });
@@ -151,10 +152,10 @@ async function getReviewQuestions(userId, limit = MAX_REVIEW_QUESTIONS) {
       }
       throw queryError; // Re-throw if it's a different error
     }
-    
+
     // Combine all incorrect responses
     const allResponses = [];
-    
+
     dailyQuizSnapshot.docs.forEach(doc => {
       const data = doc.data();
       allResponses.push({
@@ -164,7 +165,7 @@ async function getReviewQuestions(userId, limit = MAX_REVIEW_QUESTIONS) {
         review_interval: data.review_interval || REVIEW_INTERVALS[0] // Default to first interval
       });
     });
-    
+
     assessmentSnapshot.docs.forEach(doc => {
       const data = doc.data();
       allResponses.push({
@@ -174,31 +175,31 @@ async function getReviewQuestions(userId, limit = MAX_REVIEW_QUESTIONS) {
         review_interval: REVIEW_INTERVALS[0] // Assessment questions start at first interval
       });
     });
-    
+
     // Group by question_id and get most recent incorrect answer
     const questionMap = new Map();
-    
+
     allResponses.forEach(response => {
       const questionId = response.question_id;
       if (!questionId) return;
-      
+
       const existing = questionMap.get(questionId);
       if (!existing || (response.answered_at > existing.answered_at)) {
         questionMap.set(questionId, response);
       }
     });
-    
+
     // Filter to questions due for review and score by priority
     const reviewCandidates = [];
-    
+
     for (const [questionId, response] of questionMap.entries()) {
       if (isDueForReview(response.answered_at, response.review_interval)) {
         const daysOverdue = getDaysOverdue(response.answered_at, response.review_interval);
-        
+
         // Priority score: higher = more urgent
         // Factors: days overdue, review interval (shorter = more urgent)
         const priorityScore = daysOverdue * 10 + (REVIEW_INTERVALS.length - REVIEW_INTERVALS.indexOf(response.review_interval));
-        
+
         reviewCandidates.push({
           question_id: questionId,
           chapter_key: response.chapter_key,
@@ -209,27 +210,27 @@ async function getReviewQuestions(userId, limit = MAX_REVIEW_QUESTIONS) {
         });
       }
     }
-    
+
     // Sort by priority (descending) and limit
     reviewCandidates.sort((a, b) => b.priority_score - a.priority_score);
     const topCandidates = reviewCandidates.slice(0, limit);
-    
+
     // Fetch question documents
     const questionIds = topCandidates.map(c => c.question_id);
     const questionRefs = questionIds.map(id => db.collection('questions').doc(id));
-    
+
     const questionDocs = await retryFirestoreOperation(async () => {
       return await db.getAll(...questionRefs);
     });
-    
+
     // Combine question data with review metadata
     const reviewQuestions = questionDocs
       .filter(doc => doc.exists)
       .map((doc, index) => {
         const candidate = topCandidates[index];
+        const normalized = normalizeQuestion(doc.id, doc.data());
         return {
-          ...doc.data(),
-          question_id: doc.id,
+          ...normalized,
           review_metadata: {
             last_answered_at: candidate.last_answered_at,
             review_interval: candidate.review_interval,
@@ -238,13 +239,13 @@ async function getReviewQuestions(userId, limit = MAX_REVIEW_QUESTIONS) {
           }
         };
       });
-    
+
     logger.info('Review questions retrieved', {
       userId,
       total_candidates: reviewCandidates.length,
       selected: reviewQuestions.length
     });
-    
+
     return reviewQuestions;
   } catch (error) {
     logger.error('Error getting review questions', {
@@ -276,11 +277,11 @@ async function updateReviewInterval(userId, questionId, isCorrect, currentInterv
         .where('question_id', '==', questionId)
         .orderBy('answered_at', 'desc')
         .limit(1);
-      
+
       const snapshot = await retryFirestoreOperation(async () => {
         return await responsesRef.get();
       });
-      
+
       if (!snapshot.empty) {
         const lastResponse = snapshot.docs[0].data();
         currentInterval = lastResponse.review_interval || REVIEW_INTERVALS[0];
@@ -288,13 +289,13 @@ async function updateReviewInterval(userId, questionId, isCorrect, currentInterv
         currentInterval = REVIEW_INTERVALS[0];
       }
     }
-    
+
     // Calculate new interval
     const newInterval = getNextReviewInterval(currentInterval, isCorrect);
-    
+
     // Note: The new interval will be stored when the response is saved
     // This function just calculates it
-    
+
     return newInterval;
   } catch (error) {
     logger.error('Error updating review interval', {

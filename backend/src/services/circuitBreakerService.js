@@ -13,7 +13,7 @@
 const { db, admin } = require('../config/firebase');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
-const { selectQuestionsForChapter, selectAnyAvailableQuestions } = require('./questionSelectionService');
+const { selectQuestionsForChapter, selectAnyAvailableQuestions, normalizeQuestion } = require('./questionSelectionService');
 const { getReviewQuestions } = require('./spacedRepetitionService');
 const { formatChapterKey } = require('./thetaCalculationService');
 
@@ -50,15 +50,15 @@ async function checkConsecutiveFailures(userId) {
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
-    
+
     if (!userDoc.exists) {
       return { hasFailures: false, count: 0, shouldTrigger: false };
     }
-    
+
     const userData = userDoc.data();
     const consecutiveFailures = userData.consecutive_failures || 0;
     const shouldTrigger = consecutiveFailures >= CONSECUTIVE_FAILURE_THRESHOLD;
-    
+
     return {
       hasFailures: consecutiveFailures > 0,
       count: consecutiveFailures,
@@ -83,7 +83,7 @@ async function checkConsecutiveFailures(userId) {
 async function updateFailureCount(userId, quizPassed) {
   try {
     const userRef = db.collection('users').doc(userId);
-    
+
     if (quizPassed) {
       // Reset failure count on success
       await retryFirestoreOperation(async () => {
@@ -93,7 +93,7 @@ async function updateFailureCount(userId, quizPassed) {
           last_circuit_breaker_trigger: admin.firestore.FieldValue.delete()
         });
       });
-      
+
       return {
         consecutive_failures: 0,
         circuit_breaker_active: false
@@ -103,30 +103,30 @@ async function updateFailureCount(userId, quizPassed) {
       const userDoc = await retryFirestoreOperation(async () => {
         return await userRef.get();
       });
-      
+
       const currentFailures = userDoc.data()?.consecutive_failures || 0;
       const newFailures = currentFailures + 1;
       const shouldTrigger = newFailures >= CONSECUTIVE_FAILURE_THRESHOLD;
-      
+
       const updateData = {
         consecutive_failures: newFailures
       };
-      
+
       if (shouldTrigger) {
         updateData.circuit_breaker_active = true;
         updateData.last_circuit_breaker_trigger = admin.firestore.FieldValue.serverTimestamp();
       }
-      
+
       await retryFirestoreOperation(async () => {
         return await userRef.update(updateData);
       });
-      
+
       logger.info('Failure count updated', {
         userId,
         consecutive_failures: newFailures,
         circuit_breaker_active: shouldTrigger
       });
-      
+
       return {
         consecutive_failures: newFailures,
         circuit_breaker_active: shouldTrigger
@@ -161,25 +161,25 @@ async function selectEasyQuestions(chapterKey, theta, excludeQuestionIds, count)
     const parts = chapterKey.split('_');
     const subject = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
     const chapter = parts.slice(1).join(' ').replace(/_/g, ' ');
-    
+
     const questionsRef = db.collection('questions')
       .where('subject', '==', subject)
       .where('chapter', '==', chapter)
       .where('irt_parameters.difficulty_b', '<=', EASY_DIFFICULTY_MAX)
       .orderBy('irt_parameters.difficulty_b', 'asc')
       .limit(50); // Get more candidates for filtering
-    
+
     const snapshot = await retryFirestoreOperation(async () => {
       return await questionsRef.get();
     });
-    
+
     let questions = snapshot.docs
-      .map(doc => ({ question_id: doc.id, ...doc.data() }))
+      .map(doc => normalizeQuestion(doc.id, doc.data()))
       .filter(q => !excludeQuestionIds.has(q.question_id));
-    
+
     // Shuffle and take first N
     questions = questions.sort(() => Math.random() - 0.5).slice(0, count);
-    
+
     return questions;
   } catch (error) {
     logger.error('Error selecting easy questions', {
@@ -204,7 +204,7 @@ async function selectMediumQuestions(chapterKey, theta, excludeQuestionIds, coun
     const parts = chapterKey.split('_');
     const subject = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
     const chapter = parts.slice(1).join(' ').replace(/_/g, ' ');
-    
+
     const questionsRef = db.collection('questions')
       .where('subject', '==', subject)
       .where('chapter', '==', chapter)
@@ -212,17 +212,17 @@ async function selectMediumQuestions(chapterKey, theta, excludeQuestionIds, coun
       .where('irt_parameters.difficulty_b', '<=', MEDIUM_DIFFICULTY_MAX)
       .orderBy('irt_parameters.difficulty_b', 'asc')
       .limit(50);
-    
+
     const snapshot = await retryFirestoreOperation(async () => {
       return await questionsRef.get();
     });
-    
+
     let questions = snapshot.docs
-      .map(doc => ({ question_id: doc.id, ...doc.data() }))
+      .map(doc => normalizeQuestion(doc.id, doc.data()))
       .filter(q => !excludeQuestionIds.has(q.question_id));
-    
+
     questions = questions.sort(() => Math.random() - 0.5).slice(0, count);
-    
+
     return questions;
   } catch (error) {
     logger.error('Error selecting medium questions', {
@@ -242,9 +242,10 @@ async function selectMediumQuestions(chapterKey, theta, excludeQuestionIds, coun
  * @returns {Promise<Array>} Recovery quiz questions
  */
 async function generateRecoveryQuiz(userId, chapterThetas, excludeQuestionIds) {
+  logger.info(`generateRecoveryQuiz called for user=${userId}`);
   try {
     const recoveryQuestions = [];
-    
+
     // Get review questions (1) - but don't fail if this fails
     let reviewQuestions = [];
     try {
@@ -263,32 +264,32 @@ async function generateRecoveryQuiz(userId, chapterThetas, excludeQuestionIds) {
         error: reviewError.message
       });
     }
-    
+
     // Select chapters for easy and medium questions
     // Use chapters where student is struggling (low theta)
     const strugglingChapters = Object.entries(chapterThetas)
       .filter(([_, theta]) => theta < 0) // Below average
       .sort(([_, a], [__, b]) => a - b) // Sort by theta (lowest first)
       .slice(0, 3); // Top 3 struggling chapters
-    
+
     if (strugglingChapters.length === 0) {
       // Fallback: use all chapters
       strugglingChapters.push(...Object.entries(chapterThetas).slice(0, 3));
     }
-    
+
     // Distribute easy questions across struggling chapters
     const easyPerChapter = Math.ceil(RECOVERY_QUIZ_CONFIG.easy / strugglingChapters.length);
-    
+
     for (const [chapterKey, theta] of strugglingChapters) {
       if (recoveryQuestions.length >= RECOVERY_QUIZ_CONFIG.easy + RECOVERY_QUIZ_CONFIG.medium) {
         break;
       }
-      
+
       const needed = Math.min(
         easyPerChapter,
         RECOVERY_QUIZ_CONFIG.easy - recoveryQuestions.filter(q => q.difficulty_category === 'easy').length
       );
-      
+
       if (needed > 0) {
         const easyQuestions = await selectEasyQuestions(chapterKey, theta, excludeQuestionIds, needed);
         easyQuestions.forEach(q => {
@@ -302,20 +303,20 @@ async function generateRecoveryQuiz(userId, chapterThetas, excludeQuestionIds) {
         });
       }
     }
-    
+
     // Distribute medium questions
     const mediumPerChapter = Math.ceil(RECOVERY_QUIZ_CONFIG.medium / strugglingChapters.length);
-    
+
     for (const [chapterKey, theta] of strugglingChapters) {
       if (recoveryQuestions.length >= RECOVERY_QUIZ_CONFIG.total) {
         break;
       }
-      
+
       const needed = Math.min(
         mediumPerChapter,
         RECOVERY_QUIZ_CONFIG.medium - recoveryQuestions.filter(q => q.difficulty_category === 'medium').length
       );
-      
+
       if (needed > 0) {
         const mediumQuestions = await selectMediumQuestions(chapterKey, theta, excludeQuestionIds, needed);
         mediumQuestions.forEach(q => {
@@ -329,13 +330,13 @@ async function generateRecoveryQuiz(userId, chapterThetas, excludeQuestionIds) {
         });
       }
     }
-    
+
     // Validate recovery quiz has sufficient questions
     const easyCount = recoveryQuestions.filter(q => q.difficulty_category === 'easy').length;
     const mediumCount = recoveryQuestions.filter(q => q.difficulty_category === 'medium').length;
     const reviewCount = recoveryQuestions.filter(q => q.difficulty_category === 'review').length;
     const totalCount = recoveryQuestions.length;
-    
+
     if (totalCount < RECOVERY_QUIZ_CONFIG.total) {
       logger.warn('Recovery quiz has insufficient questions', {
         userId,
@@ -345,24 +346,24 @@ async function generateRecoveryQuiz(userId, chapterThetas, excludeQuestionIds) {
         medium: mediumCount,
         review: reviewCount
       });
-      
+
       // If we have at least some questions, proceed with what we have
       // Otherwise, try fallback to get any available questions
       if (totalCount === 0) {
         logger.warn('Recovery quiz found no questions through normal selection, trying fallback', { userId });
-        
+
         try {
           const fallbackQuestions = await selectAnyAvailableQuestions(
             excludeQuestionIds,
             RECOVERY_QUIZ_CONFIG.total
           );
-          
+
           if (fallbackQuestions.length > 0) {
-            logger.info('Recovery quiz using fallback questions', { 
-              userId, 
-              count: fallbackQuestions.length 
+            logger.info('Recovery quiz using fallback questions', {
+              userId,
+              count: fallbackQuestions.length
             });
-            
+
             // Add fallback questions as recovery questions
             fallbackQuestions.forEach(q => {
               recoveryQuestions.push({
@@ -384,10 +385,10 @@ async function generateRecoveryQuiz(userId, chapterThetas, excludeQuestionIds) {
         }
       }
     }
-    
+
     // Shuffle questions
     recoveryQuestions.sort(() => Math.random() - 0.5);
-    
+
     const finalCount = recoveryQuestions.length;
     logger.info('Recovery quiz generated', {
       userId,
@@ -398,7 +399,7 @@ async function generateRecoveryQuiz(userId, chapterThetas, excludeQuestionIds) {
       fallback: recoveryQuestions.filter(q => q.selection_reason === 'recovery_fallback').length,
       meets_requirement: finalCount >= RECOVERY_QUIZ_CONFIG.total
     });
-    
+
     return recoveryQuestions;
   } catch (error) {
     logger.error('Error generating recovery quiz', {

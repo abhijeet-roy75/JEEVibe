@@ -74,7 +74,7 @@ function selectChaptersForExploration(chapterThetas, count = 7) {
     chemistry: [],
     mathematics: []
   };
-  
+
   // Extract subject from chapter key (format: "subject_chapter_name")
   Object.entries(chapterThetas).forEach(([key, data]) => {
     const subject = key.split('_')[0]?.toLowerCase();
@@ -86,7 +86,7 @@ function selectChaptersForExploration(chapterThetas, count = 7) {
       });
     }
   });
-  
+
   // Sort each subject's chapters by attempts (fewer attempts first), then by theta
   Object.keys(chaptersBySubject).forEach(subject => {
     chaptersBySubject[subject].sort((a, b) => {
@@ -96,7 +96,7 @@ function selectChaptersForExploration(chapterThetas, count = 7) {
       return a.theta - b.theta;
     });
   });
-  
+
   // Select chapters ensuring subject diversity
   // Target distribution: ~35% physics, ~30% chemistry, ~35% mathematics
   const selected = [];
@@ -105,15 +105,15 @@ function selectChaptersForExploration(chapterThetas, count = 7) {
     chemistry: Math.ceil(count * 0.30),
     mathematics: Math.ceil(count * 0.35)
   };
-  
+
   // Round-robin selection to ensure diversity
   const subjectKeys = ['physics', 'chemistry', 'mathematics'];
   let subjectIndex = 0;
   let selectedCount = 0;
-  
+
   while (selectedCount < count) {
     let progressMade = false;
-    
+
     // Try each subject in round-robin
     for (let i = 0; i < subjectKeys.length && selectedCount < count; i++) {
       const subject = subjectKeys[(subjectIndex + i) % subjectKeys.length];
@@ -122,12 +122,12 @@ function selectChaptersForExploration(chapterThetas, count = 7) {
         const cSubject = c.split('_')[0]?.toLowerCase();
         return cSubject === subject;
       }).length;
-      
+
       // Check if we've reached target for this subject or no more chapters available
       if (subjectSelected >= subjectTargets[subject] || subjectChapters.length === 0) {
         continue;
       }
-      
+
       // Select the next chapter from this subject
       const nextChapter = subjectChapters.shift();
       if (nextChapter) {
@@ -136,29 +136,29 @@ function selectChaptersForExploration(chapterThetas, count = 7) {
         progressMade = true;
       }
     }
-    
+
     // If no progress made, break to avoid infinite loop
     if (!progressMade) {
       break;
     }
-    
+
     subjectIndex = (subjectIndex + 1) % subjectKeys.length;
   }
-  
+
   // If we still need more chapters, fill from any available
   if (selectedCount < count) {
     const remaining = [];
     Object.values(chaptersBySubject).forEach(subjectChapters => {
       remaining.push(...subjectChapters);
     });
-    
+
     remaining.sort((a, b) => {
       if (a.attempts !== b.attempts) {
         return a.attempts - b.attempts;
       }
       return a.theta - b.theta;
     });
-    
+
     while (selectedCount < count && remaining.length > 0) {
       const nextChapter = remaining.shift();
       if (!selected.includes(nextChapter.chapter_key)) {
@@ -167,7 +167,7 @@ function selectChaptersForExploration(chapterThetas, count = 7) {
       }
     }
   }
-  
+
   logger.info('Chapters selected for exploration with subject diversity', {
     selected,
     subjectDistribution: {
@@ -176,7 +176,7 @@ function selectChaptersForExploration(chapterThetas, count = 7) {
       mathematics: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'mathematics').length
     }
   });
-  
+
   return selected;
 }
 
@@ -195,7 +195,7 @@ function selectChaptersForExploitation(chapterThetas, count = 6) {
     chemistry: [],
     mathematics: []
   };
-  
+
   // Extract subject from chapter key and filter for explored chapters (>= 2 attempts)
   Object.entries(chapterThetas)
     .filter(([_, data]) => (data.attempts || 0) >= 2) // At least 2 attempts (explored)
@@ -209,7 +209,7 @@ function selectChaptersForExploitation(chapterThetas, count = 6) {
         });
       }
     });
-  
+
   // Sort each subject's chapters by theta (lower = weaker = priority), then by attempts
   Object.keys(chaptersBySubject).forEach(subject => {
     chaptersBySubject[subject].sort((a, b) => {
@@ -221,7 +221,7 @@ function selectChaptersForExploitation(chapterThetas, count = 6) {
       return b.attempts - a.attempts;
     });
   });
-  
+
   // Select chapters ensuring subject diversity
   // Target distribution: ~35% physics, ~30% chemistry, ~35% mathematics
   const selected = [];
@@ -230,15 +230,15 @@ function selectChaptersForExploitation(chapterThetas, count = 6) {
     chemistry: Math.ceil(count * 0.30),
     mathematics: Math.ceil(count * 0.35)
   };
-  
+
   // Round-robin selection to ensure diversity
   const subjectKeys = ['physics', 'chemistry', 'mathematics'];
   let subjectIndex = 0;
   let selectedCount = 0;
-  
+
   while (selectedCount < count) {
     let progressMade = false;
-    
+
     // Try each subject in round-robin
     for (let i = 0; i < subjectKeys.length && selectedCount < count; i++) {
       const subject = subjectKeys[(subjectIndex + i) % subjectKeys.length];
@@ -247,12 +247,12 @@ function selectChaptersForExploitation(chapterThetas, count = 6) {
         const cSubject = c.split('_')[0]?.toLowerCase();
         return cSubject === subject;
       }).length;
-      
+
       // Check if we've reached target for this subject or no more chapters available
       if (subjectSelected >= subjectTargets[subject] || subjectChapters.length === 0) {
         continue;
       }
-      
+
       // Select the next chapter from this subject
       const nextChapter = subjectChapters.shift();
       if (nextChapter) {
@@ -261,29 +261,29 @@ function selectChaptersForExploitation(chapterThetas, count = 6) {
         progressMade = true;
       }
     }
-    
+
     // If no progress made, break to avoid infinite loop
     if (!progressMade) {
       break;
     }
-    
+
     subjectIndex = (subjectIndex + 1) % subjectKeys.length;
   }
-  
+
   // If we still need more chapters, fill from any available
   if (selectedCount < count) {
     const remaining = [];
     Object.values(chaptersBySubject).forEach(subjectChapters => {
       remaining.push(...subjectChapters);
     });
-    
+
     remaining.sort((a, b) => {
       if (Math.abs(a.theta - b.theta) > 0.1) {
         return a.theta - b.theta;
       }
       return b.attempts - a.attempts;
     });
-    
+
     while (selectedCount < count && remaining.length > 0) {
       const nextChapter = remaining.shift();
       if (!selected.includes(nextChapter.chapter_key)) {
@@ -292,7 +292,7 @@ function selectChaptersForExploitation(chapterThetas, count = 6) {
       }
     }
   }
-  
+
   logger.info('Chapters selected for exploitation with subject diversity', {
     selected,
     subjectDistribution: {
@@ -301,7 +301,7 @@ function selectChaptersForExploitation(chapterThetas, count = 6) {
       mathematics: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'mathematics').length
     }
   });
-  
+
   return selected;
 }
 
@@ -322,13 +322,13 @@ function balanceSubjects(questions, targets = SUBJECT_DISTRIBUTION) {
     chemistry: 0,
     mathematics: 0
   };
-  
+
   const subjectQueues = {
     physics: [],
     chemistry: [],
     mathematics: []
   };
-  
+
   // Group questions by subject
   questions.forEach(q => {
     const subject = q.subject?.toLowerCase();
@@ -337,7 +337,7 @@ function balanceSubjects(questions, targets = SUBJECT_DISTRIBUTION) {
       subjectCounts[subject]++;
     }
   });
-  
+
   // Calculate target counts
   const total = questions.length;
   const targetCounts = {
@@ -345,44 +345,44 @@ function balanceSubjects(questions, targets = SUBJECT_DISTRIBUTION) {
     chemistry: Math.round(total * targets.chemistry),
     mathematics: Math.round(total * targets.mathematics)
   };
-  
+
   // Interleave subjects
   const balanced = [];
   const used = { physics: 0, chemistry: 0, mathematics: 0 };
-  
+
   // Safety limit to prevent infinite loops
   let iterations = 0;
   const MAX_ITERATIONS = total * 3; // Allow up to 3x total iterations
-  
+
   while (balanced.length < total && iterations < MAX_ITERATIONS) {
     iterations++;
     let progressMade = false;
-    
+
     // Try to add from each subject in round-robin
     for (const subject of ['physics', 'chemistry', 'mathematics']) {
       if (balanced.length >= total) break;
       if (used[subject] >= targetCounts[subject]) continue;
       if (subjectQueues[subject].length === 0) continue;
-      
+
       // Check if we've had 3+ consecutive from same subject
       const lastThree = balanced.slice(-3);
       const sameSubjectCount = lastThree.filter(q => q.subject?.toLowerCase() === subject).length;
-      
+
       if (sameSubjectCount >= 3) {
         continue; // Skip to avoid 3+ consecutive
       }
-      
+
       balanced.push(subjectQueues[subject].shift());
       used[subject]++;
       progressMade = true;
     }
-    
+
     // If no progress made in this iteration, break to avoid infinite loop
     if (!progressMade) {
       break;
     }
   }
-  
+
   // If we're stuck or hit iteration limit, add remaining questions
   if (balanced.length < total) {
     for (const subject of ['physics', 'chemistry', 'mathematics']) {
@@ -391,7 +391,7 @@ function balanceSubjects(questions, targets = SUBJECT_DISTRIBUTION) {
       }
     }
   }
-  
+
   // Log warning if we couldn't balance completely
   if (balanced.length < total) {
     logger.warn('Could not balance all subjects completely', {
@@ -400,7 +400,7 @@ function balanceSubjects(questions, targets = SUBJECT_DISTRIBUTION) {
       iterations
     });
   }
-  
+
   return balanced;
 }
 
@@ -426,36 +426,36 @@ async function generateDailyQuiz(userId) {
 async function generateDailyQuizInternal(userId) {
   try {
     logger.info('Starting quiz generation internal', { userId });
-    
+
     // Get user data
     const userRef = db.collection('users').doc(userId);
     logger.info('Fetching user data', { userId });
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
-    
+
     if (!userDoc.exists) {
       throw new Error(`User ${userId} not found`);
     }
-    
+
     const userData = userDoc.data();
     logger.info('User data fetched', { userId, hasAssessment: !!userData.assessment?.completed_at });
-    
+
     // Check if assessment completed
     if (!userData.assessment?.completed_at) {
       throw new Error('User must complete initial assessment before daily quizzes');
     }
-    
+
     const completedQuizCount = userData.completed_quiz_count || 0;
     const learningPhase = getLearningPhase(completedQuizCount);
     const thetaByChapter = userData.theta_by_chapter || {};
     logger.info('Learning phase determined', { userId, learningPhase, completedQuizCount, chapterCount: Object.keys(thetaByChapter).length });
-    
+
     // Check circuit breaker for recovery quiz
     logger.info('Checking circuit breaker', { userId });
     const failureCheck = await checkConsecutiveFailures(userId);
     logger.info('Circuit breaker check complete', { userId, shouldTrigger: failureCheck.shouldTrigger });
-    
+
     if (failureCheck.shouldTrigger) {
       logger.info('Circuit breaker triggered, attempting to generate recovery quiz', { userId });
       try {
@@ -472,12 +472,12 @@ async function generateDailyQuizInternal(userId) {
         // (e.g., due to limited question bank)
       }
     }
-    
+
     // Get recent question IDs to exclude
     logger.info('Getting recent question IDs', { userId });
     const excludeQuestionIds = await getRecentQuestionIds(userId);
     logger.info('Recent question IDs fetched', { userId, excludeCount: excludeQuestionIds.size });
-    
+
     // Get review questions (1 per quiz)
     // If review questions fail (e.g., missing index), continue without them
     let reviewQuestions = [];
@@ -493,28 +493,28 @@ async function generateDailyQuizInternal(userId) {
       });
       reviewQuestions = []; // Continue without review questions
     }
-    
+
     let selectedQuestions = [];
-    
+
     if (learningPhase === 'exploration') {
       logger.info('Exploration phase: selecting chapters', { userId });
       // Exploration phase: Map ability across topics
       const selectedChapters = selectChaptersForExploration(thetaByChapter, EXPLORATION_QUESTIONS_PER_QUIZ);
       logger.info('Chapters selected for exploration', { userId, selectedChapters, count: selectedChapters.length });
-      
+
       if (selectedChapters.length === 0) {
         // Fallback: use all available chapters
         selectedChapters.push(...Object.keys(thetaByChapter).slice(0, EXPLORATION_QUESTIONS_PER_QUIZ));
         logger.info('Using fallback chapters', { userId, selectedChapters });
       }
-      
+
       // Build chapter thetas map for selection
       const chapterThetasMap = {};
       selectedChapters.forEach(chapterKey => {
         const chapterData = thetaByChapter[chapterKey];
         chapterThetasMap[chapterKey] = chapterData?.theta || 0.0;
       });
-      
+
       logger.info('Selecting exploration questions', { userId, chapterCount: Object.keys(chapterThetasMap).length, chapters: Object.keys(chapterThetasMap) });
       // Select questions for selected chapters
       const explorationQuestions = await selectQuestionsForChapters(
@@ -523,26 +523,26 @@ async function generateDailyQuizInternal(userId) {
         { questionsPerChapter: 1 }
       );
       logger.info('Exploration questions selected', { userId, questionCount: explorationQuestions.length });
-      
+
       selectedQuestions.push(...explorationQuestions);
     } else {
       logger.info('Exploitation phase: selecting weak chapters', { userId });
       // Exploitation phase: Focus on weak areas
       const selectedChapters = selectChaptersForExploitation(thetaByChapter, DELIBERATE_PRACTICE_QUESTIONS_PER_QUIZ);
       logger.info('Weak chapters selected', { userId, selectedChapters, count: selectedChapters.length });
-      
+
       if (selectedChapters.length === 0) {
         // Fallback: use all available chapters
         selectedChapters.push(...Object.keys(thetaByChapter).slice(0, DELIBERATE_PRACTICE_QUESTIONS_PER_QUIZ));
         logger.info('Using fallback chapters', { userId, selectedChapters });
       }
-      
+
       const chapterThetasMap = {};
       selectedChapters.forEach(chapterKey => {
         const chapterData = thetaByChapter[chapterKey];
         chapterThetasMap[chapterKey] = chapterData?.theta || 0.0;
       });
-      
+
       logger.info('Selecting practice questions', { userId, chapterCount: Object.keys(chapterThetasMap).length, chapters: Object.keys(chapterThetasMap) });
       const practiceQuestions = await selectQuestionsForChapters(
         chapterThetasMap,
@@ -550,10 +550,10 @@ async function generateDailyQuizInternal(userId) {
         { questionsPerChapter: 1 }
       );
       logger.info('Practice questions selected', { userId, questionCount: practiceQuestions.length });
-      
+
       selectedQuestions.push(...practiceQuestions);
     }
-    
+
     // Add review questions
     reviewQuestions.forEach(q => {
       selectedQuestions.push({
@@ -562,19 +562,19 @@ async function generateDailyQuizInternal(userId) {
         chapter_key: q.chapter_key || formatChapterKey(q.subject, q.chapter)
       });
     });
-    
+
     logger.info('Processing selected questions', { userId, selectedCount: selectedQuestions.length });
-    
+
     // Remove duplicates before balancing
     const uniqueQuestions = [];
     const seenQuestionIds = new Set();
     for (const q of selectedQuestions) {
       const questionId = q.question_id || q.id;
       if (seenQuestionIds.has(questionId)) {
-        logger.warn('Duplicate question detected, removing', { 
-          questionId, 
+        logger.warn('Duplicate question detected, removing', {
+          questionId,
           chapterKey: q.chapter_key,
-          selectionReason: q.selection_reason 
+          selectionReason: q.selection_reason
         });
         continue;
       }
@@ -583,14 +583,14 @@ async function generateDailyQuizInternal(userId) {
     }
     selectedQuestions = uniqueQuestions;
     logger.info('Duplicates removed', { userId, uniqueCount: selectedQuestions.length });
-    
+
     // Balance subjects and limit to QUIZ_SIZE
     logger.info('Balancing subjects', { userId });
     selectedQuestions = balanceSubjects(selectedQuestions);
     logger.info('Subjects balanced', { userId, balancedCount: selectedQuestions.length });
     selectedQuestions = selectedQuestions.slice(0, QUIZ_SIZE);
     logger.info('Questions limited to quiz size', { userId, finalCount: selectedQuestions.length });
-    
+
     // Validate quiz size
     if (selectedQuestions.length < QUIZ_SIZE) {
       logger.warn('Insufficient questions selected for quiz', {
@@ -600,17 +600,17 @@ async function generateDailyQuizInternal(userId) {
         learningPhase,
         note: 'This may be due to limited question bank. Consider adding more questions to the database.'
       });
-      
+
       // If we have zero questions, try fallback: get ANY available questions
       if (selectedQuestions.length === 0) {
         logger.info('No questions found from selected chapters, trying fallback: any available questions', { userId });
-        
+
         try {
           const fallbackQuestions = await selectAnyAvailableQuestions(
             excludeQuestionIds,
             QUIZ_SIZE
           );
-          
+
           if (fallbackQuestions.length > 0) {
             logger.info('Fallback found questions', { userId, count: fallbackQuestions.length });
             selectedQuestions = fallbackQuestions.map((q, index) => ({
@@ -650,13 +650,13 @@ async function generateDailyQuizInternal(userId) {
         });
       }
     }
-    
+
     // Assign positions
     selectedQuestions = selectedQuestions.map((q, index) => ({
       ...q,
       position: index + 1
     }));
-    
+
     logger.info('Daily quiz generated', {
       userId,
       learningPhase,
@@ -666,7 +666,7 @@ async function generateDailyQuizInternal(userId) {
       deliberate_practice: selectedQuestions.filter(q => q.selection_reason === 'deliberate_practice').length,
       review: selectedQuestions.filter(q => q.selection_reason === 'review').length
     });
-    
+
     return {
       quiz_id: `quiz_${completedQuizCount + 1}_${new Date().toISOString().split('T')[0]}`,
       quiz_number: completedQuizCount + 1,
@@ -694,26 +694,26 @@ async function generateDailyQuizInternal(userId) {
  */
 async function generateRecoveryQuizWrapper(userId, chapterThetas) {
   const excludeQuestionIds = await getRecentQuestionIds(userId);
-  
+
   // Build chapter thetas map
   const chapterThetasMap = {};
   Object.entries(chapterThetas).forEach(([key, data]) => {
     chapterThetasMap[key] = data.theta || 0.0;
   });
-  
+
   const recoveryQuestions = await generateRecoveryQuiz(userId, chapterThetasMap, excludeQuestionIds);
-  
+
   // Assign positions
   const questions = recoveryQuestions.map((q, index) => ({
     ...q,
     position: index + 1
   }));
-  
+
   const userDoc = await retryFirestoreOperation(async () => {
     return await db.collection('users').doc(userId).get();
   });
   const completedQuizCount = userDoc.data()?.completed_quiz_count || 0;
-  
+
   return {
     quiz_id: `quiz_${completedQuizCount + 1}_${new Date().toISOString().split('T')[0]}_recovery`,
     quiz_number: completedQuizCount + 1,

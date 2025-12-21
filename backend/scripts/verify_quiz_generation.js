@@ -62,51 +62,57 @@ async function verifyQuizGeneration(userId) {
     }
     console.log(`- Selected Chapters (${selectedChapters.length}): ${JSON.stringify(selectedChapters)}\n`);
 
-    // 3. Check Question Bank for Selected Chapters
-    console.log('Step 3: Checking Question Bank Density...');
-    const findings = [];
+    // 3. Simulate Full Quiz Generation
+    console.log('Step 3: Simulating Full Quiz Generation...');
+    const { generateDailyQuiz } = require('../src/services/dailyQuizService');
+    const quiz = await generateDailyQuiz(userId);
 
-    for (const chapterKey of selectedChapters) {
-      const mapping = await getDatabaseNames(chapterKey);
-      let subject, chapterName;
+    console.log(`- Quiz ID: ${quiz.quiz_id}`);
+    console.log(`- Questions: ${quiz.questions.length}`);
+    let schemaErrors = 0;
+    quiz.questions.forEach((q, i) => {
+      const issues = [];
+      if (!q.question_id) issues.push('missing question_id');
+      if (!q.question_text) issues.push('missing question_text');
+      if (!q.subject) issues.push('missing subject');
+      if (!q.chapter) issues.push('missing chapter');
 
-      if (mapping) {
-        subject = mapping.subject;
-        chapterName = mapping.chapter;
-        console.log(`  - [FOUND MAPPING] ${chapterKey} -> [${subject}] ${chapterName}`);
-      } else {
-        const parts = chapterKey.split('_');
-        subject = parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase();
-        chapterName = parts.slice(1).join(' ').replace(/_/g, ' ');
-        console.log(`  - [NO MAPPING] ${chapterKey} -> falling back to [${subject}] ${chapterName}`);
+      const isNumerical = q.question_type === 'numerical';
+
+      if (!isNumerical) {
+        if (!Array.isArray(q.options)) {
+          issues.push(`options is ${typeof q.options} (expected Array for MCQ)`);
+        } else if (q.options.length === 0) {
+          issues.push('options array is empty');
+        } else {
+          q.options.forEach((opt, oi) => {
+            if (!opt.option_id) issues.push(`option[${oi}] missing option_id`);
+            if (!opt.text) issues.push(`option[${oi}] missing text`);
+          });
+        }
       }
 
-      const questionsCountResult = await db.collection('questions')
-        .where('subject', '==', subject)
-        .where('chapter', '==', chapterName)
-        .count()
-        .get();
+      if (issues.length > 0) {
+        console.log(`  [!] Question ${i + 1} (${q.question_id}): ${issues.join(', ')}`);
+        schemaErrors++;
+      }
+    });
 
-      const count = questionsCountResult.data().count;
-      findings.push({ chapterKey, subject, chapterName, count });
-
-      console.log(`    Result: ${count} questions found`);
+    if (schemaErrors === 0) {
+      console.log('✅ All generated questions passed schema validation.\n');
+    } else {
+      console.log(`❌ Found ${schemaErrors} questions with schema issues.\n`);
     }
 
     // 4. Summary
-    console.log('\n--- Final Summary ---');
-    const sparseChapters = findings.filter(f => f.count === 0);
-    const totalQuestionsAvailable = findings.reduce((sum, f) => sum + f.count, 0);
-
-    if (sparseChapters.length > 0) {
-      console.log(`\n❌ ISSUE: ${sparseChapters.length} out of ${findings.length} selected chapters have ZERO questions.`);
-      console.log('Chapters with 0 questions:');
-      sparseChapters.forEach(f => console.log(`  - ${f.chapterKey}`));
+    console.log('--- Final Summary ---');
+    if (schemaErrors > 0) {
+      console.log('❌ ISSUE: Schema mismatch detected. Mobile app will likely crash.');
+    } else if (quiz.questions.length === 0) {
+      console.log('⚠️ WARNING: No questions were generated.');
     } else {
-      console.log('\n✅ All selected chapters have questions.');
+      console.log('✅ Success: Quiz generated with valid schema.');
     }
-
-    console.log(`\nTotal questions available for this batch: ${totalQuestionsAvailable}`);
 
     process.exit(0);
   } catch (error) {
