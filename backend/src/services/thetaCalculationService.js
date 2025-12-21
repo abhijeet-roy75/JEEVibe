@@ -40,7 +40,7 @@ const CHAPTER_NAME_NORMALIZATIONS = {
   "electromagnetic_induction": "electromagnetic_induction", // Already correct
   "optics": "ray_optics", // Default to ray optics if ambiguous
   "modern_physics": "dual_nature", // "Modern Physics" maps to "dual_nature"
-  
+
   // Chemistry variations
   "atomic_structure": "atomic_structure", // Already correct
   "chemical_bonding": "chemical_bonding", // Already correct
@@ -49,12 +49,24 @@ const CHAPTER_NAME_NORMALIZATIONS = {
   "physical_chemistry": "thermodynamics", // "Physical Chemistry" maps to "thermodynamics" (main physical chemistry topic)
   "organic_chemistry": "organic_basics", // "Organic Chemistry" maps to "organic_basics"
   "inorganic_chemistry": "classification_elements", // "Inorganic Chemistry" maps to "classification_elements"
-  
+
   // Mathematics variations
   "calculus": "limits_continuity", // "Calculus" maps to "limits_continuity" (foundational calculus topic)
   "algebra": "complex_numbers", // "Algebra" maps to "complex_numbers" (important algebra topic)
   "coordinate_geometry": "coordinate_geometry", // Already correct
   "geometry": "coordinate_geometry", // Default if ambiguous
+
+  // Database Variations (found in questions collection)
+  "magnetic_effects_magnetism": "magnetic_effects",
+  "limits_continuity_differentiability": "limits_continuity",
+  "conic_sections_ellipse_hyperbola": "conic_sections",
+  "differential_calculus_aod": "applications_derivatives",
+  "integral_calculus_definite_area": "applications_integrals",
+  "integral_calculus_indefinite": "integration",
+  "vector_algebra": "vectors",
+  "purification_characterization": "organic_basics", // Map to organic basics as a catch-all
+  "general_organic_chemistry_goc": "organic_basics",
+  "units_measurements": "kinematics", // Fallback for units
 };
 
 const JEE_CHAPTER_WEIGHTS = {
@@ -80,7 +92,7 @@ const JEE_CHAPTER_WEIGHTS = {
   "physics_dual_nature": 0.6,
   "physics_atoms_nuclei": 0.6,
   "physics_semiconductors": 0.4,
-  
+
   // Chemistry (~27 chapters)
   "chemistry_atomic_structure": 0.8,
   "chemistry_classification_elements": 0.6,
@@ -109,7 +121,7 @@ const JEE_CHAPTER_WEIGHTS = {
   "chemistry_surface_chemistry": 0.4,
   "chemistry_coordination_compounds": 0.8,
   "chemistry_d_f_block": 0.8,
-  
+
   // Mathematics (~22 chapters)
   "mathematics_sets_relations": 0.6,
   "mathematics_complex_numbers": 1.0,
@@ -147,7 +159,7 @@ function normalCDF(z) {
   const t = 1 / (1 + 0.2316419 * Math.abs(z));
   const d = 0.3989423 * Math.exp(-z * z / 2);
   const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-  
+
   if (z > 0) {
     return 1 - p;
   } else {
@@ -162,28 +174,28 @@ function normalCDF(z) {
 function normalInverseCDF(p) {
   // Clamp p to [0.0001, 0.9999] to avoid edge cases
   p = Math.max(0.0001, Math.min(0.9999, p));
-  
+
   // Approximation using Beasley-Springer-Moro algorithm
   const a = [0, -3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00];
   const b = [0, -5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02, 6.680131188771972e+01, -1.328068155288572e+01];
   const c = [0, -7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
   const d = [0, 7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00, 3.754408661907416e+00];
-  
+
   let q = p - 0.5;
   let r, z;
-  
+
   if (Math.abs(q) < 0.425) {
     r = 0.180625 - q * q;
     z = q * (((((a[1] * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * r + a[6]) /
-             (((((b[1] * r + b[2]) * r + b[3]) * r + b[4]) * r + b[5]) * r + 1);
+      (((((b[1] * r + b[2]) * r + b[3]) * r + b[4]) * r + b[5]) * r + 1);
   } else {
     r = q > 0 ? 1 - p : p;
     r = Math.sqrt(-Math.log(r));
     z = (((((c[1] * r + c[2]) * r + c[3]) * r + c[4]) * r + c[5]) * r + c[6]) /
-        ((((d[1] * r + d[2]) * r + d[3]) * r + d[4]) * r + 1);
+      ((((d[1] * r + d[2]) * r + d[3]) * r + d[4]) * r + 1);
     if (q < 0) z = -z;
   }
-  
+
   return z;
 }
 
@@ -237,7 +249,7 @@ function accuracyToThetaMapping(accuracy, numQuestions = 1) {
   } else if (accuracy === 0.0) {
     return numQuestions >= 5 ? -2.0 : -1.5;
   }
-  
+
   // Standard mapping based on accuracy ranges
   if (accuracy < 0.20) {
     return -2.5;  // Very weak foundation
@@ -266,17 +278,17 @@ function calculateInitialSE(numQuestions, accuracy) {
   if (numQuestions <= 0) {
     return SE_CEILING; // Maximum uncertainty
   }
-  
+
   // Maximum likelihood estimation variance formula (simplified)
   // SE decreases with sqrt(n)
   const baseSE = 1.0 / Math.sqrt(numQuestions);
-  
+
   // Adjust for informativeness: accuracy near 50% is most informative
   // (provides most information about ability level)
   const informationPenalty = 1 + Math.abs(accuracy - 0.5);
-  
+
   let SE = baseSE * informationPenalty;
-  
+
   // Clamp to typical range: [0.15, 0.6] and round to 3 decimal places
   return Math.round(Math.max(SE_FLOOR, Math.min(SE_CEILING, SE)) * 1000) / 1000;
 }
@@ -291,16 +303,16 @@ function calculateWeightedOverallTheta(thetaByChapter) {
   if (Object.keys(thetaByChapter).length === 0) {
     return 0.0;
   }
-  
+
   let weightedSum = 0;
   let totalWeight = 0;
-  
+
   for (const [chapterKey, data] of Object.entries(thetaByChapter)) {
     const weight = JEE_CHAPTER_WEIGHTS[chapterKey] || DEFAULT_CHAPTER_WEIGHT;
     weightedSum += data.theta * weight;
     totalWeight += weight;
   }
-  
+
   if (totalWeight === 0) {
     console.warn(
       'Total weight is 0 for weighted overall theta calculation. ' +
@@ -308,7 +320,7 @@ function calculateWeightedOverallTheta(thetaByChapter) {
     );
     return 0.0;
   }
-  
+
   return boundTheta(weightedSum / totalWeight);
 }
 
@@ -339,15 +351,15 @@ function formatChapterKey(subject, chapter) {
   let chapterLower = chapter.toLowerCase().trim()
     .replace(/[^a-z0-9\s]/g, '')  // Remove special characters
     .replace(/\s+/g, '_');         // Replace spaces with underscores
-  
+
   // Apply normalization if chapter name matches a known variation
   const normalizedChapter = CHAPTER_NAME_NORMALIZATIONS[chapterLower];
   if (normalizedChapter) {
     chapterLower = normalizedChapter;
   }
-  
+
   const chapterKey = `${subjectLower}_${chapterLower}`;
-  
+
   // Log warning if chapter key doesn't exist in weights (for debugging)
   if (!JEE_CHAPTER_WEIGHTS[chapterKey] && !chapterKey.includes('unknown')) {
     console.warn(
@@ -355,7 +367,7 @@ function formatChapterKey(subject, chapter) {
       `Using default weight ${DEFAULT_CHAPTER_WEIGHT}.`
     );
   }
-  
+
   return chapterKey;
 }
 
@@ -389,7 +401,7 @@ function getSubjectFromChapter(chapterKey) {
 function calculateSubjectTheta(thetaByChapter, subject) {
   const subjectChapters = Object.entries(thetaByChapter)
     .filter(([key, _]) => key.startsWith(`${subject}_`));
-  
+
   if (subjectChapters.length === 0) {
     return {
       theta: null,
@@ -402,19 +414,19 @@ function calculateSubjectTheta(thetaByChapter, subject) {
       strong_chapters: []
     };
   }
-  
+
   // Calculate weighted average
   let weightedSum = 0;
   let totalWeight = 0;
   let totalAttempts = 0;
-  
+
   for (const [chapterKey, data] of subjectChapters) {
     // Validate data structure and theta value
     if (!data || typeof data !== 'object') {
       console.warn(`Chapter ${chapterKey} has invalid data structure, skipping`);
       continue;
     }
-    
+
     if (typeof data.theta !== 'number' || isNaN(data.theta) || !isFinite(data.theta)) {
       console.warn(
         `Chapter ${chapterKey} has invalid theta: ${data.theta}, skipping. ` +
@@ -422,13 +434,13 @@ function calculateSubjectTheta(thetaByChapter, subject) {
       );
       continue;
     }
-    
+
     const weight = JEE_CHAPTER_WEIGHTS[chapterKey] || DEFAULT_CHAPTER_WEIGHT;
     weightedSum += data.theta * weight;
     totalWeight += weight;
     totalAttempts += (data.attempts || 0);
   }
-  
+
   // Validate we have at least one valid chapter
   if (totalWeight === 0) {
     console.warn(
@@ -436,9 +448,9 @@ function calculateSubjectTheta(thetaByChapter, subject) {
       `All chapters may have invalid data.`
     );
   }
-  
+
   const subjectTheta = totalWeight > 0 ? weightedSum / totalWeight : 0.0;
-  
+
   // Identify weak and strong chapters
   const sortedChapters = subjectChapters.sort((a, b) => a[1].theta - b[1].theta);
   const weakChapters = sortedChapters
@@ -449,7 +461,7 @@ function calculateSubjectTheta(thetaByChapter, subject) {
     .filter(([_, data]) => data.theta > 0.5)
     .slice(-3)
     .map(([key, _]) => key);
-  
+
   return {
     theta: boundTheta(subjectTheta),
     percentile: thetaToPercentile(subjectTheta),
@@ -469,20 +481,20 @@ function calculateSubjectTheta(thetaByChapter, subject) {
  */
 function calculateSubjectBalance(thetaEstimates) {
   const subjectCounts = { physics: 0, chemistry: 0, mathematics: 0 };
-  
+
   for (const [chapterKey, data] of Object.entries(thetaEstimates)) {
     const subject = getSubjectFromChapter(chapterKey);
     if (subject in subjectCounts) {
       subjectCounts[subject] += data.attempts || 0;
     }
   }
-  
+
   const total = subjectCounts.physics + subjectCounts.chemistry + subjectCounts.mathematics;
-  
+
   if (total === 0) {
-    return { physics: 1/3, chemistry: 1/3, mathematics: 1/3 };
+    return { physics: 1 / 3, chemistry: 1 / 3, mathematics: 1 / 3 };
   }
-  
+
   return {
     physics: Math.round((subjectCounts.physics / total) * 1000) / 1000,
     chemistry: Math.round((subjectCounts.chemistry / total) * 1000) / 1000,
@@ -504,12 +516,12 @@ module.exports = {
   calculateOverallTheta, // Backward compatibility
   calculateWeightedOverallTheta,
   calculateSubjectTheta,
-  
+
   // Helper functions
   formatChapterKey,
   getSubjectFromChapter,
   calculateSubjectBalance,
-  
+
   // Constants
   THETA_MIN,
   THETA_MAX,

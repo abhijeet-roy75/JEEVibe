@@ -14,6 +14,7 @@
 const { db, admin } = require('../config/firebase');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
+const { getDatabaseNames } = require('./chapterMappingService');
 
 // ============================================================================
 // CONSTANTS
@@ -58,20 +59,20 @@ function calculateIRTProbability(theta, a, b, c) {
  */
 function calculateFisherInformation(theta, a, b, c) {
   const P = calculateIRTProbability(theta, a, b, c);
-  
+
   // Avoid division by zero
   if (P <= 0 || P >= 1) {
     return 0;
   }
-  
+
   // Fisher Information formula for 3PL model
   const numerator = Math.pow(a, 2) * Math.pow(P - c, 2);
   const denominator = Math.pow(1 - c, 2) * P * (1 - P);
-  
+
   if (denominator === 0) {
     return 0;
   }
-  
+
   return numerator / denominator;
 }
 
@@ -91,43 +92,43 @@ async function getRecentQuestionIds(userId, days = RECENCY_FILTER_DAYS) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
     const cutoffTimestamp = admin.firestore.Timestamp.fromDate(cutoffDate);
-    
+
     // Query daily quiz responses
     const dailyQuizResponsesRef = db.collection('daily_quiz_responses')
       .doc(userId)
       .collection('responses')
       .where('answered_at', '>=', cutoffTimestamp);
-    
+
     const dailyQuizSnapshot = await retryFirestoreOperation(async () => {
       return await dailyQuizResponsesRef.get();
     });
-    
+
     // Query assessment responses (if within time window)
     const assessmentResponsesRef = db.collection('assessment_responses')
       .doc(userId)
       .collection('responses')
       .where('answered_at', '>=', cutoffTimestamp);
-    
+
     const assessmentSnapshot = await retryFirestoreOperation(async () => {
       return await assessmentResponsesRef.get();
     });
-    
+
     const recentQuestionIds = new Set();
-    
+
     dailyQuizSnapshot.docs.forEach(doc => {
       const questionId = doc.data().question_id;
       if (questionId) {
         recentQuestionIds.add(questionId);
       }
     });
-    
+
     assessmentSnapshot.docs.forEach(doc => {
       const questionId = doc.data().question_id;
       if (questionId) {
         recentQuestionIds.add(questionId);
       }
     });
-    
+
     return recentQuestionIds;
   } catch (error) {
     logger.error('Error getting recent question IDs', {
@@ -148,10 +149,10 @@ async function getRecentQuestionIds(userId, days = RECENCY_FILTER_DAYS) {
 function filterByDifficultyMatch(questions, theta) {
   return questions.filter(q => {
     const irtParams = q.irt_parameters || {};
-    const difficulty_b = irtParams.difficulty_b !== undefined 
-      ? irtParams.difficulty_b 
+    const difficulty_b = irtParams.difficulty_b !== undefined
+      ? irtParams.difficulty_b
       : q.difficulty_irt || 0;
-    
+
     const diff = Math.abs(difficulty_b - theta);
     return diff <= DIFFICULTY_MATCH_THRESHOLD;
   });
@@ -168,25 +169,25 @@ function scoreQuestions(questions, theta) {
   return questions.map(q => {
     const irtParams = q.irt_parameters || {};
     const a = irtParams.discrimination_a || 1.5;
-    const b = irtParams.difficulty_b !== undefined 
-      ? irtParams.difficulty_b 
+    const b = irtParams.difficulty_b !== undefined
+      ? irtParams.difficulty_b
       : q.difficulty_irt || 0;
-    const c = irtParams.guessing_c !== undefined 
-      ? irtParams.guessing_c 
+    const c = irtParams.guessing_c !== undefined
+      ? irtParams.guessing_c
       : (q.question_type === 'mcq_single' ? 0.25 : 0.0);
-    
+
     // Calculate Fisher Information
     const fisherInfo = calculateFisherInformation(theta, a, b, c);
-    
+
     // Bonus for higher discrimination (better questions)
     const discriminationBonus = a * 0.1;
-    
+
     // Penalty for difficulty mismatch (prefer questions closer to theta)
     const difficultyPenalty = Math.abs(b - theta) * 0.2;
-    
+
     // Combined score
     const score = fisherInfo + discriminationBonus - difficultyPenalty;
-    
+
     return {
       question: q,
       score: score,
@@ -213,98 +214,92 @@ function scoreQuestions(questions, theta) {
 async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds = new Set(), count = 1) {
   try {
     logger.info('Selecting questions for chapter', { chapterKey, theta, excludeCount: excludeQuestionIds.size, count });
-    
+
     // Validate chapter key format
     if (!chapterKey || typeof chapterKey !== 'string') {
       logger.warn('Invalid chapter key provided', { chapterKey });
       return [];
     }
-    
-    // Extract subject and chapter from chapterKey
-    // Format: "subject_chapter_name" or "subject_chapter_name_with_spaces"
-    const parts = chapterKey.split('_');
-    
-    if (parts.length < 2) {
-      logger.warn('Chapter key format may be invalid, attempting to parse', { 
-        chapterKey,
-        parts: parts.length 
-      });
-      // Try to handle single-word chapters (fallback)
-      if (parts.length === 1) {
-        // Assume entire string is chapter name, try to infer subject from context
-        // This is a fallback - ideally chapter keys should always have subject prefix
-        logger.warn('Single-part chapter key detected, may cause query issues', { chapterKey });
+
+    // 1. Try dynamic mapping first (most robust)
+    const mapping = await getDatabaseNames(chapterKey);
+    let subject, chapterFromKey;
+
+    if (mapping) {
+      subject = mapping.subject;
+      chapterFromKey = mapping.chapter;
+      logger.info('Using dynamic mapping for chapter selection', { chapterKey, subject, chapter: chapterFromKey });
+    } else {
+      // Fallback: Parse from key (existing logic)
+      const parts = chapterKey.split('_');
+      if (parts.length < 2) {
+        logger.warn('Invalid chapter key format', { chapterKey });
         return [];
       }
+      subject = parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase();
+      chapterFromKey = parts.slice(1).join(' ').replace(/_/g, ' ');
+      logger.info('Falling back to key parsing for chapter selection', { chapterKey, subject, chapter: chapterFromKey });
     }
-    
-    const subject = parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase(); // Capitalize first letter, lowercase rest
-    logger.info('Parsed chapter key', { chapterKey, subject, parts });
-    const chapterFromKey = parts.slice(1).join(' ').replace(/_/g, ' '); // Convert underscores to spaces
-    
+
     // Query questions for this chapter
-    // Try exact match first, then case-insensitive fallback
     logger.info('Querying Firestore for questions', { chapterKey, subject, chapter: chapterFromKey });
     let questionsRef = db.collection('questions')
       .where('subject', '==', subject)
       .where('chapter', '==', chapterFromKey)
       .limit(MAX_CANDIDATES);
-    
-    logger.info('Executing Firestore query (exact match)', { chapterKey });
+
     let snapshot = await retryFirestoreOperation(async () => {
       return await questionsRef.get();
     });
-    logger.info('Firestore query completed (exact match)', { chapterKey, resultCount: snapshot.size });
-    
-    // If no results, try with capitalized chapter name (Title Case)
-    if (snapshot.empty && chapterFromKey) {
+    logger.info('Firestore query completed', { chapterKey, resultCount: snapshot.size });
+
+    // If no results and we didn't use a mapping, try Title Case as a last resort
+    if (snapshot.empty && !mapping && chapterFromKey) {
       const titleCaseChapter = chapterFromKey
         .split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
-      
-      logger.info('Trying Title Case chapter name', { chapterKey, titleCaseChapter });
+
+      logger.info('Trying Title Case chapter name fallback', { chapterKey, titleCaseChapter });
       questionsRef = db.collection('questions')
         .where('subject', '==', subject)
         .where('chapter', '==', titleCaseChapter)
         .limit(MAX_CANDIDATES);
-      
-      logger.info('Executing Firestore query (Title Case)', { chapterKey });
+
       snapshot = await retryFirestoreOperation(async () => {
         return await questionsRef.get();
       });
-      logger.info('Firestore query completed (Title Case)', { chapterKey, resultCount: snapshot.size });
+      logger.info('Firestore query completed (Title Case fallback)', { chapterKey, resultCount: snapshot.size });
     }
-    
+
     if (snapshot.empty) {
-      logger.warn('No questions found for chapter', { 
-        chapterKey, 
-        subject, 
-        chapter: chapterFromKey,
-        triedFormats: [chapterFromKey, chapterFromKey.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')]
+      logger.warn('No questions found for chapter after all attempts', {
+        chapterKey,
+        subject,
+        chapter: chapterFromKey
       });
       return [];
     }
-    
+
     let questions = snapshot.docs.map(doc => ({
       question_id: doc.id,
       ...doc.data()
     }));
-    
+
     // Filter out excluded questions (recently answered)
     questions = questions.filter(q => !excludeQuestionIds.has(q.question_id));
-    
+
     if (questions.length === 0) {
       logger.warn('All questions excluded (recently answered)', { chapterKey });
       return [];
     }
-    
+
     // Filter by difficulty match
     questions = filterByDifficultyMatch(questions, theta);
-    
+
     if (questions.length === 0) {
-      logger.warn('No questions match difficulty threshold', { 
-        chapterKey, 
+      logger.warn('No questions match difficulty threshold', {
+        chapterKey,
         theta,
         threshold: DIFFICULTY_MATCH_THRESHOLD
       });
@@ -314,15 +309,15 @@ async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds =
         ...doc.data()
       })).filter(q => !excludeQuestionIds.has(q.question_id));
     }
-    
+
     // Score and rank questions
     const scoredQuestions = scoreQuestions(questions, theta);
-    
+
     // Select top N questions
     const selected = scoredQuestions
       .slice(0, count)
       .map(item => item.question);
-    
+
     logger.info('Questions selected for chapter', {
       chapterKey,
       theta,
@@ -330,7 +325,7 @@ async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds =
       selected: selected.length,
       topScore: scoredQuestions[0]?.score
     });
-    
+
     return selected;
   } catch (error) {
     logger.error('Error selecting questions for chapter', {
@@ -354,9 +349,9 @@ async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds =
  */
 async function selectQuestionsForChapters(chapterThetas, excludeQuestionIds = new Set(), options = {}) {
   const { questionsPerChapter = 1 } = options;
-  
+
   const allSelected = [];
-  
+
   // Select questions for each chapter in parallel
   const selections = await Promise.all(
     Object.entries(chapterThetas).map(async ([chapterKey, theta]) => {
@@ -381,12 +376,12 @@ async function selectQuestionsForChapters(chapterThetas, excludeQuestionIds = ne
       }
     })
   );
-  
+
   // Flatten results
   selections.forEach(chapterQuestions => {
     allSelected.push(...chapterQuestions);
   });
-  
+
   return allSelected;
 }
 
@@ -404,37 +399,37 @@ async function selectAnyAvailableQuestions(excludeQuestionIds = new Set(), limit
       excludeCount: excludeQuestionIds.size,
       limit
     });
-    
+
     // Query all questions, limited by count
     const questionsRef = db.collection('questions')
       .limit(limit * 3); // Get more to account for exclusions
-    
+
     logger.info('Executing fallback Firestore query', { limit: limit * 3 });
     const snapshot = await retryFirestoreOperation(async () => {
       return await questionsRef.get();
     });
     logger.info('Fallback Firestore query completed', { resultCount: snapshot.size });
-    
+
     if (snapshot.empty) {
       logger.warn('No questions found in database (fallback)', {});
       return [];
     }
-    
+
     // Map to question objects
     let questions = snapshot.docs.map(doc => ({
       question_id: doc.id,
       ...doc.data()
     }));
-    
+
     // Filter out excluded questions
     let filteredQuestions = questions.filter(q => !excludeQuestionIds.has(q.question_id));
-    
-    logger.info('Filtered available questions', { 
-      initialCount: snapshot.size, 
+
+    logger.info('Filtered available questions', {
+      initialCount: snapshot.size,
       filteredCount: filteredQuestions.length,
       excludeCount: excludeQuestionIds.size
     });
-    
+
     // If all questions were excluded, return questions anyway (ignore exclusions)
     // This ensures we can still generate a quiz even if all questions were recently answered
     if (filteredQuestions.length === 0 && questions.length > 0) {
@@ -444,16 +439,16 @@ async function selectAnyAvailableQuestions(excludeQuestionIds = new Set(), limit
       });
       filteredQuestions = questions;
     }
-    
+
     // Limit to requested count
     const selectedQuestions = filteredQuestions.slice(0, limit);
-    
+
     logger.info('Fallback questions selected', {
       selected: selectedQuestions.length,
       limit,
       hadToIgnoreExclusions: filteredQuestions.length === questions.length && excludeQuestionIds.size > 0
     });
-    
+
     return selectedQuestions;
   } catch (error) {
     logger.error('Error in fallback question selection', {
