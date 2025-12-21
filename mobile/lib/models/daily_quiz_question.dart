@@ -42,8 +42,37 @@ class DailyQuizQuestion {
   });
 
   factory DailyQuizQuestion.fromJson(Map<String, dynamic> json) {
+    // Parse options and validate IDs
+    List<QuestionOption>? options;
+    if (json['options'] != null) {
+      final optionsList = (json['options'] as List)
+          .map((opt) => QuestionOption.fromJson(opt as Map<String, dynamic>))
+          .toList();
+      
+      // Validate and fix duplicate/empty option IDs
+      final seenIds = <String>{};
+      options = optionsList.map((opt) {
+        String optionId = opt.optionId;
+        
+        // If empty or duplicate, generate a unique ID
+        if (optionId.isEmpty || seenIds.contains(optionId)) {
+          // Use A, B, C, D based on index
+          final index = optionsList.indexOf(opt);
+          optionId = String.fromCharCode(65 + index); // A=65, B=66, etc.
+          print('WARNING: Fixed option ID for question ${json['question_id']} - assigned: $optionId');
+        }
+        
+        seenIds.add(optionId);
+        
+        // Return new option with corrected ID if needed
+        return optionId != opt.optionId
+            ? QuestionOption(optionId: optionId, text: opt.text, html: opt.html)
+            : opt;
+      }).toList();
+    }
+    
     return DailyQuizQuestion(
-      questionId: json['question_id'] as String,
+      questionId: json['question_id'] as String? ?? '',
       position: json['position'] as int? ?? 0,
       subject: json['subject'] as String? ?? '',
       chapter: json['chapter'] as String? ?? '',
@@ -52,11 +81,7 @@ class DailyQuizQuestion {
       questionText: json['question_text'] as String? ?? '',
       questionTextHtml: json['question_text_html'] as String?,
       questionLatex: json['question_latex'] as String?,
-      options: json['options'] != null
-          ? (json['options'] as List)
-              .map((opt) => QuestionOption.fromJson(opt as Map<String, dynamic>))
-              .toList()
-          : null,
+      options: options,
       imageUrl: json['image_url'] as String?,
       timeEstimate: json['time_estimate'] as int?,
       selectionReason: json['selection_reason'] as String?,
@@ -92,7 +117,7 @@ class DailyQuiz {
 
   factory DailyQuiz.fromJson(Map<String, dynamic> json) {
     return DailyQuiz(
-      quizId: json['quiz_id'] as String,
+      quizId: json['quiz_id'] as String? ?? '',
       quizNumber: json['quiz_number'] as int? ?? 0,
       learningPhase: json['learning_phase'] as String? ?? 'exploration',
       questions: (json['questions'] as List? ?? [])
@@ -134,8 +159,8 @@ class AnswerFeedback {
 
   factory AnswerFeedback.fromJson(Map<String, dynamic> json) {
     return AnswerFeedback(
-      questionId: json['question_id'] as String,
-      isCorrect: json['is_correct'] as bool,
+      questionId: json['question_id'] as String? ?? '',
+      isCorrect: json['is_correct'] as bool? ?? false,
       correctAnswer: json['correct_answer'] as String?,
       correctAnswerText: json['correct_answer_text'] as String?,
       explanation: json['explanation'] as String?,
@@ -145,7 +170,7 @@ class AnswerFeedback {
               .map((step) => SolutionStep.fromJson(step))
               .toList()
           : null,
-      timeTakenSeconds: json['time_taken_seconds'] as int,
+      timeTakenSeconds: json['time_taken_seconds'] as int? ?? 0,
       studentAnswer: json['student_answer'] as String?,
     );
   }

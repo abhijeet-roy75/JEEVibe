@@ -360,13 +360,10 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                         question: question,
                         selectedAnswer: questionState?.selectedAnswer,
                         showAnswerOptions: feedback == null,
-                        onAnswerSelected: feedback == null 
-                            ? (question.isMcq || question.isNumerical) 
-                                ? _handleOptionSelection 
-                                : null
-                            : null,
+                        // FIX: Simplified callback logic - always provide callback when not yet answered
+                        onAnswerSelected: feedback == null ? _handleOptionSelection : null,
                         onAnswerSubmitted: feedback == null 
-                            ? (question.isMcq && questionState?.selectedAnswer != null
+                            ? ((question.options != null && question.options!.isNotEmpty && questionState?.selectedAnswer != null)
                                 ? () => _handleAnswerSubmission(questionState!.selectedAnswer!)
                                 : question.isNumerical
                                     ? () {

@@ -105,6 +105,22 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
     return '${minutes}:${secs.toString().padLeft(2, '0')}';
   }
 
+  String _getDisplayableOptionId(String optionId) {
+    // If it's already a single character (A, B, C, D), use it
+    if (optionId.length == 1) {
+      return optionId.toUpperCase();
+    }
+    
+    // If malformed (like "opt_813"), try to extract a letter
+    final match = RegExp(r'[A-Za-z]').firstMatch(optionId);
+    if (match != null) {
+      return match.group(0)!.toUpperCase();
+    }
+    
+    // Last resort: use first character
+    return optionId.isNotEmpty ? optionId[0].toUpperCase() : '?';
+  }
+
   @override
   Widget build(BuildContext context) {
     final question = widget.question;
@@ -374,6 +390,11 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
     final optionHtml = option.html;
     final isSelected = widget.selectedAnswer == optionId;
     
+    // Debug: Log option data for troubleshooting
+    if (optionId.isEmpty) {
+      print('WARNING: Option has empty ID - Text: $optionText');
+    }
+    
     // Determine option state when reviewing
     final feedback = widget.feedback;
     final isReviewing = feedback != null;
@@ -462,7 +483,9 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                 ),
                 child: Center(
                   child: Text(
-                    optionId,
+                    // Display only single letter (A, B, C, D)
+                    // If ID is malformed (like "opt_813"), extract first uppercase letter or use first char
+                    _getDisplayableOptionId(optionId),
                     style: AppTextStyles.labelMedium.copyWith(
                       color: isReviewing && (isCorrectAnswer || isWrongAnswer)
                           ? Colors.white

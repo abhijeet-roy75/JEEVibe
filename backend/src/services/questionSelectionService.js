@@ -228,8 +228,10 @@ function normalizeQuestion(id, data) {
         .sort(([a], [b]) => String(a).localeCompare(String(b)))
         .map(([key, value], index) => {
           const isObj = typeof value === 'object' && value !== null;
+          // Ensure option_id is not empty string
+          const optionId = String(key || '').trim() || String.fromCharCode(65 + index);
           return {
-            option_id: String(key || String.fromCharCode(65 + index)),
+            option_id: optionId,
             text: String(isObj ? (value.text || value.description || '') : (value !== undefined && value !== null ? value : '')),
             html: isObj ? (value.html || value.rich_text || null) : null
           };
@@ -246,9 +248,11 @@ function normalizeQuestion(id, data) {
             };
           }
           if (typeof opt === 'object') {
+            // Get option_id and fallback to A, B, C, D if missing or empty
+            const optionId = opt.option_id || opt.id || opt.key || '';
             return {
               ...opt,
-              option_id: String(opt.option_id || opt.id || opt.key || String.fromCharCode(65 + index)),
+              option_id: String(optionId).trim() || String.fromCharCode(65 + index),
               text: String(opt.text || opt.description || opt.value || ''),
               html: opt.html || opt.rich_text || null
             };
