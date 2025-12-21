@@ -93,6 +93,7 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
       return await todayQuizzesRef.get();
     });
     
+    /*
     if (!todayQuizzesSnapshot.empty) {
       const completedQuiz = todayQuizzesSnapshot.docs[0].data();
       const completedQuizId = todayQuizzesSnapshot.docs[0].id;
@@ -114,6 +115,7 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
         requestId: req.id
       });
     }
+    */
     
     // Generate new quiz
     logger.info('Generating daily quiz', { userId, requestId: req.id });

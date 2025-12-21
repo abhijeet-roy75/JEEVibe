@@ -348,7 +348,8 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
           final now = DateTime.now();
           final daysSinceLastQuiz = now.difference(lastDate).inDays;
           // Disable if quiz was completed today (0 days since last quiz)
-          canStartQuiz = daysSinceLastQuiz > 0;
+          // canStartQuiz = daysSinceLastQuiz > 0;
+          canStartQuiz = true; // RESTORE: Temporarily enabled for testing
         } catch (e) {
           // Invalid date, allow quiz
           canStartQuiz = true;
@@ -570,17 +571,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
                   ),
                 ],
               ),
-              TextButton(
-                onPressed: () {
-                  // TODO: Navigate to full journey view
-                },
-                child: Text(
-                  'View All',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.primaryPurple,
-                  ),
-                ),
-              ),
+              // View All button removed
             ],
           ),
           const SizedBox(height: 16),
@@ -679,17 +670,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
                   ),
                 ],
               ),
-              TextButton(
-                onPressed: () {
-                  // TODO: Navigate to full journey view
-                },
-                child: Text(
-                  'View All',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.primaryPurple,
-                  ),
-                ),
-              ),
+              // View All button removed
             ],
           ),
           const SizedBox(height: 16),

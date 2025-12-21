@@ -139,7 +139,7 @@ class _JEEVibeAppState extends State<JEEVibeApp> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _checkAndLockApp();
+      // _checkAndLockApp(); // DISABLED: As per user request, do not prompt for PIN on resume
     }
   }
 

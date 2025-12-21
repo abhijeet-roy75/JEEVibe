@@ -86,17 +86,7 @@ class SubjectProgressWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              TextButton(
-                onPressed: () {
-                  // TODO: Navigate to full progress view
-                },
-                child: Text(
-                  'View All',
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.primaryPurple,
-                  ),
-                ),
-              ),
+              // View All button removed
             ],
           ),
           const SizedBox(height: 16),
