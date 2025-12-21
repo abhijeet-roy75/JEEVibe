@@ -72,16 +72,16 @@ function boundSE(se) {
 function calculateGradient(theta, a, b, c, isCorrect) {
   const D = 1.702; // Scaling constant for 3PL model
   const P = calculateIRTProbability(theta, a, b, c);
-  
+
   // Avoid division by zero
   if (P <= 0 || P >= 1) {
     return 0;
   }
-  
+
   // Gradient of log-likelihood
   const residual = (isCorrect ? 1 : 0) - P;
   const gradient = D * a * (P - c) / ((1 - c) * P * (1 - P)) * residual;
-  
+
   return gradient;
 }
 
@@ -96,18 +96,18 @@ function calculateGradient(theta, a, b, c, isCorrect) {
  */
 function calculateFisherInformation(theta, a, b, c) {
   const P = calculateIRTProbability(theta, a, b, c);
-  
+
   if (P <= 0 || P >= 1) {
     return 0;
   }
-  
+
   const numerator = Math.pow(a, 2) * Math.pow(P - c, 2);
   const denominator = Math.pow(1 - c, 2) * P * (1 - P);
-  
+
   if (denominator === 0) {
     return 0;
   }
-  
+
   return numerator / denominator;
 }
 
@@ -127,24 +127,24 @@ function calculateFisherInformation(theta, a, b, c) {
  */
 function updateThetaAfterQuestion(currentTheta, currentSE, questionIRT, isCorrect) {
   const { a, b, c } = questionIRT;
-  
+
   // Calculate gradient
   const gradient = calculateGradient(currentTheta, a, b, c, isCorrect);
-  
+
   // Update theta using gradient descent
   let newTheta = currentTheta + LEARNING_RATE * gradient;
   newTheta = boundTheta(newTheta);
-  
+
   // Update standard error using Fisher Information
   const fisherInfo = calculateFisherInformation(newTheta, a, b, c);
-  
+
   // SE decreases as we gain more information
   // Formula: new_SE = 1 / sqrt(1/old_SE² + Fisher_Info)
   const oldVariance = Math.pow(currentSE, 2);
   const newVariance = 1 / (1 / oldVariance + fisherInfo);
   let newSE = Math.sqrt(newVariance);
   newSE = boundSE(newSE);
-  
+
   return {
     theta: newTheta,
     se: newSE,
@@ -170,11 +170,11 @@ function batchUpdateTheta(initialTheta, initialSE, responses) {
   let currentTheta = initialTheta;
   let currentSE = initialSE;
   const updates = [];
-  
+
   for (const response of responses) {
     const { questionIRT, isCorrect } = response;
     const update = updateThetaAfterQuestion(currentTheta, currentSE, questionIRT, isCorrect);
-    
+
     updates.push({
       theta_before: currentTheta,
       theta_after: update.theta,
@@ -183,11 +183,11 @@ function batchUpdateTheta(initialTheta, initialSE, responses) {
       theta_delta: update.theta_delta,
       se_delta: update.se_delta
     });
-    
+
     currentTheta = update.theta;
     currentSE = update.se;
   }
-  
+
   return {
     theta: currentTheta,
     se: currentSE,
@@ -215,11 +215,11 @@ async function updateChapterTheta(userId, chapterKey, responses) {
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
-    
+
     if (!userDoc.exists) {
       throw new Error(`User ${userId} not found`);
     }
-    
+
     const userData = userDoc.data();
     const currentChapterData = userData.theta_by_chapter?.[chapterKey] || {
       theta: 0.0,
@@ -229,38 +229,38 @@ async function updateChapterTheta(userId, chapterKey, responses) {
       accuracy: 0.0,
       last_updated: new Date().toISOString()
     };
-    
+
     // Prepare responses for batch update
     const batchResponses = responses.map(r => ({
       questionIRT: r.questionIRT,
       isCorrect: r.isCorrect
     }));
-    
+
     // Perform batch theta update
     const updateResult = batchUpdateTheta(
       currentChapterData.theta,
       currentChapterData.confidence_SE,
       batchResponses
     );
-    
+
     // Calculate new accuracy
     const correctCount = responses.filter(r => r.isCorrect).length;
     const totalCount = responses.length;
     const newAccuracy = totalCount > 0 ? correctCount / totalCount : 0;
-    
+
     // Combine with existing attempts
     const newAttempts = currentChapterData.attempts + totalCount;
-    
+
     // Calculate weighted accuracy (combine old and new)
     const oldAccuracy = currentChapterData.accuracy || 0;
     const oldAttempts = currentChapterData.attempts || 0;
     const combinedAccuracy = oldAttempts > 0
       ? (oldAccuracy * oldAttempts + newAccuracy * totalCount) / newAttempts
       : newAccuracy;
-    
+
     // Calculate percentile from theta
     const percentile = thetaToPercentile(updateResult.theta);
-    
+
     // Prepare updated chapter data
     const updatedChapterData = {
       theta: boundTheta(updateResult.theta),
@@ -270,14 +270,14 @@ async function updateChapterTheta(userId, chapterKey, responses) {
       accuracy: Math.round(combinedAccuracy * 1000) / 1000, // 3 decimal places
       last_updated: new Date().toISOString()
     };
-    
+
     // Update user document
     await retryFirestoreOperation(async () => {
       return await userRef.update({
         [`theta_by_chapter.${chapterKey}`]: updatedChapterData
       });
     });
-    
+
     logger.info('Chapter theta updated', {
       userId,
       chapterKey,
@@ -285,7 +285,7 @@ async function updateChapterTheta(userId, chapterKey, responses) {
       theta_after: updatedChapterData.theta,
       attempts: newAttempts
     });
-    
+
     return {
       chapter_key: chapterKey,
       ...updatedChapterData,
@@ -336,42 +336,68 @@ async function updateSubjectAndOverallTheta(userId) {
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
-    
+
     if (!userDoc.exists) {
       throw new Error(`User ${userId} not found`);
     }
-    
+
     const userData = userDoc.data();
     const thetaByChapter = userData.theta_by_chapter || {};
-    
-    // Calculate subject-level thetas
-    const thetaBySubject = {
-      physics: calculateSubjectTheta(thetaByChapter, 'physics'),
-      chemistry: calculateSubjectTheta(thetaByChapter, 'chemistry'),
-      mathematics: calculateSubjectTheta(thetaByChapter, 'mathematics')
-    };
-    
+
+    // Calculate subject-level thetas and aggregate accuracy
+    const thetaBySubject = {};
+    const subjectAccuracy = {};
+    const subjects = ['physics', 'chemistry', 'mathematics'];
+
+    for (const subject of subjects) {
+      const subjectData = calculateSubjectTheta(thetaByChapter, subject);
+      thetaBySubject[subject] = subjectData;
+
+      // Calculate aggregated accuracy for this subject from thetaByChapter
+      let correct = 0;
+      let total = 0;
+
+      Object.entries(thetaByChapter).forEach(([key, data]) => {
+        if (key.startsWith(`${subject}_`)) {
+          // Weighted by attempts to get cumulative accuracy
+          const attempts = data.attempts || 0;
+          const accuracy = data.accuracy || 0;
+          correct += Math.round(accuracy * attempts);
+          total += attempts;
+        }
+      });
+
+      subjectAccuracy[subject] = {
+        correct,
+        total,
+        accuracy: total > 0 ? Math.round((correct / total) * 100) : 0
+      };
+    }
+
     // Calculate overall theta (weighted by JEE chapter importance)
     const overallTheta = calculateWeightedOverallTheta(thetaByChapter);
     const overallPercentile = thetaToPercentile(overallTheta);
-    
+
     // Update user document
     await retryFirestoreOperation(async () => {
       return await userRef.update({
         theta_by_subject: thetaBySubject,
+        subject_accuracy: subjectAccuracy,
         overall_theta: overallTheta,
         overall_percentile: overallPercentile
       });
     });
-    
+
     logger.info('Subject and overall theta updated', {
       userId,
       overall_theta: overallTheta,
-      overall_percentile: overallPercentile
+      overall_percentile: overallPercentile,
+      subject_accuracy: subjectAccuracy
     });
-    
+
     return {
       theta_by_subject: thetaBySubject,
+      subject_accuracy: subjectAccuracy,
       overall_theta: overallTheta,
       overall_percentile: overallPercentile
     };

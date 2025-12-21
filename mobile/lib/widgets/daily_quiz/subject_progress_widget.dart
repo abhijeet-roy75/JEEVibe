@@ -94,7 +94,7 @@ class SubjectProgressWidget extends StatelessWidget {
             final subjectData = subjects[subject.toLowerCase()] as Map<String, dynamic>?;
             if (subjectData == null) return const SizedBox.shrink();
             
-            final percentile = subjectData['percentile'] as num? ?? 0;
+            final percentile = (subjectData['current_percentile'] ?? subjectData['percentile'] ?? 0) as num;
             final progressValue = percentile / 100;
             
             return Padding(
