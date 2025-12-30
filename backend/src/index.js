@@ -59,7 +59,7 @@ const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-    
+
     // In production, strictly validate origins
     if (process.env.NODE_ENV === 'production') {
       if (allowedOrigins.includes(origin)) {
@@ -76,12 +76,12 @@ const corsOptions = {
         'http://127.0.0.1:3000',
         'http://127.0.0.1:8080',
       ];
-      
+
       // Allow localhost with any port, or exact matches
-      const isLocalhost = origin.startsWith('http://localhost:') || 
-                         origin.startsWith('http://127.0.0.1:') ||
-                         devOrigins.includes(origin);
-      
+      const isLocalhost = origin.startsWith('http://localhost:') ||
+        origin.startsWith('http://127.0.0.1:') ||
+        devOrigins.includes(origin);
+
       if (isLocalhost || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -159,6 +159,9 @@ app.use('/api/cron', cronRouter);
 
 const dailyQuizRouter = require('./routes/dailyQuiz');
 app.use('/api/daily-quiz', dailyQuizRouter);
+
+const snapHistoryRouter = require('./routes/snapHistory');
+app.use('/api', snapHistoryRouter);
 
 // Test endpoints (only in development)
 if (process.env.NODE_ENV !== 'production') {
@@ -240,17 +243,17 @@ app.listen(PORT, () => {
     environment: process.env.NODE_ENV || 'development',
     nodeVersion: process.version,
   });
-  
+
   // Check for required environment variables
   const requiredEnvVars = ['OPENAI_API_KEY', 'FIREBASE_PROJECT_ID'];
   const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-  
+
   if (missingVars.length > 0) {
     logger.warn('⚠️  Missing required environment variables', {
       missing: missingVars,
     });
   }
-  
+
   if (process.env.NODE_ENV === 'production') {
     logger.info('✅ Production mode - Security features enabled');
   } else {

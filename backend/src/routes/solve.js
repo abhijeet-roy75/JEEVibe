@@ -11,6 +11,9 @@ const { solveQuestionFromImage, generateFollowUpQuestions, generateSingleFollowU
 const { authenticateUser } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
+const { storage } = require('../config/firebase');
+const { getDailyUsage, saveSnapRecord } = require('../services/snapHistoryService');
+const { v4: uuidv4 } = require('uuid');
 
 
 /**
@@ -139,10 +142,40 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
       throw new ApiError(400, `Invalid image type. Allowed types: ${allowedMimeTypes.join(', ')}`);
     }
 
+    // Check daily limit first
+    const usage = await getDailyUsage(userId);
+    if (usage.used >= usage.limit) {
+      logger.warn('Daily snap limit reached', { userId, used: usage.used, limit: usage.limit });
+      throw new ApiError(429, `Daily limit of ${usage.limit} snaps reached. Please come back tomorrow!`, {
+        code: 'LIMIT_EXHAUSTED',
+        resetsAt: usage.resetsAt
+      });
+    }
+
     // Validate image content (magic numbers/file signatures)
     if (!validateImageContent(imageBuffer, req.file.mimetype)) {
       throw new ApiError(400, 'File content does not match declared image type. File may be corrupted or not an image.');
     }
+
+    // Step 0: Upload image to Firebase Storage
+    logger.info('Updating image to storage', { userId, requestId: req.id });
+    const filename = `snaps/${userId}/${uuidv4()}_${req.file.originalname}`;
+    const file = storage.bucket().file(filename);
+
+    await file.save(imageBuffer, {
+      metadata: {
+        contentType: req.file.mimetype,
+        metadata: {
+          userId: userId,
+          requestId: req.id
+        }
+      }
+    });
+
+    // Get public URL or bucket path
+    // For simplicity in this POC, we'll use the bucket path
+    // The mobile app can use the Firebase Storage SDK to get the download URL
+    const imageUrl = `gs://${storage.bucket().name}/${filename}`;
 
     // Step 1: Solve question from image (don't generate follow-up questions yet)
     logger.info('Processing image with OpenAI', {
@@ -168,17 +201,36 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
       topic: solutionData.topic,
     });
 
+    // Save snap record to history
+    const snapId = await saveSnapRecord(userId, {
+      recognizedQuestion: solutionData.recognizedQuestion,
+      subject: solutionData.subject,
+      topic: solutionData.topic,
+      difficulty: solutionData.difficulty,
+      language: solutionData.language,
+      solution: solutionData.solution,
+      imageUrl: imageUrl,
+      requestId: req.id
+    });
+
+    // Get updated usage
+    const updatedUsage = await getDailyUsage(userId);
+
     // Return solution only (follow-up questions will be generated on demand)
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.json({
       success: true,
       data: {
+        id: snapId,
         recognizedQuestion: solutionData.recognizedQuestion,
         subject: solutionData.subject,
         topic: solutionData.topic,
         difficulty: solutionData.difficulty,
+        language: solutionData.language,
         solution: solutionData.solution,
-        // No followUpQuestions - will be generated on demand
+        imageUrl: imageUrl,
+        remainingSnaps: updatedUsage.limit - updatedUsage.used,
+        resetsAt: updatedUsage.resetsAt
       },
       requestId: req.id,
     });

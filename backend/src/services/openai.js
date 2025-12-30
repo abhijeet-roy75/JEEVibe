@@ -37,8 +37,10 @@ You are solving a JEE Main 2025 level question from a photo. Your task:
    - Easy: 70%+ students can solve (straightforward application)
    - Medium: 40-70% students can solve (requires concept understanding)
    - Hard: 20-40% students can solve (multi-step, complex reasoning)
-5. Solve the question step-by-step in Priya Ma'am's voice
-6. Provide a clear final answer
+5. Detect the language of the question (English or Hindi).
+6. Solve the question step-by-step in Priya Ma'am's voice.
+7. CRITICAL: Provide the solution in the SAME LANGUAGE as the question (e.g., if question is in Hindi, the solution approach and steps should be in Hindi).
+8. Provide a clear final answer.
 
 CRITICAL SPACING REQUIREMENTS:
 - ALL step descriptions MUST have proper word spacing
@@ -58,6 +60,7 @@ OUTPUT FORMAT (strict JSON):
   "subject": "Mathematics|Physics|Chemistry",
   "topic": "Syllabus-aligned topic name (e.g., 'Integral Calculus', 'Kinematics', 'Organic Chemistry - Reactions')",
   "difficulty": "easy|medium|hard",
+  "language": "en|hi",
   "solution": {
     "approach": "Brief strategy (1-2 sentences)",
     "steps": [
@@ -205,6 +208,7 @@ OUTPUT FORMAT (strict JSON):
       subject: solutionData.subject || "Mathematics",
       topic: alignedTopic,
       difficulty: solutionData.difficulty || "medium",
+      language: solutionData.language || "en",
       solution: normalizedSolution
     };
   } catch (error) {
