@@ -575,7 +575,8 @@ function stratifyAndRandomize(questions, userId) {
 async function getRandomizedAssessmentQuestions(userId, db) {
   try {
     // Fetch all assessment questions with retry
-    const questionsRef = db.collection('initial_assessment_questions');
+    const questionsRef = db.collection('initial_assessment_questions')
+      .select('question_id', 'subject', 'chapter', 'irt_parameters', 'difficulty_b', 'question_text', 'options', 'question_type');
     const snapshot = await retryFirestoreOperation(async () => {
       return await questionsRef.get();
     });

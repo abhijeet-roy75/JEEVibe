@@ -13,7 +13,7 @@ const { formatChapterKey } = require('./thetaCalculationService');
 // Map<chapterKey, { subject, chapter }>
 let mappingCache = null;
 let lastUpdate = 0;
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+const CACHE_TTL = 60 * 60 * 1000; // Increased to 1 hour to reduce DB pressure
 
 /**
  * Initialize or refresh mappings by scanning the questions collection
@@ -25,12 +25,12 @@ async function initializeMappings() {
             return mappingCache;
         }
 
-        logger.info('Refreshing chapter mappings from database...');
+        logger.info('Refreshing chapter mappings from database (optimized)...');
 
-        // Fetch unique subject/chapter pairs
-        // Note: In a large DB, we might want a dedicated 'metadata' collection
-        // but for 1200 questions, a direct scan (or distinct query) is fine.
-        const snapshot = await db.collection('questions').get();
+        // Fetch only necessary fields to save memory and reduce OOM risk
+        const snapshot = await db.collection('questions')
+            .select('subject', 'chapter')
+            .get();
 
         const newCache = new Map();
 
@@ -52,7 +52,7 @@ async function initializeMappings() {
 
         mappingCache = newCache;
         lastUpdate = now;
-        logger.info('Chapter mappings refreshed', { uniqueChapters: mappingCache.size });
+        logger.info('Chapter mappings refreshed', { uniqueChapters: mappingCache.size, totalQuestions: snapshot.size });
         return mappingCache;
     } catch (error) {
         logger.error('Failed to initialize chapter mappings', { error: error.message });

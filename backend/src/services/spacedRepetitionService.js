@@ -119,27 +119,20 @@ async function getReviewQuestions(userId, limit = MAX_REVIEW_QUESTIONS) {
     let assessmentSnapshot;
 
     try {
-      // Query daily quiz responses
-      const dailyQuizResponsesRef = db.collection('daily_quiz_responses')
-        .doc(userId)
-        .collection('responses')
-        .where('answered_at', '>=', cutoffTimestamp)
-        .where('is_correct', '==', false); // Only incorrect answers
-
-      dailyQuizSnapshot = await retryFirestoreOperation(async () => {
-        return await dailyQuizResponsesRef.get();
-      });
-
-      // Query assessment responses
-      const assessmentResponsesRef = db.collection('assessment_responses')
-        .doc(userId)
-        .collection('responses')
+      // Query responses across all quizzes using collectionGroup
+      // This is more efficient as it leverages the existing composite index
+      const responsesRef = db.collectionGroup('responses')
+        .where('student_id', '==', userId)
         .where('answered_at', '>=', cutoffTimestamp)
         .where('is_correct', '==', false);
 
-      assessmentSnapshot = await retryFirestoreOperation(async () => {
-        return await assessmentResponsesRef.get();
+      const snapshot = await retryFirestoreOperation(async () => {
+        return await responsesRef.get();
       });
+
+      // Use the snapshot for both (we don't need two separate queries if we use student_id)
+      dailyQuizSnapshot = snapshot;
+      assessmentSnapshot = { docs: [] }; // Assessment responses are now caught in the collectionGroup query
     } catch (queryError) {
       // Handle missing index error gracefully
       if (queryError.message && queryError.message.includes('index')) {

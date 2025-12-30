@@ -334,6 +334,7 @@ async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds =
     let questionsRef = db.collection('questions')
       .where('subject', '==', subject)
       .where('chapter', '==', chapterFromKey)
+      .orderBy('irt_parameters.discrimination_a', 'desc')
       .limit(MAX_CANDIDATES);
 
     let snapshot = await retryFirestoreOperation(async () => {

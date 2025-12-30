@@ -21,13 +21,14 @@ const apiLimiter = rateLimit({
   legacyHeaders: false, // Disable `X-RateLimit-*` headers
   skipSuccessfulRequests: false,
   skipFailedRequests: false,
-  onLimitReached: (req, res, options) => {
+  handler: (req, res, next, options) => {
     logger.warn('Rate limit exceeded', {
       requestId: req.id || 'unknown',
       ip: req.ip,
       path: req.path,
       method: req.method,
     });
+    res.status(options.statusCode).send(options.message);
   },
 });
 
@@ -42,13 +43,14 @@ const strictLimiter = rateLimit({
   }),
   standardHeaders: true,
   legacyHeaders: false,
-  onLimitReached: (req, res, options) => {
+  handler: (req, res, next, options) => {
     logger.warn('Strict rate limit exceeded', {
       requestId: req.id || 'unknown',
       ip: req.ip,
       path: req.path,
       method: req.method,
     });
+    res.status(options.statusCode).send(options.message);
   },
 });
 
@@ -63,13 +65,14 @@ const imageProcessingLimiter = rateLimit({
   }),
   standardHeaders: true,
   legacyHeaders: false,
-  onLimitReached: (req, res, options) => {
+  handler: (req, res, next, options) => {
     logger.warn('Image processing rate limit exceeded', {
       requestId: req.id || 'unknown',
       ip: req.ip,
       path: req.path,
       method: req.method,
     });
+    res.status(options.statusCode).send(options.message);
   },
 });
 
