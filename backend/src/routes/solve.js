@@ -71,9 +71,9 @@ function validateImageContent(buffer, declaredMimeType) {
 }
 
 // Configure multer for memory storage (no disk writes for POC)
-const storage = multer.memoryStorage();
+const multerStorage = multer.memoryStorage();
 const upload = multer({
-  storage: storage,
+  storage: multerStorage,
   limits: {
     fileSize: 5 * 1024 * 1024 // 5MB limit
   },
