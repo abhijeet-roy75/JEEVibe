@@ -279,6 +279,75 @@ class ApiService {
     }
   }
 
+  /// Get snap limits and usage from backend
+  /// Requires Firebase ID token for authentication
+  static Future<Map<String, dynamic>> getSnapLimit({
+    required String authToken,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/snap-limit'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true && jsonData['data'] != null) {
+            return jsonData['data'] as Map<String, dynamic>;
+          } else {
+            throw Exception(jsonData['error'] ?? 'Invalid response format');
+          }
+        } else {
+          throw Exception('Failed to fetch snap limit (${response.statusCode})');
+        }
+      } catch (e) {
+        throw Exception('Failed to fetch snap limit: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Get snap history from backend
+  /// Requires Firebase ID token for authentication
+  static Future<List<dynamic>> getSnapHistory({
+    required String authToken,
+    int limit = 20,
+    String? lastDocId,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        String url = '$baseUrl/api/snap-history?limit=$limit';
+        if (lastDocId != null) {
+          url += '&lastDocId=$lastDocId';
+        }
+
+        final response = await http.get(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        ).timeout(const Duration(seconds: 30));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true && jsonData['data'] != null) {
+            return jsonData['data']['history'] as List<dynamic>;
+          } else {
+            throw Exception(jsonData['error'] ?? 'Invalid response format');
+          }
+        } else {
+          throw Exception('Failed to fetch snap history (${response.statusCode})');
+        }
+      } catch (e) {
+        throw Exception('Failed to fetch snap history: ${e.toString()}');
+      }
+    });
+  }
+
   /// Get assessment questions
   /// Requires Firebase ID token for authentication
   static Future<List<AssessmentQuestion>> getAssessmentQuestions({

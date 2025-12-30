@@ -77,6 +77,8 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
         priyaMaamTip: solutionDetails['priyaMaamTip']?.toString() ?? '',
       ),
       followUpQuestions: [], // Not stored in RecentSolution
+      imageUrl: recentSolution.imageUrl,
+      language: recentSolution.language,
     );
   }
 
@@ -155,6 +157,40 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
             ],
           ),
           const SizedBox(height: 12),
+          const SizedBox(height: 12),
+          // Display question image if available (from URL)
+          if (solution.imageUrl != null) ...[
+            Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(maxHeight: 250),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                border: Border.all(color: AppColors.borderLight),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                child: Image.network(
+                  solution.imageUrl!,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) => const Center(
+                    child: Icon(Icons.broken_image, color: AppColors.textLight, size: 48),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           _buildContentWidget(
             solution.recognizedQuestion,
             solution.subject,

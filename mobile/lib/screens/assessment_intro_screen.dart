@@ -14,11 +14,17 @@ import '../services/firebase/auth_service.dart';
 import '../services/api_service.dart';
 import '../models/user_profile.dart';
 import '../models/assessment_response.dart';
+import '../models/snap_data_model.dart';
+import '../widgets/subject_icon_widget.dart';
 import '../providers/app_state_provider.dart';
+import '../utils/text_preprocessor.dart';
 import 'profile/profile_view_screen.dart';
 import 'assessment_instructions_screen.dart';
 import 'camera_screen.dart';
 import 'daily_quiz_loading_screen.dart';
+import 'home_screen.dart';
+import 'solution_review_screen.dart';
+import 'all_solutions_screen.dart';
 
 class AssessmentIntroScreen extends StatefulWidget {
   const AssessmentIntroScreen({super.key});
@@ -166,6 +172,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     const SizedBox(height: 16),
                     // Daily Practice Card (Locked)
                     _buildDailyPracticeCard(),
+                    const SizedBox(height: 24),
+                    // Snap & Solve Card
+                    _buildSnapSolveCard(),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -538,20 +547,11 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   }
 
   Widget _buildSnapSolveCard() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Snap & Solve',
-            style: AppTextStyles.headerSmall.copyWith(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
+    return Consumer<AppStateProvider>(
+      builder: (context, appState, child) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -595,7 +595,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                             ),
                           ),
                           Text(
-                            '5 snaps remaining',
+                            '${appState.snapsRemaining} snaps remaining',
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.primaryPurple,
                               fontWeight: FontWeight.w600,
@@ -613,9 +613,29 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '5 snaps available today • Resets at midnight',
+                  '${appState.snapLimit} snaps available today • Resets at midnight',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textLight,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // View History link
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AllSolutionsScreen(),
+                      ),
+                    ).then((_) => _loadData());
+                  },
+                  child: Text(
+                    'View History',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: AppColors.primaryPurple,
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -634,9 +654,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const CameraScreen(),
+                            builder: (context) => const HomeScreen(),
                           ),
-                        );
+                        ).then((_) => _loadData());
                       },
                       borderRadius: BorderRadius.circular(12),
                       child: Center(
@@ -664,10 +684,11 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               ],
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
+
 
   Widget _buildPriyaMessageCard() {
     return Padding(
@@ -915,73 +936,77 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   }
 
   Widget _buildFloatingSnapButton() {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            gradient: AppColors.ctaGradient,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primaryPurple.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CameraScreen(),
+    return Consumer<AppStateProvider>(
+      builder: (context, appState, child) {
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                gradient: AppColors.ctaGradient,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryPurple.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
-                );
-                // Refresh snap count when returning from camera
-                _loadData();
-              },
-              borderRadius: BorderRadius.circular(32),
-              child: const Icon(
-                Icons.camera_alt,
-                color: Colors.white,
-                size: 28,
+                ],
               ),
-            ),
-          ),
-        ),
-        // Notification badge with snap count
-        Positioned(
-          top: -4,
-          right: -4,
-          child: Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white,
-                width: 2,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                '$_remainingSnaps',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HomeScreen(),
+                      ),
+                    );
+                    // Refresh data when returning
+                    _loadData();
+                  },
+                  borderRadius: BorderRadius.circular(32),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
-      ],
+            // Notification badge with snap count
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    '${appState.snapsRemaining}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

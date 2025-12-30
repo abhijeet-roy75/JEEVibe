@@ -7,10 +7,16 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'photo_review_screen.dart';
+import 'all_solutions_screen.dart';
+import 'solution_review_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
 import '../widgets/priya_avatar.dart';
+import '../widgets/subject_icon_widget.dart';
+import '../utils/text_preprocessor.dart';
+import '../models/snap_data_model.dart';
+import '../services/storage_service.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -192,6 +198,11 @@ class _CameraScreenState extends State<CameraScreen> {
                     ),
                     
                     const SizedBox(height: 24),
+
+                    // Recent Snaps Section
+                    _buildRecentSnaps(),
+                    
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -291,9 +302,13 @@ class _CameraScreenState extends State<CameraScreen> {
                           
                           // Bookmark/History button
                           IconButton(
-                            icon: const Icon(Icons.bookmark_border, color: Colors.white),
+                            icon: const Icon(Icons.history, color: Colors.white),
                             onPressed: () {
-                              // TODO: Navigate to history
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const AllSolutionsScreen(),
+                                ),
+                              );
                             },
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
@@ -607,6 +622,155 @@ class _CameraScreenState extends State<CameraScreen> {
             _buildTipItem('✍️', 'Clear Text', 'Works with printed and neat handwriting'),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildRecentSnaps() {
+    return Consumer<AppStateProvider>(
+      builder: (context, appState, child) {
+        final solutions = appState.recentSolutions;
+        if (solutions.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Recent Snaps',
+                    style: AppTextStyles.headerSmall.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AllSolutionsScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'View All',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.primaryPurple,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 140,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                scrollDirection: Axis.horizontal,
+                itemCount: solutions.length > 5 ? 5 : solutions.length,
+                itemBuilder: (context, index) {
+                  return _buildRecentSnapCard(solutions[index]);
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRecentSnapCard(RecentSolution solution) {
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+        border: Border.all(color: AppColors.borderLight),
+        boxShadow: AppShadows.cardShadow,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () async {
+            final storage = StorageService();
+            final allSolutions = await storage.getAllSolutionsForToday();
+            if (allSolutions.isEmpty) {
+              final appState = Provider.of<AppStateProvider>(context, listen: false);
+              final recentSolutions = appState.recentSolutions;
+              if (recentSolutions.isNotEmpty) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => SolutionReviewScreen(
+                      allSolutions: recentSolutions,
+                      initialIndex: recentSolutions.indexOf(solution),
+                    ),
+                  ),
+                );
+              }
+            } else {
+              final index = allSolutions.indexWhere((s) => s.id == solution.id);
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => SolutionReviewScreen(
+                    allSolutions: allSolutions,
+                    initialIndex: index >= 0 ? index : 0,
+                  ),
+                ),
+              );
+            }
+          },
+          borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    SubjectIconWidget(subject: solution.subject, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        solution.subject,
+                        style: AppTextStyles.labelSmall.copyWith(
+                          fontSize: 12,
+                          color: AppColors.textMedium,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Text(
+                    TextPreprocessor.addSpacesToText(solution.getPreviewText()),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  solution.getTimeAgo(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppColors.textLight,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

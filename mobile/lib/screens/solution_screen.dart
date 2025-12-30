@@ -10,7 +10,7 @@ import 'processing_screen.dart';
 import 'camera_screen.dart';
 import 'daily_limit_screen.dart';
 import '../widgets/latex_widget.dart';
-import '../widgets/chemistry_text.dart';
+
 import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
 import '../theme/app_colors.dart';
@@ -62,7 +62,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
     try {
       final appState = Provider.of<AppStateProvider>(context, listen: false);
       
-      final questionId = 'snap_${DateTime.now().millisecondsSinceEpoch}';
+      final questionId = solution.id ?? 'snap_${DateTime.now().millisecondsSinceEpoch}';
       await appState.incrementSnap(
         questionId,
         solution.topic,
@@ -162,6 +162,8 @@ class _SolutionScreenState extends State<SolutionScreen> {
       ),
     );
   }
+
+
 
   Widget _buildHeader(Solution solution) {
     return AppHeaderWithIcon(
@@ -840,19 +842,11 @@ class _SolutionScreenState extends State<SolutionScreen> {
 
   /// Build content widget based on subject (ChemistryText for Chemistry, LaTeXWidget for others)
   Widget _buildContentWidget(String content, String subject, TextStyle textStyle, {bool allowWrapping = false}) {
-    if (subject.toLowerCase() == 'chemistry') {
-      return ChemistryText(
-        content,
-        textStyle: textStyle,
-        fontSize: textStyle.fontSize ?? 16, // Use bodyLarge size (16) as default
-        allowWrapping: allowWrapping,
-      );
-    } else {
-      return LaTeXWidget(
-        text: content,
-        textStyle: textStyle,
-        allowWrapping: allowWrapping,
-      );
-    }
+    // Always use LaTeXWidget to handle both simple text and complex formulas (math/chemistry)
+    return LaTeXWidget(
+      text: content,
+      textStyle: textStyle,
+      allowWrapping: allowWrapping,
+    );
   }
 }

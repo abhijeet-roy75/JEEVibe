@@ -1,32 +1,47 @@
 /// Solution model for Snap & Solve response
 class Solution {
+  final String? id;
   final String recognizedQuestion;
   final String subject;
   final String topic;
   final String difficulty;
+  final String? language;
+  final String? imageUrl;
   final SolutionDetails solution;
   final List<FollowUpQuestion> followUpQuestions;
+  final int? remainingSnaps;
+  final String? resetsAt;
 
   Solution({
+    this.id,
     required this.recognizedQuestion,
     required this.subject,
     required this.topic,
     required this.difficulty,
+    this.language,
+    this.imageUrl,
     required this.solution,
     required this.followUpQuestions,
+    this.remainingSnaps,
+    this.resetsAt,
   });
 
   factory Solution.fromJson(Map<String, dynamic> json) {
     return Solution(
+      id: json['id'],
       recognizedQuestion: json['recognizedQuestion'] ?? '',
       subject: json['subject'] ?? 'Mathematics',
       topic: json['topic'] ?? 'General',
       difficulty: json['difficulty'] ?? 'medium',
+      language: json['language'],
+      imageUrl: json['imageUrl'] ?? json['image_url'],
       solution: SolutionDetails.fromJson(json['solution'] ?? {}),
       followUpQuestions: (json['followUpQuestions'] as List<dynamic>?)
               ?.map((q) => FollowUpQuestion.fromJson(q))
               .toList() ??
           [],
+      remainingSnaps: json['remainingSnaps'],
+      resetsAt: json['resetsAt'],
     );
   }
 }

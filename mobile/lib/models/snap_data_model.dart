@@ -42,6 +42,8 @@ class RecentSolution {
   final String subject;
   final String timestamp;
   final Map<String, dynamic>? solutionData;
+  final String? imageUrl;
+  final String? language;
 
   RecentSolution({
     required this.id,
@@ -50,6 +52,8 @@ class RecentSolution {
     required this.subject,
     required this.timestamp,
     this.solutionData,
+    this.imageUrl,
+    this.language,
   });
 
   factory RecentSolution.fromJson(Map<String, dynamic> json) {
@@ -60,6 +64,8 @@ class RecentSolution {
       subject: json['subject'] ?? '',
       timestamp: json['timestamp'] ?? '',
       solutionData: json['solutionData'] as Map<String, dynamic>?,
+      imageUrl: json['imageUrl'] ?? json['image_url'],
+      language: json['language'],
     );
   }
 
@@ -71,6 +77,8 @@ class RecentSolution {
       'subject': subject,
       'timestamp': timestamp,
       'solutionData': solutionData,
+      'imageUrl': imageUrl,
+      'language': language,
     };
   }
 

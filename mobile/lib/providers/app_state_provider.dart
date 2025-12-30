@@ -4,11 +4,14 @@ import '../services/storage_service.dart';
 import '../services/snap_counter_service.dart';
 import '../models/snap_data_model.dart';
 
+import '../services/firebase/auth_service.dart';
+
 class AppStateProvider extends ChangeNotifier {
   final StorageService _storage;
   final SnapCounterService _snapCounter;
+  final AuthService? _authService;
 
-  AppStateProvider(this._storage, this._snapCounter);
+  AppStateProvider(this._storage, this._snapCounter, [this._authService]);
 
   // State variables
   int _snapsUsed = 0;
@@ -45,7 +48,20 @@ class AppStateProvider extends ChangeNotifier {
     try {
       await _storage.initialize();
       await _snapCounter.initialize();
+      
+      // Load local state first for immediate UI
       await _loadState();
+      
+      // Sync with backend if authenticated
+      if (_authService != null && _authService!.isAuthenticated) {
+        final token = await _authService!.getIdToken();
+        if (token != null) {
+          await _snapCounter.syncWithBackend(token);
+          // Reload state after sync
+          await _loadState();
+        }
+      }
+      
       _isInitialized = true;
     } catch (e) {
       debugPrint('Error initializing AppStateProvider: $e');

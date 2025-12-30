@@ -6,6 +6,7 @@ import '../widgets/app_header.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'solution_review_screen.dart';
+import '../widgets/subject_icon_widget.dart';
 
 class AllSolutionsScreen extends StatefulWidget {
   const AllSolutionsScreen({super.key});
@@ -31,16 +32,8 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
 
     try {
       final storage = StorageService();
-      // Get all solutions (not filtered by date) as fallback
-      final allSolutions = await storage.getAllSolutions();
-      
-      // Get solutions for today
-      var solutions = await storage.getAllSolutionsForToday();
-      
-      // If no solutions for today but we have solutions, show all (might be a date issue)
-      if (solutions.isEmpty && allSolutions.isNotEmpty) {
-        solutions = allSolutions;
-      }
+      // Get ALL solutions from history (not just today)
+      final solutions = await storage.getAllSolutions();
       
       setState(() {
         _allSolutions = solutions;
@@ -83,12 +76,12 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
     final subtitle = _isLoading 
         ? 'Loading...'
         : _allSolutions.isEmpty 
-            ? 'No solutions found' 
-            : '${_allSolutions.length} solution${_allSolutions.length == 1 ? '' : 's'} for today';
+            ? 'No snaps found' 
+            : '${_allSolutions.length} snap${_allSolutions.length == 1 ? '' : 's'} in history';
     
     return AppHeaderWithIcon(
       icon: Icons.history,
-      title: 'All Solutions',
+      title: 'Snap & Solve History',
       subtitle: subtitle,
       iconColor: AppColors.primaryPurple,
       iconSize: 40,
@@ -110,7 +103,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'No solutions today',
+              'No snaps yet',
               style: AppTextStyles.headerMedium.copyWith(
                 color: AppColors.textMedium,
               ),
@@ -146,7 +139,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+        borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
         border: Border.all(color: AppColors.borderLight),
         boxShadow: AppShadows.cardShadow,
       ),
@@ -166,95 +159,73 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
               _loadSolutions();
             });
           },
-          borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+          borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Subject badge - make it flexible to prevent overflow
-                Flexible(
-                  flex: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getSubjectColor(solution.subject).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppRadius.radiusRound),
-                      border: Border.all(
-                        color: _getSubjectColor(solution.subject).withOpacity(0.3),
-                      ),
-                    ),
-                    child: Text(
-                      solution.subject,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: _getSubjectColor(solution.subject),
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Question preview
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        solution.getPreviewText(),
-                        style: AppTextStyles.bodyLarge,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
+                Row(
+                  children: [
+                    SubjectIconWidget(subject: solution.subject, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.label_outline,
-                            size: 14,
-                            color: AppColors.textGray,
+                          Text(
+                            solution.subject,
+                            style: AppTextStyles.headerSmall.copyWith(fontSize: 16),
                           ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              solution.topic,
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textGray,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Icon(
-                            Icons.access_time,
-                            size: 14,
-                            color: AppColors.textGray,
-                          ),
-                          const SizedBox(width: 4),
                           Text(
                             solution.getTimeAgo(),
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textGray,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.bodySmall,
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.textGray,
+                      size: 20,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                // Arrow icon
-                Icon(
-                  Icons.chevron_right,
-                  color: AppColors.textGray,
-                  size: 20,
+                const SizedBox(height: 12),
+                Text(
+                  solution.getPreviewText(),
+                  style: AppTextStyles.bodyMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    // Topic capsule/badge
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardLightPurple.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(AppRadius.radiusRound),
+                          border: Border.all(
+                            color: AppColors.primaryPurple.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          solution.topic,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.primaryPurple,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -262,20 +233,6 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
         ),
       ),
     );
-  }
-
-  Color _getSubjectColor(String subject) {
-    switch (subject.toLowerCase()) {
-      case 'physics':
-        return AppColors.primaryPurple;
-      case 'chemistry':
-        return Colors.orange;
-      case 'mathematics':
-      case 'math':
-        return Colors.blue;
-      default:
-        return AppColors.primaryPurple;
-    }
   }
 }
 

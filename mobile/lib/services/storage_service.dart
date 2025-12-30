@@ -79,6 +79,16 @@ class StorageService {
     }
   }
 
+  /// Set snap limit
+  Future<void> setSnapLimit(int limit) async {
+    try {
+      final prefs = await _preferences;
+      await prefs.setInt(_keySnapLimit, limit);
+    } catch (e) {
+      debugPrint('Error setting snap limit: $e');
+    }
+  }
+
   /// Get last reset date (ISO format)
   Future<String?> getLastResetDate() async {
     try {
@@ -143,6 +153,21 @@ class StorageService {
     } catch (e) {
       debugPrint('Error getting recent solutions: $e');
       return [];
+    }
+  }
+
+  /// Set recent solutions (replaces entire list, typically from backend sync)
+  Future<void> setRecentSolutions(List<RecentSolution> solutions) async {
+    try {
+      final prefs = await _preferences;
+      final jsonString = json.encode(solutions.map((s) => s.toJson()).toList());
+      await prefs.setString(_keyRecentSolutions, jsonString);
+      
+      // Also update all solutions list
+      final allSolutionsJson = json.encode(solutions.map((s) => s.toJson()).toList());
+      await prefs.setString(_keyAllSolutions, allSolutionsJson);
+    } catch (e) {
+      debugPrint('Error setting recent solutions: $e');
     }
   }
 

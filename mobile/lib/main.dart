@@ -92,11 +92,19 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        // App State (Snap limits, etc.)
-        ChangeNotifierProvider(create: (_) => AppStateProvider(storageService, snapCounterService)..initialize()),
-        
-        // Firebase Auth
+        // Firebase Auth (Now defined FIRST so others can depend on it)
         ChangeNotifierProvider(create: (_) => AuthService()),
+        
+        // App State (Snap limits, etc.) - Now depends on AuthService
+        ChangeNotifierProxyProvider<AuthService, AppStateProvider>(
+          create: (context) => AppStateProvider(
+            storageService, 
+            snapCounterService, 
+            Provider.of<AuthService>(context, listen: false)
+          )..initialize(),
+          update: (context, authService, previous) => 
+            previous ?? AppStateProvider(storageService, snapCounterService, authService),
+        ),
         
         // Firestore User Data
         Provider(create: (_) => FirestoreUserService()),

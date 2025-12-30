@@ -1,6 +1,7 @@
 /// Service for managing daily snap counter with automatic midnight reset
 import 'package:flutter/foundation.dart';
 import 'storage_service.dart';
+import 'api_service.dart';
 import '../models/snap_data_model.dart';
 
 class SnapCounterService {
@@ -11,7 +12,37 @@ class SnapCounterService {
   /// Initialize the service (should be called on app launch)
   Future<void> initialize() async {
     await _storage.initialize();
-    await checkAndResetIfNeeded();
+  }
+
+  /// Sync limits and history from backend
+  Future<void> syncWithBackend(String authToken) async {
+    try {
+      // 1. Fetch limit/usage
+      final limitData = await ApiService.getSnapLimit(authToken: authToken);
+      final int used = limitData['used'] ?? 0;
+      final int limit = limitData['limit'] ?? StorageService.defaultSnapLimit;
+      final String? resetsAt = limitData['resetsAt'];
+
+      // 2. Save to local storage for offline access and quick retrieval
+      await _storage.setSnapCount(used);
+      await _storage.setSnapLimit(limit);
+      if (resetsAt != null) {
+        await _storage.setLastResetDate(resetsAt.split('T')[0]);
+      }
+
+      // 3. Fetch history
+      final historyData = await ApiService.getSnapHistory(authToken: authToken, limit: 10);
+      final historyRecords = historyData.map((json) => RecentSolution.fromJson(json)).toList();
+      
+      // 4. Save history to local storage
+      await _storage.setRecentSolutions(historyRecords);
+      
+      debugPrint('Synced snap counter and history with backend. Used: $used/$limit');
+    } catch (e) {
+      debugPrint('Error syncing with backend: $e');
+      // Fallback to checkAndResetIfNeeded for local-only behavior
+      await checkAndResetIfNeeded();
+    }
   }
 
   /// Check if counter needs reset based on date and reset if needed

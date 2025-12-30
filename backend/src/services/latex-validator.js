@@ -30,7 +30,10 @@ function validateAndNormalizeLaTeX(text) {
   // Step 5: Remove invalid LaTeX commands
   normalized = removeInvalidCommands(normalized);
 
-  // Step 6: Final cleanup
+  // Step 6: Balance delimiters (close any open ones)
+  normalized = balanceDelimiters(normalized);
+
+  // Step 7: Final cleanup
   normalized = finalCleanup(normalized);
 
   return normalized;
@@ -75,7 +78,7 @@ function removeNestedDelimiters(text) {
   // Strategy 1: Remove nested inline delimiters \( ... \( ... \) ... \)
   for (let i = 0; i < maxIterations; i++) {
     const before = cleaned;
-    
+
     // Find content between outer delimiters
     cleaned = cleaned.replace(/\\\(([^]*?)\\\)/g, (match, content) => {
       // Remove any inner delimiters from the content
@@ -94,7 +97,7 @@ function removeNestedDelimiters(text) {
   // Strategy 2: Remove nested display delimiters \[ ... \[ ... \] ... \]
   for (let i = 0; i < maxIterations; i++) {
     const before = cleaned;
-    
+
     cleaned = cleaned.replace(/\\\[([^]*?)\\\]/g, (match, content) => {
       // Remove any inner delimiters from the content
       const innerCleaned = content
@@ -112,22 +115,22 @@ function removeNestedDelimiters(text) {
   // Pattern: \( text \( inner \) text \) -> \( text inner text \)
   for (let i = 0; i < maxIterations; i++) {
     const before = cleaned;
-    
+
     // Match any sequence of delimiters and remove inner ones
-    cleaned = cleaned.replace(/\\\(([^\\]*?)(\\\(|\\\[)([^]*?)(\\\)|\\\])([^\\]*?)\\\)/g, 
+    cleaned = cleaned.replace(/\\\(([^\\]*?)(\\\(|\\\[)([^]*?)(\\\)|\\\])([^\\]*?)\\\)/g,
       (match, before, openDelim, inner, closeDelim, after) => {
         return '\\(' + before + inner + after + '\\)';
       }
     );
-    
+
     if (before === cleaned) break;
   }
-  
+
   // Strategy 3.5: ULTRA-AGGRESSIVE - Remove ALL inner delimiters from any \(...\) block
   // This is a safety net for extremely nested cases
   for (let i = 0; i < 5; i++) {
     const before = cleaned;
-    
+
     // Find all \(...\) blocks and strip inner delimiters
     cleaned = cleaned.replace(/\\\(([^\)]*)\\\)/g, (match, content) => {
       // Remove ALL delimiter patterns from content
@@ -138,7 +141,7 @@ function removeNestedDelimiters(text) {
         .replace(/\\\]/g, '');
       return '\\(' + innerCleaned + '\\)';
     });
-    
+
     if (before === cleaned) break;
   }
 
@@ -188,7 +191,7 @@ function fixChemicalFormulas(text) {
   // Ensure chemical elements are wrapped in \mathrm{}
   // Match chemical formulas like H2O, CO2, NH4+ that aren't already in LaTeX
   // This is a simple heuristic - only apply outside of existing LaTeX delimiters
-  
+
   // Split by LaTeX delimiters to avoid modifying content inside them
   const parts = [];
   let currentPos = 0;
@@ -226,7 +229,7 @@ function fixChemicalFormulas(text) {
     // Convert simple chemical formulas like H2O -> \(\mathrm{H}_{2}\mathrm{O}\)
     // Only if not already in LaTeX
     let text = part.text;
-    
+
     // Pattern: Capital letter optionally followed by lowercase, followed by digit(s)
     // This catches: H2, CO2, H2O, etc.
     text = text.replace(/\b([A-Z][a-z]?)(\d+)\b/g, (match, element, number) => {
@@ -249,14 +252,14 @@ function ensureDelimiters(text) {
 
   // Split text by existing delimiters to only process text outside of them
   const parts = _splitByDelimiters(fixed);
-  
+
   fixed = parts.map(part => {
     if (part.isDelimited) {
       return part.text; // Already has delimiters, don't modify
     }
-    
+
     let content = part.text;
-    
+
     // Wrap standalone \mathrm{} expressions (chemistry formulas)
     // Pattern: \mathrm{...} with any number of subscripts/superscripts following
     // Example: \mathrm{sp}^{3} -> \(\mathrm{sp}^{3}\)
@@ -267,25 +270,28 @@ function ensureDelimiters(text) {
         return `\\(${match}\\)`;
       }
     );
-    
+
     // Wrap standalone math commands
     const mathCommands = ['frac', 'int', 'sum', 'lim', 'sqrt', 'infty', 'alpha', 'beta', 'gamma', 'theta', 'pi', 'Delta', 'omega', 'phi'];
     mathCommands.forEach(cmd => {
       const pattern = new RegExp(`\\\\${cmd}(?:\\{[^}]*\\})?`, 'g');
       content = content.replace(pattern, (match) => `\\(${match}\\)`);
     });
-    
+
     // Wrap standalone subscripts/superscripts patterns (for variables)
     content = content.replace(/([a-zA-Z])_\{[^}]+\}/g, (match) => `\\(${match}\\)`);
     content = content.replace(/([a-zA-Z])\^\{[^}]+\}/g, (match) => `\\(${match}\\)`);
-    
+
+    // Handle single char subscript/superscript e.g. x^2, H_2 (common in chemistry/math)
+    content = content.replace(/([a-zA-Z])([_^][0-9a-zA-Z])(?![a-zA-Z0-9])/g, (match) => `\\(${match}\\)`);
+
     // Wrap sequences of \mathrm that are separated by spaces or underscores
     // Example: "\mathrm{H}_{2}\mathrm{O}" -> "\(\mathrm{H}_{2}\mathrm{O}\)"
     content = content.replace(
       /\\mathrm\{[^}]+\}(?:[_^]\{[^}]+\}|\\mathrm\{[^}]+\})*/g,
       (match) => `\\(${match}\\)`
     );
-    
+
     return content;
   }).join('');
 
@@ -299,11 +305,11 @@ function _splitByDelimiters(text) {
   const parts = [];
   let currentPos = 0;
   let insideDelimiters = false;
-  
+
   // Find all \( \) and \[ \] delimiters
   const delimiterRegex = /\\\(|\\\)|\\\[|\\\]/g;
   let match;
-  
+
   while ((match = delimiterRegex.exec(text)) !== null) {
     if (!insideDelimiters) {
       // We found an opening delimiter
@@ -319,12 +325,12 @@ function _splitByDelimiters(text) {
       insideDelimiters = false;
     }
   }
-  
+
   // Add remaining text
   if (currentPos < text.length) {
     parts.push({ text: text.substring(currentPos), isDelimited: insideDelimiters });
   }
-  
+
   return parts;
 }
 
@@ -349,7 +355,33 @@ function removeInvalidCommands(text) {
 }
 
 /**
- * Final cleanup pass
+ * Step 6: Balance delimiters
+ * Appends missing closing delimiters if counts don't match
+ */
+function balanceDelimiters(text) {
+  let fixed = text;
+
+  // Count inline delimiters
+  const openInline = (fixed.match(/\\\(/g) || []).length;
+  const closeInline = (fixed.match(/\\\)/g) || []).length;
+
+  if (openInline > closeInline) {
+    fixed += '\\)'.repeat(openInline - closeInline);
+  }
+
+  // Count display delimiters
+  const openDisplay = (fixed.match(/\\\[/g) || []).length;
+  const closeDisplay = (fixed.match(/\\\]/g) || []).length;
+
+  if (openDisplay > closeDisplay) {
+    fixed += '\\]'.repeat(openDisplay - closeDisplay);
+  }
+
+  return fixed;
+}
+
+/**
+ * Step 7: Final cleanup
  */
 function finalCleanup(text) {
   let cleaned = text;
@@ -523,6 +555,7 @@ module.exports = {
   removeNestedDelimiters,
   fixChemicalFormulas,
   ensureDelimiters,
-  removeInvalidCommands
+  removeInvalidCommands,
+  balanceDelimiters
 };
 
