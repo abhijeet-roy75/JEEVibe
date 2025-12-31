@@ -12,12 +12,33 @@ function validateAndNormalizeLaTeX(text) {
   if (!text || typeof text !== 'string') {
     return text;
   }
-
   let normalized = text;
 
-  // Step 1: Fix common AI generation errors
+  // Auto-detect Devanagari (Hindi) characters. If present, use conservative
+  // normalization to avoid aggressive LaTeX wrapping which often corrupts
+  // mixed-language OCR outputs (Hindi + inline ascii math).
+  const hasDevanagari = /[\u0900-\u097F]/.test(text);
+
+  // Step 1: Fix common AI generation errors (safe to run for all languages)
   normalized = fixCommonErrors(normalized);
 
+  // For Hindi / Devanagari text, avoid aggressive wrapping and delimiter
+  // insertion. Instead run a conservative pipeline that fixes obvious issues
+  // but preserves original spacing and non-latin tokens.
+  if (hasDevanagari) {
+    // Fix chemical formulas and unicode subscripts/superscripts
+    normalized = fixChemicalFormulas(normalized);
+
+    // Remove invalid/empty commands and do light balancing only
+    normalized = removeInvalidCommands(normalized);
+    normalized = balanceDelimiters(normalized);
+
+    // Final cleanup and return early
+    normalized = finalCleanup(normalized);
+    return normalized;
+  }
+
+  // Non-Devanagari (default) -- full normalization pipeline
   // Step 2: Remove nested delimiters
   normalized = removeNestedDelimiters(normalized);
 

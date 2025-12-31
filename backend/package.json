@@ -18,7 +18,8 @@
     "test:scenarios:sim": "node scripts/test-scenarios-simulation.js",
     "test:circuit-breaker": "node scripts/test-circuit-breaker.js",
     "populate:assessment": "node scripts/populate-assessment-questions.js",
-    "update:images": "node scripts/update-question-images.js"
+    "update:images": "node scripts/update-question-images.js",
+    "cleanup:user": "node scripts/cleanup-user.js"
   },
   "keywords": [
     "jee",

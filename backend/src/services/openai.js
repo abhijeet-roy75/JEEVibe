@@ -115,6 +115,21 @@ OUTPUT FORMAT (strict JSON):
       console.log('[LaTeX Validation] ✓ All LaTeX formatting passed validation');
     }
 
+    // Helper: strip LaTeX-ish tokens to produce plain text fallback for UI (used for Hindi)
+    const stripLaTeX = (text) => {
+      if (!text || typeof text !== 'string') return text;
+
+      // Remove inline/display delimiters and common LaTeX commands
+      let t = text;
+      t = t.replace(/\\\(|\\\)|\\\[|\\\]/g, ''); // remove \( \) \[ \]
+      t = t.replace(/\\[a-zA-Z]+/g, ''); // remove \frac, \sqrt, \mathrm, etc.
+      t = t.replace(/[{}]/g, ''); // remove braces
+      t = t.replace(/\^\{([^}]*)\}/g, '^$1'); // convert ^{x} -> ^x
+      t = t.replace(/_\{([^}]*)\}/g, '_$1'); // convert _{x} -> _x
+      t = t.replace(/\s{2,}/g, ' ');
+      return t.trim();
+    };
+
     // Normalize LaTeX markers in solution data using validator service
     const normalizeLaTeX = (text) => {
       if (typeof text !== 'string') return text;
@@ -168,6 +183,23 @@ OUTPUT FORMAT (strict JSON):
       : "Question extracted from image";
     validateLaTeX(normalizedQuestion, 'recognizedQuestion');
 
+    // UI-safe fallback for Hindi: if language detected as Hindi and LaTeX validation
+    // failed (anywhere), strip LaTeX from the recognized question to avoid
+    // KaTeX/parser errors on the mobile UI. We keep solutions in Hindi as-is but
+    // provide a plain-text recognizedQuestion for rendering.
+    let finalRecognizedQuestion = normalizedQuestion;
+    if ((solutionData.language === 'hi' || solutionData.language === 'hi-IN') && !fullValidation.valid) {
+      console.warn('[Hindi fallback] LaTeX validation failed for Hindi content; stripping LaTeX for UI safety');
+      try {
+        const stripped = stripLaTeX(solutionData.recognizedQuestion || normalizedQuestion);
+        if (stripped && stripped.length > 0) {
+          finalRecognizedQuestion = stripped;
+        }
+      } catch (err) {
+        console.error('[Hindi fallback] Error stripping LaTeX:', err);
+      }
+    }
+
     // Normalize solution steps
     let normalizedSolution = solutionData.solution || {
       approach: "Let's solve this step by step.",
@@ -204,7 +236,7 @@ OUTPUT FORMAT (strict JSON):
     );
 
     return {
-      recognizedQuestion: normalizedQuestion,
+      recognizedQuestion: finalRecognizedQuestion,
       subject: solutionData.subject || "Mathematics",
       topic: alignedTopic,
       difficulty: solutionData.difficulty || "medium",
