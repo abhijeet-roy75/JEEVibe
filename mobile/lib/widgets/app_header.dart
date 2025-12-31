@@ -112,14 +112,19 @@ class AppHeaderWithIcon extends StatelessWidget {
     this.trailing,
     this.customCenterContent,
     this.bottomPadding = 16, // Default reduced from 32
+    this.gradient,
+    this.leadingIcon = Icons.close,
   }) : super(key: key);
+
+  final Gradient? gradient;
+  final IconData leadingIcon;
 
   @override
   Widget build(BuildContext context) {
     return AppHeader(
       leading: onClose != null
           ? IconButton(
-              icon: const Icon(Icons.close, color: Colors.white),
+              icon: Icon(leadingIcon, color: Colors.white),
               onPressed: onClose,
             )
           : null,
@@ -162,6 +167,7 @@ class AppHeaderWithIcon extends StatelessWidget {
       trailing: trailing,
       bottomPadding: bottomPadding,
       topPadding: 20, // Reduced from default 24 for more compact header
+      gradient: gradient,
     );
   }
 }

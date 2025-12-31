@@ -4,15 +4,17 @@
 
 const { BASE_PROMPT_TEMPLATE } = require('./priya_maam_base');
 
-const SNAP_SOLVE_FOLLOWUP_PROMPT = (originalQuestion, solution, topic, difficulty) => `
+const SNAP_SOLVE_FOLLOWUP_PROMPT = (originalQuestion, solution, topic, difficulty, language = 'en') => `
 ${BASE_PROMPT_TEMPLATE}
 
 CONTEXT: A student just used Snap & Solve on this JEE Main 2025 question:
 QUESTION: ${originalQuestion}
 TOPIC: ${topic} (from JEE Main 2025 syllabus)
 DIFFICULTY: ${difficulty}
+LANGUAGE: ${language === 'hi' ? 'Hindi' : 'English'}
 
 TASK: Generate 3 follow-up practice questions that progressively build on this concept.
+IMPORTANT: Generate questions and explanations in ${language === 'hi' ? 'Hindi (or Hinglish if appropriate for technical terms)' : 'English'}.
 IMPORTANT: Questions must align with JEE Main 2025 syllabus and difficulty standards.
 
 EXPLANATION REQUIREMENTS (CRITICAL):

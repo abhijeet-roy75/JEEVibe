@@ -272,15 +272,26 @@ function ensureDelimiters(text) {
     );
 
     // Wrap standalone math commands
-    const mathCommands = ['frac', 'int', 'sum', 'lim', 'sqrt', 'infty', 'alpha', 'beta', 'gamma', 'theta', 'pi', 'Delta', 'omega', 'phi'];
+    const mathCommands = [
+      'frac', 'int', 'sum', 'lim', 'sqrt', 'infty',
+      'alpha', 'beta', 'gamma', 'theta', 'pi', 'Delta', 'omega', 'phi',
+      'sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'log', 'ln', 'exp'
+    ];
     mathCommands.forEach(cmd => {
-      const pattern = new RegExp(`\\\\${cmd}(?:\\{[^}]*\\})?`, 'g');
+      // Improved regex: match \cmd only if not already preceded by \
+      // And handle optional arguments like \sin^{2} or \tan(x)
+      const pattern = new RegExp(`(?<!\\\\)\\\\${cmd}(?:[\\^_]\\{?[^}]*\\}?)?`, 'g');
       content = content.replace(pattern, (match) => `\\(${match}\\)`);
+
+      // Also catch "naked" trig/log functions missing backslash (common in mixed language content)
+      // Matches "sin" if not part of another word and followed by ^, _, (, or space
+      const nakedPattern = new RegExp(`(?<![a-zA-Z\\\\])\\b(${cmd})\\b(?=[\\^_\\(\\s])`, 'g');
+      content = content.replace(nakedPattern, (match, p1) => `\\(\\${p1}\\)`);
     });
 
-    // Wrap standalone subscripts/superscripts patterns (for variables)
-    content = content.replace(/([a-zA-Z])_\{[^}]+\}/g, (match) => `\\(${match}\\)`);
-    content = content.replace(/([a-zA-Z])\^\{[^}]+\}/g, (match) => `\\(${match}\\)`);
+    // Wrap standalone subscripts/superscripts patterns (for variables or chemical numbers)
+    // Matches patterns like _{4}, ^{2}, _2, ^+, etc.
+    content = content.replace(/(?<!\\)([_^]\{?[^}\s]+\}?)/g, (match) => `\\(${match}\\)`);
 
     // Handle single char subscript/superscript e.g. x^2, H_2 (common in chemistry/math)
     content = content.replace(/([a-zA-Z])([_^][0-9a-zA-Z])(?![a-zA-Z0-9])/g, (match) => `\\(${match}\\)`);
@@ -340,9 +351,7 @@ function _splitByDelimiters(text) {
 function removeInvalidCommands(text) {
   let cleaned = text;
 
-  // Remove control sequences that aren't valid LaTeX
-  // Pattern: backslash followed by single letter that's not part of a command
-  cleaned = cleaned.replace(/\\([ntrbfv])(?![a-zA-Z])/g, ' ');
+  // CRITICAL: Removed aggressive backslash-character replacements that mangle \tan, \theta, etc.
 
   // Remove empty subscripts and superscripts
   cleaned = cleaned.replace(/_\{\}/g, '');
@@ -375,6 +384,23 @@ function balanceDelimiters(text) {
 
   if (openDisplay > closeDisplay) {
     fixed += '\\]'.repeat(openDisplay - closeDisplay);
+  }
+
+  // Count \left and \right
+  const openLeft = (fixed.match(/\\left/g) || []).length;
+  const closeRight = (fixed.match(/\\right/g) || []).length;
+
+  if (openLeft > closeRight) {
+    // Try to be smart about what we're closing
+    // Most common is \left( and \left[
+    const openLeftParen = (fixed.match(/\\left\(/g) || []).length;
+    const closeRightParen = (fixed.match(/\\right\)/g) || []).length;
+    if (openLeftParen > closeRightParen) {
+      fixed += '\\right)'.repeat(openLeftParen - closeRightParen);
+    } else {
+      // Fallback: just add \right. (null delimiter) or guess )
+      fixed += '\\right)'.repeat(openLeft - closeRight);
+    }
   }
 
   return fixed;

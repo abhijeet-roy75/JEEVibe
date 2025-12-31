@@ -10,6 +10,9 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../config/content_config.dart';
 import '../utils/text_preprocessor.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'home_screen.dart';
+import '../services/localization_service.dart';
 
 class SolutionReviewScreen extends StatefulWidget {
   final List<RecentSolution> allSolutions;
@@ -82,6 +85,18 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
     );
   }
 
+  Future<String> _resolveImageUrl(String url) async {
+    if (url.startsWith('gs://')) {
+      try {
+        return await FirebaseStorage.instance.refFromURL(url).getDownloadURL();
+      } catch (e) {
+        debugPrint('Error resolving gs:// URL: $e');
+        return url; 
+      }
+    }
+    return url;
+  }
+
   @override
   Widget build(BuildContext context) {
     final solution = _reconstructSolution(_currentSolution);
@@ -122,12 +137,32 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return AppHeaderWithIcon(
-      icon: Icons.history,
-      title: 'Solution ${_currentIndex + 1} of ${widget.allSolutions.length}',
-      subtitle: '${_currentSolution.topic} - ${_currentSolution.subject}',
+      leadingIcon: Icons.arrow_back,
+      icon: Icons.auto_awesome,
+      title: 'Snap Solution',
+      subtitle: '${_currentSolution.topic} • ${_currentSolution.subject}',
       iconColor: AppColors.primaryPurple,
       iconSize: 48,
-      onClose: () => Navigator.of(context).pop(),
+      onClose: () {
+        bool found = false;
+        Navigator.of(context).popUntil((route) {
+          if (route.settings.name == '/snap_home') {
+            found = true;
+            return true;
+          }
+          return route.isFirst;
+        });
+        
+        if (!found) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => HomeScreen(),
+              settings: const RouteSettings(name: '/snap_home'),
+            ),
+          );
+        }
+      },
+      gradient: AppColors.ctaGradient,
     );
   }
 
@@ -148,7 +183,7 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
               const Icon(Icons.menu_book, color: AppColors.primaryPurple, size: 20),
               const SizedBox(width: 8),
               Text(
-                'QUESTION:',
+                LocalizationService.getString('see_header', solution.language ?? 'en'),
                 style: AppTextStyles.labelMedium.copyWith(
                   color: AppColors.primaryPurple,
                   fontWeight: FontWeight.w700,
@@ -160,36 +195,52 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
           const SizedBox(height: 12),
           // Display question image if available (from URL)
           if (solution.imageUrl != null) ...[
-            Container(
-              width: double.infinity,
-              constraints: const BoxConstraints(maxHeight: 250),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                border: Border.all(color: AppColors.borderLight),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                child: Image.network(
-                  solution.imageUrl!,
-                  fit: BoxFit.contain,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                            : null,
+            FutureBuilder<String>(
+              future: _resolveImageUrl(solution.imageUrl!),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const SizedBox(
+                    height: 200, 
+                    child: Center(child: CircularProgressIndicator(color: AppColors.primaryPurple))
+                  );
+                }
+                
+                return Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      constraints: const BoxConstraints(maxHeight: 250),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                        border: Border.all(color: AppColors.borderLight),
                       ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) => const Center(
-                    child: Icon(Icons.broken_image, color: AppColors.textLight, size: 48),
-                  ),
-                ),
-              ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                        child: Image.network(
+                          snapshot.data!,
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) => const Center(
+                            child: Icon(Icons.broken_image, color: AppColors.textLight, size: 48),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                );
+              }
             ),
-            const SizedBox(height: 16),
           ],
           _buildContentWidget(
             solution.recognizedQuestion,
@@ -237,7 +288,10 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
           children: [
             const Icon(Icons.auto_awesome, color: AppColors.primaryPurple, size: 20),
             const SizedBox(width: 8),
-            Text('Step-by-Step Solution', style: AppTextStyles.headerMedium),
+            Text(
+              LocalizationService.getString('solution_header', solution.language ?? 'en'), 
+              style: AppTextStyles.headerMedium
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -300,7 +354,7 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
                         minWidth: constraints.maxWidth,
                       ),
                       child:                       _buildContentWidget(
-                        TextPreprocessor.addSpacesToText(stepContent),
+                        TextPreprocessor.preprocessStepContent(stepContent),
                         _currentSolution.subject,
                         ContentConfig.getStepTextStyle(color: AppColors.textMedium),
                       ),
@@ -377,7 +431,7 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
               const Icon(Icons.check_circle, color: AppColors.successGreen, size: 20),
               const SizedBox(width: 8),
               Text(
-                'FINAL ANSWER',
+                LocalizationService.getString('final_answer', solution.language ?? 'en'),
                 style: AppTextStyles.labelMedium.copyWith(
                   color: AppColors.successGreen,
                   fontWeight: FontWeight.w700,
@@ -424,7 +478,7 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
                 Row(
                   children: [
                     Text(
-                      'Priya Ma\'am\'s Tip',
+                      LocalizationService.getString('priya_tip', solution.language ?? 'en'),
                       style: AppTextStyles.labelMedium.copyWith(
                         color: const Color(0xFF7C3AED),
                       ),
@@ -475,7 +529,7 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
   Widget _buildNavigationButtons() {
     return Column(
       children: [
-        // Next Solution / Back to List
+        // Back to Snap and Solve
         Container(
           width: double.infinity,
           height: 56,
@@ -488,54 +542,40 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                if (_currentIndex < widget.allSolutions.length - 1) {
-                  _nextSolution();
-                } else {
-                  Navigator.of(context).pop();
+                bool found = false;
+                Navigator.of(context).popUntil((route) {
+                  if (route.settings.name == '/snap_home') {
+                    found = true;
+                    return true;
+                  }
+                  return route.isFirst;
+                });
+                
+                if (!found) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => HomeScreen(),
+                      settings: const RouteSettings(name: '/snap_home'),
+                    ),
+                  );
                 }
               },
               borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
               child: Center(
-                child: Text(
-                  _currentIndex < widget.allSolutions.length - 1
-                      ? 'Next Solution'
-                      : 'Back to List',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        
-        const SizedBox(height: 12),
-        
-        // Back to Dashboard
-        Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-            border: Border.all(color: AppColors.primaryPurple, width: 2),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                // Pop until we reach home screen
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              },
-              borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-              child: Center(
-                child: Text(
-                  'Back to Dashboard',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.primaryPurple,
-                    fontSize: 16,
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                    const SizedBox(width: 12),
+                    Text(
+                      LocalizationService.getString('back_to_snap', _reconstructSolution(_currentSolution).language ?? 'en'),
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -238,10 +238,16 @@ class TextPreprocessor {
     cleaned = cleaned.replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1');
     
     // Remove subscripts/superscripts but keep content
-    cleaned = cleaned.replaceAll(RegExp(r'[_\^]\{([^}]+)\}'), r'$1');
+    cleaned = cleaned.replaceAll(RegExp(r'[_\^]\{?([^}\s]+)\}?'), r'$1');
     
-    // Remove standalone LaTeX commands
-    cleaned = cleaned.replaceAll(RegExp(r'\\[a-zA-Z]+\{?[^}]*\}?'), '');
+    // Convert LaTeX commands to plain text (e.g., \tan -> tan)
+    cleaned = cleaned.replaceAllMapped(RegExp(r'\\([a-zA-Z]+)'), (match) {
+      final cmd = match.group(1)!;
+      // Keep common math function names
+      const keep = {'sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'log', 'ln', 'exp', 'theta', 'alpha', 'beta', 'pi'};
+      if (keep.contains(cmd.toLowerCase())) return cmd;
+      return ''; // Strip unknown commands
+    });
     
     // Remove braces
     cleaned = cleaned.replaceAll(RegExp(r'[{}]'), '');

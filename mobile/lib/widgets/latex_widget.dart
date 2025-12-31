@@ -49,8 +49,17 @@ class LaTeXWidget extends StatelessWidget {
       if (processedInput.contains('\\mathrm{') || 
           processedInput.contains('\\frac{') ||
           processedInput.contains('\\sqrt{') ||
+          processedInput.contains('\\sin') ||
+          processedInput.contains('\\cos') ||
+          processedInput.contains('\\tan') ||
+          processedInput.contains('\\log') ||
+          processedInput.contains('\\theta') ||
+          processedInput.contains('\\alpha') ||
+          processedInput.contains('\\beta') ||
           processedInput.contains('_{') ||
-          processedInput.contains('^{')) {
+          processedInput.contains('^{') ||
+          processedInput.contains('\\pi') ||
+          processedInput.contains('\\infty')) {
         // Has LaTeX commands but no delimiters - wrap entire text
         processedInput = '\\(' + processedInput + '\\)';
       }
@@ -209,10 +218,8 @@ class LaTeXWidget extends StatelessWidget {
       cleanedLatex = cleanedLatex.replaceAll('\r', ' ');
       cleanedLatex = cleanedLatex.replaceAll('\t', ' ');
       
-      // Remove undefined control sequences that might cause errors
-      // This includes things like \n, \t, etc. that aren't valid LaTeX
-      // Pattern: \ followed by a single letter that's not part of a valid LaTeX command
-      cleanedLatex = cleanedLatex.replaceAll(RegExp(r'\\([ntrbfv])(?![a-zA-Z])'), ' '); // Replace \n, \t, \r, etc. with space (but not if followed by letter)
+      // CRITICAL: Removed aggressive backslash replacements that mangle commands like \tan, \theta, \beta
+      // Only keep actual newline/tab char replacements which are handled above
       
       // Remove any standalone backslashes that aren't part of commands
       cleanedLatex = cleanedLatex.replaceAll(RegExp(r'\\(?![a-zA-Z\(\)\[\]])'), '');
@@ -533,8 +540,7 @@ class LaTeXWidget extends StatelessWidget {
         String processedContent = match.content;
         processedContent = processedContent.replaceAll('\n', ' ');
         processedContent = processedContent.replaceAll('\r', ' ');
-        processedContent = processedContent.replaceAll(RegExp(r'\\n'), ' ');
-        processedContent = processedContent.replaceAll(RegExp(r'\\([ntrbfv])'), ' '); // Replace \n, \t, etc.
+        // CRITICAL: Avoid aggressive RegExp(r'\\([ntrbfv])') as it mangles \tan, \theta, etc.
         
         // Preprocess mhchem syntax before rendering
         processedContent = _processMhchemSyntax(processedContent);

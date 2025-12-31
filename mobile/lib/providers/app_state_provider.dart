@@ -79,6 +79,8 @@ class AppStateProvider extends ChangeNotifier {
       _hasSeenWelcome = await _storage.hasSeenWelcome();
       _recentSolutions = await _storage.getRecentSolutions();
       _stats = await _storage.getStats();
+      
+      debugPrint('State loaded: used=$_snapsUsed, limit=$_snapLimit, snapsRemaining=$snapsRemaining');
     } catch (e) {
       debugPrint('Error loading state: $e');
     }

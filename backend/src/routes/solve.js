@@ -261,7 +261,7 @@ router.post('/generate-practice-questions',
         throw new ApiError(400, 'Validation failed', errors.array());
       }
 
-      const { recognizedQuestion, solution, topic, difficulty } = req.body;
+      const { recognizedQuestion, solution, topic, difficulty, language } = req.body;
       const userId = req.userId;
 
       logger.info('Generating follow-up questions', {
@@ -269,13 +269,15 @@ router.post('/generate-practice-questions',
         userId,
         topic,
         difficulty,
+        language
       });
 
       const followUpQuestions = await generateFollowUpQuestions(
         recognizedQuestion,
         typeof solution === 'string' ? solution : JSON.stringify(solution),
         topic,
-        difficulty
+        difficulty,
+        language
       );
 
       logger.info('Follow-up questions generated', {
@@ -321,7 +323,7 @@ router.post('/generate-single-question',
         throw new ApiError(400, 'Validation failed', errors.array());
       }
 
-      const { recognizedQuestion, solution, topic, difficulty, questionNumber } = req.body;
+      const { recognizedQuestion, solution, topic, difficulty, questionNumber, language } = req.body;
       const userId = req.userId;
 
       logger.info('Generating single question', {
@@ -337,7 +339,8 @@ router.post('/generate-single-question',
         typeof solution === 'string' ? solution : JSON.stringify(solution),
         topic,
         difficulty,
-        questionNumber
+        questionNumber,
+        language
       );
 
       logger.info('Single question generated', {

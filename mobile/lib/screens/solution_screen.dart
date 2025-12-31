@@ -15,9 +15,12 @@ import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../services/localization_service.dart';
+import '../services/storage_service.dart';
 import '../providers/app_state_provider.dart';
 import '../config/content_config.dart';
 import '../utils/text_preprocessor.dart';
+import 'home_screen.dart';
 
 class SolutionScreen extends StatefulWidget {
   final Future<Solution> solutionFuture;
@@ -84,6 +87,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
           },
           'difficulty': solution.difficulty,
         },
+        imageUrl: solution.imageUrl,
       );
       
       await appState.addRecentSolution(recentSolution);
@@ -166,13 +170,32 @@ class _SolutionScreenState extends State<SolutionScreen> {
 
 
   Widget _buildHeader(Solution solution) {
+    final lang = solution.language ?? 'en';
     return AppHeaderWithIcon(
       icon: Icons.check,
-      title: 'Question Recognized!',
+      title: LocalizationService.getString('recognized_title', lang),
       subtitle: '${solution.topic} - ${solution.subject}',
       iconColor: AppColors.successGreen,
       iconSize: 40, // Further reduced from 48 to match photo review screen
-      onClose: () => Navigator.of(context).popUntil((route) => route.isFirst),
+      onClose: () {
+        bool found = false;
+        Navigator.of(context).popUntil((route) {
+          if (route.settings.name == '/snap_home') {
+            found = true;
+            return true;
+          }
+          return route.isFirst;
+        });
+        
+        if (!found) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => HomeScreen(),
+              settings: const RouteSettings(name: '/snap_home'),
+            ),
+          );
+        }
+      },
       bottomPadding: 12, // Further reduced from 16
     );
   }
@@ -197,7 +220,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
               const Icon(Icons.menu_book, color: AppColors.primaryPurple, size: 20),
               const SizedBox(width: 8),
               Text(
-                'HERE\'S WHAT I SEE:',
+                LocalizationService.getString('see_header', solution.language ?? 'en'),
                 style: AppTextStyles.labelMedium.copyWith(
                   color: AppColors.primaryPurple,
                   fontWeight: FontWeight.w700,
@@ -263,7 +286,10 @@ class _SolutionScreenState extends State<SolutionScreen> {
                     children: [
             const Icon(Icons.auto_awesome, color: AppColors.primaryPurple, size: 20),
                       const SizedBox(width: 8),
-            Text('Step-by-Step Solution', style: AppTextStyles.headerMedium),
+            Text(
+              LocalizationService.getString('solution_header', solution.language ?? 'en'), 
+              style: AppTextStyles.headerMedium
+            ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -432,8 +458,8 @@ class _SolutionScreenState extends State<SolutionScreen> {
               const Icon(Icons.check_circle, color: AppColors.successGreen, size: 20),
                             const SizedBox(width: 8),
                             Text(
-                              'FINAL ANSWER',
-                style: AppTextStyles.labelMedium.copyWith(
+                               LocalizationService.getString('final_answer', solution.language ?? 'en'),
+                 style: AppTextStyles.labelMedium.copyWith(
                   color: AppColors.successGreen,
                   fontWeight: FontWeight.w700,
                               ),
@@ -483,7 +509,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 Row(
                   children: [
                     Text(
-                      'Priya Ma\'am\'s Tip',
+                      LocalizationService.getString('priya_tip', solution.language ?? 'en'),
                       style: AppTextStyles.labelMedium.copyWith(
                         color: const Color(0xFF7C3AED),
                         fontSize: 18, // Larger title
@@ -765,33 +791,50 @@ class _SolutionScreenState extends State<SolutionScreen> {
             
             const SizedBox(height: 12),
             
-            // Back to Dashboard
+            // Back to Snap and Solve
             Container(
               width: double.infinity,
               height: 56,
               decoration: BoxDecoration(
-                color: Colors.white,
+                gradient: AppColors.ctaGradient,
                 borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                border: Border.all(color: AppColors.borderGray, width: 2),
+                boxShadow: AppShadows.buttonShadow,
               ),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
+                    bool found = false;
+                    Navigator.of(context).popUntil((route) {
+                      if (route.settings.name == '/snap_home') {
+                        found = true;
+                        return true;
+                      }
+                      return route.isFirst;
+                    });
+                    
+                    if (!found) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => HomeScreen(),
+                          settings: const RouteSettings(name: '/snap_home'),
+                        ),
+                      );
+                    }
                   },
                   borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
                   child: Center(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.home, color: AppColors.textDark),
+                        const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                         const SizedBox(width: 12),
-            Text(
-                          'Back to Dashboard',
+                        Text(
+                          'Back to Snap and Solve',
                           style: AppTextStyles.labelMedium.copyWith(
-                            color: AppColors.textDark,
+                            color: Colors.white,
                             fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],

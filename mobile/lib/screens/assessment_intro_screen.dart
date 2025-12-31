@@ -145,8 +145,6 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: null,
-      floatingActionButton: _buildFloatingSnapButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppColors.backgroundGradient,
@@ -611,13 +609,6 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                   'Stuck on a problem? Just snap a photo and get instant step-by-step solutions!',
                   style: AppTextStyles.bodyMedium,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  '${appState.snapLimit} snaps available today • Resets at midnight',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textLight,
-                  ),
-                ),
                 const SizedBox(height: 12),
                 // View History link
                 GestureDetector(
@@ -654,7 +645,8 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const HomeScreen(),
+                            builder: (context) => HomeScreen(),
+                            settings: const RouteSettings(name: '/snap_home'),
                           ),
                         ).then((_) => _loadData());
                       },

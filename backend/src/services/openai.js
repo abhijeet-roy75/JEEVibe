@@ -225,9 +225,9 @@ OUTPUT FORMAT (strict JSON):
  * @param {string} difficulty - Difficulty level
  * @returns {Promise<Array>} Array of 3 follow-up questions
  */
-async function generateFollowUpQuestions(originalQuestion, solution, topic, difficulty) {
+async function generateFollowUpQuestions(originalQuestion, solution, topic, difficulty, language = 'en') {
   try {
-    const prompt = SNAP_SOLVE_FOLLOWUP_PROMPT(originalQuestion, solution, topic, difficulty);
+    const prompt = SNAP_SOLVE_FOLLOWUP_PROMPT(originalQuestion, solution, topic, difficulty, language);
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -351,7 +351,7 @@ async function generateFollowUpQuestions(originalQuestion, solution, topic, diff
  * @param {number} questionNumber - Question number (1, 2, or 3)
  * @returns {Promise<Object>} Single follow-up question
  */
-async function generateSingleFollowUpQuestion(originalQuestion, solution, topic, difficulty, questionNumber) {
+async function generateSingleFollowUpQuestion(originalQuestion, solution, topic, difficulty, questionNumber, language = 'en') {
   try {
     const difficultyDescriptions = {
       1: 'SIMILAR difficulty, same core concept, different numbers/scenario',
@@ -365,8 +365,10 @@ CONTEXT: A student just used Snap & Solve on this JEE Main 2025 question:
 QUESTION: ${originalQuestion}
 TOPIC: ${topic} (from JEE Main 2025 syllabus)
 DIFFICULTY: ${difficulty}
+LANGUAGE: ${language === 'hi' ? 'Hindi' : 'English'}
 
 TASK: Generate Question ${questionNumber} of 3 follow-up practice questions.
+IMPORTANT: Generate questions and explanations in ${language === 'hi' ? 'Hindi (or Hinglish if appropriate for technical terms)' : 'English'}.
 
 REQUIREMENTS:
 - Question ${questionNumber}: ${difficultyDescriptions[questionNumber]}

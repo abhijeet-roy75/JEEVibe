@@ -26,9 +26,9 @@ class SnapCounterService {
       // 2. Save to local storage for offline access and quick retrieval
       await _storage.setSnapCount(used);
       await _storage.setSnapLimit(limit);
-      if (resetsAt != null) {
-        await _storage.setLastResetDate(resetsAt.split('T')[0]);
-      }
+      
+      // Mark today as safe (synced) so we don't auto-reset locally
+      await _storage.setLastResetDate(_getTodayDateString());
 
       // 3. Fetch history
       final historyData = await ApiService.getSnapHistory(authToken: authToken, limit: 10);

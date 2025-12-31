@@ -662,47 +662,50 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
   Widget _buildRecentSolutions() {
     return Consumer<AppStateProvider>(
       builder: (context, appState, child) {
         final solutions = appState.recentSolutions;
-
-        return Padding(
-          padding: AppSpacing.screenPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Recent Snaps', style: AppTextStyles.headerMedium),
+                  Text(
+                    'Recent Snaps',
+                    style: AppTextStyles.headerSmall,
+                  ),
                   if (solutions.isNotEmpty)
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const AllSolutionsScreen(),
-                          ),
-                        );
+                    GestureDetector(
+                      onTap: () {
+                         Navigator.of(context).push(
+                           MaterialPageRoute(
+                             builder: (context) => const AllSolutionsScreen(),
+                           ),
+                         );
                       },
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(0, 0),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
                       child: Text(
                         'View All',
                         style: AppTextStyles.labelMedium.copyWith(
                           color: AppColors.primaryPurple,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: 16),
-              
-              if (solutions.isEmpty)
-                Container(
+            ),
+            const SizedBox(height: 16),
+            
+            if (solutions.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -733,21 +736,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                )
-              else
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 1,
-                    mainAxisExtent: 140, // Height of each card
-                    mainAxisSpacing: 12,
-                  ),
-                  itemCount: solutions.length > 3 ? 3 : solutions.length,
-                  itemBuilder: (context, index) => _buildSolutionCard(solutions[index]),
                 ),
-            ],
-          ),
+              )
+            else
+              SizedBox(
+                height: 190, // Fixed height for horizontal list
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: solutions.length > 5 ? 5 : solutions.length,
+                  separatorBuilder: (context, index) => const SizedBox(width: 16),
+                  itemBuilder: (context, index) {
+                    return _buildSolutionCard(solutions[index]);
+                  },
+                ),
+              ),
+          ],
         );
       },
     );
@@ -756,11 +760,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSolutionCard(RecentSolution solution) {
     final BuildContext context = this.context;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      width: 260, // Fixed width for horizontal card
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
         border: Border.all(color: AppColors.borderLight),
+        boxShadow: AppShadows.cardShadow,
       ),
       child: Material(
         color: Colors.transparent,
@@ -800,10 +805,11 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, // Shrink wrap vertically
               children: [
                 Row(
                   children: [
-                    SubjectIconWidget(subject: solution.subject, size: 24),
+                    SubjectIconWidget(subject: solution.subject, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -811,53 +817,59 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Text(
                             solution.subject,
-                            style: AppTextStyles.headerSmall.copyWith(fontSize: 16),
+                            style: AppTextStyles.labelMedium.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textDark,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           Text(
                             solution.getTimeAgo(),
-                            style: AppTextStyles.bodySmall,
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.textLight,
+                              fontSize: 10,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(
-                      Icons.chevron_right,
-                      color: AppColors.textGray,
-                      size: 20,
-                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  TextPreprocessor.addSpacesToText(solution.getPreviewText()),
-                  style: AppTextStyles.bodyMedium,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                Expanded(
+                  child: Text(
+                    TextPreprocessor.addSpacesToText(solution.getPreviewText()),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      height: 1.4,
+                      fontSize: 13,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    // Topic capsule/badge
                     Flexible(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.cardLightPurple.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(AppRadius.radiusRound),
+                          color: SubjectIconWidget.getColor(solution.subject).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: AppColors.primaryPurple.withOpacity(0.3),
-                            width: 1,
+                            color: SubjectIconWidget.getColor(solution.subject).withValues(alpha: 0.2),
                           ),
                         ),
                         child: Text(
-                          solution.topic,
+                          solution.topic.isNotEmpty ? solution.topic : 'General',
                           style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.primaryPurple,
+                            color: SubjectIconWidget.getColor(solution.subject),
                             fontWeight: FontWeight.w600,
-                            fontSize: 11,
+                            fontSize: 10,
                           ),
-                          overflow: TextOverflow.ellipsis,
                           maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),

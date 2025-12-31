@@ -57,13 +57,23 @@ class RecentSolution {
   });
 
   factory RecentSolution.fromJson(Map<String, dynamic> json) {
+    // Handle both local storage format (nested solutionData) and backend format (flat solution object)
+    Map<String, dynamic>? data = json['solutionData'] as Map<String, dynamic>?;
+    
+    if (data == null && json['solution'] != null) {
+      data = {
+        'solution': json['solution'],
+        'difficulty': json['difficulty'],
+      };
+    }
+
     return RecentSolution(
       id: json['id'] ?? '',
-      question: json['question'] ?? '',
+      question: json['question'] ?? json['recognizedQuestion'] ?? '',
       topic: json['topic'] ?? '',
       subject: json['subject'] ?? '',
-      timestamp: json['timestamp'] ?? '',
-      solutionData: json['solutionData'] as Map<String, dynamic>?,
+      timestamp: json['timestamp'] ?? json['created_at'] ?? '',
+      solutionData: data,
       imageUrl: json['imageUrl'] ?? json['image_url'],
       language: json['language'],
     );
