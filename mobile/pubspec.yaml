@@ -40,7 +40,7 @@ dependencies:
   
   # UI
   cupertino_icons: ^1.0.6
-  image_cropper: ^11.0.0
+  image_cropper: ^10.0.0
   google_fonts: ^6.2.1
   
   # Firebase - Updated to latest versions for Xcode 26.1.1 compatibility
