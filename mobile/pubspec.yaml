@@ -23,7 +23,7 @@ dependencies:
   http_parser: ^4.0.2
   
   # LaTeX Rendering
-  flutter_math_fork: ^0.7.2
+  flutter_math_fork: 0.7.2
   
   # SVG Rendering
   flutter_svg: ^2.0.9
@@ -40,7 +40,7 @@ dependencies:
   
   # UI
   cupertino_icons: ^1.0.6
-  image_cropper: ^10.0.0
+  image_cropper: 8.0.2
   google_fonts: ^6.2.1
   
   # Firebase - Updated to latest versions for Xcode 26.1.1 compatibility

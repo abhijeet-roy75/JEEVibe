@@ -855,10 +855,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: SubjectIconWidget.getColor(solution.subject).withValues(alpha: 0.1),
+                          color: SubjectIconWidget.getColor(solution.subject).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: SubjectIconWidget.getColor(solution.subject).withValues(alpha: 0.2),
+                            color: SubjectIconWidget.getColor(solution.subject).withOpacity(0.2),
                           ),
                         ),
                         child: Text(

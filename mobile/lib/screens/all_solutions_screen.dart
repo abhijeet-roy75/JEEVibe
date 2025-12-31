@@ -163,7 +163,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             offset: const Offset(0, -4),
             blurRadius: 10,
           ),
@@ -302,7 +302,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
           ),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -313,11 +313,11 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isSelected ? color.withValues(alpha: 0.1) : Colors.white,
+                color: isSelected ? color.withOpacity(0.1) : Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: isSelected ? null : [
                   BoxShadow(
-                    color: color.withValues(alpha: 0.2),
+                    color: color.withOpacity(0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -358,7 +358,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
             Icon(
               Icons.search_off,
               size: 64,
-              color: AppColors.textGray.withValues(alpha: 0.5),
+              color: AppColors.textGray.withOpacity(0.5),
             ),
             const SizedBox(height: 24),
             Text(
@@ -470,7 +470,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryPurple.withValues(alpha: 0.05),
+                          color: AppColors.primaryPurple.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
