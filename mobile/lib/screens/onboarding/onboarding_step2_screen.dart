@@ -608,7 +608,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
               ),
             ),
           ],
-        ),
+        )
       )
     );
   }
