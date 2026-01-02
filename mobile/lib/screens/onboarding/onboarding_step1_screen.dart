@@ -400,7 +400,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 }
