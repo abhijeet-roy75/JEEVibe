@@ -108,70 +108,42 @@ router.post('/profile',
       }
       return true;
     }),
-    body('weakSubjects').optional().isArray().custom((arr) => {
+    body('targetExam').optional().isIn([
+      'JEE Main',
+      'JEE Main + Advanced'
+    ]).withMessage('Invalid exam type. Must be "JEE Main" or "JEE Main + Advanced"'),
+    body('targetYear').optional().isString().isLength({ min: 4, max: 4 }).matches(/^\d{4}$/)
+      .withMessage('Target year must be a 4-digit year (e.g., 2025)'),
+    body('dreamBranch').optional().isLength({ max: 100 }).trim().escape(),
+    body('state').optional().isLength({ max: 100 }).trim().escape(),
+    body('studySetup').optional().isArray().custom((arr) => {
       if (!Array.isArray(arr)) {
-        throw new Error('weakSubjects must be an array');
+        throw new Error('studySetup must be an array');
       }
-      if (arr.length > 10) {
-        throw new Error('Maximum 10 weak subjects allowed');
+      if (arr.length > 4) {
+        throw new Error('Maximum 4 study setup options allowed');
       }
-      
-      // Check total size
-      const totalSize = JSON.stringify(arr).length;
-      if (totalSize > 10000) { // 10KB limit
-        throw new Error('weakSubjects array data too large (max 10KB)');
-      }
-      
-      // Validate each item
+
+      const validOptions = ['Self-study', 'Online coaching', 'Offline coaching', 'School only'];
+
       arr.forEach((item, index) => {
         if (typeof item !== 'string') {
-          throw new Error(`weakSubjects[${index}] must be a string`);
+          throw new Error(`studySetup[${index}] must be a string`);
         }
-        if (item.length === 0) {
-          throw new Error(`weakSubjects[${index}] cannot be empty`);
-        }
-        if (item.length > 50) {
-          throw new Error(`weakSubjects[${index}] must be 50 characters or less`);
-        }
-        // Allow alphanumeric, spaces, hyphens, underscores
-        if (!/^[a-zA-Z0-9\s_-]+$/.test(item)) {
-          throw new Error(`weakSubjects[${index}] contains invalid characters`);
+        if (!validOptions.includes(item)) {
+          throw new Error(
+            `studySetup[${index}] has invalid value "${item}". ` +
+            `Must be one of: ${validOptions.join(', ')}`
+          );
         }
       });
-      
-      return true;
-    }),
-    body('strongSubjects').optional().isArray().custom((arr) => {
-      if (!Array.isArray(arr)) {
-        throw new Error('strongSubjects must be an array');
+
+      // Check for duplicates
+      const uniqueItems = new Set(arr);
+      if (uniqueItems.size !== arr.length) {
+        throw new Error('studySetup array contains duplicate values');
       }
-      if (arr.length > 10) {
-        throw new Error('Maximum 10 strong subjects allowed');
-      }
-      
-      // Check total size
-      const totalSize = JSON.stringify(arr).length;
-      if (totalSize > 10000) { // 10KB limit
-        throw new Error('strongSubjects array data too large (max 10KB)');
-      }
-      
-      // Validate each item
-      arr.forEach((item, index) => {
-        if (typeof item !== 'string') {
-          throw new Error(`strongSubjects[${index}] must be a string`);
-        }
-        if (item.length === 0) {
-          throw new Error(`strongSubjects[${index}] cannot be empty`);
-        }
-        if (item.length > 50) {
-          throw new Error(`strongSubjects[${index}] must be 50 characters or less`);
-        }
-        // Allow alphanumeric, spaces, hyphens, underscores
-        if (!/^[a-zA-Z0-9\s_-]+$/.test(item)) {
-          throw new Error(`strongSubjects[${index}] contains invalid characters`);
-        }
-      });
-      
+
       return true;
     }),
   ],

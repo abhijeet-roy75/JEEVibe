@@ -53,7 +53,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -102,7 +102,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             'Your AI-powered path to JEE success',
                             textAlign: TextAlign.center,
                             style: AppTextStyles.bodyLarge.copyWith(
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                               height: 1.4,
                             ),
                             maxLines: 2,
@@ -151,7 +151,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                     width: 12,
                                     height: 12,
                                     decoration: BoxDecoration(
-                                      color: AppColors.primaryPurple.withOpacity(0.3),
+                                      color: AppColors.primaryPurple.withValues(alpha: 0.3),
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -164,7 +164,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                     width: 12,
                                     height: 12,
                                     decoration: BoxDecoration(
-                                      color: AppColors.primaryPurple.withOpacity(0.3),
+                                      color: AppColors.primaryPurple.withValues(alpha: 0.3),
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -177,7 +177,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                     width: 12,
                                     height: 12,
                                     decoration: BoxDecoration(
-                                      color: AppColors.primaryPurple.withOpacity(0.3),
+                                      color: AppColors.primaryPurple.withValues(alpha: 0.3),
                                       shape: BoxShape.circle,
                                     ),
                                   ),

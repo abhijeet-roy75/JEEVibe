@@ -454,7 +454,7 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isCorrect ? AppColors.successGreen.withOpacity(0.3) : AppColors.errorRed.withOpacity(0.3),
+          color: isCorrect ? AppColors.successGreen.withValues(alpha: 0.3) : AppColors.errorRed.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -504,7 +504,7 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _getSubjectColor(subject).withOpacity(0.2),
+                          color: _getSubjectColor(subject).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -518,7 +518,7 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.warningAmber.withOpacity(0.2),
+                          color: AppColors.warningAmber.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -602,7 +602,7 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primaryPurple.withOpacity(0.1),
+        color: AppColors.primaryPurple.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

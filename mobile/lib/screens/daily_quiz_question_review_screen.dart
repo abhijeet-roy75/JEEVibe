@@ -250,7 +250,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                           decoration: BoxDecoration(
                             color: index == _currentIndex 
                                 ? Colors.white 
-                                : Colors.white.withOpacity(0.3),
+                                : Colors.white.withValues(alpha: 0.3),
                             shape: BoxShape.circle,
                           ),
                         );
@@ -313,7 +313,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                         ? 'Well done! You got this right.'
                         : 'Your answer: ${studentAnswer.toUpperCase()} • Correct: ${correctAnswer.toUpperCase()}',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 ],
@@ -359,7 +359,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -397,7 +397,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryPurple.withOpacity(0.1),
+                    color: AppColors.primaryPurple.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -410,7 +410,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.warningAmber.withOpacity(0.2),
+                    color: AppColors.warningAmber.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -473,12 +473,12 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
     Widget? trailingIcon;
 
     if (isCorrectAnswer) {
-      backgroundColor = AppColors.successGreen.withOpacity(0.1);
+      backgroundColor = AppColors.successGreen.withValues(alpha: 0.1);
       borderColor = AppColors.successGreen;
       textColor = AppColors.successGreen;
       trailingIcon = const Icon(Icons.check_circle, color: AppColors.successGreen);
     } else if (isSelected && !isCorrect) {
-      backgroundColor = AppColors.errorRed.withOpacity(0.1);
+      backgroundColor = AppColors.errorRed.withValues(alpha: 0.1);
       borderColor = AppColors.errorRed;
       textColor = AppColors.errorRed;
       trailingIcon = const Icon(Icons.cancel, color: AppColors.errorRed);
@@ -499,7 +499,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: borderColor.withOpacity(0.2),
+                color: borderColor.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -703,7 +703,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: AppColors.successGreen.withOpacity(0.1),
+                          color: AppColors.successGreen.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -748,7 +748,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
           width: 20,
           height: 20,
           decoration: BoxDecoration(
-            color: AppColors.warningAmber.withOpacity(0.2),
+            color: AppColors.warningAmber.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -828,7 +828,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.primaryPurple.withOpacity(0.1),
+          color: AppColors.primaryPurple.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -875,7 +875,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

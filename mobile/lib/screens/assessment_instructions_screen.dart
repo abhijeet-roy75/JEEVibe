@@ -146,7 +146,7 @@ class AssessmentInstructionsScreen extends StatelessWidget {
         icon: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -179,7 +179,7 @@ class AssessmentInstructionsScreen extends StatelessWidget {
         child: Text(
           'Tips for best results',
           style: AppTextStyles.bodyWhite.copyWith(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontSize: 14,
           ),
           textAlign: TextAlign.center,
@@ -204,7 +204,7 @@ class AssessmentInstructionsScreen extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryPurple.withOpacity(0.1),
+              color: AppColors.primaryPurple.withValues(alpha: 0.1),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -273,7 +273,7 @@ class AssessmentInstructionsScreen extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primaryPurple.withOpacity(0.1),
+              color: AppColors.primaryPurple.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(

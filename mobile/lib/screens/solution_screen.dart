@@ -446,9 +446,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
     return Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-        color: AppColors.successBackground.withOpacity(0.5),
+        color: AppColors.successBackground.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-        border: Border.all(color: AppColors.successGreen.withOpacity(0.3), width: 2),
+        border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.3), width: 2),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -595,9 +595,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.successBackground.withOpacity(0.5),
+                    color: AppColors.successBackground.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(AppRadius.radiusSmall),
-                    border: Border.all(color: AppColors.successGreen.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     children: [
@@ -623,9 +623,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.warningBackground.withOpacity(0.5),
+                    color: AppColors.warningBackground.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(AppRadius.radiusSmall),
-                    border: Border.all(color: AppColors.warningAmber.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.warningAmber.withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     children: [
@@ -651,9 +651,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.errorBackground.withOpacity(0.5),
+                    color: AppColors.errorBackground.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(AppRadius.radiusSmall),
-                    border: Border.all(color: AppColors.errorRed.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.errorRed.withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     children: [
@@ -688,7 +688,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
               borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.infoBlue.withOpacity(0.3),
+                  color: AppColors.infoBlue.withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),

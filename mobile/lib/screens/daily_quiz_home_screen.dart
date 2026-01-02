@@ -406,11 +406,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
   Widget _buildHeader() {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
+        gradient: AppColors.ctaGradient,
       ),
       child: SafeArea(
         bottom: false,
@@ -427,7 +423,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -547,7 +543,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -589,7 +585,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.primaryPurple.withOpacity(0.1),
+              color: AppColors.primaryPurple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -646,7 +642,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -688,7 +684,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.primaryPurple.withOpacity(0.1),
+              color: AppColors.primaryPurple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -802,7 +798,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primaryPurple.withOpacity(0.1),
+        color: AppColors.primaryPurple.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -829,7 +825,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -898,7 +894,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.warningAmber.withOpacity(0.1),
+                color: AppColors.warningAmber.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -924,7 +920,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primaryPurple.withOpacity(0.1),
+                color: AppColors.primaryPurple.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -1032,7 +1028,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1061,11 +1057,11 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
           ),
           const SizedBox(height: 20),
           // Subject Results
-          _buildSubjectResult('Physics', physicsAccuracy, AppColors.primaryPurple),
+          _buildSubjectResult('Physics', physicsAccuracy, AppColors.subjectPhysics),
           const SizedBox(height: 12),
-          _buildSubjectResult('Chemistry', chemistryAccuracy, const Color(0xFF4CAF50)),
+          _buildSubjectResult('Chemistry', chemistryAccuracy, AppColors.subjectChemistry),
           const SizedBox(height: 12),
-          _buildSubjectResult('Mathematics', mathematicsAccuracy, const Color(0xFF2196F3)),
+          _buildSubjectResult('Mathematics', mathematicsAccuracy, AppColors.subjectMathematics),
         ],
       ),
     );
@@ -1084,13 +1080,13 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
       progressColor = Colors.grey;
     } else if (accuracyValue < 70) {
       feedbackText = 'Needs more practice';
-      progressColor = const Color(0xFFFF9800); // Orange
+      progressColor = AppColors.performanceOrange;
     } else if (accuracyValue <= 85) {
       feedbackText = 'Good progress';
-      progressColor = const Color(0xFF2196F3); // Blue
+      progressColor = AppColors.subjectMathematics;
     } else {
       feedbackText = 'Strong performance';
-      progressColor = const Color(0xFF4CAF50); // Green
+      progressColor = AppColors.subjectChemistry;
     }
     
     return Column(

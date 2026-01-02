@@ -3,6 +3,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../services/firebase/pin_service.dart';
+import 'forgot_pin_screen.dart';
 
 class PinVerificationScreen extends StatefulWidget {
   final Widget? targetScreen;
@@ -150,7 +151,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 8,
                                 offset: const Offset(0, 2),
                               ),
@@ -200,7 +201,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryPurple.withOpacity(0.1),
+                      color: AppColors.primaryPurple.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -286,6 +287,29 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                   ),
 
                   const SizedBox(height: 32),
+
+                  // Forgot PIN button
+                  TextButton(
+                    onPressed: () {
+                      // Navigate to Forgot PIN flow
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const ForgotPinScreen(),
+                        ),
+                      );
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.textMedium,
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                    ),
+                    child: Text(
+                      'Forgot PIN?',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.textMedium,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

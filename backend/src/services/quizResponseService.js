@@ -168,98 +168,102 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
     // Validate inputs
     const validatedQuestionId = validateQuestionId(questionId);
     const validatedTime = validateTimeTaken(timeTakenSeconds);
-    
+
     // Get quiz document
     const quizRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
       .doc(quizId);
-    
+
     const quizDoc = await retryFirestoreOperation(async () => {
       return await quizRef.get();
     });
-    
+
     if (!quizDoc.exists) {
       throw new Error(`Quiz ${quizId} not found`);
     }
-    
+
     const quizData = quizDoc.data();
-    
+
     // Check if quiz is active
     if (quizData.status !== 'in_progress') {
       throw new Error(`Quiz ${quizId} is not in progress. Status: ${quizData.status}`);
     }
-    
-    // Find question in quiz
-    const questionIndex = quizData.questions?.findIndex(q => q.question_id === questionId);
-    
-    if (questionIndex === -1 || questionIndex === undefined) {
+
+    // Find question in quiz subcollection
+    const questionsSnapshot = await retryFirestoreOperation(async () => {
+      return await quizRef.collection('questions')
+        .where('question_id', '==', questionId)
+        .limit(1)
+        .get();
+    });
+
+    if (questionsSnapshot.empty) {
       throw new Error(`Question ${questionId} not found in quiz ${quizId}`);
     }
-    
-    // Get question data (from quiz or fetch from questions collection)
-    let questionData = quizData.questions?.[questionIndex];
-    
+
+    const questionDoc = questionsSnapshot.docs[0];
+    let questionData = questionDoc.data();
+    const questionPosition = questionData.position;
+
     // Validate question data exists
     if (!questionData) {
-      throw new Error(`Question data missing at index ${questionIndex} in quiz ${quizId}`);
+      throw new Error(`Question data missing for ${questionId} in quiz ${quizId}`);
     }
-    
-    // If question data is incomplete, fetch from questions collection
+
+    // If question data is incomplete (missing correct_answer), fetch from questions collection
     if (!questionData.correct_answer) {
-      const questionRef = db.collection('questions').doc(questionId);
-      const questionDoc = await retryFirestoreOperation(async () => {
-        return await questionRef.get();
+      const fullQuestionRef = db.collection('questions').doc(questionId);
+      const fullQuestionDoc = await retryFirestoreOperation(async () => {
+        return await fullQuestionRef.get();
       });
-      
-      if (!questionDoc.exists) {
-        throw new Error(`Question ${questionId} not found`);
+
+      if (!fullQuestionDoc.exists) {
+        throw new Error(`Question ${questionId} not found in questions collection`);
       }
-      
-      questionData = { ...questionData, ...questionDoc.data() };
+
+      questionData = { ...questionData, ...fullQuestionDoc.data() };
     }
-    
+
     // Validate answer
     const validation = validateAnswer(questionData, studentAnswer);
-    
+
     // Generate feedback
     const feedback = generateFeedback(questionData, validation.isCorrect, validation.validatedAnswer);
-    
+
     // Prepare response data
-    // Note: Cannot use FieldValue.serverTimestamp() inside arrays, so use Timestamp.now() instead
     const now = admin.firestore.Timestamp.now();
     const responseData = {
-      question_id: validatedQuestionId,
       student_answer: validation.validatedAnswer,
       correct_answer: questionData.correct_answer,
       is_correct: validation.isCorrect,
       time_taken_seconds: validatedTime,
       answered_at: now,
-      feedback: feedback
-    };
-    
-    // Update quiz document with response
-    const questions = [...(quizData.questions || [])];
-    questions[questionIndex] = {
-      ...questions[questionIndex],
-      ...responseData,
       answered: true
     };
-    
+
+    // Update question document in subcollection
+    const questionRef = quizRef.collection('questions').doc(String(questionPosition));
+    await retryFirestoreOperation(async () => {
+      return await questionRef.update(responseData);
+    });
+
+    // Update quiz document with last answered timestamp and increment questions_answered
     await retryFirestoreOperation(async () => {
       return await quizRef.update({
-        questions: questions,
-        last_answered_at: admin.firestore.FieldValue.serverTimestamp()
+        last_answered_at: admin.firestore.FieldValue.serverTimestamp(),
+        questions_answered: admin.firestore.FieldValue.increment(1)
       });
     });
-    
+
     logger.info('Answer submitted', {
       userId,
       quizId,
       questionId,
-      isCorrect: validation.isCorrect
+      isCorrect: validation.isCorrect,
+      position: questionPosition
     });
-    
+
     return {
       success: true,
       question_id: validatedQuestionId,
@@ -284,7 +288,7 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
 
 /**
  * Get all responses from a quiz for batch processing
- * 
+ *
  * @param {string} userId
  * @param {string} quizId
  * @returns {Promise<Array>} Array of response objects with question data
@@ -295,33 +299,39 @@ async function getQuizResponses(userId, quizId) {
       .doc(userId)
       .collection('quizzes')
       .doc(quizId);
-    
+
     const quizDoc = await retryFirestoreOperation(async () => {
       return await quizRef.get();
     });
-    
+
     if (!quizDoc.exists) {
       throw new Error(`Quiz ${quizId} not found`);
     }
-    
-    const quizData = quizDoc.data();
-    const questions = quizData.questions || [];
-    
+
+    // Fetch questions from subcollection
+    const questionsSnapshot = await retryFirestoreOperation(async () => {
+      return await quizRef.collection('questions')
+        .orderBy('position', 'asc')
+        .get();
+    });
+
+    const questions = questionsSnapshot.docs.map(doc => doc.data());
+
     // Filter to answered questions and format for batch processing
     const responses = questions
       .filter(q => q.answered && q.question_id)
       .map(q => {
         // Extract and validate IRT parameters
-        const a = q.irt_parameters?.discrimination_a !== undefined 
-          ? q.irt_parameters.discrimination_a 
+        const a = q.irt_parameters?.discrimination_a !== undefined
+          ? q.irt_parameters.discrimination_a
           : 1.5;
-        const b = q.irt_parameters?.difficulty_b !== undefined 
-          ? q.irt_parameters.difficulty_b 
+        const b = q.irt_parameters?.difficulty_b !== undefined
+          ? q.irt_parameters.difficulty_b
           : (q.difficulty_irt !== undefined ? q.difficulty_irt : 0);
         const c = q.irt_parameters?.guessing_c !== undefined
           ? q.irt_parameters.guessing_c
           : (q.question_type === 'mcq_single' ? 0.25 : 0.0);
-        
+
         // Validate IRT parameters
         if (typeof a !== 'number' || isNaN(a) || a <= 0) {
           logger.warn('Invalid discrimination_a, using default', {
@@ -344,14 +354,14 @@ async function getQuizResponses(userId, quizId) {
             default: q.question_type === 'mcq_single' ? 0.25 : 0.0
           });
         }
-        
+
         // Use validated values with defaults
         const validatedA = (typeof a === 'number' && !isNaN(a) && a > 0) ? a : 1.5;
         const validatedB = (typeof b === 'number' && !isNaN(b)) ? b : 0;
-        const validatedC = (typeof c === 'number' && !isNaN(c) && c >= 0 && c <= 1) 
-          ? c 
+        const validatedC = (typeof c === 'number' && !isNaN(c) && c >= 0 && c <= 1)
+          ? c
           : (q.question_type === 'mcq_single' ? 0.25 : 0.0);
-        
+
         return {
           question_id: q.question_id,
           student_answer: q.student_answer,
@@ -359,14 +369,14 @@ async function getQuizResponses(userId, quizId) {
           is_correct: q.is_correct,
           time_taken_seconds: q.time_taken_seconds,
           chapter_key: q.chapter_key,
-          questionIRT: {
+          question_irt_params: {
             a: validatedA,
             b: validatedB,
             c: validatedC
           }
         };
       });
-    
+
     return responses;
   } catch (error) {
     logger.error('Error getting quiz responses', {

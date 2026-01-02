@@ -419,9 +419,9 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.successBackground.withOpacity(0.5),
+        color: AppColors.successBackground.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-        border: Border.all(color: AppColors.successGreen.withOpacity(0.3), width: 2),
+        border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.3), width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

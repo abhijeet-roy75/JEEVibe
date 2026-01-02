@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import '../profile/profile_basics_screen.dart';
+import '../onboarding/onboarding_step1_screen.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../services/firebase/pin_service.dart';
@@ -120,7 +120,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
       
       if (!mounted || _isDisposed) return;
 
-      // Navigate to Target Screen (if provided) or Profile Setup
+      // Navigate to Target Screen (if provided) or Onboarding
       if (widget.targetScreen != null) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => widget.targetScreen!),
@@ -128,7 +128,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
         );
       } else {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const ProfileBasicsScreen()),
+          MaterialPageRoute(builder: (context) => const OnboardingStep1Screen()),
           (route) => false,
         );
       }
@@ -183,7 +183,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -233,7 +233,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryPurple.withOpacity(0.1),
+                        color: AppColors.primaryPurple.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(

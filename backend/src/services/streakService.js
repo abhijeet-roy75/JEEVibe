@@ -151,9 +151,40 @@ async function updateStreak(userId) {
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
-    
+
     const userData = userDoc.exists ? userDoc.data() : {};
-    
+
+    // Update weekly stats (Sunday = week end)
+    const weeklyStats = [...(streakData.weekly_stats || [])];
+    const currentWeekEnd = getWeekEnd(today);
+
+    // Check if current week already exists in stats
+    const existingWeekIndex = weeklyStats.findIndex(w => w.week_end === currentWeekEnd);
+
+    const weekData = {
+      week_end: currentWeekEnd,
+      days_practiced: Object.keys(practiceDays).filter(d => d >= getWeekStart(today) && d <= currentWeekEnd).length,
+      total_quizzes: todayQuizCount,
+      total_questions: todayQuestions,
+      total_correct: todayCorrect,
+      avg_accuracy: todayAccuracy,
+      total_time_minutes: todayTimeMinutes
+    };
+
+    if (existingWeekIndex >= 0) {
+      // Update existing week
+      weeklyStats[existingWeekIndex] = weekData;
+    } else {
+      // Add new week
+      weeklyStats.push(weekData);
+
+      // Limit to last 52 weeks (1 year of data)
+      const MAX_WEEKLY_STATS = 52;
+      if (weeklyStats.length > MAX_WEEKLY_STATS) {
+        weeklyStats.splice(0, weeklyStats.length - MAX_WEEKLY_STATS);
+      }
+    }
+
     // Update streak document
     const updatedStreak = {
       student_id: userId,
@@ -165,6 +196,7 @@ async function updateStreak(userId) {
       total_quizzes_completed: userData.completed_quiz_count || 0,
       total_questions_answered: userData.total_questions_solved || 0,
       total_time_spent_minutes: userData.total_time_spent_minutes || 0,
+      weekly_stats: weeklyStats,
       day_of_week_pattern: dayPattern,
       last_updated: admin.firestore.FieldValue.serverTimestamp()
     };
@@ -244,13 +276,47 @@ function formatDate(date) {
 
 /**
  * Get day of week name (lowercase)
- * 
+ *
  * @param {Date} date
  * @returns {string} 'monday', 'tuesday', etc.
  */
 function getDayOfWeek(date) {
   const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   return days[date.getDay()];
+}
+
+/**
+ * Get week end date (Sunday) for a given date
+ *
+ * @param {Date} date
+ * @returns {string} YYYY-MM-DD format
+ */
+function getWeekEnd(date) {
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+  const daysUntilSunday = 7 - dayOfWeek;
+  const weekEnd = new Date(date);
+
+  if (dayOfWeek === 0) {
+    // Already Sunday
+    return formatDate(weekEnd);
+  }
+
+  weekEnd.setDate(weekEnd.getDate() + daysUntilSunday);
+  return formatDate(weekEnd);
+}
+
+/**
+ * Get week start date (Monday) for a given date
+ *
+ * @param {Date} date
+ * @returns {string} YYYY-MM-DD format
+ */
+function getWeekStart(date) {
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Handle Sunday
+  const weekStart = new Date(date);
+  weekStart.setDate(weekStart.getDate() - daysSinceMonday);
+  return formatDate(weekStart);
 }
 
 /**

@@ -19,7 +19,9 @@
     "test:circuit-breaker": "node scripts/test-circuit-breaker.js",
     "populate:assessment": "node scripts/populate-assessment-questions.js",
     "update:images": "node scripts/update-question-images.js",
-    "cleanup:user": "node scripts/cleanup-user.js"
+    "cleanup:user": "node scripts/cleanup-user.js",
+    "migrate:cumulative-stats": "node scripts/migrate-cumulative-stats.js",
+    "migrate:cumulative-stats:dry-run": "node scripts/migrate-cumulative-stats.js --dry-run"
   },
   "keywords": [
     "jee",

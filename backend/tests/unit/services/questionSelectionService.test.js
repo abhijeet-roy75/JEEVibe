@@ -195,5 +195,28 @@ describe('Question Selection Service', () => {
       expect(fi2).toBeGreaterThan(fi3);
     });
   });
+
+  describe('Adaptive Difficulty Threshold', () => {
+    test('should return 1.5 SD for <10 available questions (relaxed)', () => {
+      const threshold = questionSelectionService.getDifficultyThreshold(5);
+      expect(threshold).toBe(1.5);
+    });
+
+    test('should return 1.0 SD for 10-29 available questions (moderate)', () => {
+      const threshold = questionSelectionService.getDifficultyThreshold(15);
+      expect(threshold).toBe(1.0);
+
+      const threshold2 = questionSelectionService.getDifficultyThreshold(29);
+      expect(threshold2).toBe(1.0);
+    });
+
+    test('should return 0.5 SD for >=30 available questions (strict)', () => {
+      const threshold = questionSelectionService.getDifficultyThreshold(30);
+      expect(threshold).toBe(0.5);
+
+      const threshold2 = questionSelectionService.getDifficultyThreshold(100);
+      expect(threshold2).toBe(0.5);
+    });
+  });
 });
 

@@ -196,12 +196,142 @@ function batchUpdateTheta(initialTheta, initialSE, responses) {
 }
 
 // ============================================================================
-// CHAPTER-LEVEL UPDATE
+// CHAPTER-LEVEL CALCULATIONS (Pure Functions - No Firestore)
+// ============================================================================
+
+/**
+ * Calculate chapter theta update (pure function, no Firestore writes)
+ * Separated from updateChapterTheta to enable pre-calculation for transactions
+ *
+ * @param {Object} currentChapterData - Current chapter data {theta, confidence_SE, attempts, accuracy}
+ * @param {Array} responses - Array of responses for this chapter
+ *   Each response: {questionIRT: {a, b, c}, isCorrect}
+ * @returns {Object} Calculated chapter theta data (no persistence)
+ */
+function calculateChapterThetaUpdate(currentChapterData, responses) {
+  try {
+    // Prepare responses for batch update
+    const batchResponses = responses.map(r => ({
+      questionIRT: r.questionIRT,
+      isCorrect: r.isCorrect
+    }));
+
+    // Perform batch theta update
+    const updateResult = batchUpdateTheta(
+      currentChapterData.theta,
+      currentChapterData.confidence_SE,
+      batchResponses
+    );
+
+    // Calculate new accuracy
+    const correctCount = responses.filter(r => r.isCorrect).length;
+    const totalCount = responses.length;
+    const newAccuracy = totalCount > 0 ? correctCount / totalCount : 0;
+
+    // Combine with existing attempts
+    const newAttempts = currentChapterData.attempts + totalCount;
+
+    // Calculate weighted accuracy (combine old and new)
+    const oldAccuracy = currentChapterData.accuracy || 0;
+    const oldAttempts = currentChapterData.attempts || 0;
+    const combinedAccuracy = oldAttempts > 0
+      ? (oldAccuracy * oldAttempts + newAccuracy * totalCount) / newAttempts
+      : newAccuracy;
+
+    // Calculate percentile from theta
+    const percentile = thetaToPercentile(updateResult.theta);
+
+    // Return calculated data (no Firestore write)
+    return {
+      theta: boundTheta(updateResult.theta),
+      percentile: percentile,
+      confidence_SE: boundSE(updateResult.se),
+      attempts: newAttempts,
+      accuracy: Math.round(combinedAccuracy * 1000) / 1000, // 3 decimal places
+      last_updated: new Date().toISOString(),
+      // Metadata for debugging
+      theta_delta: updateResult.theta - currentChapterData.theta,
+      se_delta: updateResult.se - currentChapterData.confidence_SE
+    };
+  } catch (error) {
+    logger.error('Error calculating chapter theta update', {
+      chapterKey: currentChapterData.chapterKey,
+      error: error.message,
+      stack: error.stack
+    });
+    throw error;
+  }
+}
+
+/**
+ * Calculate subject and overall theta updates (pure function, no Firestore writes)
+ * Separated from updateSubjectAndOverallTheta to enable pre-calculation for transactions
+ *
+ * @param {Object} thetaByChapter - Updated theta_by_chapter map
+ * @returns {Object} Calculated subject and overall theta data (no persistence)
+ */
+function calculateSubjectAndOverallThetaUpdate(thetaByChapter) {
+  try {
+    // Calculate subject-level thetas and aggregate accuracy
+    const thetaBySubject = {};
+    const subjectAccuracy = {};
+    const subjects = ['physics', 'chemistry', 'mathematics'];
+
+    for (const subject of subjects) {
+      const subjectData = calculateSubjectTheta(thetaByChapter, subject);
+      thetaBySubject[subject] = subjectData;
+
+      // Calculate aggregated accuracy for this subject from thetaByChapter
+      let correct = 0;
+      let total = 0;
+
+      Object.entries(thetaByChapter).forEach(([key, data]) => {
+        if (key.startsWith(`${subject}_`)) {
+          // Weighted by attempts to get cumulative accuracy
+          const attempts = data.attempts || 0;
+          const accuracy = data.accuracy || 0;
+          correct += Math.round(accuracy * attempts);
+          total += attempts;
+        }
+      });
+
+      subjectAccuracy[subject] = {
+        correct,
+        total,
+        accuracy: total > 0 ? Math.round((correct / total) * 100) : 0
+      };
+    }
+
+    // Calculate overall theta (weighted by JEE chapter importance)
+    const overallTheta = calculateWeightedOverallTheta(thetaByChapter);
+    const overallPercentile = thetaToPercentile(overallTheta);
+
+    // Return calculated data (no Firestore write)
+    return {
+      theta_by_subject: thetaBySubject,
+      subject_accuracy: subjectAccuracy,
+      overall_theta: overallTheta,
+      overall_percentile: overallPercentile
+    };
+  } catch (error) {
+    logger.error('Error calculating subject and overall theta update', {
+      error: error.message,
+      stack: error.stack
+    });
+    throw error;
+  }
+}
+
+// ============================================================================
+// CHAPTER-LEVEL UPDATE (Legacy - with Firestore persistence)
 // ============================================================================
 
 /**
  * Update chapter-level theta after quiz completion
- * 
+ *
+ * NOTE: This function is being deprecated in favor of atomic transaction approach.
+ * Use calculateChapterThetaUpdate() for transaction-safe calculations.
+ *
  * @param {string} userId
  * @param {string} chapterKey - Chapter key (e.g., "physics_electrostatics")
  * @param {Array} responses - Array of responses for this chapter
@@ -416,10 +546,17 @@ async function updateSubjectAndOverallTheta(userId) {
 // ============================================================================
 
 module.exports = {
+  // Pure calculation functions (for atomic transactions)
+  calculateChapterThetaUpdate,
+  calculateSubjectAndOverallThetaUpdate,
+
+  // Legacy functions (with Firestore persistence)
   updateThetaAfterQuestion,
   batchUpdateTheta,
   updateChapterTheta,
   updateSubjectAndOverallTheta,
+
+  // Utility functions
   boundTheta,
   boundSE,
   thetaToPercentile

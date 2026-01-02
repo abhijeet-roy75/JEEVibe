@@ -106,20 +106,20 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
                     Icon(
                       Icons.error_outline,
                       size: 64,
-                      color: Colors.white.withOpacity(0.95),
+                      color: Colors.white.withValues(alpha: 0.95),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'Error',
                       style: AppTextStyles.headerMedium.copyWith(
-                        color: Colors.white.withOpacity(0.95),
+                        color: Colors.white.withValues(alpha: 0.95),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       _error!,
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -181,8 +181,8 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.white.withOpacity(
-                                    0.3 + (_avatarAnimationController.value * 0.2),
+                                  color: Colors.white.withValues(
+                                    alpha: 0.3 + (_avatarAnimationController.value * 0.2),
                                   ),
                                   blurRadius: 40,
                                   spreadRadius: 15,
@@ -200,7 +200,7 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
                     Text(
                       'I am preparing your personalized daily quiz. This will just take a moment.',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.white.withOpacity(0.95), // White text on gradient
+                        color: Colors.white.withValues(alpha: 0.95), // White text on gradient
                         fontSize: 15,
                         height: 1.5,
                         fontWeight: FontWeight.w500,

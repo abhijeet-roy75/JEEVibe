@@ -231,7 +231,10 @@ async function getAccuracyTrends(userId, days = 30) {
 
 /**
  * Get cumulative statistics for a user
- * 
+ *
+ * OPTIMIZED: Now uses denormalized stats from user document instead of
+ * reading 1000 response documents (500 reads → 1 read = 99.8% cost reduction)
+ *
  * @param {string} userId
  * @returns {Promise<Object>} Cumulative stats
  */
@@ -248,53 +251,58 @@ async function getCumulativeStats(userId) {
 
     const userData = userDoc.data();
 
-    // Get quiz count
-    const quizzesRef = db.collection('daily_quizzes')
-      .doc(userId)
-      .collection('quizzes')
-      .where('status', '==', 'completed');
+    // Use denormalized cumulative stats (maintained during quiz completion)
+    const cumulativeStats = userData.cumulative_stats || {
+      total_questions_correct: 0,
+      total_questions_attempted: 0,
+      overall_accuracy: 0.0
+    };
 
-    const quizzesSnapshot = await retryFirestoreOperation(async () => {
-      return await quizzesRef.get();
-    });
+    // Calculate overall accuracy from denormalized data
+    const overallAccuracy = cumulativeStats.total_questions_attempted > 0
+      ? cumulativeStats.total_questions_correct / cumulativeStats.total_questions_attempted
+      : 0;
 
-    const totalQuizzes = quizzesSnapshot.size;
-    const totalQuestions = userData.total_questions_solved || 0;
-    const totalTimeMinutes = userData.total_time_spent_minutes || 0;
+    // Count chapters explored and confident from theta_by_chapter
+    const thetaByChapter = userData.theta_by_chapter || {};
+    let chaptersExplored = 0;
+    let chaptersConfident = 0;
 
-    // Calculate overall accuracy from responses
-    const responsesRef = db.collection('daily_quiz_responses')
-      .doc(userId)
-      .collection('responses');
-
-    const responsesSnapshot = await retryFirestoreOperation(async () => {
-      return await responsesRef.limit(1000).get(); // Sample for performance
-    });
-
-    let correctCount = 0;
-    let totalCount = 0;
-
-    responsesSnapshot.docs.forEach(doc => {
-      const data = doc.data();
-      if (data.is_correct !== undefined) {
-        totalCount++;
-        if (data.is_correct) {
-          correctCount++;
+    Object.values(thetaByChapter).forEach(chapterData => {
+      if (chapterData.attempts > 0) {
+        chaptersExplored++;
+        // Confident = percentile >= 70
+        if ((chapterData.percentile || 50) >= 70) {
+          chaptersConfident++;
         }
       }
     });
 
-    const overallAccuracy = totalCount > 0 ? correctCount / totalCount : 0;
-
     return {
-      total_quizzes: totalQuizzes,
-      total_questions: totalQuestions,
-      total_time_minutes: totalTimeMinutes,
+      // Quiz counts (from user document)
+      total_quizzes: userData.completed_quiz_count || 0,
+      completed_quiz_count: userData.completed_quiz_count || 0,
+
+      // Question counts (from denormalized stats)
+      total_questions: userData.total_questions_solved || 0,
+      total_questions_correct: cumulativeStats.total_questions_correct || 0,
+      total_questions_attempted: cumulativeStats.total_questions_attempted || 0,
+
+      // Time tracking (from user document)
+      total_time_minutes: userData.total_time_spent_minutes || 0,
+
+      // Accuracy (from denormalized stats)
       overall_accuracy: Math.round(overallAccuracy * 1000) / 1000,
-      chapters_explored: userData.chapters_explored || 0,
-      chapters_confident: userData.chapters_confident || 0,
+
+      // Chapter progress (calculated from theta_by_chapter)
+      chapters_explored: chaptersExplored,
+      chapters_confident: chaptersConfident,
+
+      // Learning phase (from user document)
       learning_phase: userData.learning_phase || 'exploration',
-      completed_quiz_count: userData.completed_quiz_count || 0
+
+      // Metadata
+      last_updated: cumulativeStats.last_updated || userData.last_quiz_completed_at
     };
   } catch (error) {
     logger.error('Error getting cumulative stats', {

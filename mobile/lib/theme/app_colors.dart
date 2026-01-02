@@ -44,6 +44,12 @@ class AppColors {
   static const Color infoBlue = Color(0xFF3B82F6);
   static const Color infoBackground = Color(0xFFDCEAFE);
 
+  // Subject-specific colors (for results/charts)
+  static const Color subjectPhysics = primaryPurple; // Reuse primary purple
+  static const Color subjectChemistry = Color(0xFF4CAF50); // Green
+  static const Color subjectMathematics = Color(0xFF2196F3); // Blue
+  static const Color performanceOrange = Color(0xFFFF9800); // Orange for medium performance
+
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [primaryPurple, purple500],
@@ -127,7 +133,7 @@ class AppRadius {
 class AppShadows {
   static List<BoxShadow> get cardShadow => [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           blurRadius: 12,
           offset: const Offset(0, 4),
         ),
@@ -135,7 +141,7 @@ class AppShadows {
 
   static List<BoxShadow> get cardShadowElevated => [
         BoxShadow(
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.black.withValues(alpha: 0.1),
           blurRadius: 40,
           offset: const Offset(0, 10),
         ),
@@ -143,7 +149,7 @@ class AppShadows {
 
   static List<BoxShadow> get buttonShadow => [
         BoxShadow(
-          color: AppColors.primaryPurple.withOpacity(0.3),
+          color: AppColors.primaryPurple.withValues(alpha: 0.3),
           blurRadius: 16,
           offset: const Offset(0, 4),
         ),

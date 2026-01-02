@@ -140,10 +140,10 @@ class _TokenDisplayScreenState extends State<TokenDisplayScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryPurple.withOpacity(0.1),
+                          color: AppColors.primaryPurple.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppColors.primaryPurple.withOpacity(0.3),
+                            color: AppColors.primaryPurple.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(

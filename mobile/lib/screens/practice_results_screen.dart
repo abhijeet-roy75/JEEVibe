@@ -71,7 +71,7 @@ class PracticeResultsScreen extends StatelessWidget {
       subtitle: Text(
         'You completed all 3 practice questions',
         style: AppTextStyles.bodyWhite.copyWith(
-          color: Colors.white.withOpacity(0.9),
+          color: Colors.white.withValues(alpha: 0.9),
           fontSize: 13,
         ),
         textAlign: TextAlign.center,
@@ -115,9 +115,9 @@ class PracticeResultsScreen extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.warningBackground.withOpacity(0.5),
+              color: AppColors.warningBackground.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-              border: Border.all(color: AppColors.warningAmber.withOpacity(0.3)),
+              border: Border.all(color: AppColors.warningAmber.withValues(alpha: 0.3)),
             ),
             child: Column(
               children: [

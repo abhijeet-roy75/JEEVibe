@@ -1,6 +1,6 @@
 /**
  * User Data Cleanup Script
- * 
+ *
  * SYSTEMATICALLY DELETES ALL DATA RELATED TO A SPECIFIC USER:
  * 1. Firebase Auth User (Optional cleanup)
  * 2. User Profile & stats (users/{userId})
@@ -8,14 +8,15 @@
  * 4. Snap history (users/{userId}/snaps)
  * 5. Initial assessment responses (assessment_responses/{userId}/responses)
  * 6. Daily quizzes (daily_quizzes/{userId}/quizzes)
+ *    - INCLUDING nested question subcollections (quizzes/{quizId}/questions)
  * 7. Daily quiz responses (daily_quiz_responses/{userId}/responses)
  * 8. Practice streaks (practice_streaks/{userId})
  * 9. Theta history/Weekly snapshots (theta_history/{userId}/snapshots)
  * 10. Snap Images in Storage (snaps/{userId}/*)
- * 
- * Usage: 
+ *
+ * Usage:
  *   node scripts/cleanup-user.js <userId|phoneNumber> [--preview] [--force]
- * 
+ *
  * Flags:
  *   --preview  : Dry-run mode. Shows what would be deleted without making changes.
  *   --force    : Skips the interactive confirmation prompt.
@@ -60,6 +61,62 @@ async function deleteQueryBatch(query, resolve) {
     process.nextTick(() => {
         deleteQueryBatch(query, resolve);
     });
+}
+
+/**
+ * Delete quizzes with their nested question subcollections
+ * Handles the new subcollection structure where each quiz has a questions/{position} subcollection
+ * @param {string} userId
+ * @param {boolean} isPreview
+ */
+async function deleteQuizzesWithSubcollections(userId, isPreview = false) {
+    const quizzesRef = db.collection('daily_quizzes').doc(userId).collection('quizzes');
+    const quizzesSnapshot = await quizzesRef.get();
+
+    if (quizzesSnapshot.empty) {
+        return;
+    }
+
+    if (isPreview) {
+        console.log(`     [DRY RUN] Would delete ${quizzesSnapshot.size} quiz documents...`);
+
+        // Count total question documents across all quizzes
+        let totalQuestions = 0;
+        for (const quizDoc of quizzesSnapshot.docs) {
+            const questionsSnapshot = await quizDoc.ref.collection('questions').get();
+            totalQuestions += questionsSnapshot.size;
+        }
+
+        if (totalQuestions > 0) {
+            console.log(`     [DRY RUN] Would delete ${totalQuestions} question documents from quiz subcollections...`);
+        }
+        return;
+    }
+
+    // Delete each quiz and its questions subcollection
+    let deletedQuizzes = 0;
+    let deletedQuestions = 0;
+
+    for (const quizDoc of quizzesSnapshot.docs) {
+        // Delete questions subcollection first
+        const questionsRef = quizDoc.ref.collection('questions');
+        const questionsSnapshot = await questionsRef.get();
+
+        if (!questionsSnapshot.empty) {
+            const batch = db.batch();
+            questionsSnapshot.docs.forEach(questionDoc => {
+                batch.delete(questionDoc.ref);
+            });
+            await batch.commit();
+            deletedQuestions += questionsSnapshot.size;
+        }
+
+        // Then delete the quiz document itself
+        await quizDoc.ref.delete();
+        deletedQuizzes++;
+    }
+
+    console.log(`     ✓ Deleted ${deletedQuizzes} quizzes and ${deletedQuestions} question documents`);
 }
 
 /**
@@ -177,7 +234,7 @@ async function cleanupUser(identifier, options = {}) {
         if (!isPreview) await db.collection('assessment_responses').doc(userId).delete();
 
         console.log('   - Processing daily quizzes...');
-        await deleteCollection(db.collection('daily_quizzes').doc(userId).collection('quizzes'), isPreview);
+        await deleteQuizzesWithSubcollections(userId, isPreview);
         if (!isPreview) await db.collection('daily_quizzes').doc(userId).delete();
 
         console.log('   - Processing individual quiz responses...');

@@ -374,7 +374,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
+                          color: Colors.white.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -413,7 +413,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 24),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -431,7 +431,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           value: progress,
-                          backgroundColor: Colors.white.withOpacity(0.3),
+                          backgroundColor: Colors.white.withValues(alpha: 0.3),
                           valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                           minHeight: 6,
                         ),
@@ -461,7 +461,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -496,7 +496,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.successGreen.withOpacity(0.1),
+                  color: AppColors.successGreen.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -524,7 +524,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryPurple.withOpacity(0.1),
+                  color: AppColors.primaryPurple.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -538,7 +538,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.warningAmber.withOpacity(0.2),
+                  color: AppColors.warningAmber.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -597,18 +597,18 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
 
     if (feedback != null) {
       if (isCorrect || showCorrect) {
-        backgroundColor = AppColors.successGreen.withOpacity(0.1);
+        backgroundColor = AppColors.successGreen.withValues(alpha: 0.1);
         borderColor = AppColors.successGreen;
         textColor = AppColors.successGreen;
         trailingIcon = const Icon(Icons.check_circle, color: AppColors.successGreen);
       } else if (isWrong) {
-        backgroundColor = AppColors.errorRed.withOpacity(0.1);
+        backgroundColor = AppColors.errorRed.withValues(alpha: 0.1);
         borderColor = AppColors.errorRed;
         textColor = AppColors.errorRed;
         trailingIcon = const Icon(Icons.cancel, color: AppColors.errorRed);
       }
     } else if (isSelected) {
-      backgroundColor = AppColors.primaryPurple.withOpacity(0.1);
+      backgroundColor = AppColors.primaryPurple.withValues(alpha: 0.1);
       borderColor = AppColors.primaryPurple;
       textColor = AppColors.primaryPurple;
     }
@@ -631,7 +631,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: borderColor.withOpacity(0.2),
+                  color: borderColor.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -746,7 +746,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                           ? 'Well done! You got this right.'
                           : 'Your answer: ${_getOptionLabel(studentAnswer)} • Correct: ${_getOptionLabel(feedback.correctAnswer ?? '')}',
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
@@ -936,7 +936,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: AppColors.successGreen.withOpacity(0.1),
+                          color: AppColors.successGreen.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -990,7 +990,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
           width: 20,
           height: 20,
           decoration: BoxDecoration(
-            color: AppColors.warningAmber.withOpacity(0.2),
+            color: AppColors.warningAmber.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -1149,7 +1149,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primaryPurple.withOpacity(0.1),
+        color: AppColors.primaryPurple.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -1189,7 +1189,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

@@ -162,7 +162,7 @@ class _DailyLimitScreenState extends State<DailyLimitScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.successBackground,
                         borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                        border: Border.all(color: AppColors.successGreen.withOpacity(0.3)),
+                        border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         children: [
@@ -193,7 +193,7 @@ class _DailyLimitScreenState extends State<DailyLimitScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.warningBackground,
                   borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                  border: Border.all(color: AppColors.warningAmber.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.warningAmber.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -224,9 +224,9 @@ class _DailyLimitScreenState extends State<DailyLimitScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.successBackground.withOpacity(0.5),
+                  color: AppColors.successBackground.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                  border: Border.all(color: AppColors.successGreen.withOpacity(0.2)),
+                  border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.2)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,9 +262,9 @@ class _DailyLimitScreenState extends State<DailyLimitScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.successGreen.withOpacity(0.2),
+        color: AppColors.successGreen.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(AppRadius.radiusRound),
-        border: Border.all(color: AppColors.successGreen.withOpacity(0.3)),
+        border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.3)),
       ),
       child: Text(
         topic,
@@ -285,9 +285,9 @@ class _DailyLimitScreenState extends State<DailyLimitScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.infoBackground.withOpacity(0.5),
+        color: AppColors.infoBackground.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-        border: Border.all(color: AppColors.infoBlue.withOpacity(0.3)),
+        border: Border.all(color: AppColors.infoBlue.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

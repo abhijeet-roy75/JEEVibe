@@ -194,9 +194,9 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
 
   Color _getPerformanceBackgroundColor(int correct, int total) {
     final percentage = total > 0 ? (correct / total) : 0.0;
-    if (percentage >= 0.8) return AppColors.successGreen.withOpacity(0.1);
-    if (percentage >= 0.6) return AppColors.warningAmber.withOpacity(0.1);
-    return AppColors.errorRed.withOpacity(0.1);
+    if (percentage >= 0.8) return AppColors.successGreen.withValues(alpha: 0.1);
+    if (percentage >= 0.6) return AppColors.warningAmber.withValues(alpha: 0.1);
+    return AppColors.errorRed.withValues(alpha: 0.1);
   }
 
   IconData _getPerformanceIcon(int correct, int total) {
@@ -329,7 +329,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -394,7 +394,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -429,7 +429,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.warningAmber.withOpacity(0.2),
+                  color: AppColors.warningAmber.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -518,7 +518,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -592,7 +592,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.2),
+                      color: color.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -621,7 +621,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -711,7 +711,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primaryPurple.withOpacity(0.3),
+                  color: AppColors.primaryPurple.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),

@@ -198,8 +198,8 @@ class _AssessmentLoadingScreenState extends State<AssessmentLoadingScreen>
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.white.withOpacity(
-                                    0.3 + (_avatarAnimationController.value * 0.2),
+                                  color: Colors.white.withValues(
+                                    alpha: 0.3 + (_avatarAnimationController.value * 0.2),
                                   ),
                                   blurRadius: 40,
                                   spreadRadius: 15,
@@ -217,7 +217,7 @@ class _AssessmentLoadingScreenState extends State<AssessmentLoadingScreen>
                     Text(
                       'I am evaluating your answers and generating your personalized study plan. This will just take a moment.',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.white.withOpacity(0.95), // White text on gradient
+                        color: Colors.white.withValues(alpha: 0.95), // White text on gradient
                         fontSize: 15,
                         height: 1.5,
                         fontWeight: FontWeight.w500,

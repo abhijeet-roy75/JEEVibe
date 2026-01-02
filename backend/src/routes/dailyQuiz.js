@@ -16,16 +16,73 @@ const { authenticateUser } = require('../middleware/auth');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
+const { body, validationResult } = require('express-validator');
 
 // Services
 const { generateDailyQuiz } = require('../services/dailyQuizService');
 const { submitAnswer, getQuizResponses } = require('../services/quizResponseService');
-const { updateChapterTheta, updateSubjectAndOverallTheta } = require('../services/thetaUpdateService');
+const {
+  calculateChapterThetaUpdate,
+  calculateSubjectAndOverallThetaUpdate,
+  updateChapterTheta,
+  updateSubjectAndOverallTheta
+} = require('../services/thetaUpdateService');
 const { updateFailureCount } = require('../services/circuitBreakerService');
 const { updateReviewInterval } = require('../services/spacedRepetitionService');
 const { formatChapterKey } = require('../services/thetaCalculationService');
 const { getChapterProgress, getSubjectProgress, getAccuracyTrends, getCumulativeStats } = require('../services/progressService');
 const { getStreak, updateStreak } = require('../services/streakService');
+
+// ============================================================================
+// VALIDATION MIDDLEWARE
+// ============================================================================
+
+/**
+ * Validation middleware helper - handles validation errors
+ */
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const firstError = errors.array()[0];
+    return res.status(400).json({
+      error: 'Validation failed',
+      message: firstError.msg,
+      field: firstError.path,
+      code: 'VALIDATION_ERROR'
+    });
+  }
+  next();
+};
+
+// Validation rules
+const validateQuizId = [
+  body('quiz_id')
+    .trim()
+    .notEmpty().withMessage('quiz_id is required')
+    .isString().withMessage('quiz_id must be a string')
+    .isLength({ min: 1, max: 100 }).withMessage('quiz_id must be between 1 and 100 characters')
+    .matches(/^[a-zA-Z0-9_-]+$/).withMessage('quiz_id can only contain letters, numbers, hyphens, and underscores'),
+  handleValidationErrors
+];
+
+const validateSubmitAnswer = [
+  body('quiz_id')
+    .trim()
+    .notEmpty().withMessage('quiz_id is required')
+    .isString().withMessage('quiz_id must be a string'),
+  body('question_id')
+    .trim()
+    .notEmpty().withMessage('question_id is required')
+    .isString().withMessage('question_id must be a string'),
+  body('student_answer')
+    .trim()
+    .notEmpty().withMessage('student_answer is required')
+    .isString().withMessage('student_answer must be a string'),
+  body('time_taken_seconds')
+    .optional()
+    .isInt({ min: 0, max: 3600 }).withMessage('time_taken_seconds must be between 0 and 3600'),
+  handleValidationErrors
+];
 
 // ============================================================================
 // GENERATE QUIZ
@@ -56,18 +113,34 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
 
     if (!activeQuizSnapshot.empty) {
       const activeQuiz = activeQuizSnapshot.docs[0].data();
+      const activeQuizId = activeQuizSnapshot.docs[0].id;
+
+      // Fetch questions from subcollection
+      const questionsSnapshot = await retryFirestoreOperation(async () => {
+        return await db.collection('daily_quizzes')
+          .doc(userId)
+          .collection('quizzes')
+          .doc(activeQuizId)
+          .collection('questions')
+          .orderBy('position', 'asc')
+          .get();
+      });
+
+      const questions = questionsSnapshot.docs.map(doc => {
+        const questionData = doc.data();
+        // Remove sensitive fields (if any still present)
+        const { correct_answer, correct_answer_text, solution_text, solution_steps, ...sanitized } = questionData;
+        return sanitized;
+      });
+
       return res.json({
         success: true,
         message: 'Active quiz found',
         quiz: {
-          quiz_id: activeQuizSnapshot.docs[0].id,
+          quiz_id: activeQuizId,
           quiz_number: activeQuiz.quiz_number,
           learning_phase: activeQuiz.learning_phase,
-          questions: activeQuiz.questions?.map(q => {
-            // Remove sensitive fields
-            const { correct_answer, correct_answer_text, solution_text, solution_steps, ...sanitized } = q;
-            return sanitized;
-          }) || [],
+          questions,
           generated_at: activeQuiz.generated_at,
           is_recovery_quiz: activeQuiz.is_recovery_quiz || false
         },
@@ -149,30 +222,52 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
             return; // Exit transaction without creating
           }
 
-          // Create new quiz atomically
+          // Create quiz metadata document (WITHOUT embedded questions array)
+          const { questions, ...quizMetadata } = quizData;
+
           transaction.set(quizRef, {
-            ...quizData,
+            ...quizMetadata,
             student_id: userId,
             status: 'in_progress',
             started_at: null, // Will be set when quiz is started
             completed_at: null,
             total_time_seconds: 0,
-            questions: quizData.questions.map(q => {
-              // Store question data but mark as not answered
-              const { solution_text, solution_steps, correct_answer, correct_answer_text, ...questionData } = q;
-              return {
-                ...questionData,
-                answered: false,
-                student_answer: null,
-                is_correct: null,
-                time_taken_seconds: null
-              };
-            })
+            total_questions: questions.length,
+            questions_answered: 0
           });
 
           savedQuizData = quizData; // Mark as saved
         });
       });
+
+      // After transaction succeeds, save questions to subcollection
+      // This happens AFTER quiz document is created, but before returning to user
+      if (savedQuizData === quizData) {
+        const batch = db.batch();
+
+        quizData.questions.forEach((q, index) => {
+          // Remove sensitive fields before storing
+          const { solution_text, solution_steps, correct_answer, correct_answer_text, ...questionData } = q;
+
+          const questionRef = quizRef.collection('questions').doc(String(index));
+          batch.set(questionRef, {
+            ...questionData,
+            position: index,
+            answered: false,
+            student_answer: null,
+            is_correct: null,
+            time_taken_seconds: null,
+            answered_at: null
+          });
+        });
+
+        await batch.commit();
+        logger.info('Quiz questions saved to subcollection', {
+          userId,
+          quizId: quizData.quiz_id,
+          questionCount: quizData.questions.length
+        });
+      }
     } catch (error) {
       // If transaction failed, check if quiz was created by another request
       const existingQuizDoc = await retryFirestoreOperation(async () => {
@@ -189,8 +284,16 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
 
     // If quiz was already created by another request, use existing data
     if (savedQuizData && savedQuizData !== quizData) {
-      const sanitizedQuestions = (savedQuizData.questions || []).map(q => {
-        const { correct_answer, correct_answer_text, solution_text, solution_steps, ...sanitized } = q;
+      // Fetch questions from subcollection
+      const questionsSnapshot = await retryFirestoreOperation(async () => {
+        return await quizRef.collection('questions')
+          .orderBy('position', 'asc')
+          .get();
+      });
+
+      const sanitizedQuestions = questionsSnapshot.docs.map(doc => {
+        const questionData = doc.data();
+        const { correct_answer, correct_answer_text, solution_text, solution_steps, ...sanitized } = questionData;
         return sanitized;
       });
 
@@ -255,7 +358,7 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
  * Body: { quiz_id: string }
  * Authentication: Required
  */
-router.post('/start', authenticateUser, async (req, res, next) => {
+router.post('/start', authenticateUser, validateQuizId, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { quiz_id } = req.body;
@@ -320,7 +423,7 @@ router.post('/start', authenticateUser, async (req, res, next) => {
  * }
  * Authentication: Required
  */
-router.post('/submit-answer', authenticateUser, async (req, res, next) => {
+router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { quiz_id, question_id, student_answer, time_taken_seconds } = req.body;
@@ -354,7 +457,7 @@ router.post('/submit-answer', authenticateUser, async (req, res, next) => {
  * Body: { quiz_id: string }
  * Authentication: Required
  */
-router.post('/complete', authenticateUser, async (req, res, next) => {
+router.post('/complete', authenticateUser, validateQuizId, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { quiz_id } = req.body;
@@ -399,7 +502,98 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
       responsesByChapter[chapterKey].push(response);
     });
 
-    // Use transaction to atomically complete quiz and update user
+    // ========================================================================
+    // PHASE 1: Fetch current user data BEFORE transaction
+    // ========================================================================
+    const userDocSnapshot = await retryFirestoreOperation(async () => {
+      return await userRef.get();
+    });
+
+    if (!userDocSnapshot.exists) {
+      throw new ApiError(404, `User ${userId} not found`, 'USER_NOT_FOUND');
+    }
+
+    const currentUserData = userDocSnapshot.data();
+    const currentThetaByChapter = currentUserData.theta_by_chapter || {};
+
+    // ========================================================================
+    // PHASE 2: Pre-calculate all theta updates BEFORE transaction
+    // ========================================================================
+    const updatedThetaByChapter = { ...currentThetaByChapter };
+    const chapterUpdateResults = {};
+
+    // Calculate theta for each chapter
+    for (const [chapterKey, chapterResponses] of Object.entries(responsesByChapter)) {
+      try {
+        // Get current chapter data or use defaults
+        const currentChapterData = currentThetaByChapter[chapterKey] || {
+          theta: 0.0,
+          percentile: 50.0,
+          confidence_SE: 0.6,
+          attempts: 0,
+          accuracy: 0.0,
+          last_updated: new Date().toISOString()
+        };
+
+        // Prepare responses with IRT parameters
+        const responsesWithIRT = chapterResponses.map(r => ({
+          questionIRT: r.question_irt_params || { a: 1.0, b: 0.0, c: 0.25 },
+          isCorrect: r.is_correct
+        }));
+
+        // Calculate new theta (pure function, no Firestore write)
+        const chapterUpdate = calculateChapterThetaUpdate(currentChapterData, responsesWithIRT);
+
+        // Store calculated update
+        updatedThetaByChapter[chapterKey] = chapterUpdate;
+        chapterUpdateResults[chapterKey] = {
+          theta_before: currentChapterData.theta,
+          theta_after: chapterUpdate.theta,
+          theta_delta: chapterUpdate.theta_delta
+        };
+
+        logger.info('Pre-calculated chapter theta update', {
+          userId,
+          chapterKey,
+          theta_before: currentChapterData.theta,
+          theta_after: chapterUpdate.theta,
+          responses_count: responsesWithIRT.length
+        });
+      } catch (error) {
+        logger.error('Error pre-calculating chapter theta', {
+          userId,
+          chapterKey,
+          error: error.message,
+          stack: error.stack
+        });
+        throw new ApiError(500, `Failed to calculate theta for ${chapterKey}`, 'THETA_CALCULATION_ERROR');
+      }
+    }
+
+    // ========================================================================
+    // PHASE 3: Calculate subject and overall theta updates
+    // ========================================================================
+    let subjectAndOverallUpdate;
+    try {
+      subjectAndOverallUpdate = calculateSubjectAndOverallThetaUpdate(updatedThetaByChapter);
+
+      logger.info('Pre-calculated subject and overall theta', {
+        userId,
+        overall_theta: subjectAndOverallUpdate.overall_theta,
+        overall_percentile: subjectAndOverallUpdate.overall_percentile
+      });
+    } catch (error) {
+      logger.error('Error pre-calculating subject/overall theta', {
+        userId,
+        error: error.message,
+        stack: error.stack
+      });
+      throw new ApiError(500, 'Failed to calculate overall theta', 'THETA_CALCULATION_ERROR');
+    }
+
+    // ========================================================================
+    // PHASE 4: Execute SINGLE atomic transaction with ALL updates
+    // ========================================================================
     await retryFirestoreOperation(async () => {
       return await db.runTransaction(async (transaction) => {
         // Read quiz and user documents in transaction
@@ -448,44 +642,38 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
           review_questions: responses.filter(r => r.selection_reason === 'review').length
         });
 
-        // Update user document atomically
+        // Update user document atomically with ALL updates
         transaction.update(userRef, {
+          // Existing user stats
           completed_quiz_count: newQuizCount,
           current_day: daysSinceAssessment + 1,
           learning_phase: learningPhase,
           phase_switched_at_quiz: learningPhase === 'exploitation' && completedQuizCount < 14 ? 14 : userData.phase_switched_at_quiz,
           last_quiz_completed_at: admin.firestore.FieldValue.serverTimestamp(),
           total_questions_solved: admin.firestore.FieldValue.increment(totalCount),
-          total_time_spent_minutes: admin.firestore.FieldValue.increment(Math.round(totalTime / 60))
+          total_time_spent_minutes: admin.firestore.FieldValue.increment(Math.round(totalTime / 60)),
+
+          // Theta updates (atomic with quiz completion)
+          theta_by_chapter: updatedThetaByChapter,
+          theta_by_subject: subjectAndOverallUpdate.theta_by_subject,
+          subject_accuracy: subjectAndOverallUpdate.subject_accuracy,
+          overall_theta: subjectAndOverallUpdate.overall_theta,
+          overall_percentile: subjectAndOverallUpdate.overall_percentile,
+
+          // NEW: Cumulative stats (denormalized for Progress API optimization)
+          'cumulative_stats.total_questions_correct': admin.firestore.FieldValue.increment(correctCount),
+          'cumulative_stats.total_questions_attempted': admin.firestore.FieldValue.increment(totalCount),
+          'cumulative_stats.last_updated': admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        logger.info('Quiz completed with atomic theta updates', {
+          userId,
+          quiz_id,
+          chapters_updated: Object.keys(chapterUpdateResults),
+          overall_theta: subjectAndOverallUpdate.overall_theta
         });
       });
     });
-
-    // Update chapter thetas (outside transaction - these can fail without blocking completion)
-    const chapterUpdates = await Promise.all(
-      Object.entries(responsesByChapter).map(async ([chapterKey, chapterResponses]) => {
-        try {
-          return await updateChapterTheta(userId, chapterKey, chapterResponses);
-        } catch (error) {
-          logger.error('Error updating chapter theta', {
-            userId,
-            chapterKey,
-            error: error.message
-          });
-          return null;
-        }
-      })
-    );
-
-    // Update subject and overall theta
-    try {
-      await updateSubjectAndOverallTheta(userId);
-    } catch (error) {
-      logger.error('Error updating subject/overall theta', {
-        userId,
-        error: error.message
-      });
-    }
 
     // Update practice streak
     try {
@@ -529,11 +717,21 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
     const userData = userDoc.data();
     const newQuizCount = (userData.completed_quiz_count || 0);
 
-    // Get quiz data again (needed for saving responses)
+    // Get quiz data again (needed for metadata)
     const quizDoc = await retryFirestoreOperation(async () => {
       return await quizRef.get();
     });
     const quizData = quizDoc.data();
+
+    // Get questions from subcollection for saving responses
+    const questionsSnapshot = await retryFirestoreOperation(async () => {
+      return await quizRef.collection('questions').get();
+    });
+    const questionsMap = {};
+    questionsSnapshot.docs.forEach(doc => {
+      const questionData = doc.data();
+      questionsMap[questionData.question_id] = questionData;
+    });
 
     // Save individual responses to daily_quiz_responses collection
     const responsesRef = db.collection('daily_quiz_responses')
@@ -547,7 +745,7 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
       const responseId = `${quiz_id}_${response.question_id}`;
       const responseRef = responsesRef.doc(responseId);
 
-      const questionData = quizData.questions?.find(q => q.question_id === response.question_id) || {};
+      const questionData = questionsMap[response.question_id] || {};
 
       batch.set(responseRef, {
         response_id: responseId,
@@ -565,9 +763,9 @@ router.post('/complete', authenticateUser, async (req, res, next) => {
         chapter_key: response.chapter_key,
 
         // IRT parameters (denormalized)
-        difficulty_b: response.questionIRT.b,
-        discrimination_a: response.questionIRT.a,
-        guessing_c: response.questionIRT.c,
+        difficulty_b: response.question_irt_params.b,
+        discrimination_a: response.question_irt_params.a,
+        guessing_c: response.question_irt_params.c,
 
         // Response details
         student_answer: response.student_answer,
@@ -664,9 +862,21 @@ router.get('/active', authenticateUser, async (req, res, next) => {
     const activeQuiz = activeQuizSnapshot.docs[0].data();
     const quizId = activeQuizSnapshot.docs[0].id;
 
+    // Fetch questions from subcollection
+    const questionsSnapshot = await retryFirestoreOperation(async () => {
+      return await db.collection('daily_quizzes')
+        .doc(userId)
+        .collection('quizzes')
+        .doc(quizId)
+        .collection('questions')
+        .orderBy('position', 'asc')
+        .get();
+    });
+
     // Sanitize questions (remove answers)
-    const sanitizedQuestions = (activeQuiz.questions || []).map(q => {
-      const { correct_answer, correct_answer_text, solution_text, solution_steps, ...sanitized } = q;
+    const sanitizedQuestions = questionsSnapshot.docs.map(doc => {
+      const questionData = doc.data();
+      const { correct_answer, correct_answer_text, solution_text, solution_steps, ...sanitized } = questionData;
       return sanitized;
     });
 
@@ -881,7 +1091,7 @@ router.get('/history', authenticateUser, async (req, res, next) => {
         completed_at: data.completed_at?.toDate?.()?.toISOString() || data.completed_at,
         accuracy: data.accuracy || 0,
         score: data.score || 0,
-        total: data.questions?.length || 0,
+        total: data.total_questions || 0,
         total_time_seconds: data.total_time_seconds || 0,
         learning_phase: data.learning_phase,
         is_recovery_quiz: data.is_recovery_quiz || false,
@@ -965,14 +1175,21 @@ router.get('/result/:quiz_id', authenticateUser, async (req, res, next) => {
       throw new ApiError(400, `Quiz ${quiz_id} is not completed. Status: ${quizData.status}`, 'QUIZ_NOT_COMPLETED');
     }
 
-    // Get full question details from questions collection using batch read
-    const questionIds = (quizData.questions || []).map(q => q.question_id).filter(Boolean);
+    // Get questions from subcollection
+    const questionsSnapshot = await retryFirestoreOperation(async () => {
+      return await quizRef.collection('questions')
+        .orderBy('position', 'asc')
+        .get();
+    });
 
-    if (questionIds.length === 0) {
+    if (questionsSnapshot.empty) {
       throw new ApiError(400, 'Quiz has no questions', 'NO_QUESTIONS_IN_QUIZ');
     }
 
-    // Batch read all questions at once (fixes N+1 query problem)
+    const quizQuestions = questionsSnapshot.docs.map(doc => doc.data());
+    const questionIds = quizQuestions.map(q => q.question_id).filter(Boolean);
+
+    // Batch read all questions from questions collection for full details (solutions, etc.)
     const questionRefs = questionIds.map(id => db.collection('questions').doc(id));
     const questionDocs = await retryFirestoreOperation(async () => {
       return await db.getAll(...questionRefs);
@@ -990,7 +1207,7 @@ router.get('/result/:quiz_id', authenticateUser, async (req, res, next) => {
     const streak = await getStreak(userId);
 
     // Map questions with details
-    const questionsWithDetails = (quizData.questions || []).map(q => {
+    const questionsWithDetails = quizQuestions.map(q => {
       const questionData = questionMap.get(q.question_id);
 
       if (questionData) {
@@ -1054,7 +1271,7 @@ router.get('/result/:quiz_id', authenticateUser, async (req, res, next) => {
         generated_at: quizData.generated_at,
         accuracy: quizData.accuracy || 0,
         score: quizData.score || 0,
-        total: quizData.questions?.length || 0,
+        total: quizData.total_questions || quizQuestions.length || 0,
         total_time_seconds: quizData.total_time_seconds || 0,
         avg_time_per_question: quizData.avg_time_per_question || 0,
         learning_phase: quizData.learning_phase,

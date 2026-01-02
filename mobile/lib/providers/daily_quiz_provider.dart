@@ -32,7 +32,10 @@ class DailyQuizProvider extends ChangeNotifier {
   
   // Error States
   String? _error;
-  
+
+  // Disposal State
+  bool _disposed = false;
+
   DailyQuizProvider(this._authService) {
     _initializeStorage();
   }
@@ -67,6 +70,7 @@ class DailyQuizProvider extends ChangeNotifier {
 
   /// Set quiz (used when quiz is passed from loading screen)
   void setQuiz(DailyQuiz quiz) {
+    if (_disposed) return;
     _currentQuiz = quiz;
     _currentQuestionIndex = 0;
     _questionStates.clear();
@@ -78,6 +82,7 @@ class DailyQuizProvider extends ChangeNotifier {
 
   /// Generate a new daily quiz
   Future<DailyQuiz> generateQuiz() async {
+    if (_disposed) throw Exception('Provider has been disposed');
     _isGeneratingQuiz = true;
     _error = null;
     notifyListeners();
@@ -89,7 +94,8 @@ class DailyQuizProvider extends ChangeNotifier {
       }
 
       final quiz = await ApiService.generateDailyQuiz(authToken: token);
-      
+
+      if (_disposed) return quiz;
       _currentQuiz = quiz;
       _currentQuestionIndex = 0;
       _questionStates.clear();
@@ -97,13 +103,14 @@ class DailyQuizProvider extends ChangeNotifier {
       _isGeneratingQuiz = false;
       _error = null;
       _saveQuizState();
-      notifyListeners();
-      
+      _safeNotifyListeners();
+
       return quiz;
     } catch (e) {
+      if (_disposed) rethrow;
       _isGeneratingQuiz = false;
       _error = e.toString().replaceFirst('Exception: ', '');
-      notifyListeners();
+      _safeNotifyListeners();
       rethrow;
     }
   }
@@ -125,6 +132,7 @@ class DailyQuizProvider extends ChangeNotifier {
         quizId: _currentQuiz!.quizId,
       );
 
+      if (_disposed) return;
       // Initialize first question state
       _questionStates[0] = QuestionState(
         startTime: DateTime.now(),
@@ -132,10 +140,11 @@ class DailyQuizProvider extends ChangeNotifier {
       );
       _quizStartedAt = DateTime.now();
       _saveQuizState();
-      notifyListeners();
+      _safeNotifyListeners();
     } catch (e) {
+      if (_disposed) rethrow;
       _error = e.toString().replaceFirst('Exception: ', '');
-      notifyListeners();
+      _safeNotifyListeners();
       rethrow;
     }
   }
@@ -210,23 +219,25 @@ class DailyQuizProvider extends ChangeNotifier {
         isRecoveryQuiz: _currentQuiz!.isRecoveryQuiz,
       );
 
+      if (_disposed) return feedback;
       _isSubmittingAnswer = false;
       _error = null;
       _saveQuizState();
-      notifyListeners();
+      _safeNotifyListeners();
 
       return feedback;
     } catch (e) {
+      if (_disposed) rethrow;
       _isSubmittingAnswer = false;
       _error = e.toString().replaceFirst('Exception: ', '');
-      notifyListeners();
+      _safeNotifyListeners();
       rethrow;
     }
   }
 
   /// Select an answer without submitting (for MCQ questions)
   void selectAnswer(String answer) {
-    if (_currentQuiz == null) return;
+    if (_disposed || _currentQuiz == null) return;
     
     final currentIndex = _currentQuestionIndex;
     if (currentIndex >= _currentQuiz!.questions.length) return;
@@ -246,11 +257,12 @@ class DailyQuizProvider extends ChangeNotifier {
     );
     
     _saveQuizState();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Move to next question
   void nextQuestion() {
+    if (_disposed) return;
     if (_currentQuestionIndex < totalQuestions - 1) {
       _currentQuestionIndex++;
       
@@ -261,21 +273,23 @@ class DailyQuizProvider extends ChangeNotifier {
           elapsedSeconds: 0,
         );
       }
-      
-      notifyListeners();
+
+      _safeNotifyListeners();
     }
   }
 
   /// Move to previous question
   void previousQuestion() {
+    if (_disposed) return;
     if (_currentQuestionIndex > 0) {
       _currentQuestionIndex--;
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
   /// Jump to specific question
   void goToQuestion(int index) {
+    if (_disposed) return;
     if (index >= 0 && index < totalQuestions) {
       _currentQuestionIndex = index;
       
@@ -286,13 +300,14 @@ class DailyQuizProvider extends ChangeNotifier {
           elapsedSeconds: 0,
         );
       }
-      
-      notifyListeners();
+
+      _safeNotifyListeners();
     }
   }
 
   /// Update question timer
   void updateQuestionTimer(int index, int elapsedSeconds) {
+    if (_disposed) return;
     final state = _questionStates[index];
     if (state != null && !state.isAnswered) {
       _questionStates[index] = state.copyWith(elapsedSeconds: elapsedSeconds);
@@ -300,7 +315,7 @@ class DailyQuizProvider extends ChangeNotifier {
       if (elapsedSeconds % 5 == 0) {
         _saveQuizState();
       }
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
@@ -325,16 +340,18 @@ class DailyQuizProvider extends ChangeNotifier {
         quizId: _currentQuiz!.quizId,
       );
 
+      if (_disposed) return result;
       _isCompletingQuiz = false;
       _error = null;
       await _storageService.clearQuizState(); // Clear saved state on completion
-      notifyListeners();
+      _safeNotifyListeners();
 
       return result;
     } catch (e) {
+      if (_disposed) rethrow;
       _isCompletingQuiz = false;
       _error = e.toString().replaceFirst('Exception: ', '');
-      notifyListeners();
+      _safeNotifyListeners();
       rethrow;
     }
   }
@@ -356,14 +373,16 @@ class DailyQuizProvider extends ChangeNotifier {
         quizId: quizId,
       );
 
+      if (_disposed) return;
       _quizResult = result;
       _isLoadingResult = false;
       _error = null;
-      notifyListeners();
+      _safeNotifyListeners();
     } catch (e) {
+      if (_disposed) rethrow;
       _isLoadingResult = false;
       _error = e.toString().replaceFirst('Exception: ', '');
-      notifyListeners();
+      _safeNotifyListeners();
       rethrow;
     }
   }
@@ -381,14 +400,16 @@ class DailyQuizProvider extends ChangeNotifier {
       }
 
       final summary = await ApiService.getDailyQuizSummary(authToken: token);
+      if (_disposed) return;
       _summary = summary;
       _isLoadingSummary = false;
       _error = null;
-      notifyListeners();
+      _safeNotifyListeners();
     } catch (e) {
+      if (_disposed) rethrow;
       _isLoadingSummary = false;
       _error = e.toString().replaceFirst('Exception: ', '');
-      notifyListeners();
+      _safeNotifyListeners();
       rethrow;
     }
   }
@@ -406,26 +427,30 @@ class DailyQuizProvider extends ChangeNotifier {
       }
 
       final progress = await ApiService.getDailyQuizProgress(authToken: token);
+      if (_disposed) return;
       _progress = progress;
       _isLoadingProgress = false;
       _error = null;
-      notifyListeners();
+      _safeNotifyListeners();
     } catch (e) {
+      if (_disposed) rethrow;
       _isLoadingProgress = false;
       _error = e.toString().replaceFirst('Exception: ', '');
-      notifyListeners();
+      _safeNotifyListeners();
       rethrow;
     }
   }
 
   /// Clear error
   void clearError() {
+    if (_disposed) return;
     _error = null;
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Reset provider state
   void reset() {
+    if (_disposed) return;
     _currentQuiz = null;
     _quizResult = null;
     _currentQuestionIndex = 0;
@@ -433,36 +458,41 @@ class DailyQuizProvider extends ChangeNotifier {
     _quizStartedAt = null;
     _error = null;
     _storageService.clearQuizState();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   /// Restore quiz state from storage
   Future<void> _restoreQuizState() async {
+    if (_disposed) return;
     try {
       _isRestoringState = true;
-      notifyListeners();
+      _safeNotifyListeners();
 
       // Check if state exists and is not expired
       if (!await _storageService.hasSavedQuizState()) {
+        if (_disposed) return;
         _isRestoringState = false;
-        notifyListeners();
+        _safeNotifyListeners();
         return;
       }
 
       if (await _storageService.isStateExpired()) {
         await _storageService.clearQuizState();
+        if (_disposed) return;
         _isRestoringState = false;
-        notifyListeners();
+        _safeNotifyListeners();
         return;
       }
 
       final savedState = await _storageService.loadQuizState();
       if (savedState == null) {
+        if (_disposed) return;
         _isRestoringState = false;
-        notifyListeners();
+        _safeNotifyListeners();
         return;
       }
 
+      if (_disposed) return;
       // Restore quiz
       _currentQuiz = savedState.quiz;
       _currentQuestionIndex = savedState.currentIndex;
@@ -483,11 +513,12 @@ class DailyQuizProvider extends ChangeNotifier {
       }
 
       _isRestoringState = false;
-      notifyListeners();
+      _safeNotifyListeners();
     } catch (e) {
+      if (_disposed) return;
       debugPrint('Error restoring quiz state: $e');
       _isRestoringState = false;
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
@@ -531,6 +562,33 @@ class DailyQuizProvider extends ChangeNotifier {
 
   void debugPrint(String message) {
     print('[DailyQuizProvider] $message');
+  }
+
+  /// Safe notification that checks disposal state
+  void _safeNotifyListeners() {
+    if (!_disposed) {
+      notifyListeners();
+    }
+  }
+
+  /// Dispose of resources to prevent memory leaks
+  @override
+  void dispose() {
+    // Mark as disposed before cleanup
+    _disposed = true;
+
+    // Clear ephemeral state
+    _questionStates.clear();
+    _currentQuiz = null;
+    _quizResult = null;
+    _summary = null;
+    _progress = null;
+    _error = null;
+
+    // NOTE: DO NOT dispose QuizStorageService - it's a singleton
+    // that should persist across provider lifecycles
+
+    super.dispose();
   }
 }
 

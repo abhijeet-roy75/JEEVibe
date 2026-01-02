@@ -518,7 +518,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryPurple.withOpacity(0.3),
+            color: AppColors.primaryPurple.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -559,7 +559,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppColors.primaryPurple.withOpacity(0.1),
+            color: AppColors.primaryPurple.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
@@ -644,7 +644,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                                       borderRadius: BorderRadius.circular(16),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: AppColors.primaryPurple.withOpacity(0.4),
+                                          color: AppColors.primaryPurple.withValues(alpha: 0.4),
                                           blurRadius: 15,
                                           offset: const Offset(0, 6),
                                         ),
@@ -670,7 +670,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                                         Text(
                                           'Instant solutions',
                                           style: AppTextStyles.bodySmall.copyWith(
-                                            color: Colors.white.withOpacity(0.9),
+                                            color: Colors.white.withValues(alpha: 0.9),
                                             fontSize: 12,
                                           ),
                                         ),
@@ -714,7 +714,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
                                 Text(
                                   'See growth daily',
                                   style: AppTextStyles.bodySmall.copyWith(
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -828,7 +828,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.primaryPurple.withOpacity(0.1),
+              color: AppColors.primaryPurple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -967,7 +967,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateM
       decoration: BoxDecoration(
         color: onWhiteBackground
             ? (isActive ? AppColors.primaryPurple : AppColors.borderMedium)
-            : (isActive ? Colors.white : Colors.white.withOpacity(0.4)),
+            : (isActive ? Colors.white : Colors.white.withValues(alpha: 0.4)),
         borderRadius: BorderRadius.circular(4),
       ),
     );

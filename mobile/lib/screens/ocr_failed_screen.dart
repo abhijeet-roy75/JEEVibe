@@ -120,7 +120,7 @@ class OCRFailedScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.errorBackground.withOpacity(0.3),
+        color: AppColors.errorBackground.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
       ),
       child: Row(
@@ -219,9 +219,9 @@ class OCRFailedScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.warningBackground.withOpacity(0.3),
+        color: AppColors.warningBackground.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-        border: Border.all(color: AppColors.warningAmber.withOpacity(0.3)),
+        border: Border.all(color: AppColors.warningAmber.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

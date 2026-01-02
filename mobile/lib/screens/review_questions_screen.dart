@@ -119,7 +119,7 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
           Text(
             'Time: ${question.timeSpentSeconds}s • From today\'s practice',
             style: AppTextStyles.bodyWhite.copyWith(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontSize: 13,
             ),
           ),
@@ -127,9 +127,9 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(AppRadius.radiusRound),
-              border: Border.all(color: Colors.white.withOpacity(0.3)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             ),
             child: Text(
               level,
@@ -272,8 +272,8 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
         gradient: isWrong 
             ? LinearGradient(
                 colors: [
-                  AppColors.errorRed.withOpacity(0.1),
-                  AppColors.primaryPurple.withOpacity(0.1),
+                  AppColors.errorRed.withValues(alpha: 0.1),
+                  AppColors.primaryPurple.withValues(alpha: 0.1),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -282,8 +282,8 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
         borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
         border: Border.all(
           color: isWrong 
-              ? AppColors.errorRed.withOpacity(0.4)
-              : AppColors.primaryPurple.withOpacity(0.3),
+              ? AppColors.errorRed.withValues(alpha: 0.4)
+              : AppColors.primaryPurple.withValues(alpha: 0.3),
           width: isWrong ? 2.5 : 2,
         ),
       ),
@@ -315,9 +315,9 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.errorRed.withOpacity(0.1),
+                color: AppColors.errorRed.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                border: Border.all(color: AppColors.errorRed.withOpacity(0.3)),
+                border: Border.all(color: AppColors.errorRed.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -380,12 +380,12 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
                             border: Border.all(
                               color: isWrong 
-                                  ? AppColors.errorRed.withOpacity(0.2)
-                                  : AppColors.primaryPurple.withOpacity(0.2),
+                                  ? AppColors.errorRed.withValues(alpha: 0.2)
+                                  : AppColors.primaryPurple.withValues(alpha: 0.2),
                             ),
                           ),
                           child: Row(
@@ -396,8 +396,8 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
                                 height: 28,
                                 decoration: BoxDecoration(
                                   color: isWrong 
-                                      ? AppColors.errorRed.withOpacity(0.2)
-                                      : AppColors.primaryPurple.withOpacity(0.2),
+                                      ? AppColors.errorRed.withValues(alpha: 0.2)
+                                      : AppColors.primaryPurple.withValues(alpha: 0.2),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
@@ -435,10 +435,10 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.successBackground.withOpacity(0.3),
+                color: AppColors.successBackground.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
                 border: Border.all(
-                  color: AppColors.successGreen.withOpacity(0.4),
+                  color: AppColors.successGreen.withValues(alpha: 0.4),
                   width: 2,
                 ),
               ),
@@ -478,9 +478,9 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.warningBackground.withOpacity(0.5),
+              color: AppColors.warningBackground.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-              border: Border.all(color: AppColors.warningAmber.withOpacity(0.3)),
+              border: Border.all(color: AppColors.warningAmber.withValues(alpha: 0.3)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,

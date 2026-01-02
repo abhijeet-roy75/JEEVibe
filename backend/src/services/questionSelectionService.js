@@ -20,9 +20,32 @@ const { getDatabaseNames } = require('./chapterMappingService');
 // CONSTANTS
 // ============================================================================
 
-const DIFFICULTY_MATCH_THRESHOLD = 0.5; // |b - θ| ≤ 0.5
+// ADAPTIVE DIFFICULTY THRESHOLD (optimized for high/low performers)
+// Previously: Fixed 0.5 SD was too restrictive for extreme theta values
+// Now: Adapts based on available question pool size
+const DIFFICULTY_MATCH_THRESHOLD_STRICT = 0.5; // When many questions available
+const DIFFICULTY_MATCH_THRESHOLD_MODERATE = 1.0; // When moderate pool
+const DIFFICULTY_MATCH_THRESHOLD_RELAXED = 1.5; // When few questions available
+
 const RECENCY_FILTER_DAYS = 30; // Don't show questions answered in last 30 days
 const MAX_CANDIDATES = 50; // Maximum candidates to evaluate before selecting
+
+/**
+ * Get adaptive difficulty threshold based on available questions
+ * Relaxes threshold when question pool is small to ensure sufficient questions
+ *
+ * @param {number} availableCount - Number of available questions in pool
+ * @returns {number} Threshold in standard deviations
+ */
+function getDifficultyThreshold(availableCount) {
+  if (availableCount < 10) {
+    return DIFFICULTY_MATCH_THRESHOLD_RELAXED; // 1.5 SD - very permissive
+  }
+  if (availableCount < 30) {
+    return DIFFICULTY_MATCH_THRESHOLD_MODERATE; // 1.0 SD - moderate
+  }
+  return DIFFICULTY_MATCH_THRESHOLD_STRICT; // 0.5 SD - strict (original)
+}
 
 // ============================================================================
 // FISCHER INFORMATION CALCULATION
@@ -141,12 +164,18 @@ async function getRecentQuestionIds(userId, days = RECENCY_FILTER_DAYS) {
 
 /**
  * Filter questions by difficulty match
- * 
+ *
  * @param {Array} questions - Array of question documents
  * @param {number} theta - Student ability for this chapter
+ * @param {number} threshold - Difficulty threshold (optional, defaults to adaptive)
  * @returns {Array} Filtered questions
  */
-function filterByDifficultyMatch(questions, theta) {
+function filterByDifficultyMatch(questions, theta, threshold = null) {
+  // Use adaptive threshold if not specified
+  const difficultyThreshold = threshold !== null
+    ? threshold
+    : getDifficultyThreshold(questions.length);
+
   return questions.filter(q => {
     const irtParams = q.irt_parameters || {};
     const difficulty_b = irtParams.difficulty_b !== undefined
@@ -154,7 +183,7 @@ function filterByDifficultyMatch(questions, theta) {
       : q.difficulty_irt || 0;
 
     const diff = Math.abs(difficulty_b - theta);
-    return diff <= DIFFICULTY_MATCH_THRESHOLD;
+    return diff <= difficultyThreshold;
   });
 }
 
@@ -558,6 +587,7 @@ module.exports = {
   calculateFisherInformation,
   calculateIRTProbability,
   filterByDifficultyMatch,
+  getDifficultyThreshold,  // NEW: Adaptive threshold function
   scoreQuestions,
   normalizeQuestion
 };

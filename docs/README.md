@@ -1,14 +1,75 @@
-# JEEVibe Snap & Solve POC
+# JEEVibe Documentation
 
-Proof of Concept for Snap & Solve feature - AI-powered JEE question solving with interactive follow-up quiz.
+AI-powered JEE preparation app with adaptive learning, snap-to-solve, and daily quizzes.
+
+## 📚 Documentation Navigation
+
+**New to the project?** Start here:
+1. [REORGANIZATION_README.md](REORGANIZATION_README.md) - **How to find what you need** (start here!)
+2. [walkthrough.md](walkthrough.md) - Product walkthrough
+3. [01-setup/FIREBASE_SETUP_GUIDE.md](01-setup/FIREBASE_SETUP_GUIDE.md) - Setup guide
+
+**Quick Reference** (in this folder):
+- [API_ENDPOINTS_COMPLETE.md](API_ENDPOINTS_COMPLETE.md) - Complete API reference
+- [FIRESTORE_INDEXES.md](FIRESTORE_INDEXES.md) - Database indexes
+- [FIRESTORE_SECURITY_RULES.md](FIRESTORE_SECURITY_RULES.md) - Security rules
+
+---
+
+## 📂 Organized Documentation
+
+All docs are now organized into logical folders:
+
+### [01-setup/](01-setup/) - Getting Started
+Firebase setup, environment configuration, deployment keys
+- Firebase setup guides
+- Environment variables
+- GitHub configuration
+
+### [02-architecture/](02-architecture/) - System Design
+Database schemas, architecture reviews, design decisions
+- **Database schema** (DATABASE_DESIGN_V2.md)
+- **IRT algorithm** (engine/JEEVibe_IIDP_Algorithm_Specification_v4_CALIBRATED.md)
+- System architecture reviews
+
+### [03-features/](03-features/) - Features
+Feature implementation documentation
+- **Paywall system** (PAYWALL-SYSTEM-DESIGN.md)
+- **Feature gating** (FEATURE-GATING-SYSTEM.md)
+- Forgot PIN, Onboarding, Snap & Solve
+
+### [04-deployment/](04-deployment/) - Deployment
+Build guides, deployment processes
+- Production deployment
+- TestFlight setup
+- Build troubleshooting
+
+### [05-testing/](05-testing/) - Testing
+Testing strategies and guides
+- Testing guide
+- Mobile testing strategy
+
+### [06-fixes/](06-fixes/) - Bug Fixes
+Bug fix documentation and history
+
+### [07-reviews/](07-reviews/) - Quality
+Code reviews and quality assessments
+
+### [08-archive/](08-archive/) - Archive
+Completed/legacy documentation
+
+### [claude-assessment/](claude-assessment/) - External Assessment
+Independent architectural assessment and recommendations
+
+---
 
 ## Project Structure
 
 ```
 JEEVibe/
 ├── backend/          # Node.js Express API
-├── mobile/           # Flutter iOS app
-└── docs/             # Documentation
+├── mobile/           # Flutter iOS/Android app
+└── docs/             # Documentation (you are here)
 ```
 
 ## Prerequisites

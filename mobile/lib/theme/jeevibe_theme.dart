@@ -108,7 +108,7 @@ class JVStyles {
     borderRadius: BorderRadius.circular(16),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withOpacity(0.05),
+        color: Colors.black.withValues(alpha: 0.05),
         blurRadius: 12,
         offset: const Offset(0, 4),
       ),
@@ -153,7 +153,7 @@ class JVTheme {
           backgroundColor: JVColors.primary,
           foregroundColor: Colors.white,
           elevation: 4,
-          shadowColor: JVColors.primary.withOpacity(0.3),
+          shadowColor: JVColors.primary.withValues(alpha: 0.3),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

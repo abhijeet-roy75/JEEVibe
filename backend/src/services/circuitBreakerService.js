@@ -90,7 +90,8 @@ async function updateFailureCount(userId, quizPassed) {
         return await userRef.update({
           consecutive_failures: 0,
           circuit_breaker_active: false,
-          last_circuit_breaker_trigger: admin.firestore.FieldValue.delete()
+          last_circuit_breaker_trigger: admin.firestore.FieldValue.delete(),
+          'circuit_breaker.failure_dates': [] // Clear failure dates on success
         });
       });
 
@@ -104,17 +105,40 @@ async function updateFailureCount(userId, quizPassed) {
         return await userRef.get();
       });
 
-      const currentFailures = userDoc.data()?.consecutive_failures || 0;
+      const userData = userDoc.data() || {};
+      const currentFailures = userData.consecutive_failures || 0;
       const newFailures = currentFailures + 1;
       const shouldTrigger = newFailures >= CONSECUTIVE_FAILURE_THRESHOLD;
 
+      // Get existing circuit breaker data
+      const circuitBreaker = userData.circuit_breaker || { failure_dates: [] };
+      let failureDates = [...(circuitBreaker.failure_dates || [])];
+
+      // Add current failure date
+      const now = new Date().toISOString();
+      failureDates.push(now);
+
+      // Clean up old failure dates (keep last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      failureDates = failureDates.filter(dateStr => new Date(dateStr) >= sevenDaysAgo);
+
+      // Hard limit: keep only last 1000 entries (prevents unbounded growth during extended outages)
+      const MAX_FAILURE_RECORDS = 1000;
+      if (failureDates.length > MAX_FAILURE_RECORDS) {
+        failureDates = failureDates.slice(-MAX_FAILURE_RECORDS);
+      }
+
       const updateData = {
-        consecutive_failures: newFailures
+        consecutive_failures: newFailures,
+        'circuit_breaker.failure_dates': failureDates,
+        'circuit_breaker.last_failure_date': now
       };
 
       if (shouldTrigger) {
         updateData.circuit_breaker_active = true;
         updateData.last_circuit_breaker_trigger = admin.firestore.FieldValue.serverTimestamp();
+        updateData['circuit_breaker.triggered_at'] = now;
       }
 
       await retryFirestoreOperation(async () => {
@@ -124,7 +148,8 @@ async function updateFailureCount(userId, quizPassed) {
       logger.info('Failure count updated', {
         userId,
         consecutive_failures: newFailures,
-        circuit_breaker_active: shouldTrigger
+        circuit_breaker_active: shouldTrigger,
+        failure_dates_count: failureDates.length
       });
 
       return {

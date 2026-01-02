@@ -133,7 +133,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
                 width: 6,
                 height: 6,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(opacity),
+                  color: Colors.white.withValues(alpha: opacity),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -195,7 +195,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.cardLightPurple.withOpacity(0.5),
+              color: AppColors.cardLightPurple.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
             ),
             child: Row(
@@ -343,9 +343,9 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.infoBackground.withOpacity(0.5),
+        color: AppColors.infoBackground.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-        border: Border.all(color: AppColors.infoBlue.withOpacity(0.3)),
+        border: Border.all(color: AppColors.infoBlue.withValues(alpha: 0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

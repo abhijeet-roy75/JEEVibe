@@ -4,27 +4,18 @@ class UserProfile {
   final String uid;
   final String phoneNumber;
   final bool profileCompleted;
-  
-  // Basic Profile
+
+  // Basic Profile (Screen 1 - Required)
   final String? firstName;
   final String? lastName;
-  final String? email;
-  final DateTime? dateOfBirth;
-  final String? gender;
-  final String? currentClass;
-  final String? targetExam;
   final String? targetYear;
 
-  // Advanced Profile
-  final String? schoolName;
-  final String? city;
+  // Optional Profile (Screen 2)
+  final String? email;
   final String? state;
-  final String? coachingInstitute;
-  final String? coachingBranch;
-  final String? studyMode;
-  final String? preferredLanguage;
-  final List<String> weakSubjects;
-  final List<String> strongSubjects;
+  final String? targetExam; // "JEE Main" or "JEE Main + Advanced"
+  final String? dreamBranch;
+  final List<String> studySetup; // ["Self-study", "Online coaching", "Offline coaching", "School only"]
 
   // Metadata
   final DateTime createdAt;
@@ -36,21 +27,12 @@ class UserProfile {
     this.profileCompleted = false,
     this.firstName,
     this.lastName,
-    this.email,
-    this.dateOfBirth,
-    this.gender,
-    this.currentClass,
-    this.targetExam,
     this.targetYear,
-    this.schoolName,
-    this.city,
+    this.email,
     this.state,
-    this.coachingInstitute,
-    this.coachingBranch,
-    this.studyMode,
-    this.preferredLanguage,
-    this.weakSubjects = const [],
-    this.strongSubjects = const [],
+    this.targetExam,
+    this.dreamBranch,
+    this.studySetup = const [],
     required this.createdAt,
     required this.lastActive,
   });
@@ -62,21 +44,12 @@ class UserProfile {
       'profileCompleted': profileCompleted,
       'firstName': firstName,
       'lastName': lastName,
-      'email': email,
-      'dateOfBirth': dateOfBirth != null ? Timestamp.fromDate(dateOfBirth!) : null,
-      'gender': gender,
-      'currentClass': currentClass,
-      'targetExam': targetExam,
       'targetYear': targetYear,
-      'schoolName': schoolName,
-      'city': city,
+      'email': email,
       'state': state,
-      'coachingInstitute': coachingInstitute,
-      'coachingBranch': coachingBranch,
-      'studyMode': studyMode,
-      'preferredLanguage': preferredLanguage,
-      'weakSubjects': weakSubjects,
-      'strongSubjects': strongSubjects,
+      'targetExam': targetExam,
+      'dreamBranch': dreamBranch,
+      'studySetup': studySetup,
       'createdAt': Timestamp.fromDate(createdAt),
       'lastActive': Timestamp.fromDate(lastActive),
     };
@@ -89,23 +62,12 @@ class UserProfile {
       profileCompleted: map['profileCompleted'] ?? false,
       firstName: map['firstName'],
       lastName: map['lastName'],
-      email: map['email'],
-      dateOfBirth: map['dateOfBirth'] != null 
-          ? (map['dateOfBirth'] as Timestamp).toDate() 
-          : null,
-      gender: map['gender'],
-      currentClass: map['currentClass'],
-      targetExam: map['targetExam'],
       targetYear: map['targetYear'],
-      schoolName: map['schoolName'],
-      city: map['city'],
+      email: map['email'],
       state: map['state'],
-      coachingInstitute: map['coachingInstitute'],
-      coachingBranch: map['coachingBranch'],
-      studyMode: map['studyMode'],
-      preferredLanguage: map['preferredLanguage'],
-      weakSubjects: List<String>.from(map['weakSubjects'] ?? []),
-      strongSubjects: List<String>.from(map['strongSubjects'] ?? []),
+      targetExam: map['targetExam'],
+      dreamBranch: map['dreamBranch'],
+      studySetup: List<String>.from(map['studySetup'] ?? []),
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       lastActive: (map['lastActive'] as Timestamp).toDate(),
     );

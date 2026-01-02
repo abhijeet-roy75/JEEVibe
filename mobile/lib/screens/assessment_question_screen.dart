@@ -366,7 +366,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -400,11 +400,11 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
+                      color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -434,7 +434,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: LinearProgressIndicator(
                 value: progress,
-                backgroundColor: Colors.white.withOpacity(0.3),
+                backgroundColor: Colors.white.withValues(alpha: 0.3),
                 valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 minHeight: 4,
                 borderRadius: BorderRadius.circular(2),
@@ -458,11 +458,11 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
+                      color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -532,7 +532,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -628,14 +628,14 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: AppColors.primaryPurple.withOpacity(0.2),
+                            color: AppColors.primaryPurple.withValues(alpha: 0.2),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
                         ]
                       : [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),

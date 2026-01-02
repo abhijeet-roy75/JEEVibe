@@ -187,11 +187,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   Widget _buildHeader() {
     return AppHeader(
       showGradient: true,
-      gradient: const LinearGradient(
-        colors: [Color(0xFF9333EA), Color(0xFFEC4899)], // Purple to pink
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
+      gradient: AppColors.ctaGradient,
       leading: Container(
         width: 40,
         height: 40,
@@ -200,7 +196,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -233,7 +229,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           _getFormattedDate(),
           style: AppTextStyles.bodyWhite.copyWith(
             fontSize: 14,
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
           ),
           textAlign: TextAlign.center,
         ),
@@ -265,14 +261,14 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: isPending ? const Color(0xFFFFF8E1) : Colors.white,
+          color: isPending ? AppColors.warningBackground : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: isPending
-              ? Border.all(color: const Color(0xFFFFB800), width: 2)
+              ? Border.all(color: AppColors.warningAmber, width: 2)
               : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -315,7 +311,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isPending ? Colors.white.withOpacity(0.7) : AppColors.cardLightPurple,
+                color: isPending ? Colors.white.withValues(alpha: 0.7) : AppColors.cardLightPurple,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -404,7 +400,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: isPending ? Colors.white.withOpacity(0.8) : Colors.grey.shade100,
+        color: isPending ? Colors.white.withValues(alpha: 0.8) : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
@@ -432,7 +428,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 15,
               offset: const Offset(0, 6),
               spreadRadius: 1,
@@ -556,7 +552,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -692,7 +688,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 15,
               offset: const Offset(0, 6),
               spreadRadius: 1,
@@ -738,7 +734,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFF3E8FF), // Light purple
+                color: AppColors.cardLightPurple,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -802,7 +798,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 15,
               offset: const Offset(0, 6),
               spreadRadius: 1,
@@ -832,11 +828,11 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             ),
             const SizedBox(height: 20),
             // Subject Results
-            _buildSubjectResult('Physics', physicsAccuracy, AppColors.primaryPurple),
+            _buildSubjectResult('Physics', physicsAccuracy, AppColors.subjectPhysics),
             const SizedBox(height: 12),
-            _buildSubjectResult('Chemistry', chemistryAccuracy, const Color(0xFF4CAF50)),
+            _buildSubjectResult('Chemistry', chemistryAccuracy, AppColors.subjectChemistry),
             const SizedBox(height: 12),
-            _buildSubjectResult('Mathematics', mathematicsAccuracy, const Color(0xFF2196F3)),
+            _buildSubjectResult('Mathematics', mathematicsAccuracy, AppColors.subjectMathematics),
           ],
         ),
       ),
@@ -856,13 +852,13 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
       progressColor = Colors.grey;
     } else if (accuracyValue < 70) {
       feedbackText = 'Needs more practice';
-      progressColor = const Color(0xFFFF9800); // Orange
+      progressColor = AppColors.performanceOrange;
     } else if (accuracyValue <= 85) {
       feedbackText = 'Good progress';
-      progressColor = const Color(0xFF2196F3); // Blue
+      progressColor = AppColors.subjectMathematics;
     } else {
       feedbackText = 'Strong performance';
-      progressColor = const Color(0xFF4CAF50); // Green
+      progressColor = AppColors.subjectChemistry;
     }
     
     return Column(
@@ -941,7 +937,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primaryPurple.withOpacity(0.3),
+                    color: AppColors.primaryPurple.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),

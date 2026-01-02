@@ -135,7 +135,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -196,7 +196,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getSubjectColor(question.subject).withOpacity(0.1),
+                    color: _getSubjectColor(question.subject).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -228,7 +228,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryPurple.withOpacity(0.1),
+                  color: AppColors.primaryPurple.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -241,7 +241,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.warningAmber.withOpacity(0.2),
+                  color: AppColors.warningAmber.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -434,7 +434,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
         // Other options: gray
         borderColor = AppColors.borderGray;
         backgroundColor = Colors.white;
-        circleColor = AppColors.borderGray.withOpacity(0.2);
+        circleColor = AppColors.borderGray.withValues(alpha: 0.2);
         textColor = AppColors.textDark;
         labelText = null;
         labelIcon = null;
@@ -446,11 +446,11 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
           ? AppColors.primaryPurple
           : AppColors.borderGray;
       backgroundColor = isSelected
-          ? AppColors.primaryPurple.withOpacity(0.1)
+          ? AppColors.primaryPurple.withValues(alpha: 0.1)
           : Colors.white;
       circleColor = isSelected
-          ? AppColors.primaryPurple.withOpacity(0.2)
-          : AppColors.borderGray.withOpacity(0.2);
+          ? AppColors.primaryPurple.withValues(alpha: 0.2)
+          : AppColors.borderGray.withValues(alpha: 0.2);
       textColor = AppColors.textDark;
       labelText = null;
       labelIcon = null;

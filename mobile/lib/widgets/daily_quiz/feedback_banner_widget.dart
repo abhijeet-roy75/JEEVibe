@@ -67,7 +67,7 @@ class FeedbackBannerWidget extends StatelessWidget {
                         ? 'Well done! You got this right.'
                         : 'Your answer: ${feedback.studentAnswer?.toUpperCase() ?? 'N/A'} • Correct: ${feedback.correctAnswer?.toUpperCase() ?? 'N/A'}',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 ],

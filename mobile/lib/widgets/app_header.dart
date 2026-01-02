@@ -157,7 +157,7 @@ class AppHeaderWithIcon extends StatelessWidget {
               child: Text(
                 subtitle!,
                 style: AppTextStyles.bodyWhite.copyWith(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   fontSize: 13, // Slightly smaller subtitle
                 ),
                 textAlign: TextAlign.center,
@@ -210,7 +210,7 @@ class AppHeaderWithProgress extends StatelessWidget {
           ? Text(
               subtitle!,
               style: AppTextStyles.bodyWhite.copyWith(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
               ),
               textAlign: TextAlign.center,
             )

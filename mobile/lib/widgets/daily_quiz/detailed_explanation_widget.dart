@@ -187,7 +187,7 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: AppColors.successGreen.withOpacity(0.1),
+                          color: AppColors.successGreen.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Center(
@@ -232,7 +232,7 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
           width: 20,
           height: 20,
           decoration: BoxDecoration(
-            color: AppColors.warningAmber.withOpacity(0.2),
+            color: AppColors.warningAmber.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
           child: Icon(

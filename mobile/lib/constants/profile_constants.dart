@@ -1,28 +1,13 @@
 class ProfileConstants {
-  static const List<String> genders = [
-    'Male',
-    'Female',
-    'Other',
-    'Prefer not to say',
-  ];
+  // Simplified onboarding constants
 
-  static const List<String> currentClasses = [
-    'Class 11',
-    'Class 12',
-    'Dropper (12th Pass)',
-  ];
-
-  static const List<String> targetExams = [
+  /// Exam types for simplified onboarding (Screen 2)
+  static const List<String> examTypes = [
     'JEE Main',
     'JEE Main + Advanced',
-    'JEE Advanced',
-    'BITSAT',
-    'WBJEE',
-    'MHT CET',
-    'KCET',
-    'Other',
   ];
 
+  /// Target years (dynamically generated)
   static List<String> getTargetYears() {
     final currentYear = DateTime.now().year;
     return [
@@ -33,6 +18,7 @@ class ProfileConstants {
     ];
   }
 
+  /// Indian states and UTs
   static const List<String> states = [
     'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
     'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand',
@@ -45,35 +31,28 @@ class ProfileConstants {
     'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry',
   ];
 
-  static const List<String> coachingInstitutes = [
-    'No Coaching',
-    'FIITJEE',
-    'Allen',
-    'Resonance',
-    'Aakash',
-    'Physics Wallah',
-    'Unacademy',
-    'Vedantu',
-    'Sri Chaitanya',
-    'Narayana',
-    'Vibrant Academy',
-    'Other',
+  /// Study setup options (multi-select)
+  static const List<String> studySetupOptions = [
+    'Self-study',
+    'Online coaching',
+    'Offline coaching',
+    'School only',
   ];
 
-  static const List<String> studyModes = [
-    'Self-study only',
-    'Coaching only',
-    'Coaching + Self-study',
-    'Online classes only',
-    'Hybrid (Online + Offline)',
+  /// Popular engineering branches for dream branch selection
+  static const List<String> dreamBranches = [
+    'Computer Science',
+    'Electronics',
+    'Mechanical',
+    'Civil',
+    'Electrical',
+    'Chemical',
+    'Aerospace',
+    'Biotechnology',
+    'Not sure yet',
   ];
 
-  static const List<String> languages = [
-    'English',
-    'Hindi',
-    'Bilingual (English + Hindi)',
-  ];
-
+  /// Subjects (for internal use)
   static const List<String> subjects = [
     'Physics',
     'Chemistry',

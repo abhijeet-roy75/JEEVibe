@@ -125,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 128,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                 ),
@@ -137,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 96,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                 ),
@@ -161,10 +161,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(AppRadius.radiusRound),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.3),
+                                    color: Colors.white.withValues(alpha: 0.3),
                                     width: 1,
                                   ),
                                 ),
@@ -212,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -234,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'Point your camera at any JEE question',
                         style: AppTextStyles.bodyWhite.copyWith(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -261,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryPurple.withOpacity(0.1),
+            color: AppColors.primaryPurple.withValues(alpha: 0.1),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -718,7 +718,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icon(
                           Icons.search_off,
                           size: 48,
-                          color: AppColors.textGray.withOpacity(0.5),
+                          color: AppColors.textGray.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 16),
                         Text(
@@ -855,10 +855,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: SubjectIconWidget.getColor(solution.subject).withOpacity(0.1),
+                          color: SubjectIconWidget.getColor(solution.subject).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                           border: Border.all(
-                            color: SubjectIconWidget.getColor(solution.subject).withOpacity(0.2),
+                            color: SubjectIconWidget.getColor(solution.subject).withValues(alpha: 0.2),
                           ),
                         ),
                         child: Text(

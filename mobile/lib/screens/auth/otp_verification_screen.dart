@@ -15,11 +15,13 @@ import '../../utils/auth_error_helper.dart';
 class OtpVerificationScreen extends StatefulWidget {
   final String verificationId;
   final String phoneNumber;
+  final bool isForgotPinFlow;
 
   const OtpVerificationScreen({
     super.key,
     required this.verificationId,
     required this.phoneNumber,
+    this.isForgotPinFlow = false,
   });
 
   @override
@@ -128,18 +130,39 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         
         // Wait to ensure FocusNode is fully detached
         await Future.delayed(const Duration(milliseconds: 600));
-        
+
         if (!mounted || _isDisposed) return;
 
+        // Handle Forgot PIN flow
+        if (widget.isForgotPinFlow) {
+          // Clear old PIN immediately after successful verification
+          await pinService.clearPin();
+
+          if (!mounted) return;
+
+          // Navigate to CreatePinScreen to set new PIN
+          // Target screen is always AssessmentIntroScreen for existing users
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => const CreatePinScreen(
+                targetScreen: AssessmentIntroScreen(),
+              ),
+            ),
+            (route) => false,
+          );
+          return;
+        }
+
+        // Standard login flow
         if (hasProfile) {
           // User exists - Check if PIN is set on this device
           final hasPin = await pinService.pinExists();
-          
+
           if (!mounted) return;
-          
+
           // Target screen is always Home for existing users
-          final targetScreen = const AssessmentIntroScreen(); 
-          
+          final targetScreen = const AssessmentIntroScreen();
+
           if (hasPin) {
              // PIN exists - Verify it locally before going Home
              Navigator.of(context).pushAndRemoveUntil(
@@ -243,7 +266,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: IconButton(
@@ -263,7 +286,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -386,10 +409,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.errorRed.withOpacity(0.1),
+                    color: AppColors.errorRed.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.errorRed.withOpacity(0.3),
+                      color: AppColors.errorRed.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
