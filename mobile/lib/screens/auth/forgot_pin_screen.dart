@@ -138,7 +138,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
         ),
         title: Text(
           'Reset PIN',
-          style: AppTextStyles.headingMedium.copyWith(
+          style: AppTextStyles.headerMedium.copyWith(
             color: AppColors.textDark,
           ),
         ),
@@ -158,13 +158,13 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.accentBlue.withValues(alpha: 0.1),
+                      color: AppColors.infoBlue.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       Icons.lock_reset_rounded,
                       size: 48,
-                      color: AppColors.accentBlue,
+                      color: AppColors.infoBlue,
                     ),
                   ),
                 ),
@@ -174,7 +174,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                 // Title
                 Text(
                   "Don't worry!",
-                  style: AppTextStyles.headingLarge.copyWith(
+                  style: AppTextStyles.headerLarge.copyWith(
                     color: AppColors.textDark,
                     fontWeight: FontWeight.w700,
                   ),
@@ -216,7 +216,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                       color: AppColors.textMedium,
                     ),
                     filled: true,
-                    fillColor: AppColors.surfaceLight,
+                    fillColor: AppColors.cardWhite,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -231,7 +231,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                     errorBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(
-                        color: AppColors.error,
+                        color: AppColors.errorRed,
                         width: 1,
                       ),
                     ),
@@ -260,17 +260,17 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.1),
+                      color: AppColors.errorRed.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: AppColors.error.withValues(alpha: 0.3),
+                        color: AppColors.errorRed.withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
                       children: [
                         const Icon(
                           Icons.error_outline,
-                          color: AppColors.error,
+                          color: AppColors.errorRed,
                           size: 20,
                         ),
                         const SizedBox(width: 12),
@@ -278,7 +278,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                           child: Text(
                             _errorMessage!,
                             style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.error,
+                              color: AppColors.errorRed,
                             ),
                           ),
                         ),
@@ -313,7 +313,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                           )
                         : Text(
                             'Send OTP',
-                            style: AppTextStyles.buttonLarge.copyWith(
+                            style: AppTextStyles.bodyLarge.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -326,10 +326,10 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.accentBlue.withValues(alpha: 0.05),
+                    color: AppColors.infoBlue.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppColors.accentBlue.withValues(alpha: 0.2),
+                      color: AppColors.infoBlue.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Row(
@@ -337,7 +337,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                     children: [
                       Icon(
                         Icons.info_outline,
-                        color: AppColors.accentBlue,
+                        color: AppColors.infoBlue,
                         size: 20,
                       ),
                       const SizedBox(width: 12),

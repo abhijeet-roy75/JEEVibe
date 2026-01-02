@@ -95,7 +95,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                   Expanded(
                     child: LinearProgressIndicator(
                       value: 0.5, // Step 1 of 2
-                      backgroundColor: AppColors.surfaceLight,
+                      backgroundColor: AppColors.cardWhite,
                       valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryPurple),
                       minHeight: 4,
                     ),
@@ -126,7 +126,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                       // Title
                       Text(
                         "Let's get started!",
-                        style: AppTextStyles.headingLarge.copyWith(
+                        style: AppTextStyles.headerLarge.copyWith(
                           color: AppColors.textDark,
                           fontWeight: FontWeight.w700,
                         ),
@@ -158,7 +158,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                             color: AppColors.textLight,
                           ),
                           filled: true,
-                          fillColor: AppColors.surfaceLight,
+                          fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -173,7 +173,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(
-                              color: AppColors.error,
+                              color: AppColors.errorRed,
                               width: 1,
                             ),
                           ),
@@ -212,14 +212,14 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.surfaceLight,
+                          color: AppColors.backgroundLight,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           children: [
                             const Icon(
                               Icons.check_circle,
-                              color: AppColors.success,
+                              color: AppColors.successGreen,
                               size: 20,
                             ),
                             const SizedBox(width: 12),
@@ -236,13 +236,13 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.success.withValues(alpha: 0.1),
+                                color: AppColors.successGreen.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 'Verified',
                                 style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.success,
+                                  color: AppColors.successGreen,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 11,
                                 ),
@@ -271,7 +271,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                             color: AppColors.textLight,
                           ),
                           filled: true,
-                          fillColor: AppColors.surfaceLight,
+                          fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -286,7 +286,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(
-                              color: AppColors.error,
+                              color: AppColors.errorRed,
                               width: 1,
                             ),
                           ),
@@ -338,7 +338,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                   ),
                   child: Text(
                     'Continue',
-                    style: AppTextStyles.buttonLarge.copyWith(
+                    style: AppTextStyles.bodyLarge.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),

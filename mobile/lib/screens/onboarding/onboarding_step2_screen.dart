@@ -105,7 +105,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error saving profile: ${e.toString()}'),
-            backgroundColor: AppColors.error,
+            backgroundColor: AppColors.errorRed,
           ),
         );
       }
@@ -139,7 +139,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                   Expanded(
                     child: LinearProgressIndicator(
                       value: 1.0, // Step 2 of 2 (complete)
-                      backgroundColor: AppColors.surfaceLight,
+                      backgroundColor: AppColors.cardWhite,
                       valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryPurple),
                       minHeight: 4,
                     ),
@@ -170,7 +170,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       // Title
                       Text(
                         'Tell us more',
-                        style: AppTextStyles.headingLarge.copyWith(
+                        style: AppTextStyles.headerLarge.copyWith(
                           color: AppColors.textDark,
                           fontWeight: FontWeight.w700,
                         ),
@@ -191,13 +191,13 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.accentBlue.withValues(alpha: 0.1),
+                              color: AppColors.infoBlue.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               'Optional',
                               style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.accentBlue,
+                                color: AppColors.infoBlue,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 11,
                               ),
@@ -226,7 +226,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                             color: AppColors.textLight,
                           ),
                           filled: true,
-                          fillColor: AppColors.surfaceLight,
+                          fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -241,7 +241,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                           errorBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(
-                              color: AppColors.error,
+                              color: AppColors.errorRed,
                               width: 1,
                             ),
                           ),
@@ -285,7 +285,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                             color: AppColors.textLight,
                           ),
                           filled: true,
-                          fillColor: AppColors.surfaceLight,
+                          fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -342,7 +342,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? AppColors.primaryPurple.withValues(alpha: 0.1)
-                                      : AppColors.surfaceLight,
+                                      : AppColors.cardWhite,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isSelected
@@ -402,7 +402,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                             color: AppColors.textLight,
                           ),
                           filled: true,
-                          fillColor: AppColors.surfaceLight,
+                          fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -463,7 +463,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? AppColors.primaryPurple.withValues(alpha: 0.1)
-                                      : AppColors.surfaceLight,
+                                      : AppColors.cardWhite,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isSelected
@@ -541,7 +541,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                             )
                           : Text(
                               'Continue',
-                              style: AppTextStyles.buttonLarge.copyWith(
+                              style: AppTextStyles.bodyLarge.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

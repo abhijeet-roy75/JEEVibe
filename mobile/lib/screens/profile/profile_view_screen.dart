@@ -234,25 +234,17 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               _buildInfoRow('Target Exam', _profile!.targetExam ?? 'Not set'),
                               const SizedBox(height: 16),
                               _buildInfoRow('Target Year', _profile!.targetYear?.toString() ?? 'Not set'),
-                              const SizedBox(height: 16),
-                              _buildInfoRow('Class', _profile!.currentClass ?? 'Not set'),
-                              if (_profile!.city != null && _profile!.city!.isNotEmpty) ...[
-                                const SizedBox(height: 16),
-                                _buildInfoRow('City', _profile!.city!),
-                              ],
                               if (_profile!.state != null && _profile!.state!.isNotEmpty) ...[
                                 const SizedBox(height: 16),
                                 _buildInfoRow('State', _profile!.state!),
                               ],
-                              const SizedBox(height: 16),
-                              _buildInfoRow('Coaching', _profile!.coachingInstitute ?? 'Self Study'),
-                              if (_profile!.coachingBranch != null && _profile!.coachingBranch!.isNotEmpty) ...[
+                              if (_profile!.dreamBranch != null && _profile!.dreamBranch!.isNotEmpty) ...[
                                 const SizedBox(height: 16),
-                                _buildInfoRow('Branch', _profile!.coachingBranch!),
+                                _buildInfoRow('Dream Branch', _profile!.dreamBranch!),
                               ],
-                              if (_profile!.studyMode != null && _profile!.studyMode!.isNotEmpty) ...[
+                              if (_profile!.studySetup.isNotEmpty) ...[
                                 const SizedBox(height: 16),
-                                _buildInfoRow('Study Mode', _profile!.studyMode!),
+                                _buildInfoRow('Study Setup', _profile!.studySetup.join(', ')),
                               ],
                             ],
                           ),
