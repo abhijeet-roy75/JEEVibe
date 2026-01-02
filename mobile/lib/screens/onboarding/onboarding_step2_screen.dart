@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../constants/profile_constants.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../../models/user_profile.dart';
 import '../auth/create_pin_screen.dart';
 
 /// Simplified Onboarding - Screen 2
@@ -121,92 +120,121 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Progress indicator and back button
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
-                    onPressed: () => Navigator.of(context).pop(),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: LinearProgressIndicator(
-                      value: 1.0, // Step 2 of 2 (complete)
-                      backgroundColor: AppColors.cardWhite,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryPurple),
-                      minHeight: 4,
+      body: Column(
+        children: [
+          // Gradient Header Section
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: AppColors.ctaGradient,
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                child: Column(
+                  children: [
+                    // Back button row
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                            onPressed: () => Navigator.of(context).pop(),
+                            padding: const EdgeInsets.all(8),
+                            constraints: const BoxConstraints(),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '2/2',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textMedium,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 16),
+                    // Wave emoji
+                    const Text(
+                      '👋',
+                      style: TextStyle(fontSize: 48),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    // Title
+                    Text(
+                      "Let's Get to Know You!",
+                      style: AppTextStyles.headerLarge.copyWith(
+                        fontSize: 28,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'This helps us personalize your JEE prep journey',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.white.withValues(alpha: 0.95),
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    // Progress indicator dots
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          width: 24,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
+          ),
 
-            // Scrollable content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-
-                      // Title
-                      Text(
-                        'Tell us more',
-                        style: AppTextStyles.headerLarge.copyWith(
-                          color: AppColors.textDark,
-                          fontWeight: FontWeight.w700,
-                        ),
+          // White Content Section
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Section header
+                    Text(
+                      'Tell Us More',
+                      style: AppTextStyles.headerMedium.copyWith(
+                        fontSize: 20,
+                        color: AppColors.textDark,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Text(
-                            'All fields are optional',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textMedium,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.infoBlue.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'Optional',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.infoBlue,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
-                        ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Optional - helps us personalize better (you can skip)',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textLight,
+                        fontSize: 14,
                       ),
+                    ),
 
-                      const SizedBox(height: 32),
+                    const SizedBox(height: 28),
 
                       // Email (optional)
                       Text(
@@ -278,7 +306,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: _state,
+                        initialValue: _state,
                         decoration: InputDecoration(
                           hintText: 'Select state',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
@@ -395,7 +423,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: _dreamBranch,
+                        initialValue: _dreamBranch,
                         decoration: InputDecoration(
                           hintText: 'Select branch',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
@@ -516,14 +544,26 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
               padding: const EdgeInsets.all(24.0),
               child: Column(
                 children: [
-                  // Continue button
-                  SizedBox(
+                  // Continue button with gradient
+                  Container(
                     width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.ctaGradient,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _saveProfile,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryPurple,
+                        backgroundColor: Colors.transparent,
                         foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

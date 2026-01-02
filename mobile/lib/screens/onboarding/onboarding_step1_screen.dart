@@ -84,62 +84,103 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Progress indicator
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: LinearProgressIndicator(
-                      value: 0.5, // Step 1 of 2
-                      backgroundColor: AppColors.cardWhite,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryPurple),
-                      minHeight: 4,
+      body: Column(
+        children: [
+          // Gradient Header Section
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: AppColors.ctaGradient,
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                child: Column(
+                  children: [
+                    // Wave emoji
+                    const Text(
+                      '👋',
+                      style: TextStyle(fontSize: 48),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '1/2',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textMedium,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 16),
+                    // Title
+                    Text(
+                      "Let's Get to Know You!",
+                      style: AppTextStyles.headerLarge.copyWith(
+                        fontSize: 28,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      'This helps us personalize your JEE prep journey',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: Colors.white.withValues(alpha: 0.95),
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    // Progress indicator dots
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          width: 24,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
+          ),
 
-            // Scrollable content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-
-                      // Title
-                      Text(
-                        "Let's get started!",
-                        style: AppTextStyles.headerLarge.copyWith(
-                          color: AppColors.textDark,
-                          fontWeight: FontWeight.w700,
-                        ),
+          // White Content Section
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Section header
+                    Text(
+                      'Essential Information',
+                      style: AppTextStyles.headerMedium.copyWith(
+                        fontSize: 20,
+                        color: AppColors.textDark,
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Help us personalize your learning journey',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textMedium,
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Just the basics to get you started',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textLight,
+                        fontSize: 14,
                       ),
+                    ),
 
-                      const SizedBox(height: 40),
+                    const SizedBox(height: 28),
 
                       // Your Name (required)
                       Text(
@@ -264,7 +305,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: _targetYear,
+                        initialValue: _targetYear,
                         decoration: InputDecoration(
                           hintText: 'Select year',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
@@ -320,16 +361,28 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
               ),
             ),
 
-            // Continue button
+            // Continue button with gradient
             Padding(
               padding: const EdgeInsets.all(24.0),
-              child: SizedBox(
+              child: Container(
                 width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: AppColors.ctaGradient,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: ElevatedButton(
                   onPressed: _continue,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryPurple,
+                    backgroundColor: Colors.transparent,
                     foregroundColor: Colors.white,
+                    shadowColor: Colors.transparent,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
