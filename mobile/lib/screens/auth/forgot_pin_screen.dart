@@ -129,235 +129,310 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Reset PIN',
-          style: AppTextStyles.headerMedium.copyWith(
-            color: AppColors.textDark,
+      body: Column(
+        children: [
+          // Gradient Header Section
+          Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: AppColors.ctaGradient,
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Stack(
+                children: [
+                  // Main content column
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                    child: Column(
+                      children: [
+                        // Icon
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.lock_reset_rounded,
+                            size: 48,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Title
+                        Text(
+                          "Reset PIN",
+                          style: AppTextStyles.headerLarge.copyWith(
+                            fontSize: 28,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Don't worry! We'll send you an OTP to verify your identity, then you can create a new PIN.",
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: Colors.white.withValues(alpha: 0.95),
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Absolutely positioned back button
+                  Positioned(
+                    top: 32,
+                    left: 24,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                        onPressed: () => Navigator.of(context).pop(),
+                        padding: const EdgeInsets.all(6),
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 24),
 
-                // Info icon and title
-                Center(
-                  child: Container(
+          // White Content Section
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    // Section header
+                    Text(
+                      'Phone Number',
+                      style: AppTextStyles.headerMedium.copyWith(
+                        fontSize: 20,
+                        color: AppColors.textDark,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Enter the phone number associated with your account',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textLight,
+                        fontSize: 14,
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // Phone number input
+                    Text(
+                      'Phone Number',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.textDark,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        hintText: '+91 1234567890',
+                        hintStyle: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textLight,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.phone_outlined,
+                          color: AppColors.textMedium,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.cardWhite,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.borderGray,
+                            width: 1,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.borderGray,
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.primaryPurple,
+                            width: 2,
+                          ),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: AppColors.errorRed,
+                            width: 1,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                      ),
+                      style: AppTextStyles.bodyMedium,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter your phone number';
+                        }
+                        // Basic phone validation (E.164 format)
+                        if (!RegExp(r'^\+?[1-9]\d{1,14}$').hasMatch(value.trim())) {
+                          return 'Please enter a valid phone number';
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Error message
+                    if (_errorMessage != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.errorRed.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.errorRed.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: AppColors.errorRed,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.errorRed,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Action buttons
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+                children: [
+                  // Send OTP button with gradient
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.ctaGradient,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _sendOTP,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Text(
+                              'Send OTP',
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Info box
+                  Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.infoBlue.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.lock_reset_rounded,
-                      size: 48,
-                      color: AppColors.infoBlue,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Title
-                Text(
-                  "Don't worry!",
-                  style: AppTextStyles.headerLarge.copyWith(
-                    color: AppColors.textDark,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 12),
-
-                // Explanation
-                Text(
-                  "We'll send you an OTP to verify your identity, then you can create a new PIN.",
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textMedium,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 40),
-
-                // Phone number input
-                Text(
-                  'Phone Number',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.textDark,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    hintText: '+91 1234567890',
-                    hintStyle: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textLight,
-                    ),
-                    prefixIcon: const Icon(
-                      Icons.phone_outlined,
-                      color: AppColors.textMedium,
-                    ),
-                    filled: true,
-                    fillColor: AppColors.cardWhite,
-                    border: OutlineInputBorder(
+                      color: AppColors.infoBlue.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: AppColors.primaryPurple,
-                        width: 2,
-                      ),
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: AppColors.errorRed,
-                        width: 1,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                  ),
-                  style: AppTextStyles.bodyMedium,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your phone number';
-                    }
-                    // Basic phone validation (E.164 format)
-                    if (!RegExp(r'^\+?[1-9]\d{1,14}$').hasMatch(value.trim())) {
-                      return 'Please enter a valid phone number';
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 24),
-
-                // Error message
-                if (_errorMessage != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.errorRed.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: AppColors.errorRed.withValues(alpha: 0.3),
+                        color: AppColors.infoBlue.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: AppColors.errorRed,
+                        Icon(
+                          Icons.info_outline,
+                          color: AppColors.infoBlue,
                           size: 20,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            _errorMessage!,
+                            'Make sure you have access to this phone number. We\'ll send you a one-time verification code.',
                             style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.errorRed,
+                              color: AppColors.textDark,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
                 ],
-
-                // Send OTP button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _sendOTP,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryPurple,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : Text(
-                            'Send OTP',
-                            style: AppTextStyles.bodyLarge.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Info box
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.infoBlue.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.infoBlue.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: AppColors.infoBlue,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Make sure you have access to this phone number. We\'ll send you a one-time verification code.',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
-      ),
-    );
+      );
   }
 }
 

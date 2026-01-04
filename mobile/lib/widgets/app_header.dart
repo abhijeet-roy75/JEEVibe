@@ -34,7 +34,7 @@ class AppHeader extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(0, topPadding, 0, bottomPadding),
       decoration: showGradient
           ? BoxDecoration(
-              gradient: gradient ?? AppColors.primaryGradient,
+              gradient: gradient ?? AppColors.ctaGradient,
             )
           : null,
       child: SafeArea(

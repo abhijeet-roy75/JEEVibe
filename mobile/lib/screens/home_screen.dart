@@ -107,11 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, appState, child) {
         return Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primaryPurple, AppColors.secondaryPink],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: AppColors.ctaGradient,
           ),
           child: SafeArea(
             bottom: false,

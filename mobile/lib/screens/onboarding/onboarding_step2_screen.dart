@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import '../../constants/profile_constants.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../auth/create_pin_screen.dart';
+import '../../services/firebase/firestore_user_service.dart';
+import '../../models/user_profile.dart';
+import '../assessment_intro_screen.dart';
 
 /// Simplified Onboarding - Screen 2
 ///
@@ -31,6 +33,7 @@ class OnboardingStep2Screen extends StatefulWidget {
 class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _emailFocusNode = FocusNode();
 
   String? _email;
   String? _state;
@@ -43,71 +46,80 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
   @override
   void dispose() {
     _emailController.dispose();
+    _emailFocusNode.dispose();
     super.dispose();
   }
 
   Future<void> _saveProfile() async {
-    // Validate email if provided
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
+    // Save form state to capture current values
+    _formKey.currentState?.save();
 
-      setState(() => _isLoading = true);
-
-      try {
-        final user = FirebaseAuth.instance.currentUser;
-        if (user == null) {
-          throw Exception('User not authenticated');
-        }
-
-        final userId = user.uid;
-
-        // Combine data from both screens
-        final profileData = {
-          'uid': userId,
-          'phoneNumber': widget.step1Data['phoneNumber'],
-          'profileCompleted': true,
-          // Screen 1 data
-          'firstName': widget.step1Data['firstName'],
-          'lastName': widget.step1Data['lastName'],
-          'targetYear': widget.step1Data['targetYear'],
-          // Screen 2 data (all optional)
-          'email': _email,
-          'state': _state,
-          'targetExam': _examType,
-          'dreamBranch': _dreamBranch,
-          'studySetup': _studySetup.toList(),
-          // Metadata
-          'createdAt': FieldValue.serverTimestamp(),
-          'lastActive': FieldValue.serverTimestamp(),
-        };
-
-        // Save to Firestore
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .set(profileData, SetOptions(merge: true));
-
-        if (!mounted) return;
-
-        // Navigate to create PIN screen
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => const CreatePinScreen(),
-          ),
-          (route) => false, // Remove all previous routes
-        );
-      } catch (e) {
-        if (!mounted) return;
-
-        setState(() => _isLoading = false);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving profile: ${e.toString()}'),
-            backgroundColor: AppColors.errorRed,
-          ),
-        );
+    // Validate email if provided (but don't block save if invalid - just exclude it)
+    String? validEmail;
+    if (_email != null && _email!.isNotEmpty) {
+      final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+      if (emailRegex.hasMatch(_email!)) {
+        validEmail = _email;
       }
+      // If email is invalid, we'll just exclude it (user can fix later)
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final userId = user.uid;
+      final now = DateTime.now();
+
+      // Create UserProfile object from collected data
+      final profile = UserProfile(
+        uid: userId,
+        phoneNumber: widget.step1Data['phoneNumber'] ?? '',
+        profileCompleted: true,
+        // Screen 1 data (required)
+        firstName: widget.step1Data['firstName'],
+        lastName: widget.step1Data['lastName'],
+        targetYear: widget.step1Data['targetYear'],
+        // Screen 2 data (all optional)
+        email: validEmail,
+        state: _state,
+        targetExam: _examType,
+        dreamBranch: _dreamBranch,
+        studySetup: _studySetup.toList(),
+        // Metadata
+        createdAt: now,
+        lastActive: now,
+      );
+
+      // Save profile using backend API (ensures proper cache handling)
+      final firestoreService = Provider.of<FirestoreUserService>(context, listen: false);
+      await firestoreService.saveUserProfile(profile);
+
+      if (!mounted) return;
+
+      // Navigate to home screen (Assessment Intro)
+      // PIN was already created before onboarding, so we go directly to home
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const AssessmentIntroScreen(),
+        ),
+        (route) => false, // Remove all previous routes
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error saving profile: ${e.toString()}'),
+          backgroundColor: AppColors.errorRed,
+        ),
+      );
     }
   }
 
@@ -130,37 +142,22 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
             ),
             child: SafeArea(
               bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-                child: Column(
-                  children: [
-                    // Back button row
-                    Row(
+              child: Stack(
+                children: [
+                  // Main content column (same as Step 1)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                    child: Column(
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
-                            onPressed: () => Navigator.of(context).pop(),
-                            padding: const EdgeInsets.all(8),
-                            constraints: const BoxConstraints(),
-                          ),
+                        // Wave emoji
+                        const Text(
+                          '👋',
+                          style: TextStyle(fontSize: 48),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Wave emoji
-                    const Text(
-                      '👋',
-                      style: TextStyle(fontSize: 48),
-                    ),
-                    const SizedBox(height: 16),
+                        const SizedBox(height: 16),
                     // Title
                     Text(
-                      "Let's Get to Know You!",
+                      "Tell Us More",
                       style: AppTextStyles.headerLarge.copyWith(
                         fontSize: 28,
                         color: Colors.white,
@@ -202,7 +199,26 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       ],
                     ),
                   ],
-                ),
+                    ),
+                  ),
+                  // Absolutely positioned back button
+                  Positioned(
+                    top: 32,
+                    left: 24,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                        onPressed: () => Navigator.of(context).pop(),
+                        padding: const EdgeInsets.all(6),
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -247,7 +263,13 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _emailController,
+                        focusNode: _emailFocusNode,
                         keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) {
+                          // Unfocus keyboard since next fields are dropdowns/selects
+                          _emailFocusNode.unfocus();
+                        },
                         decoration: InputDecoration(
                           hintText: 'your.email@example.com',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
@@ -257,7 +279,17 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                           fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -316,13 +348,30 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                           fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(
                               color: AppColors.primaryPurple,
                               width: 2,
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.errorRed,
+                              width: 1,
                             ),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
@@ -375,8 +424,8 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                                   border: Border.all(
                                     color: isSelected
                                         ? AppColors.primaryPurple
-                                        : Colors.transparent,
-                                    width: 2,
+                                        : AppColors.borderGray,
+                                    width: isSelected ? 2 : 1,
                                   ),
                                 ),
                                 child: Row(
@@ -411,7 +460,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                         }).toList(),
                       ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
 
                       // Dream Branch (optional)
                       Text(
@@ -433,13 +482,30 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                           fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(
                               color: AppColors.primaryPurple,
                               width: 2,
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.errorRed,
+                              width: 1,
                             ),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
@@ -461,7 +527,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                         onSaved: (value) => _dreamBranch = value,
                       ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
                       // Current Study Setup (optional, multi-select)
                       Text(
@@ -496,8 +562,8 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                                   border: Border.all(
                                     color: isSelected
                                         ? AppColors.primaryPurple
-                                        : Colors.transparent,
-                                    width: 2,
+                                        : AppColors.borderGray,
+                                    width: isSelected ? 2 : 1,
                                   ),
                                 ),
                                 child: Row(
@@ -582,6 +648,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                           : Text(
                               'Continue',
                               style: AppTextStyles.bodyLarge.copyWith(
+                                color: Colors.white,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -608,8 +675,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
               ),
             ),
           ],
-        )
-      )
-    );
+        ),
+      );
   }
 }

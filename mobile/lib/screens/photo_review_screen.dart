@@ -165,6 +165,7 @@ class PhotoReviewScreen extends StatelessWidget {
       iconSize: 40, // Further reduced from 48 to match other screens better
       onClose: () => Navigator.of(context).pop(),
       bottomPadding: 12, // Further reduced from 16
+      gradient: AppColors.ctaGradient,
     );
   }
 

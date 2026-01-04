@@ -20,9 +20,13 @@ class OnboardingStep1Screen extends StatefulWidget {
 
 class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _firstNameFocusNode = FocusNode();
+  final _lastNameFocusNode = FocusNode();
 
-  String? _fullName;
+  String? _firstName;
+  String? _lastName;
   String? _targetYear;
   String? _phoneNumber;
 
@@ -36,41 +40,23 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _firstNameFocusNode.dispose();
+    _lastNameFocusNode.dispose();
     super.dispose();
-  }
-
-  /// Parse full name into firstName and lastName
-  Map<String, String?> _parseFullName(String fullName) {
-    final parts = fullName.trim().split(RegExp(r'\s+'));
-
-    if (parts.isEmpty || (parts.length == 1 && parts[0].isEmpty)) {
-      return {'firstName': null, 'lastName': null};
-    }
-
-    if (parts.length == 1) {
-      return {'firstName': parts[0], 'lastName': null};
-    }
-
-    // First word = firstName, rest = lastName
-    final firstName = parts[0];
-    final lastName = parts.sublist(1).join(' ');
-
-    return {'firstName': firstName, 'lastName': lastName};
   }
 
   void _continue() {
     if (_formKey.currentState?.validate() ?? false) {
       _formKey.currentState?.save();
 
-      final nameParts = _parseFullName(_fullName ?? '');
-
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => OnboardingStep2Screen(
             step1Data: {
-              'firstName': nameParts['firstName'],
-              'lastName': nameParts['lastName'],
+              'firstName': _firstName,
+              'lastName': _lastName,
               'phoneNumber': _phoneNumber,
               'targetYear': _targetYear,
             },
@@ -182,9 +168,9 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
 
                     const SizedBox(height: 28),
 
-                      // Your Name (required)
+                      // First Name (required)
                       Text(
-                        'Your Name',
+                        'First Name',
                         style: AppTextStyles.labelMedium.copyWith(
                           color: AppColors.textDark,
                           fontWeight: FontWeight.w600,
@@ -192,9 +178,15 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
-                        controller: _nameController,
+                        controller: _firstNameController,
+                        focusNode: _firstNameFocusNode,
+                        textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (_) {
+                          // Move focus to last name field
+                          FocusScope.of(context).requestFocus(_lastNameFocusNode);
+                        },
                         decoration: InputDecoration(
-                          hintText: 'Enter your full name',
+                          hintText: 'Enter your first name',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.textLight,
                           ),
@@ -202,7 +194,17 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -226,14 +228,87 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                         style: AppTextStyles.bodyMedium,
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return 'Please enter your name';
+                            return 'Please enter your first name';
                           }
                           if (value.trim().length < 2) {
-                            return 'Name must be at least 2 characters';
+                            return 'First name must be at least 2 characters';
                           }
                           return null;
                         },
-                        onSaved: (value) => _fullName = value?.trim(),
+                        onSaved: (value) => _firstName = value?.trim(),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Last Name (required)
+                      Text(
+                        'Last Name',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: AppColors.textDark,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _lastNameController,
+                        focusNode: _lastNameFocusNode,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) {
+                          // Unfocus keyboard and trigger form submission
+                          _lastNameFocusNode.unfocus();
+                          _continue();
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Enter your last name',
+                          hintStyle: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textLight,
+                          ),
+                          filled: true,
+                          fillColor: AppColors.cardWhite,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryPurple,
+                              width: 2,
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.errorRed,
+                              width: 1,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                        ),
+                        style: AppTextStyles.bodyMedium,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your last name';
+                          }
+                          if (value.trim().length < 2) {
+                            return 'Last name must be at least 2 characters';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) => _lastName = value?.trim(),
                       ),
 
                       const SizedBox(height: 24),
@@ -315,7 +390,17 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -392,6 +477,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                   child: Text(
                     'Continue',
                     style: AppTextStyles.bodyLarge.copyWith(
+                      color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -399,8 +485,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
               ),
             ),
           ],
-        )
-      )
-    );
+        ),
+      );
   }
 }

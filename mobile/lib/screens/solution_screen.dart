@@ -197,6 +197,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
         }
       },
       bottomPadding: 12, // Further reduced from 16
+      gradient: AppColors.ctaGradient,
     );
   }
 

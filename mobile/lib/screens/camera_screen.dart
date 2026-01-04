@@ -221,7 +221,7 @@ class _CameraScreenState extends State<CameraScreen> {
       builder: (context, appState, child) {
         return Container(
           decoration: const BoxDecoration(
-            gradient: AppColors.primaryGradient,
+            gradient: AppColors.ctaGradient,
           ),
           child: SafeArea(
             bottom: false,
