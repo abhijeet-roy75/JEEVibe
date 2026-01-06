@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// ========================================
+// FIREBASE STORAGE SECURITY RULES
+// ========================================
+// JEEVibe App - Snap & Solve Image Storage
+//
+// Architecture:
+// - Backend uploads images using Admin SDK (bypasses these rules)
+// - Mobile app only READS images (download URLs for display)
+// - All writes must go through backend API
+// ========================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ========================================
+    // SNAP IMAGES - Read Only for Authenticated Users
+    // ========================================
+    // Path: snaps/{userId}/{imageId}
+    // - Backend uploads using Admin SDK
+    // - Users can only read their own images
+    // - No direct client uploads
+
+    match /snaps/{userId}/{imageId} {
+      // Allow authenticated users to read ONLY their own images
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // DENY all writes from clients
+      // Backend uses Admin SDK which bypasses these rules
+      allow write: if false;
+    }
+
+    // ========================================
+    // DEFAULT DENY ALL
+    // ========================================
+    // Any other paths are completely blocked
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
