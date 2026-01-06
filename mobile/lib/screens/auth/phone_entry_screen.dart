@@ -55,31 +55,59 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
     }
   }
 
-  /// Validate Indian mobile number
-  /// Must start with 6, 7, 8, or 9 and be exactly 10 digits
-  String? _validateIndianMobile(String? phoneNumber) {
+  /// Validate phone number based on country
+  /// India: Mobile only (starts with 6, 7, 8, or 9), exactly 10 digits
+  /// USA: Standard format, 10 digits
+  String? _validatePhoneNumber(String? phoneNumber) {
     if (phoneNumber == null || phoneNumber.isEmpty) {
-      return 'Please enter your mobile number';
+      return 'Please enter your phone number';
     }
 
     // Extract just the digits from the phone number
     final digitsOnly = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
 
-    // For Indian numbers, remove country code (+91) if present
-    String mobileNumber = digitsOnly;
-    if (digitsOnly.startsWith('91') && digitsOnly.length == 12) {
-      mobileNumber = digitsOnly.substring(2); // Remove '91' prefix
-    }
+    // Detect country based on country code
+    if (digitsOnly.startsWith('91')) {
+      // Indian number - validate as mobile only
+      String mobileNumber = digitsOnly;
+      if (digitsOnly.length == 12) {
+        mobileNumber = digitsOnly.substring(2); // Remove '91' prefix
+      }
 
-    // Check if it's exactly 10 digits
-    if (mobileNumber.length != 10) {
-      return 'Mobile number must be 10 digits';
-    }
+      // Check if it's exactly 10 digits
+      if (mobileNumber.length != 10) {
+        return 'Mobile number must be 10 digits';
+      }
 
-    // Check if it starts with valid mobile prefix (6, 7, 8, or 9)
-    final firstDigit = mobileNumber[0];
-    if (!['6', '7', '8', '9'].contains(firstDigit)) {
-      return 'Please enter a valid mobile number (not landline)';
+      // Check if it starts with valid mobile prefix (6, 7, 8, or 9)
+      final firstDigit = mobileNumber[0];
+      if (!['6', '7', '8', '9'].contains(firstDigit)) {
+        return 'Please enter a valid mobile number (not landline)';
+      }
+    } else if (digitsOnly.startsWith('1')) {
+      // USA number - validate standard 10-digit format
+      String usaNumber = digitsOnly;
+      if (digitsOnly.length == 11) {
+        usaNumber = digitsOnly.substring(1); // Remove '1' prefix
+      }
+
+      // Check if it's exactly 10 digits
+      if (usaNumber.length != 10) {
+        return 'Phone number must be 10 digits';
+      }
+    } else {
+      // For numbers without country code, check length
+      if (digitsOnly.length != 10) {
+        return 'Phone number must be 10 digits';
+      }
+
+      // If current country is India, validate as mobile
+      if (_number.isoCode == 'IN') {
+        final firstDigit = digitsOnly[0];
+        if (!['6', '7', '8', '9'].contains(firstDigit)) {
+          return 'Please enter a valid mobile number (not landline)';
+        }
+      }
     }
 
     return null; // Valid
@@ -278,7 +306,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                         setState(() => _validationError = null);
                       }
                       // Validate on change
-                      final error = _validateIndianMobile(number.phoneNumber);
+                      final error = _validatePhoneNumber(number.phoneNumber);
                       if (error != null) {
                         setState(() => _validationError = error);
                       }
@@ -290,12 +318,12 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                       showFlags: true,
                       useEmoji: false,
                     ),
-                    countries: const ['IN'], // Lock to India only
+                    countries: const ['IN', 'US'], // Allow India and USA
                     ignoreBlank: false,
                     autoValidateMode: AutovalidateMode.onUserInteraction,
                     selectorTextStyle: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textMedium, // Grey out country code
+                      color: AppColors.textDark, // Normal color for selectable country
                     ),
                     textStyle: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                     initialValue: _number,
@@ -303,7 +331,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     formatInput: true,
                     keyboardType: TextInputType.phone,
                     inputBorder: InputBorder.none,
-                    validator: _validateIndianMobile,
+                    validator: _validatePhoneNumber,
                     onSaved: (PhoneNumber number) {
                       _phoneNumber = number.phoneNumber;
                     },
