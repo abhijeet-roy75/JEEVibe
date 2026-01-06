@@ -7,20 +7,16 @@ import '../models/snap_data_model.dart';
 import 'followup_quiz_screen.dart';
 import 'ocr_failed_screen.dart';
 import 'processing_screen.dart';
-import 'camera_screen.dart';
-import 'daily_limit_screen.dart';
+import 'home_screen.dart';
 import '../widgets/latex_widget.dart';
-
 import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../services/localization_service.dart';
-import '../services/storage_service.dart';
 import '../providers/app_state_provider.dart';
 import '../config/content_config.dart';
 import '../utils/text_preprocessor.dart';
-import 'home_screen.dart';
 
 class SolutionScreen extends StatefulWidget {
   final Future<Solution> solutionFuture;
@@ -97,10 +93,13 @@ class _SolutionScreenState extends State<SolutionScreen> {
   }
 
   Widget _buildErrorState(String error) {
-    final isOCRError = error.toLowerCase().contains('recognize') ||
-        error.toLowerCase().contains('ocr') ||
-        error.toLowerCase().contains('could not read') ||
-        error.toLowerCase().contains('unclear');
+    final errorLower = error.toLowerCase();
+
+    // Check for OCR errors
+    final isOCRError = errorLower.contains('recognize') ||
+        errorLower.contains('ocr') ||
+        errorLower.contains('could not read') ||
+        errorLower.contains('unclear');
 
     if (isOCRError) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -112,7 +111,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
           );
         }
       });
-      
+
       return Container(
         color: AppColors.backgroundLight,
         child: const Center(
@@ -121,9 +120,149 @@ class _SolutionScreenState extends State<SolutionScreen> {
       );
     }
 
+    // Parse error message for user-friendly display
+    String errorTitle;
+    String? errorSuggestion;
+    IconData errorIcon = Icons.error_outline;
+
+    if (errorLower.contains('timeout') || errorLower.contains('timed out')) {
+      errorTitle = 'Request Timed Out';
+      errorSuggestion = 'This question is taking longer than usual. Try:\n• Taking a clearer photo\n• Ensuring good lighting\n• Trying a simpler question first';
+      errorIcon = Icons.timer_off_outlined;
+    } else if (errorLower.contains('no internet') || errorLower.contains('network')) {
+      errorTitle = 'Network Error';
+      errorSuggestion = 'Please check your internet connection and try again.';
+      errorIcon = Icons.wifi_off_outlined;
+    } else if (errorLower.contains('too many requests')) {
+      errorTitle = 'Too Many Requests';
+      errorSuggestion = 'Please wait a moment before trying again.';
+      errorIcon = Icons.speed_outlined;
+    } else if (errorLower.contains('authentication') || errorLower.contains('sign in')) {
+      errorTitle = 'Authentication Error';
+      errorSuggestion = 'Please sign in again.';
+      errorIcon = Icons.lock_outline;
+    } else if (errorLower.contains('internal server error') || errorLower.contains('500')) {
+      errorTitle = 'Server Error';
+      errorSuggestion = 'Our servers are experiencing issues. Please try again in a few moments.';
+      errorIcon = Icons.cloud_off_outlined;
+    } else {
+      errorTitle = 'Something Went Wrong';
+      errorSuggestion = 'Please try again. If the problem persists, try taking a clearer photo.';
+    }
+
     return Scaffold(
-      body: Center(
-        child: Text('Error: $error', style: AppTextStyles.bodyMedium),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppColors.backgroundGradient,
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              children: [
+                // Header with back button
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Error icon
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: AppColors.errorRed.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            errorIcon,
+                            size: 64,
+                            color: AppColors.errorRed,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Error title
+                        Text(
+                          errorTitle,
+                          style: AppTextStyles.headerLarge.copyWith(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        // Error suggestion
+                        Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.cardWhite,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppColors.borderGray,
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              errorSuggestion,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.textMedium,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        const SizedBox(height: 24),
+                        // Retry button
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            gradient: AppColors.ctaGradient,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              'Try Again',
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -753,19 +892,31 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    if (appState.canTakeSnap) {
-                      Navigator.of(context).pushAndRemoveUntil(
+                    // NAVIGATION STRATEGY: Always navigate to HomeScreen (Simplified Flow)
+                    //
+                    // Benefits:
+                    // 1. Consistent user experience - same destination regardless of quota
+                    // 2. Users can always view their snap history
+                    // 3. Simpler mental model - one button, one destination
+                    // 4. HomeScreen enforces quota (camera/gallery buttons disabled when exhausted)
+                    //
+                    // Trade-off: Users with available quota need one extra tap (HomeScreen → Camera button)
+                    // This can be revisited based on user feedback if the extra tap becomes friction
+                    bool found = false;
+                    Navigator.of(context).popUntil((route) {
+                      if (route.settings.name == '/snap_home') {
+                        found = true;
+                        return true;
+                      }
+                      return route.isFirst;
+                    });
+
+                    if (!found) {
+                      Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => const CameraScreen(),
+                          builder: (context) => HomeScreen(),
+                          settings: const RouteSettings(name: '/snap_home'),
                         ),
-                        (route) => route.isFirst,
-                      );
-                    } else {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder: (context) => const DailyLimitScreen(),
-                        ),
-                        (route) => route.isFirst,
                       );
                     }
                   },

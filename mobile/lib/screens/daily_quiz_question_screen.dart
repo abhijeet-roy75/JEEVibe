@@ -219,7 +219,12 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
 
   Future<void> _completeQuiz() async {
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
-    
+
+    // Guard against multiple simultaneous calls
+    if (provider.isCompletingQuiz) {
+      return;
+    }
+
     try {
       final result = await ErrorHandler.handleApiError(
         context,
@@ -607,12 +612,13 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
 
   Widget _buildActionButton(DailyQuizProvider provider) {
     final isLastQuestion = provider.isQuizComplete;
-    
+    final isLoading = provider.isSubmittingAnswer || provider.isCompletingQuiz;
+
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: provider.isSubmittingAnswer ? null : _handleNextQuestion,
+        onPressed: isLoading ? null : _handleNextQuestion,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryPurple,
           foregroundColor: Colors.white,
@@ -620,7 +626,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: provider.isSubmittingAnswer
+        child: isLoading
             ? const SizedBox(
                 width: 20,
                 height: 20,

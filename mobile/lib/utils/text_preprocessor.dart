@@ -83,8 +83,8 @@ class TextPreprocessor {
   /// Protect LaTeX blocks by replacing them with placeholders
   static String _protectLatexBlocks(String text, List<String> blocks) {
     String result = text;
-    
-    // Match \(...\) and \[...\] blocks
+
+    // First, protect delimited LaTeX blocks: \(...\) and \[...\]
     final latexPattern = RegExp(r'\\([\(\)\[\]])(.*?)\\([\(\)\[\]])');
     result = result.replaceAllMapped(latexPattern, (match) {
       final fullMatch = match.group(0)!;
@@ -92,7 +92,26 @@ class TextPreprocessor {
       blocks.add(fullMatch);
       return placeholder;
     });
-    
+
+    // Also protect individual LaTeX commands with arguments (like \sqrt{3}, \frac{a}{b})
+    // Match: \command{...} including nested braces
+    final commandPattern = RegExp(r'\\[a-zA-Z]+\{[^}]*\}');
+    result = result.replaceAllMapped(commandPattern, (match) {
+      final fullMatch = match.group(0)!;
+      final placeholder = '___LATEX_BLOCK_${blocks.length}___';
+      blocks.add(fullMatch);
+      return placeholder;
+    });
+
+    // Protect LaTeX subscripts and superscripts: _{\alpha}, ^{2}
+    final scriptPattern = RegExp(r'[_^]\{[^}]*\}');
+    result = result.replaceAllMapped(scriptPattern, (match) {
+      final fullMatch = match.group(0)!;
+      final placeholder = '___LATEX_BLOCK_${blocks.length}___';
+      blocks.add(fullMatch);
+      return placeholder;
+    });
+
     return result;
   }
   
@@ -140,11 +159,11 @@ class TextPreprocessor {
       (match) => '${match.group(1)} ${match.group(2)}',
     );
     
-    // Fix "and" concatenations
-    result = result.replaceAllMapped(
-      RegExp(r'([a-z])(and)([a-z])', caseSensitive: false),
-      (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
-    );
+    // Fix "and" concatenations ONLY in specific contexts
+    // Match patterns like "paramagneticwiththree" where "and" appears after common suffixes
+    // or before common prefixes, but NOT in the middle of normal words like "understanding"
+    // This is intentionally removed as it was breaking words like "understanding"
+    // The more specific patterns in _fixAndPatterns() handle the actual concatenation cases
     
     return result;
   }
@@ -191,9 +210,11 @@ class TextPreprocessor {
       (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
     );
     
-    // "WordandWord" -> "Word and Word"
+    // "WordandWord" -> "Word and Word" (only when both sides start with capital)
+    // This pattern is safe because it only matches cases like "PhysicsandChemistry"
+    // and won't match normal words like "understanding"
     result = result.replaceAllMapped(
-      RegExp(r'([A-Z][a-z]+)(and)([A-Z])', caseSensitive: false),
+      RegExp(r'([A-Z][a-z]+)(and)([A-Z])'),
       (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
     );
     

@@ -325,6 +325,11 @@ class DailyQuizProvider extends ChangeNotifier {
       throw Exception('No quiz available');
     }
 
+    // Guard against multiple simultaneous calls
+    if (_isCompletingQuiz) {
+      throw Exception('Quiz completion already in progress');
+    }
+
     _isCompletingQuiz = true;
     _error = null;
     notifyListeners();
