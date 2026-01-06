@@ -6,7 +6,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../services/firebase/firestore_user_service.dart';
 import '../../models/user_profile.dart';
-import '../assessment_intro_screen.dart';
+import '../welcome_screen.dart';
 
 /// Simplified Onboarding - Screen 2
 ///
@@ -101,11 +101,11 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
 
       if (!mounted) return;
 
-      // Navigate to home screen (Assessment Intro)
-      // PIN was already created before onboarding, so we go directly to home
+      // Navigate to Welcome Screen (3-slide carousel)
+      // After onboarding, show the welcome carousel before going to home
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (context) => const AssessmentIntroScreen(),
+          builder: (context) => const WelcomeScreen(),
         ),
         (route) => false, // Remove all previous routes
       );
@@ -253,12 +253,24 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                     const SizedBox(height: 28),
 
                       // Email (optional)
-                      Text(
-                        'Email',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.textDark,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Email',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColors.textDark,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '(Optional)',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.textLight,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
@@ -329,12 +341,24 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       const SizedBox(height: 20),
 
                       // Your State (optional)
-                      Text(
-                        'Your State',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.textDark,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Your State',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColors.textDark,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '(Optional)',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.textLight,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
@@ -396,12 +420,24 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       const SizedBox(height: 20),
 
                       // Exam Type (optional)
-                      Text(
-                        'Exam Type',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.textDark,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Exam Type',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColors.textDark,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '(Optional)',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.textLight,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
                       Column(
@@ -463,12 +499,24 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       const SizedBox(height: 24),
 
                       // Dream Branch (optional)
-                      Text(
-                        'Dream Branch',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.textDark,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Dream Branch',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColors.textDark,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '(Optional)',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.textLight,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(

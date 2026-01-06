@@ -10,6 +10,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'solution_review_screen.dart';
 import '../widgets/subject_icon_widget.dart';
+import '../widgets/latex_widget.dart';
 import '../utils/text_preprocessor.dart';
 import 'home_screen.dart';
 
@@ -456,14 +457,22 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        TextPreprocessor.addSpacesToText(solution.getPreviewText()),
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textMedium,
-                          height: 1.3,
+                      // Use LaTeXWidget to properly render LaTeX/mathematical notation
+                      SizedBox(
+                        height: 34, // Approximate height for 2 lines (17px per line)
+                        child: ClipRect(
+                          child: Align(
+                            alignment: Alignment.topLeft,
+                            child: LaTeXWidget(
+                              text: TextPreprocessor.addSpacesToText(solution.getPreviewText()),
+                              textStyle: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textMedium,
+                                height: 1.3,
+                                fontSize: 13, // Slightly smaller for preview
+                              ),
+                            ),
+                          ),
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
                       // Topic Badge

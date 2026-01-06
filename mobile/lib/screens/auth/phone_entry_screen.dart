@@ -17,22 +17,25 @@ class PhoneEntryScreen extends StatefulWidget {
 class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _controller = TextEditingController();
-  
-  String _initialCountry = 'IN'; 
+
+  String _initialCountry = 'IN';
   PhoneNumber _number = PhoneNumber(isoCode: 'IN');
   String? _phoneNumber;
   bool _isLoading = false;
+  int _remainingOtpRequests = 3;
+  String? _validationError;
 
   @override
   void initState() {
     super.initState();
     _loadCountryCode();
+    _loadRemainingOtpRequests();
   }
 
   Future<void> _loadCountryCode() async {
     final storageService = StorageService();
     final savedCountry = await storageService.getCountryCode();
-    
+
     if (mounted) {
       setState(() {
         _initialCountry = savedCountry;
@@ -41,12 +44,73 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
     }
   }
 
+  Future<void> _loadRemainingOtpRequests() async {
+    final storageService = StorageService();
+    final remaining = await storageService.getRemainingOtpRequests();
+
+    if (mounted) {
+      setState(() {
+        _remainingOtpRequests = remaining;
+      });
+    }
+  }
+
+  /// Validate Indian mobile number
+  /// Must start with 6, 7, 8, or 9 and be exactly 10 digits
+  String? _validateIndianMobile(String? phoneNumber) {
+    if (phoneNumber == null || phoneNumber.isEmpty) {
+      return 'Please enter your mobile number';
+    }
+
+    // Extract just the digits from the phone number
+    final digitsOnly = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+
+    // For Indian numbers, remove country code (+91) if present
+    String mobileNumber = digitsOnly;
+    if (digitsOnly.startsWith('91') && digitsOnly.length == 12) {
+      mobileNumber = digitsOnly.substring(2); // Remove '91' prefix
+    }
+
+    // Check if it's exactly 10 digits
+    if (mobileNumber.length != 10) {
+      return 'Mobile number must be 10 digits';
+    }
+
+    // Check if it starts with valid mobile prefix (6, 7, 8, or 9)
+    final firstDigit = mobileNumber[0];
+    if (!['6', '7', '8', '9'].contains(firstDigit)) {
+      return 'Please enter a valid mobile number (not landline)';
+    }
+
+    return null; // Valid
+  }
+
   Future<void> _sendOTP() async {
     if (_formKey.currentState?.validate() ?? false) {
+      // Check OTP rate limit before sending
+      final storageService = StorageService();
+      final canRequest = await storageService.canRequestOtp();
+
+      if (!canRequest) {
+        final minutesUntilNext = await storageService.getMinutesUntilNextOtpAllowed();
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Too many OTP requests. Please try again in $minutesUntilNext ${minutesUntilNext == 1 ? 'minute' : 'minutes'}.',
+            ),
+            backgroundColor: AppColors.errorRed,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+        return;
+      }
+
       setState(() => _isLoading = true);
-      
+
       final authService = Provider.of<AuthService>(context, listen: false);
-      
+
       await authService.verifyPhoneNumber(
         phoneNumber: _phoneNumber!,
         verificationCompleted: (credential) async {
@@ -56,10 +120,19 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
         verificationFailed: (e) {
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Verification Failed: ${e.message}')),
+            SnackBar(
+              content: Text('Verification Failed: ${e.message}'),
+              backgroundColor: AppColors.errorRed,
+            ),
           );
         },
-        codeSent: (verificationId, resendToken) {
+        codeSent: (verificationId, resendToken) async {
+          // Record successful OTP request
+          await storageService.recordOtpRequest();
+
+          // Update remaining requests count
+          await _loadRemainingOtpRequests();
+
           setState(() => _isLoading = false);
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -200,35 +273,118 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     onInputChanged: (PhoneNumber number) {
                       _number = number;
                       _phoneNumber = number.phoneNumber;
-                      // Save country code when changed
-                      if (number.isoCode != null && number.isoCode != _initialCountry) {
-                        _initialCountry = number.isoCode!;
-                        StorageService().setCountryCode(_initialCountry);
+                      // Clear validation error on input change
+                      if (_validationError != null) {
+                        setState(() => _validationError = null);
+                      }
+                      // Validate on change
+                      final error = _validateIndianMobile(number.phoneNumber);
+                      if (error != null) {
+                        setState(() => _validationError = error);
                       }
                     },
                     selectorConfig: const SelectorConfig(
                       selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
                       setSelectorButtonAsPrefixIcon: true,
                       leadingPadding: 12,
+                      showFlags: true,
+                      useEmoji: false,
                     ),
+                    countries: const ['IN'], // Lock to India only
                     ignoreBlank: false,
-                    autoValidateMode: AutovalidateMode.disabled,
-                    selectorTextStyle: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                    autoValidateMode: AutovalidateMode.onUserInteraction,
+                    selectorTextStyle: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textMedium, // Grey out country code
+                    ),
                     textStyle: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                     initialValue: _number,
                     textFieldController: _controller,
                     formatInput: true,
                     keyboardType: TextInputType.phone,
                     inputBorder: InputBorder.none,
+                    validator: _validateIndianMobile,
                     onSaved: (PhoneNumber number) {
                       _phoneNumber = number.phoneNumber;
                     },
                   ),
                 ),
               ),
-              
-              const SizedBox(height: 48), // Spacing instead of Spacer for SingleChildScrollView
-              
+
+              // Validation error message
+              if (_validationError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, left: 4),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        color: AppColors.errorRed,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _validationError!,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.errorRed,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              const SizedBox(height: 24),
+
+              // OTP Rate Limit Info
+              if (_remainingOtpRequests < 3)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _remainingOtpRequests > 0
+                        ? AppColors.primaryPurple.withValues(alpha: 0.1)
+                        : AppColors.errorRed.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: _remainingOtpRequests > 0
+                          ? AppColors.primaryPurple.withValues(alpha: 0.3)
+                          : AppColors.errorRed.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _remainingOtpRequests > 0
+                            ? Icons.info_outline
+                            : Icons.warning_amber_rounded,
+                        size: 20,
+                        color: _remainingOtpRequests > 0
+                            ? AppColors.primaryPurple
+                            : AppColors.errorRed,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _remainingOtpRequests > 0
+                              ? '$_remainingOtpRequests OTP ${_remainingOtpRequests == 1 ? 'request' : 'requests'} remaining this hour'
+                              : 'Rate limit reached. Please try again later.',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: _remainingOtpRequests > 0
+                                ? AppColors.primaryPurple
+                                : AppColors.errorRed,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              const SizedBox(height: 24),
+
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'dart:convert';
@@ -101,8 +102,13 @@ class ApiService {
         ),
       );
 
-      // Send request
-      var streamedResponse = await request.send();
+      // Send request with 90 second timeout (some complex questions take time)
+      var streamedResponse = await request.send().timeout(
+        const Duration(seconds: 90),
+        onTimeout: () {
+          throw Exception('Request timed out. This question might be taking longer than usual to process. Please try again or try a clearer photo.');
+        },
+      );
       var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
@@ -141,11 +147,17 @@ class ApiService {
           throw Exception('Server error (${response.statusCode}): ${response.body.substring(0, 200)}');
         }
       }
+      } on TimeoutException {
+        throw Exception('Request timed out after 90 seconds. This question might be taking longer than usual to process. Please try again or try a clearer photo.');
       } on SocketException {
         throw Exception('No internet connection. Please check your network and try again.');
       } on http.ClientException {
         throw Exception('Network error. Please try again.');
       } catch (e) {
+        // Check if error message already contains timeout info
+        if (e.toString().contains('timed out') || e.toString().contains('timeout')) {
+          rethrow;
+        }
         throw Exception('Failed to solve question: ${e.toString()}');
       }
     });

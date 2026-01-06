@@ -21,10 +21,12 @@ class StorageService {
   static const String _keyAppVersion = '${_keyPrefix}app_version';
   static const String _keyAssessmentStatus = '${_keyPrefix}assessment_status';
   static const String _keyCountryCode = '${_keyPrefix}country_code';
+  static const String _keyOtpRequests = '${_keyPrefix}otp_requests';
 
   // Constants
   static const int defaultSnapLimit = 5;
   static const int maxRecentSolutions = 3;
+  static const int maxOtpRequestsPerHour = 3;
 
   // Singleton pattern
   static final StorageService _instance = StorageService._internal();
@@ -449,6 +451,133 @@ class StorageService {
       await prefs.setString(_keyCountryCode, code);
     } catch (e) {
       debugPrint('Error setting country code: $e');
+    }
+  }
+
+  // ===== OTP RATE LIMITING METHODS =====
+
+  /// Record an OTP request timestamp
+  Future<void> recordOtpRequest() async {
+    try {
+      final prefs = await _preferences;
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      // Get existing timestamps
+      final List<int> timestamps = await _getOtpRequestTimestamps();
+
+      // Add new timestamp
+      timestamps.add(now);
+
+      // Save back to storage
+      await prefs.setString(_keyOtpRequests, jsonEncode(timestamps));
+    } catch (e) {
+      debugPrint('Error recording OTP request: $e');
+    }
+  }
+
+  /// Check if user can request OTP (hasn't exceeded rate limit)
+  /// Returns true if allowed, false if rate limit exceeded
+  Future<bool> canRequestOtp() async {
+    try {
+      final timestamps = await _getOtpRequestTimestamps();
+
+      // If no requests yet, allow
+      if (timestamps.isEmpty) return true;
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final oneHourAgo = now - (60 * 60 * 1000); // 1 hour in milliseconds
+
+      // Count requests in the last hour
+      final recentRequests = timestamps.where((ts) => ts > oneHourAgo).length;
+
+      return recentRequests < maxOtpRequestsPerHour;
+    } catch (e) {
+      debugPrint('Error checking OTP rate limit: $e');
+      return true; // Allow on error to not block users
+    }
+  }
+
+  /// Get the number of remaining OTP requests in current hour
+  Future<int> getRemainingOtpRequests() async {
+    try {
+      final timestamps = await _getOtpRequestTimestamps();
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final oneHourAgo = now - (60 * 60 * 1000);
+
+      final recentRequests = timestamps.where((ts) => ts > oneHourAgo).length;
+
+      return maxOtpRequestsPerHour - recentRequests;
+    } catch (e) {
+      debugPrint('Error getting remaining OTP requests: $e');
+      return maxOtpRequestsPerHour;
+    }
+  }
+
+  /// Get time until next OTP request is allowed (in minutes)
+  /// Returns 0 if request is allowed now
+  Future<int> getMinutesUntilNextOtpAllowed() async {
+    try {
+      final timestamps = await _getOtpRequestTimestamps();
+
+      if (timestamps.isEmpty) return 0;
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final oneHourAgo = now - (60 * 60 * 1000);
+
+      // Get requests in the last hour
+      final recentTimestamps = timestamps.where((ts) => ts > oneHourAgo).toList();
+
+      // If under limit, no wait needed
+      if (recentTimestamps.length < maxOtpRequestsPerHour) return 0;
+
+      // Sort to find oldest request
+      recentTimestamps.sort();
+      final oldestRequest = recentTimestamps.first;
+
+      // Calculate when oldest request will be 1 hour old
+      final unlockTime = oldestRequest + (60 * 60 * 1000);
+      final waitTimeMs = unlockTime - now;
+
+      // Convert to minutes (round up)
+      return (waitTimeMs / (60 * 1000)).ceil();
+    } catch (e) {
+      debugPrint('Error calculating wait time: $e');
+      return 0;
+    }
+  }
+
+  /// Helper method to get OTP request timestamps
+  Future<List<int>> _getOtpRequestTimestamps() async {
+    try {
+      final prefs = await _preferences;
+      final stored = prefs.getString(_keyOtpRequests);
+
+      if (stored == null || stored.isEmpty) return [];
+
+      final List<dynamic> decoded = jsonDecode(stored);
+      return decoded.map((e) => e as int).toList();
+    } catch (e) {
+      debugPrint('Error getting OTP timestamps: $e');
+      return [];
+    }
+  }
+
+  /// Clear old OTP request timestamps (cleanup - called periodically)
+  Future<void> cleanupOldOtpRequests() async {
+    try {
+      final prefs = await _preferences;
+      final timestamps = await _getOtpRequestTimestamps();
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final oneHourAgo = now - (60 * 60 * 1000);
+
+      // Keep only timestamps from last hour
+      final recentTimestamps = timestamps.where((ts) => ts > oneHourAgo).toList();
+
+      await prefs.setString(_keyOtpRequests, jsonEncode(recentTimestamps));
+    } catch (e) {
+      debugPrint('Error cleaning up OTP timestamps: $e');
     }
   }
 

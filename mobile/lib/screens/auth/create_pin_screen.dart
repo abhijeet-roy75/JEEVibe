@@ -29,9 +29,16 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
   void initState() {
     super.initState();
     // Auto-focus and show numeric keypad immediately
+    // Use multiple delayed attempts to ensure keyboard stays visible
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+      if (mounted && !_isDisposed) {
         _pinFocusNode.requestFocus();
+        // Ensure focus persists with a slight delay
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted && !_isDisposed && !_pinFocusNode.hasFocus) {
+            _pinFocusNode.requestFocus();
+          }
+        });
       }
     });
   }
@@ -268,7 +275,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                     inactiveFillColor: Colors.grey.shade100,
                     selectedFillColor: Colors.white,
                     activeColor: AppColors.primaryPurple,
-                    inactiveColor: Colors.transparent, // Or light gray for outline?
+                    inactiveColor: Colors.transparent,
                     selectedColor: AppColors.primaryPurple,
                     borderWidth: 1,
                   ),
@@ -279,6 +286,8 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                   focusNode: _pinFocusNode,
                   keyboardType: TextInputType.number,
                   autoFocus: true,
+                  autoDismissKeyboard: false, // Prevent keyboard from auto-dismissing
+                  enablePinAutofill: false, // Disable autofill to prevent focus issues
                   onCompleted: (v) {
                     // Guard against calling after disposal or during navigation
                     if (!_isDisposed && mounted) {
