@@ -2,8 +2,6 @@
 /// Shows quiz completion summary with performance breakdown
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
-import '../models/daily_quiz_question.dart';
 import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../services/firebase/firestore_user_service.dart';
@@ -93,10 +91,6 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
     return _userProfile?.firstName ?? 'Student';
   }
 
-  String _getFormattedDate() {
-    return DateFormat('EEEE, MMM d').format(DateTime.now());
-  }
-
   String _getStreakText() {
     final currentStreak = _streak?['current_streak'] as int? ?? 0;
     if (currentStreak <= 0) {
@@ -136,8 +130,6 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
     final time = quiz['total_time_seconds'];
     return time is int ? time : (time is num ? time.toInt() : 0);
   }
-  
-  int get _wrongCount => _total - _score;
   
   List<dynamic> get _questions {
     final quiz = _quizResult?['quiz'];
@@ -206,31 +198,161 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
     return Icons.error_outline;
   }
 
-  String _getPriyaMaamFeedback() {
-    final accuracy = _accuracy;
-    final wrongCount = _wrongCount;
-    
-    if (accuracy >= 0.8) {
-      return "Excellent work! You're mastering these concepts. Keep up the momentum! 🎉";
-    } else if (accuracy >= 0.6) {
-      return "Good job! You're making progress. Focus on the topics you got wrong to improve further! 💪";
-    } else if (wrongCount > 0) {
-      final weakTopic = _getPerformanceByTopic().entries
-          .where((e) {
-            final total = e.value['total'];
-            final correct = e.value['correct'];
-            if (total is! int || correct is! int) return false;
-            return total > 0 && (correct / total) < 0.5;
-          })
-          .map((e) => e.key)
-          .firstOrNull;
-      
-      if (weakTopic != null) {
-        return "Great effort! Let's focus more on $weakTopic next. You're improving—keep it up! 🎯";
-      }
-      return "Don't worry! Review the mistakes and understand the concepts. You'll do better next time! 📚";
+  /// Get emoji for score card based on performance
+  String _getScoreEmoji() {
+    switch (_getPerformanceTier()) {
+      case 'excellent':
+        return '🏆';
+      case 'good':
+        return '⭐';
+      case 'average':
+        return '📊';
+      case 'struggling':
+        return '📚';
+      case 'tough_day':
+        return '💪';
+      default:
+        return '📝';
     }
-    return "Keep practicing! Every mistake is a learning opportunity. Review the explanations carefully! 🌟";
+  }
+
+  /// Get title for score card based on performance
+  String _getScoreTitle() {
+    switch (_getPerformanceTier()) {
+      case 'excellent':
+        return 'Excellent!';
+      case 'good':
+        return 'Good Job!';
+      case 'average':
+        return 'Keep Going!';
+      case 'struggling':
+        return 'Nice Try!';
+      case 'tough_day':
+        return 'Keep Learning!';
+      default:
+        return 'Quiz Complete';
+    }
+  }
+
+  /// Get subtitle for score card based on performance
+  String _getScoreSubtitle() {
+    switch (_getPerformanceTier()) {
+      case 'excellent':
+        return 'You nailed it!';
+      case 'good':
+        return 'Solid performance';
+      case 'average':
+        return 'Room to improve';
+      case 'struggling':
+        return 'Every step counts';
+      case 'tough_day':
+        return 'Tomorrow is fresh';
+      default:
+        return 'Keep practicing';
+    }
+  }
+
+  /// Get performance tier based on score out of 10
+  /// Returns: 'excellent', 'good', 'average', 'struggling', or 'tough_day'
+  String _getPerformanceTier() {
+    // Normalize score to 10-point scale
+    final scoreOutOf10 = _total > 0 ? (_score / _total) * 10 : 0;
+
+    if (scoreOutOf10 >= 9) return 'excellent';
+    if (scoreOutOf10 >= 7) return 'good';
+    if (scoreOutOf10 >= 5) return 'average';
+    if (scoreOutOf10 >= 3) return 'struggling';
+    return 'tough_day';
+  }
+
+  /// Get the weakest topic from quiz results
+  String? _getWeakTopic() {
+    final topics = _getPerformanceByTopic();
+    String? weakestTopic;
+    double lowestAccuracy = 1.0;
+
+    for (final entry in topics.entries) {
+      final total = entry.value['total'] as int;
+      final correct = entry.value['correct'] as int;
+      if (total > 0) {
+        final accuracy = correct / total;
+        if (accuracy < lowestAccuracy) {
+          lowestAccuracy = accuracy;
+          weakestTopic = entry.key;
+        }
+      }
+    }
+
+    return weakestTopic;
+  }
+
+  /// Get the strongest topic from quiz results
+  String? _getStrongTopic() {
+    final topics = _getPerformanceByTopic();
+    String? strongestTopic;
+    double highestAccuracy = 0.0;
+
+    for (final entry in topics.entries) {
+      final total = entry.value['total'] as int;
+      final correct = entry.value['correct'] as int;
+      if (total > 0) {
+        final accuracy = correct / total;
+        if (accuracy > highestAccuracy) {
+          highestAccuracy = accuracy;
+          strongestTopic = entry.key;
+        }
+      }
+    }
+
+    return strongestTopic;
+  }
+
+  /// Priya Ma'am's feedback based on performance tier
+  /// Framework: Never demotivate, always forward-looking
+  /// Tone: Supportive elder sister who believes in you
+  String _getPriyaMaamFeedback() {
+    final tier = _getPerformanceTier();
+    final name = _getUserName();
+    final weakTopic = _getWeakTopic();
+    final strongTopic = _getStrongTopic();
+    final currentStreak = _streak?['current_streak'] as int? ?? 0;
+
+    switch (tier) {
+      case 'excellent':
+        // 9-10/10: Celebratory + Challenge
+        return "Superb, $name! 🌟 You nailed it today - your hard work is showing. Ready for a tougher challenge tomorrow? Let's push your limits!";
+
+      case 'good':
+        // 7-8/10: Warm praise + Growth
+        if (strongTopic != null) {
+          return "Great effort today, $name! 💪 You're getting stronger in $strongTopic. Keep this momentum going!";
+        }
+        return "Great effort today, $name! 💪 You're building solid momentum. Keep this up!";
+
+      case 'average':
+        // 5-6/10: Encouraging + Specific
+        if (weakTopic != null) {
+          return "Good practice today, $name. Some tricky ones in there! $weakTopic needs a bit more attention - we'll tackle it together. You've got this! 🎯";
+        }
+        return "Good practice today, $name. Some tricky questions in there! Review the concepts and you'll do even better. You've got this! 🎯";
+
+      case 'struggling':
+        // 3-4/10: Compassionate + Supportive
+        if (currentStreak >= 3) {
+          return "Tough quiz, $name - but look, $currentStreak days straight! That consistency matters more than any single score. Tomorrow we'll revisit these topics step by step. 🌱";
+        }
+        if (weakTopic != null) {
+          return "Tough topics today, $name - I know these weren't easy. What matters is you showed up and practiced. Tomorrow, we'll revisit $weakTopic with simpler problems first. One step at a time! 🌱";
+        }
+        return "Tough topics today, $name - I know these weren't easy. What matters is you showed up and practiced. One step at a time! 🌱";
+
+      case 'tough_day':
+        // 0-2/10: Gentle + Normalizing
+        return "Hey $name, rough day - it happens to everyone, even toppers. These topics are genuinely challenging. Take a break, and tomorrow we start fresh with the basics. I believe in you. ❤️";
+
+      default:
+        return "Keep practicing, $name! Every question is a learning opportunity. 📚";
+    }
   }
 
   @override
@@ -305,6 +427,42 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
     );
   }
 
+  /// Get header title based on performance tier
+  String _getHeaderTitle() {
+    switch (_getPerformanceTier()) {
+      case 'excellent':
+        return 'Outstanding! 🌟';
+      case 'good':
+        return 'Well Done! 💪';
+      case 'average':
+        return 'Quiz Complete! 🎯';
+      case 'struggling':
+        return 'Quiz Complete 🌱';
+      case 'tough_day':
+        return 'Quiz Complete';
+      default:
+        return 'Quiz Complete';
+    }
+  }
+
+  /// Get header subtitle based on performance tier
+  String _getHeaderSubtitle() {
+    switch (_getPerformanceTier()) {
+      case 'excellent':
+        return 'You crushed it today!';
+      case 'good':
+        return 'Solid performance!';
+      case 'average':
+        return 'Good practice session';
+      case 'struggling':
+        return 'Every attempt counts';
+      case 'tough_day':
+        return 'Tomorrow is a new day';
+      default:
+        return 'Keep learning';
+    }
+  }
+
   Widget _buildHeader() {
     return Container(
       decoration: const BoxDecoration(
@@ -355,12 +513,12 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              // Message centered
+              // Message centered - performance-aware
               Expanded(
                 child: Column(
                   children: [
                     Text(
-                      'Quiz Complete! 🎉',
+                      _getHeaderTitle(),
                       style: AppTextStyles.headerWhite.copyWith(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -369,7 +527,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Great effort today',
+                      _getHeaderSubtitle(),
                       style: AppTextStyles.bodyWhite.copyWith(fontSize: 14),
                       textAlign: TextAlign.center,
                     ),
@@ -404,21 +562,21 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
         children: [
           Row(
             children: [
-              const Text('🏆', style: TextStyle(fontSize: 32)),
+              Text(_getScoreEmoji(), style: const TextStyle(fontSize: 32)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Quiz Complete!',
+                      _getScoreTitle(),
                       style: AppTextStyles.headerMedium.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Excellent effort today',
+                      _getScoreSubtitle(),
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textLight,
                       ),
@@ -663,31 +821,11 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          // Review Mistakes button
-          if (_wrongCount > 0)
-            _buildActionButton(
-              icon: Icons.close,
-              iconColor: AppColors.errorRed,
-              label: 'Review Mistakes ($_wrongCount)',
-              backgroundColor: AppColors.errorRed,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DailyQuizReviewScreen(
-                      quizId: widget.quizId,
-                      filterType: 'wrong',
-                    ),
-                  ),
-                );
-              },
-            ),
-          if (_wrongCount > 0) const SizedBox(height: 12),
-          // Review All Questions button
+          // Review All Questions button (has filter for mistakes built-in)
           _buildActionButton(
-            icon: Icons.check_circle,
-            iconColor: AppColors.successGreen,
-            label: 'Review All Questions ($_total)',
+            icon: Icons.rate_review,
+            iconColor: Colors.white,
+            label: 'Review Questions ($_total)',
             backgroundColor: AppColors.primaryPurple,
             onTap: () {
               Navigator.push(

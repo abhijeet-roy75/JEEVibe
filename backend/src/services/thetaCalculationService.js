@@ -34,40 +34,187 @@ const CHAPTER_NAME_NORMALIZATIONS = {
   "rotational_dynamics": "rotational_motion",
   "electrostatics": "electrostatics", // Already correct
   "current_electricity": "current_electricity", // Already correct
-  "magnetism": "magnetic_effects", // "Magnetism" maps to "magnetic_effects"
-  "magnetic_field": "magnetic_effects",
+  "magnetism": "magnetic_effects_magnetism", // "Magnetism" maps to daily quiz chapter
+  "magnetic_field": "magnetic_effects_magnetism",
   "emi": "electromagnetic_induction",
   "electromagnetic_induction": "electromagnetic_induction", // Already correct
-  "optics": "ray_optics", // Default to ray optics if ambiguous
-  "modern_physics": "dual_nature", // "Modern Physics" maps to "dual_nature"
+  "optics": "optics", // Maps to physics_optics
+  "modern_physics": "atoms_nuclei", // "Modern Physics" maps to atoms_nuclei
 
   // Chemistry variations
   "atomic_structure": "atomic_structure", // Already correct
   "chemical_bonding": "chemical_bonding", // Already correct
   "thermodynamics": "thermodynamics", // Already correct
   "equilibrium": "equilibrium", // Already correct
-  "physical_chemistry": "thermodynamics", // "Physical Chemistry" maps to "thermodynamics" (main physical chemistry topic)
-  "organic_chemistry": "organic_basics", // "Organic Chemistry" maps to "organic_basics"
-  "inorganic_chemistry": "classification_elements", // "Inorganic Chemistry" maps to "classification_elements"
+  "physical_chemistry": "thermodynamics", // "Physical Chemistry" maps to "thermodynamics"
+  "organic_chemistry": "general_organic_chemistry", // "Organic Chemistry" maps to GOC
+  "inorganic_chemistry": "p_block_elements", // "Inorganic Chemistry" maps to p_block
 
   // Mathematics variations
-  "calculus": "limits_continuity", // "Calculus" maps to "limits_continuity" (foundational calculus topic)
-  "algebra": "complex_numbers", // "Algebra" maps to "complex_numbers" (important algebra topic)
-  "coordinate_geometry": "coordinate_geometry", // Already correct
-  "geometry": "coordinate_geometry", // Default if ambiguous
+  "calculus": "limits_continuity_differentiability", // "Calculus" maps to limits
+  "algebra": "complex_numbers", // "Algebra" maps to complex_numbers
+  "coordinate_geometry": "straight_lines", // Maps to straight_lines (foundation)
+  "geometry": "straight_lines", // Default if ambiguous
 
-  // Database Variations (found in questions collection)
-  "magnetic_effects_magnetism": "magnetic_effects",
-  "limits_continuity_differentiability": "limits_continuity",
-  "conic_sections_ellipse_hyperbola": "conic_sections",
-  "differential_calculus_aod": "applications_derivatives",
-  "integral_calculus_definite_area": "applications_integrals",
-  "integral_calculus_indefinite": "integration",
-  "vector_algebra": "vectors",
-  "purification_characterization": "organic_basics", // Map to organic basics as a catch-all
-  "general_organic_chemistry_goc": "organic_basics",
-  "units_measurements": "kinematics", // Fallback for units
+  // Database Variations (found in questions collection) - normalize to daily quiz chapter keys
+  "magnetic_effects_magnetism": "magnetic_effects_magnetism",
+  "limits_continuity_differentiability": "limits_continuity_differentiability",
+  "conic_sections_ellipse_hyperbola": "conic_sections_ellipse_hyperbola",
+  "differential_calculus_aod": "differential_calculus_aod",
+  "integral_calculus_definite_area": "integral_calculus_definite_area",
+  "integral_calculus_indefinite": "integral_calculus_indefinite",
+  "vector_algebra": "vector_algebra",
+  "purification_characterization": "purification_characterization",
+  "general_organic_chemistry_goc": "general_organic_chemistry",
+  "general_organic_chemistry": "general_organic_chemistry",
+  "units_measurements": "units_measurements",
+  "3d_geometry": "3d_geometry",
+  "p_block_elements": "p_block_elements",
+  "d_f_block_elements": "d_f_block_elements",
 };
+
+// ============================================================================
+// BROAD-TO-SPECIFIC CHAPTER MAPPING
+// ============================================================================
+// Maps broad assessment chapter names to ALL related specific daily quiz chapters
+// This allows theta from a broad category to be distributed across specific topics
+
+const BROAD_TO_SPECIFIC_CHAPTER_MAP = {
+  // Physics broad chapters
+  "physics_mechanics": [
+    "physics_kinematics",
+    "physics_laws_of_motion",
+    "physics_work_energy_and_power",
+    "physics_rotational_motion",
+    "physics_gravitation",
+    "physics_properties_of_solids_liquids"
+  ],
+  "physics_magnetism": [
+    "physics_magnetic_effects_magnetism"
+  ],
+  "physics_modern_physics": [
+    "physics_atoms_nuclei",
+    "physics_dual_nature_of_radiation",
+    "physics_electronic_devices"
+  ],
+
+  // Chemistry broad chapters
+  "chemistry_physical_chemistry": [
+    "chemistry_thermodynamics",
+    "chemistry_equilibrium",
+    "chemistry_solutions",
+    "chemistry_chemical_kinetics",
+    "chemistry_atomic_structure",
+    "chemistry_redox_electrochemistry"
+  ],
+  "chemistry_organic_chemistry": [
+    "chemistry_general_organic_chemistry",
+    "chemistry_hydrocarbons",
+    "chemistry_aldehydes_ketones",
+    "chemistry_alcohols_phenols_ethers",
+    "chemistry_amines_diazonium_salts",
+    "chemistry_carboxylic_acids_derivatives",
+    "chemistry_haloalkanes_and_haloarenes",
+    "chemistry_biomolecules"
+  ],
+  "chemistry_inorganic_chemistry": [
+    "chemistry_p_block_elements",
+    "chemistry_d_f_block_elements",
+    "chemistry_coordination_compounds",
+    "chemistry_classification_periodicity",
+    "chemistry_chemical_bonding"
+  ],
+
+  // Mathematics broad chapters
+  "mathematics_algebra": [
+    "mathematics_complex_numbers",
+    "mathematics_matrices_determinants",
+    "mathematics_permutations_and_combinations",
+    "mathematics_binomial_theorem",
+    "mathematics_sequences_and_series",
+    "mathematics_sets_relations_functions"
+  ],
+  "mathematics_calculus": [
+    "mathematics_limits_continuity_differentiability",
+    "mathematics_differential_calculus_aod",
+    "mathematics_integral_calculus_indefinite",
+    "mathematics_integral_calculus_definite_area",
+    "mathematics_differential_equations"
+  ],
+  "mathematics_coordinate_geometry": [
+    "mathematics_straight_lines",
+    "mathematics_circles",
+    "mathematics_conic_sections_ellipse_hyperbola",
+    "mathematics_3d_geometry"
+  ]
+};
+
+/**
+ * Check if a chapter key is a broad category that maps to specific chapters
+ *
+ * @param {string} chapterKey - The chapter key to check
+ * @returns {boolean} True if this is a broad category
+ */
+function isBroadChapter(chapterKey) {
+  return BROAD_TO_SPECIFIC_CHAPTER_MAP.hasOwnProperty(chapterKey);
+}
+
+/**
+ * Get specific chapters for a broad chapter category
+ * Returns the original chapter if it's not a broad category
+ *
+ * @param {string} chapterKey - The chapter key (may be broad or specific)
+ * @returns {string[]} Array of specific chapter keys
+ */
+function getSpecificChapters(chapterKey) {
+  if (BROAD_TO_SPECIFIC_CHAPTER_MAP[chapterKey]) {
+    return BROAD_TO_SPECIFIC_CHAPTER_MAP[chapterKey];
+  }
+  // If not a broad chapter, return as-is in an array
+  return [chapterKey];
+}
+
+/**
+ * Expand theta estimates from broad chapters to specific chapters
+ * Used after initial assessment to distribute theta across all related topics
+ *
+ * @param {Object} thetaByChapter - Original theta estimates (may include broad chapters)
+ * @returns {Object} Expanded theta estimates with specific chapters
+ */
+function expandBroadChaptersToSpecific(thetaByChapter) {
+  const expandedTheta = {};
+
+  for (const [chapterKey, thetaData] of Object.entries(thetaByChapter)) {
+    if (isBroadChapter(chapterKey)) {
+      // This is a broad chapter - distribute theta to all specific chapters
+      const specificChapters = getSpecificChapters(chapterKey);
+
+      for (const specificChapter of specificChapters) {
+        // Don't overwrite if specific chapter already has data
+        if (!expandedTheta[specificChapter]) {
+          expandedTheta[specificChapter] = {
+            ...thetaData,
+            source_chapter: chapterKey, // Track where this theta came from
+            is_derived: true, // Mark as derived from broad category
+            derived_at: new Date().toISOString()
+          };
+        }
+      }
+
+      // Also keep the broad chapter for reference
+      expandedTheta[chapterKey] = {
+        ...thetaData,
+        is_broad_category: true,
+        expanded_to: specificChapters
+      };
+    } else {
+      // Specific chapter - keep as-is
+      expandedTheta[chapterKey] = thetaData;
+    }
+  }
+
+  return expandedTheta;
+}
 
 const JEE_CHAPTER_WEIGHTS = {
   // Physics (~21 chapters)
@@ -522,6 +669,11 @@ module.exports = {
   getSubjectFromChapter,
   calculateSubjectBalance,
 
+  // Broad-to-specific chapter mapping functions
+  isBroadChapter,
+  getSpecificChapters,
+  expandBroadChaptersToSpecific,
+
   // Constants
   THETA_MIN,
   THETA_MAX,
@@ -529,5 +681,6 @@ module.exports = {
   SE_CEILING,
   JEE_CHAPTER_WEIGHTS,
   DEFAULT_CHAPTER_WEIGHT,
-  CHAPTER_NAME_NORMALIZATIONS
+  CHAPTER_NAME_NORMALIZATIONS,
+  BROAD_TO_SPECIFIC_CHAPTER_MAP
 };

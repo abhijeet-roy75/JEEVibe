@@ -18,7 +18,9 @@ const {
   boundTheta,
   calculateSubjectBalance,
   getSubjectFromChapter,
-  formatChapterKey
+  formatChapterKey,
+  expandBroadChaptersToSpecific,
+  isBroadChapter
 } = require('./thetaCalculationService');
 
 // ============================================================================
@@ -211,28 +213,40 @@ async function processInitialAssessment(userId, enrichedResponses) {
       
       chapterAttemptCounts[chapterKey] = totalCount;
     }
-    
-    // Step 3: Calculate subject-level theta estimates
+
+    // Step 2.5: Expand broad chapters to specific chapters
+    // This distributes theta from "Mechanics" to kinematics, laws_of_motion, etc.
+    const broadChapterCount = Object.keys(thetaEstimates).filter(k => isBroadChapter(k)).length;
+    const expandedThetaEstimates = expandBroadChaptersToSpecific(thetaEstimates);
+
+    console.log(
+      `Expanded ${broadChapterCount} broad chapters to ${Object.keys(expandedThetaEstimates).length} total chapters`
+    );
+
+    // Use expanded estimates for all subsequent calculations
+    const finalThetaEstimates = expandedThetaEstimates;
+
+    // Step 3: Calculate subject-level theta estimates (using expanded chapters)
     const thetaBySubject = {
-      physics: calculateSubjectTheta(thetaEstimates, 'physics'),
-      chemistry: calculateSubjectTheta(thetaEstimates, 'chemistry'),
-      mathematics: calculateSubjectTheta(thetaEstimates, 'mathematics')
+      physics: calculateSubjectTheta(finalThetaEstimates, 'physics'),
+      chemistry: calculateSubjectTheta(finalThetaEstimates, 'chemistry'),
+      mathematics: calculateSubjectTheta(finalThetaEstimates, 'mathematics')
     };
     
     // Step 3.5: Calculate subject-level accuracy (percentage of correct answers)
     const subjectAccuracy = calculateSubjectAccuracy(enrichedResponses);
-    
+
     // Step 4: Calculate weighted overall theta (by JEE chapter importance)
-    const overallTheta = calculateWeightedOverallTheta(thetaEstimates);
+    const overallTheta = calculateWeightedOverallTheta(finalThetaEstimates);
     const overallPercentile = thetaToPercentile(overallTheta);
-    
+
     // Step 5: Calculate subject balance
-    const subjectBalance = calculateSubjectBalance(thetaEstimates);
-    
-    // Step 6: Count chapters explored
-    const chaptersExplored = Object.keys(thetaEstimates).length;
-    const chaptersConfident = Object.values(thetaEstimates).filter(
-      c => c.attempts >= 2
+    const subjectBalance = calculateSubjectBalance(finalThetaEstimates);
+
+    // Step 6: Count chapters explored (count expanded specific chapters)
+    const chaptersExplored = Object.keys(finalThetaEstimates).length;
+    const chaptersConfident = Object.values(finalThetaEstimates).filter(
+      c => c.attempts >= 2 || c.is_derived // Derived chapters inherit confidence
     ).length;
     
     // Step 7: Prepare assessment results
@@ -258,7 +272,8 @@ async function processInitialAssessment(userId, enrichedResponses) {
         }))
       },
       // Chapter-level theta (PRIMARY - used for quiz generation)
-      theta_by_chapter: thetaEstimates,
+      // Contains both original broad chapters AND expanded specific chapters
+      theta_by_chapter: finalThetaEstimates,
       // Subject-level theta (DERIVED - for mobile app display)
       theta_by_subject: thetaBySubject,
       // Subject-level accuracy (percentage of correct answers per subject)

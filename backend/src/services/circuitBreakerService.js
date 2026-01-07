@@ -30,8 +30,10 @@ const RECOVERY_QUIZ_CONFIG = {
 };
 
 // Difficulty thresholds for recovery quiz
-const EASY_DIFFICULTY_MAX = 0.0; // b <= 0.0
-const MEDIUM_DIFFICULTY_MAX = 0.5; // 0.0 < b <= 0.5
+// Calibrated to JEEVibe question bank (difficulty range: 0.4 to 2.6)
+// Based on 20th percentile (0.7) and 40th percentile (1.2) of question difficulties
+const EASY_DIFFICULTY_MAX = 0.7; // b <= 0.7 (~21% of questions = 542)
+const MEDIUM_DIFFICULTY_MAX = 1.2; // 0.7 < b <= 1.2 (~32% of questions = 825)
 
 // ============================================================================
 // FAILURE DETECTION
