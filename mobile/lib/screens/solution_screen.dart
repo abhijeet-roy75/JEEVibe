@@ -879,7 +879,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
       builder: (context, appState, child) {
         return Column(
           children: [
-            // Snap Another Question
+            // Back to Snap and Solve - Single button since both buttons went to same destination
             Container(
               width: double.infinity,
               height: 56,
@@ -892,16 +892,8 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    // NAVIGATION STRATEGY: Always navigate to HomeScreen (Simplified Flow)
-                    //
-                    // Benefits:
-                    // 1. Consistent user experience - same destination regardless of quota
-                    // 2. Users can always view their snap history
-                    // 3. Simpler mental model - one button, one destination
-                    // 4. HomeScreen enforces quota (camera/gallery buttons disabled when exhausted)
-                    //
-                    // Trade-off: Users with available quota need one extra tap (HomeScreen → Camera button)
-                    // This can be revisited based on user feedback if the extra tap becomes friction
+                    // Navigate back to HomeScreen
+                    // HomeScreen enforces quota (camera/gallery buttons disabled when exhausted)
                     bool found = false;
                     Navigator.of(context).popUntil((route) {
                       if (route.settings.name == '/snap_home') {
@@ -911,60 +903,6 @@ class _SolutionScreenState extends State<SolutionScreen> {
                       return route.isFirst;
                     });
 
-                    if (!found) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => HomeScreen(),
-                          settings: const RouteSettings(name: '/snap_home'),
-                        ),
-                      );
-                    }
-                  },
-                  borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.menu_book, color: Colors.white),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Snap Another Question',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: Colors.white,
-                            fontSize: 16,
-            ),
-          ),
-        ],
-      ),
-                  ),
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 12),
-            
-            // Back to Snap and Solve
-            Container(
-              width: double.infinity,
-              height: 56,
-              decoration: BoxDecoration(
-                gradient: AppColors.ctaGradient,
-                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                boxShadow: AppShadows.buttonShadow,
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    bool found = false;
-                    Navigator.of(context).popUntil((route) {
-                      if (route.settings.name == '/snap_home') {
-                        found = true;
-                        return true;
-                      }
-                      return route.isFirst;
-                    });
-                    
                     if (!found) {
                       Navigator.of(context).push(
                         MaterialPageRoute(
