@@ -12,9 +12,9 @@ import '../utils/performance_tracker.dart';
 class ApiService {
   // Backend URL
   // For local development: http://localhost:3000 (iOS simulator) or http://YOUR_COMPUTER_IP:3000 (real device)
-  // For production: https://jeevibe.onrender.com
+  // For production (Singapore region): https://jeevibe-thzi.onrender.com
   // Current IP: 192.168.5.81
-  static const String baseUrl = 'https://jeevibe.onrender.com';
+  static const String baseUrl = 'https://jeevibe-thzi.onrender.com';
   // static const String baseUrl = 'http://localhost:3000'; // For local development
   // static const String baseUrl = 'http://192.168.5.81:3000'; // For real device testing
   

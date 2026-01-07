@@ -6,8 +6,8 @@ import '../../models/user_profile.dart';
 import '../firebase/auth_service.dart';
 
 class FirestoreUserService {
-  // Backend URL - same as ApiService
-  static const String baseUrl = 'https://jeevibe.onrender.com';
+  // Backend URL - same as ApiService (Singapore region)
+  static const String baseUrl = 'https://jeevibe-thzi.onrender.com';
   
   // Get authentication token from AuthService
   Future<String?> _getAuthToken() async {
