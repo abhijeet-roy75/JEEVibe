@@ -157,8 +157,13 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
       throw new ApiError(400, 'File content does not match declared image type. File may be corrupted or not an image.');
     }
 
-    // Step 0: Upload image to Firebase Storage
-    logger.info('Updating image to storage', { userId, requestId: req.id });
+    // Performance tracking - Step 0: Upload image to Firebase Storage
+    const perfStart = Date.now();
+    const perfSteps = {};
+
+    logger.info('⏱️  [PERF] Starting solve request', { userId, requestId: req.id, imageSize });
+
+    const storageStartTime = Date.now();
     const filename = `snaps/${userId}/${uuidv4()}_${req.file.originalname}`;
     const file = storage.bucket().file(filename);
 
@@ -171,14 +176,14 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
         }
       }
     });
+    perfSteps.firebaseStorageUpload = Date.now() - storageStartTime;
+    logger.info(`⏱️  [PERF] Firebase Storage upload: ${perfSteps.firebaseStorageUpload}ms`, { requestId: req.id });
 
     // Get public URL or bucket path
-    // For simplicity in this POC, we'll use the bucket path
-    // The mobile app can use the Firebase Storage SDK to get the download URL
     const imageUrl = `gs://${storage.bucket().name}/${filename}`;
 
     // Step 1: Solve question from image (don't generate follow-up questions yet)
-    logger.info('Processing image with OpenAI', {
+    logger.info('⏱️  [PERF] Starting OpenAI Vision API call', {
       requestId: req.id,
       userId,
       imageSize,
@@ -187,21 +192,22 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
     // Add timeout for long-running OpenAI operations (2 minutes)
     const setTimeoutPromise = promisify(setTimeout);
 
+    const openaiStartTime = Date.now();
     const solutionData = await Promise.race([
       solveQuestionFromImage(imageBuffer),
       setTimeoutPromise(120000).then(() => {
         throw new ApiError(504, 'Request timeout. Image processing took too long. Please try again with a clearer image.');
       }),
     ]);
-
-    logger.info('Image processed successfully', {
+    perfSteps.openaiApiCall = Date.now() - openaiStartTime;
+    logger.info(`⏱️  [PERF] OpenAI Vision API call: ${perfSteps.openaiApiCall}ms`, {
       requestId: req.id,
-      userId,
       subject: solutionData.subject,
       topic: solutionData.topic,
     });
 
     // Save snap record to history
+    const firestoreSaveStart = Date.now();
     const snapId = await saveSnapRecord(userId, {
       recognizedQuestion: solutionData.recognizedQuestion,
       subject: solutionData.subject,
@@ -212,9 +218,29 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
       imageUrl: imageUrl,
       requestId: req.id
     });
+    perfSteps.firestoreSave = Date.now() - firestoreSaveStart;
+    logger.info(`⏱️  [PERF] Firestore save snap record: ${perfSteps.firestoreSave}ms`, { requestId: req.id });
 
     // Get updated usage
+    const usageStartTime = Date.now();
     const updatedUsage = await getDailyUsage(userId);
+    perfSteps.usageCheck = Date.now() - usageStartTime;
+
+    // Calculate and log total performance
+    const totalTime = Date.now() - perfStart;
+    perfSteps.totalTime = totalTime;
+
+    logger.info('⏱️  [PERF] Request completed - Performance Summary', {
+      requestId: req.id,
+      userId,
+      totalTimeMs: totalTime,
+      breakdown: {
+        firebaseStorageUpload: `${perfSteps.firebaseStorageUpload}ms (${((perfSteps.firebaseStorageUpload / totalTime) * 100).toFixed(1)}%)`,
+        openaiApiCall: `${perfSteps.openaiApiCall}ms (${((perfSteps.openaiApiCall / totalTime) * 100).toFixed(1)}%)`,
+        firestoreSave: `${perfSteps.firestoreSave}ms (${((perfSteps.firestoreSave / totalTime) * 100).toFixed(1)}%)`,
+        usageCheck: `${perfSteps.usageCheck}ms (${((perfSteps.usageCheck / totalTime) * 100).toFixed(1)}%)`
+      }
+    });
 
     // Return solution only (follow-up questions will be generated on demand)
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
