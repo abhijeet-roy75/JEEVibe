@@ -48,8 +48,23 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
   
-  // Get ID Token
-  Future<String?> getIdToken() async {
-    return await _auth.currentUser?.getIdToken();
+  // Get ID Token (with optional force refresh)
+  Future<String?> getIdToken({bool forceRefresh = false}) async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+
+    try {
+      return await user.getIdToken(forceRefresh);
+    } catch (e) {
+      // If token fetch fails, try force refresh once
+      if (!forceRefresh) {
+        try {
+          return await user.getIdToken(true);
+        } catch (_) {
+          return null;
+        }
+      }
+      return null;
+    }
   }
 }

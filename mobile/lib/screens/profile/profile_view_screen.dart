@@ -185,26 +185,8 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Information fields
-                        _buildInfoField('Target Exam', _profile!.targetExam ?? 'Not set'),
-                        const SizedBox(height: 16),
-                        _buildInfoField('Target Year', _profile!.targetYear?.toString() ?? 'Not set'),
-                        if (_profile!.state != null && _profile!.state!.isNotEmpty) ...[
-                          const SizedBox(height: 16),
-                          _buildInfoField('State', _profile!.state!),
-                        ],
-                        if (_profile!.dreamBranch != null && _profile!.dreamBranch!.isNotEmpty) ...[
-                          const SizedBox(height: 16),
-                          _buildInfoField('Dream Branch', _profile!.dreamBranch!),
-                        ],
-                        if (_profile!.studySetup.isNotEmpty) ...[
-                          const SizedBox(height: 16),
-                          _buildInfoField('Study Setup', _profile!.studySetup.join(', ')),
-                        ],
-                        if (_profile!.email != null && _profile!.email!.isNotEmpty) ...[
-                          const SizedBox(height: 16),
-                          _buildInfoField('Email', _profile!.email!),
-                        ],
+                        // Information fields - Only show fields that have values
+                        ..._buildProfileFields(),
                         
                         const SizedBox(height: 32),
                         
@@ -305,6 +287,30 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
               ],
             ),
     );
+  }
+
+  List<Widget> _buildProfileFields() {
+    final fields = <Widget>[];
+
+    void addField(String label, String? value) {
+      if (value != null && value.isNotEmpty) {
+        if (fields.isNotEmpty) {
+          fields.add(const SizedBox(height: 16));
+        }
+        fields.add(_buildInfoField(label, value));
+      }
+    }
+
+    addField('Target Year', _profile!.targetYear);
+    addField('Target Exam', _profile!.targetExam);
+    addField('Email', _profile!.email);
+    addField('State', _profile!.state);
+    addField('Dream Branch', _profile!.dreamBranch);
+    if (_profile!.studySetup.isNotEmpty) {
+      addField('Study Setup', _profile!.studySetup.join(', '));
+    }
+
+    return fields;
   }
 
   Widget _buildInfoField(String label, String value) {

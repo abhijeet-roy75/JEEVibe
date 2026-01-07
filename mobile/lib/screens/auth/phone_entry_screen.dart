@@ -23,7 +23,6 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   String? _phoneNumber;
   bool _isLoading = false;
   int _remainingOtpRequests = 3;
-  String? _validationError;
 
   @override
   void initState() {
@@ -301,15 +300,6 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     onInputChanged: (PhoneNumber number) {
                       _number = number;
                       _phoneNumber = number.phoneNumber;
-                      // Clear validation error on input change
-                      if (_validationError != null) {
-                        setState(() => _validationError = null);
-                      }
-                      // Validate on change
-                      final error = _validatePhoneNumber(number.phoneNumber);
-                      if (error != null) {
-                        setState(() => _validationError = error);
-                      }
                     },
                     selectorConfig: const SelectorConfig(
                       selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
@@ -338,31 +328,6 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                   ),
                 ),
               ),
-
-              // Validation error message
-              if (_validationError != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, left: 4),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: AppColors.errorRed,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          _validationError!,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.errorRed,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
 
               const SizedBox(height: 24),
 
