@@ -20,6 +20,7 @@ import '../utils/text_preprocessor.dart';
 import '../widgets/subject_icon_widget.dart';
 import 'profile/profile_view_screen.dart';
 import '../widgets/priya_avatar.dart';
+import '../utils/performance_tracker.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -520,7 +521,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _processImage(File imageFile) async {
+    final tracker = PerformanceTracker('Snap and Solve - Image Capture to Crop');
+    tracker.start();
+
     // Crop the image
+    tracker.step('Starting image crop');
     final croppedFile = await ImageCropper().cropImage(
       sourcePath: imageFile.path,
       uiSettings: [
@@ -539,11 +544,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ],
     );
+    tracker.step('Image crop completed');
 
     if (croppedFile == null) {
+      tracker.end();
       return;
     }
 
+    tracker.step('Navigating to PhotoReviewScreen');
     if (mounted) {
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -553,6 +561,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
+    tracker.end();
   }
 
   Widget _buildActionButtons() {

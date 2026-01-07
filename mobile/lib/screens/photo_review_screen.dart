@@ -10,6 +10,7 @@ import '../services/firebase/auth_service.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
 import 'solution_screen.dart';
+import '../utils/performance_tracker.dart';
 
 class PhotoReviewScreen extends StatelessWidget {
   final File imageFile;
@@ -24,10 +25,14 @@ class PhotoReviewScreen extends StatelessWidget {
   }
 
   Future<void> _usePhoto(BuildContext context) async {
+    final tracker = PerformanceTracker('Snap and Solve - Use Photo to API Call');
+    tracker.start();
+
     try {
       // Get authentication token with refresh capability
+      tracker.step('Getting authentication token');
       final authService = Provider.of<AuthService>(context, listen: false);
-      
+
       // Get token right before use to avoid race conditions
       String? token;
       try {
@@ -37,6 +42,7 @@ class PhotoReviewScreen extends StatelessWidget {
           token = await authService.currentUser!.getIdToken(true); // Force refresh
         }
       } catch (e) {
+        tracker.end();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -47,8 +53,9 @@ class PhotoReviewScreen extends StatelessWidget {
         }
         return;
       }
-      
+
       if (token == null) {
+        tracker.end();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -59,6 +66,8 @@ class PhotoReviewScreen extends StatelessWidget {
         }
         return;
       }
+
+      tracker.step('Authentication token retrieved');
 
       // Show loading indicator
       showDialog(
@@ -70,21 +79,27 @@ class PhotoReviewScreen extends StatelessWidget {
       );
 
       // Compress image
+      tracker.step('Starting image compression');
       final compressedFile = await ImageCompressor.compressImage(imageFile);
-      
+      tracker.step('Image compression completed');
+
       // Start solving (but don't wait) - use token immediately to avoid race condition
+      tracker.step('Calling API solve endpoint');
       final solutionFuture = ApiService.solveQuestion(
         imageFile: compressedFile,
         authToken: token!, // Non-null assertion safe here after null check
       );
-      
+      tracker.step('API call initiated (async)');
+
+      tracker.end();
+
       if (context.mounted) {
         // Pop loading dialog
         Navigator.of(context).pop();
-        
+
         // Pop photo review screen
         Navigator.of(context).pop();
-        
+
         // Navigate to solution screen
         Navigator.of(context).push(
           MaterialPageRoute(

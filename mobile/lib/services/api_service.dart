@@ -7,6 +7,7 @@ import '../models/solution_model.dart';
 import '../models/assessment_question.dart';
 import '../models/assessment_response.dart';
 import '../models/daily_quiz_question.dart';
+import '../utils/performance_tracker.dart';
 
 class ApiService {
   // Backend URL
@@ -73,8 +74,12 @@ class ApiService {
     required File imageFile,
     required String authToken,
   }) async {
+    final tracker = PerformanceTracker('API Call - Solve Question');
+    tracker.start();
+
     return _retryRequest(() async {
       try {
+      tracker.step('Creating multipart request');
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl/api/solve'),
@@ -84,6 +89,7 @@ class ApiService {
       request.headers['Authorization'] = 'Bearer $authToken';
 
       // Add image file with explicit content type
+      tracker.step('Reading image file');
       final fileExtension = imageFile.path.split('.').last.toLowerCase();
       MediaType contentType;
       if (fileExtension == 'png') {
@@ -93,40 +99,54 @@ class ApiService {
       } else {
         contentType = MediaType('image', 'jpeg');
       }
-      
+
+      tracker.step('Attaching image to request');
       request.files.add(
         await http.MultipartFile.fromPath(
-          'image', 
+          'image',
           imageFile.path,
           contentType: contentType,
         ),
       );
 
       // Send request with 90 second timeout (some complex questions take time)
+      tracker.step('Sending HTTP request to backend');
       var streamedResponse = await request.send().timeout(
         const Duration(seconds: 90),
         onTimeout: () {
+          tracker.end();
           throw Exception('Request timed out. This question might be taking longer than usual to process. Please try again or try a clearer photo.');
         },
       );
+      tracker.step('Backend response received');
+
+      tracker.step('Reading response body');
       var response = await http.Response.fromStream(streamedResponse);
+      tracker.step('Response body read complete');
 
       if (response.statusCode == 200) {
         try {
+          tracker.step('Parsing JSON response');
           final jsonData = json.decode(response.body);
           if (jsonData['success'] == true && jsonData['data'] != null) {
             try {
-              return Solution.fromJson(jsonData['data']);
+              tracker.step('Creating Solution object from response');
+              final solution = Solution.fromJson(jsonData['data']);
+              tracker.end();
+              return solution;
             } catch (e) {
+              tracker.end();
               throw Exception('Failed to parse solution data: $e');
             }
           } else {
             // Handle new error format
+            tracker.end();
             final errorMsg = jsonData['error'] ?? 'Unknown error';
             final requestId = jsonData['requestId'];
             throw Exception('$errorMsg${requestId != null ? ' (Request ID: $requestId)' : ''}');
           }
         } catch (e) {
+          tracker.end();
           if (e is Exception) rethrow;
           throw Exception('Failed to decode response: $e');
         }
