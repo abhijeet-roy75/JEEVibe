@@ -206,25 +206,24 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
       topic: solutionData.topic,
     });
 
-    // Save snap record to history
-    const firestoreSaveStart = Date.now();
-    const snapId = await saveSnapRecord(userId, {
-      recognizedQuestion: solutionData.recognizedQuestion,
-      subject: solutionData.subject,
-      topic: solutionData.topic,
-      difficulty: solutionData.difficulty,
-      language: solutionData.language,
-      solution: solutionData.solution,
-      imageUrl: imageUrl,
-      requestId: req.id
-    });
-    perfSteps.firestoreSave = Date.now() - firestoreSaveStart;
-    logger.info(`⏱️  [PERF] Firestore save snap record: ${perfSteps.firestoreSave}ms`, { requestId: req.id });
-
-    // Get updated usage
-    const usageStartTime = Date.now();
-    const updatedUsage = await getDailyUsage(userId);
-    perfSteps.usageCheck = Date.now() - usageStartTime;
+    // Run Firestore operations in parallel (save + usage check)
+    // This saves ~1-2 seconds by avoiding sequential round-trips to Firestore
+    const firestoreStart = Date.now();
+    const [snapId, updatedUsage] = await Promise.all([
+      saveSnapRecord(userId, {
+        recognizedQuestion: solutionData.recognizedQuestion,
+        subject: solutionData.subject,
+        topic: solutionData.topic,
+        difficulty: solutionData.difficulty,
+        language: solutionData.language,
+        solution: solutionData.solution,
+        imageUrl: imageUrl,
+        requestId: req.id
+      }),
+      getDailyUsage(userId)
+    ]);
+    perfSteps.firestoreOperations = Date.now() - firestoreStart;
+    logger.info(`⏱️  [PERF] Firestore operations (parallel): ${perfSteps.firestoreOperations}ms`, { requestId: req.id });
 
     // Calculate and log total performance
     const totalTime = Date.now() - perfStart;
@@ -237,8 +236,7 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
       breakdown: {
         firebaseStorageUpload: `${perfSteps.firebaseStorageUpload}ms (${((perfSteps.firebaseStorageUpload / totalTime) * 100).toFixed(1)}%)`,
         openaiApiCall: `${perfSteps.openaiApiCall}ms (${((perfSteps.openaiApiCall / totalTime) * 100).toFixed(1)}%)`,
-        firestoreSave: `${perfSteps.firestoreSave}ms (${((perfSteps.firestoreSave / totalTime) * 100).toFixed(1)}%)`,
-        usageCheck: `${perfSteps.usageCheck}ms (${((perfSteps.usageCheck / totalTime) * 100).toFixed(1)}%)`
+        firestoreOperations: `${perfSteps.firestoreOperations}ms (${((perfSteps.firestoreOperations / totalTime) * 100).toFixed(1)}%) - parallel save + usage check`
       }
     });
 

@@ -7,7 +7,7 @@ const { db, admin } = require('../config/firebase');
 const logger = require('../utils/logger');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 
-const DAILY_LIMIT = 5;
+const DAILY_LIMIT = 20; // Temporarily increased from 5 to 20 for performance testing
 
 /**
  * Get current snap usage for a user for today
