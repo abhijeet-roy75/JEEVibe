@@ -1,12 +1,14 @@
 /// Camera Screen - Snap Your Question
 /// Matches design: 4 Camera Interface Screen Redesigned.png
 import 'dart:io';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'photo_review_screen.dart';
+import 'image_preview_screen.dart';
 import 'all_solutions_screen.dart';
 import 'solution_review_screen.dart';
 import '../theme/app_colors.dart';
@@ -85,38 +87,62 @@ class _CameraScreenState extends State<CameraScreen> {
       _selectedImage = imageFile;
     });
 
-    // Crop the image
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: imageFile.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Crop Question',
-          toolbarColor: AppColors.primaryPurple,
-          toolbarWidgetColor: Colors.white,
-          initAspectRatio: CropAspectRatioPreset.original,
-          lockAspectRatio: false,
-        ),
-        IOSUiSettings(
-          title: 'Crop Question',
-          doneButtonTitle: 'Next',
-          cancelButtonTitle: 'Cancel',
-          aspectRatioLockEnabled: false,
-        ),
-      ],
-    );
+    // On Android, use custom preview screen with large buttons
+    // On iOS, use native ImageCropper (which has proper Cancel/Next buttons)
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
 
-    if (croppedFile == null) {
-      setState(() {
-        _selectedImage = null;
-      });
-      return;
+    if (isAndroid) {
+      // Navigate to custom preview screen with large, easy-to-tap buttons
+      if (mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ImagePreviewScreen(
+              imageFile: imageFile,
+              onConfirm: (File finalImage) {
+                Navigator.of(context).pop(); // Pop preview screen
+                _navigateToPhotoReview(finalImage);
+              },
+              onCancel: () {
+                Navigator.of(context).pop(); // Pop preview screen
+                setState(() {
+                  _selectedImage = null;
+                });
+              },
+            ),
+          ),
+        );
+      }
+    } else {
+      // iOS: Use native ImageCropper (has proper text buttons)
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        uiSettings: [
+          IOSUiSettings(
+            title: 'Crop Question',
+            doneButtonTitle: 'Next',
+            cancelButtonTitle: 'Cancel',
+            aspectRatioLockEnabled: false,
+          ),
+        ],
+      );
+
+      if (croppedFile == null) {
+        setState(() {
+          _selectedImage = null;
+        });
+        return;
+      }
+
+      _navigateToPhotoReview(File(croppedFile.path));
     }
+  }
 
+  void _navigateToPhotoReview(File imageFile) {
     if (mounted) {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => PhotoReviewScreen(
-            imageFile: File(croppedFile.path),
+            imageFile: imageFile,
           ),
         ),
       );
