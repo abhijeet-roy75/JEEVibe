@@ -410,14 +410,6 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  'By continuing, you agree to our\nTerms of Service and Privacy Policy',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textLight),
-                ),
-              ),
-              const SizedBox(height: 16),
                     ],
                   ),
                 ),
