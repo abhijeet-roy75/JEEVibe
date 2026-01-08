@@ -31,6 +31,7 @@ class DailyQuizQuestionScreen extends StatefulWidget {
 class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
   Timer? _timer;
   bool _quizInitialized = false;
+  bool _isCompletingQuiz = false; // Local guard against double-tap
 
   @override
   void initState() {
@@ -218,12 +219,21 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
   }
 
   Future<void> _completeQuiz() async {
+    // Guard against multiple simultaneous calls (local state)
+    if (_isCompletingQuiz) {
+      return;
+    }
+
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
 
-    // Guard against multiple simultaneous calls
+    // Also check provider state
     if (provider.isCompletingQuiz) {
       return;
     }
+
+    setState(() {
+      _isCompletingQuiz = true;
+    });
 
     try {
       final result = await ErrorHandler.handleApiError(
@@ -244,11 +254,38 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ErrorHandler.showErrorSnackBar(
-          context,
-          message: ErrorHandler.getErrorMessage(e),
-          onRetry: _completeQuiz,
-        );
+        setState(() {
+          _isCompletingQuiz = false;
+        });
+
+        final errorMessage = e.toString().toLowerCase();
+
+        // If quiz is already completed, navigate to results instead of showing retry
+        if (errorMessage.contains('already completed')) {
+          // Quiz was completed (maybe by another request), just navigate to results
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Quiz already completed. Loading results...'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          // Navigate to result screen - the result screen will fetch results
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => DailyQuizResultScreen(
+                quizId: widget.quiz.quizId,
+                resultData: null, // Will fetch from API
+              ),
+            ),
+          );
+        } else {
+          // Show error with retry for other errors
+          ErrorHandler.showErrorSnackBar(
+            context,
+            message: ErrorHandler.getErrorMessage(e),
+            onRetry: _completeQuiz,
+          );
+        }
       }
     }
   }
@@ -614,7 +651,8 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
 
   Widget _buildActionButton(DailyQuizProvider provider) {
     final isLastQuestion = provider.isQuizComplete;
-    final isLoading = provider.isSubmittingAnswer || provider.isCompletingQuiz;
+    // Include local _isCompletingQuiz flag to prevent double-tap
+    final isLoading = provider.isSubmittingAnswer || provider.isCompletingQuiz || _isCompletingQuiz;
 
     return SizedBox(
       width: double.infinity,
