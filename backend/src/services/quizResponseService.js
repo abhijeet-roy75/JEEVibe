@@ -131,19 +131,25 @@ function generateFeedback(questionData, isCorrect, studentAnswer) {
     correct_answer_text: questionData.correct_answer_text || questionData.correct_answer,
     explanation: null,
     solution_text: questionData.solution_text || null,
-    solution_steps: questionData.solution_steps || []
+    solution_steps: questionData.solution_steps || [],
+    // Key insight from metadata (for Key Takeaway section)
+    key_insight: questionData.metadata?.key_insight || null,
+    // Common mistakes (for additional context)
+    common_mistakes: questionData.metadata?.common_mistakes || null,
+    // Hint (optional)
+    hint: questionData.metadata?.hint || null
   };
-  
+
   // Add explanation if available
   if (questionData.solution_text) {
     feedback.explanation = questionData.solution_text;
   } else if (questionData.solution_steps && questionData.solution_steps.length > 0) {
     // Use first solution step as explanation
-    feedback.explanation = questionData.solution_steps[0].explanation || 
-                           questionData.solution_steps[0].description || 
+    feedback.explanation = questionData.solution_steps[0].explanation ||
+                           questionData.solution_steps[0].description ||
                            null;
   }
-  
+
   return feedback;
 }
 

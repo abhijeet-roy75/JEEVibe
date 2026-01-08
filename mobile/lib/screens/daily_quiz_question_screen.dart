@@ -560,9 +560,11 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     if (feedback == null) {
       message = "Take your time and think carefully. You've got this! 💪";
     } else if (feedback.isCorrect) {
-      message = "Excellent! You understood this concept well. Keep it up! 🎯";
+      // Vary correct answer messages for variety
+      message = _getCorrectAnswerMessage();
     } else {
-      message = "Don't worry! Understanding why you made this mistake is valuable. Review the explanation carefully! 📚";
+      // Vary incorrect answer messages for encouragement
+      message = _getIncorrectAnswerMessage();
     }
 
     return Padding(
@@ -703,6 +705,35 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         ),
       ],
     );
+  }
+
+  // Varied messages for correct answers based on question number
+  String _getCorrectAnswerMessage() {
+    final provider = Provider.of<DailyQuizProvider>(context, listen: false);
+    final currentIndex = provider.currentQuestionIndex;
+    final messages = [
+      "Excellent! You understood this concept well. Keep it up! 🎯",
+      "Great job! Your hard work is paying off. 🌟",
+      "Well done! You're building strong momentum. 💪",
+      "Perfect! You nailed that one. Keep going! ✨",
+      "Wonderful! Your understanding is solid here. 🎉",
+    ];
+    // Use question index to vary the message
+    return messages[currentIndex % messages.length];
+  }
+
+  // Varied messages for incorrect answers (encouraging, not demotivating)
+  String _getIncorrectAnswerMessage() {
+    final provider = Provider.of<DailyQuizProvider>(context, listen: false);
+    final currentIndex = provider.currentQuestionIndex;
+    final messages = [
+      "Don't worry! Understanding why you made this mistake is valuable. Review the explanation carefully! 📚",
+      "Tough one! What matters is you're learning. Let's review this together. 🌱",
+      "These concepts can be tricky. Your effort in practicing will pay off! 💪",
+      "No problem! Every mistake is a learning opportunity. Check out the solution! 📖",
+      "It's okay! Even toppers get tricky questions wrong. Review and you'll get it next time! ❤️",
+    ];
+    return messages[currentIndex % messages.length];
   }
 }
 

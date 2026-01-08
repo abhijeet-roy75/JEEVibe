@@ -105,8 +105,11 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                       _buildWhyWrongSection(),
                       const SizedBox(height: 16),
                     ],
-                    // Key Takeaway
-                    _buildKeyTakeawaySection(widget.feedback.solutionText ?? widget.feedback.explanation ?? ''),
+                    // Key Takeaway - Use keyInsight from metadata, fallback to solutionText
+                    if (widget.feedback.keyInsight != null || widget.feedback.solutionText != null)
+                      _buildKeyTakeawaySection(
+                        widget.feedback.keyInsight ?? widget.feedback.solutionText ?? '',
+                      ),
                   ],
                 ),
               ),

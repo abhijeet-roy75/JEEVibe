@@ -144,6 +144,9 @@ class AnswerFeedback {
   final List<SolutionStep>? solutionSteps;
   final int timeTakenSeconds;
   final String? studentAnswer;
+  final String? keyInsight; // Key takeaway for this question
+  final List<String>? commonMistakes; // Common mistakes students make
+  final String? hint; // Hint for the question
 
   AnswerFeedback({
     required this.questionId,
@@ -155,6 +158,9 @@ class AnswerFeedback {
     this.solutionSteps,
     required this.timeTakenSeconds,
     this.studentAnswer,
+    this.keyInsight,
+    this.commonMistakes,
+    this.hint,
   });
 
   factory AnswerFeedback.fromJson(Map<String, dynamic> json) {
@@ -172,6 +178,11 @@ class AnswerFeedback {
           : null,
       timeTakenSeconds: json['time_taken_seconds'] as int? ?? 0,
       studentAnswer: json['student_answer'] as String?,
+      keyInsight: json['key_insight'] as String?,
+      commonMistakes: json['common_mistakes'] != null
+          ? List<String>.from(json['common_mistakes'] as List)
+          : null,
+      hint: json['hint'] as String?,
     );
   }
 }

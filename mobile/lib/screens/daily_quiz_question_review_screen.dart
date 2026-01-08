@@ -818,9 +818,11 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
   Widget _buildPriyaMaamMessage(bool isCorrect) {
     String message;
     if (isCorrect) {
-      message = "Excellent! You understood this concept well. Make sure you can explain it to someone else—that's when you truly master it! 🎯";
+      // Vary correct answer messages during review
+      message = _getCorrectReviewMessage();
     } else {
-      message = "Don't worry about getting this wrong! Understanding why you made this mistake is actually more valuable than getting it right the first time. Review the explanation carefully and try a similar problem tomorrow! 💪";
+      // Vary incorrect answer messages for encouragement during review
+      message = _getIncorrectReviewMessage();
     }
 
     return Padding(
@@ -959,6 +961,30 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
       default:
         return 'Moderate';
     }
+  }
+
+  // Varied messages for correct answers during review
+  String _getCorrectReviewMessage() {
+    final messages = [
+      "Excellent! You understood this concept well. Make sure you can explain it to someone else—that's when you truly master it! 🎯",
+      "Great work! Your solid understanding here shows your preparation is on track. 🌟",
+      "Well done! This is exactly the kind of clarity you need for JEE. Keep building on it! 💪",
+      "Perfect! Understanding like this gives you confidence. You're doing great! ✨",
+      "Wonderful! Questions like this will feel easy in the exam with this foundation. 🎉",
+    ];
+    return messages[_currentIndex % messages.length];
+  }
+
+  // Varied messages for incorrect answers during review (encouraging)
+  String _getIncorrectReviewMessage() {
+    final messages = [
+      "Don't worry about getting this wrong! Understanding why you made this mistake is actually more valuable than getting it right the first time. Review the explanation carefully! 💪",
+      "This was a tricky one! What matters is you're taking time to review it. That's how toppers improve! 📚",
+      "Everyone gets these wrong sometimes. The key is learning from it—you're doing exactly that! 🌱",
+      "No problem! JEE tests deep understanding. This review will help you nail similar questions next time. ❤️",
+      "It's okay! Some concepts need more practice. I believe in your ability to master this! 📖",
+    ];
+    return messages[_currentIndex % messages.length];
   }
 }
 
