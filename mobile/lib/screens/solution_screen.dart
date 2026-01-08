@@ -493,6 +493,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
                               child: LaTeXWidget(
                 text: processedStepContent,
                 textStyle: ContentConfig.getStepTextStyle(color: AppColors.textMedium),
+                allowWrapping: true, // Enable wrapping to prevent horizontal scroll
                               ),
                             ),
                           ],
