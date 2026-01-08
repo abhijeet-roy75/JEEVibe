@@ -131,7 +131,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
       backgroundColor: AppColors.backgroundWhite,
       body: Column(
         children: [
-          // Gradient Header Section
+          // Compact Gradient Header Section
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
@@ -139,54 +139,12 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
             ),
             child: SafeArea(
               bottom: false,
-              child: Stack(
-                children: [
-                  // Main content column
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-                    child: Column(
-                      children: [
-                        // Icon
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.lock_reset_rounded,
-                            size: 48,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        // Title
-                        Text(
-                          "Reset PIN",
-                          style: AppTextStyles.headerLarge.copyWith(
-                            fontSize: 28,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Don't worry! We'll send you an OTP to verify your identity, then you can create a new PIN.",
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: Colors.white.withValues(alpha: 0.95),
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Absolutely positioned back button
-                  Positioned(
-                    top: 32,
-                    left: 24,
-                    child: Container(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Row(
+                  children: [
+                    // Back button
+                    Container(
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
@@ -198,13 +156,36 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                         constraints: const BoxConstraints(),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    // Icon + Title inline
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.lock_reset_rounded,
+                        size: 24,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      "Reset PIN",
+                      style: AppTextStyles.headerLarge.copyWith(
+                        fontSize: 22,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
 
-          // White Content Section
+          // White Content Section - Everything scrollable
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
@@ -213,26 +194,15 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
-                    // Section header
+                    // Description moved here from header
                     Text(
-                      'Phone Number',
-                      style: AppTextStyles.headerMedium.copyWith(
-                        fontSize: 20,
-                        color: AppColors.textDark,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Enter the phone number associated with your account',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textLight,
-                        fontSize: 14,
+                      "Don't worry! We'll send you an OTP to verify your identity, then you can create a new PIN.",
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textMedium,
                       ),
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
 
                     // Phone number input
                     Text(
@@ -242,7 +212,14 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Enter the phone number associated with your account',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textLight,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     TextFormField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
@@ -303,7 +280,7 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                       },
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
                     // Error message
                     if (_errorMessage != null) ...[
@@ -335,104 +312,96 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                     ],
 
-                    const SizedBox(height: 32),
+                    // Send OTP button with gradient (now inside scroll)
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.ctaGradient,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _sendOTP,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : Text(
+                                'Send OTP',
+                                style: AppTextStyles.bodyLarge.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Info box (now inside scroll)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.infoBlue.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.infoBlue.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: AppColors.infoBlue,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Make sure you have access to this phone number. We\'ll send you a one-time verification code.',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
             ),
           ),
-
-          // Action buttons
-          Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-                children: [
-                  // Send OTP button with gradient
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.ctaGradient,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primaryPurple.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _sendOTP,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: Colors.white,
-                        shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : Text(
-                              'Send OTP',
-                              style: AppTextStyles.bodyLarge.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Info box
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.infoBlue.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.infoBlue.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          color: AppColors.infoBlue,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Make sure you have access to this phone number. We\'ll send you a one-time verification code.',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textDark,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
+        ],
+      ),
+    );
   }
 }
 

@@ -134,7 +134,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
       backgroundColor: AppColors.backgroundWhite,
       body: Column(
         children: [
-          // Gradient Header Section
+          // Compact Gradient Header Section
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
@@ -142,70 +142,12 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
             ),
             child: SafeArea(
               bottom: false,
-              child: Stack(
-                children: [
-                  // Main content column (same as Step 1)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-                    child: Column(
-                      children: [
-                        // Wave emoji
-                        const Text(
-                          '👋',
-                          style: TextStyle(fontSize: 48),
-                        ),
-                        const SizedBox(height: 16),
-                    // Title
-                    Text(
-                      "Tell Us More",
-                      style: AppTextStyles.headerLarge.copyWith(
-                        fontSize: 28,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'This helps us personalize your JEE prep journey',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.white.withValues(alpha: 0.95),
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    // Progress indicator dots
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 24,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          width: 24,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                    ),
-                  ),
-                  // Absolutely positioned back button
-                  Positioned(
-                    top: 32,
-                    left: 24,
-                    child: Container(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Row(
+                  children: [
+                    // Back button
+                    Container(
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
@@ -217,13 +159,52 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                         constraints: const BoxConstraints(),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    // Wave emoji + Title inline
+                    const Text(
+                      '✨',
+                      style: TextStyle(fontSize: 24),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Tell Us More",
+                        style: AppTextStyles.headerLarge.copyWith(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    // Progress indicator dots
+                    Row(
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Container(
+                          width: 20,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
 
-          // White Content Section
+          // White Content Section - Everything scrollable
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
@@ -232,25 +213,15 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Section header
-                    Text(
-                      'Tell Us More',
-                      style: AppTextStyles.headerMedium.copyWith(
-                        fontSize: 20,
-                        color: AppColors.textDark,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
+                    // Description moved here
                     Text(
                       'Optional - helps us personalize better (you can skip)',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textLight,
-                        fontSize: 14,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textMedium,
                       ),
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
 
                       // Email (optional)
                       Row(
@@ -646,80 +617,76 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                         }).toList(),
                       ),
 
-                      const SizedBox(height: 32),
+                    const SizedBox(height: 32),
+
+                    // Continue button with gradient (now inside scroll)
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.ctaGradient,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _saveProfile,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : Text(
+                                'Continue',
+                                style: AppTextStyles.bodyLarge.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Skip button (now inside scroll)
+                    Center(
+                      child: TextButton(
+                        onPressed: _isLoading ? null : _skip,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.textMedium,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Text(
+                          'Skip for now',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
                     ],
                   ),
                 ),
-              ),
-            ),
-
-            // Action buttons
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                children: [
-                  // Continue button with gradient
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.ctaGradient,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primaryPurple.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _saveProfile,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: Colors.white,
-                        shadowColor: Colors.transparent,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : Text(
-                              'Continue',
-                              style: AppTextStyles.bodyLarge.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Skip button
-                  TextButton(
-                    onPressed: _isLoading ? null : _skip,
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.textMedium,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: Text(
-                      'Skip for now',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ],

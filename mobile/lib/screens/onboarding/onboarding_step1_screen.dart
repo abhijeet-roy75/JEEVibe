@@ -72,7 +72,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
       backgroundColor: AppColors.backgroundWhite,
       body: Column(
         children: [
-          // Gradient Header Section
+          // Compact Gradient Header Section
           Container(
             width: double.infinity,
             decoration: const BoxDecoration(
@@ -81,50 +81,39 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
             child: SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-                child: Column(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Row(
                   children: [
-                    // Wave emoji
+                    // Wave emoji + Title inline
                     const Text(
                       '👋',
-                      style: TextStyle(fontSize: 48),
+                      style: TextStyle(fontSize: 28),
                     ),
-                    const SizedBox(height: 16),
-                    // Title
-                    Text(
-                      "Let's Get to Know You!",
-                      style: AppTextStyles.headerLarge.copyWith(
-                        fontSize: 28,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        "Let's Get to Know You!",
+                        style: AppTextStyles.headerLarge.copyWith(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'This helps us personalize your JEE prep journey',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.white.withValues(alpha: 0.95),
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
                     // Progress indicator dots
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          width: 24,
+                          width: 20,
                           height: 4,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 4),
                         Container(
-                          width: 24,
+                          width: 20,
                           height: 4,
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.4),
@@ -139,7 +128,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
             ),
           ),
 
-          // White Content Section
+          // White Content Section - Everything scrollable
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
@@ -148,25 +137,15 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Section header
+                    // Description moved here from header
                     Text(
-                      'Essential Information',
-                      style: AppTextStyles.headerMedium.copyWith(
-                        fontSize: 20,
-                        color: AppColors.textDark,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Just the basics to get you started',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textLight,
-                        fontSize: 14,
+                      'This helps us personalize your JEE prep journey',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textMedium,
                       ),
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
 
                       // First Name (required)
                       Text(
@@ -440,46 +419,47 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                         },
                         onSaved: (value) => _targetYear = value,
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
 
-            // Continue button with gradient
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: AppColors.ctaGradient,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryPurple.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+                    const SizedBox(height: 32),
+
+                    // Continue button with gradient (now inside scroll)
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.ctaGradient,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _continue,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Continue',
+                          style: AppTextStyles.bodyLarge.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: _continue,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.white,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'Continue',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
+
+                    const SizedBox(height: 24),
+                    ],
                   ),
                 ),
               ),
