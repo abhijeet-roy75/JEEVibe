@@ -341,9 +341,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
   }
 
   Widget _buildQuestionCard(Solution solution) {
-    // CRITICAL: Preprocess question text for proper spacing
+    // Only preprocess question text if we need to show it (when no image)
     final processedQuestion = TextPreprocessor.addSpacesToText(solution.recognizedQuestion);
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -386,24 +386,26 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            // When image is shown, no need to show extracted text (it's redundant and truncates options)
+          ] else ...[
+            // Only show extracted text when there's no image
+            _buildContentWidget(
+              processedQuestion,
+              solution.subject,
+              ContentConfig.getQuestionTextStyle(color: AppColors.textMedium),
+            ),
           ],
-          _buildContentWidget(
-            processedQuestion,
-            solution.subject,
-            ContentConfig.getQuestionTextStyle(color: AppColors.textMedium),
-          ),
           const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
                   color: AppColors.infoBackground,
                   borderRadius: BorderRadius.circular(AppRadius.radiusRound),
                 ),
-                          child: Text(
+                child: Text(
                   'JEE Main Level',
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.infoBlue,
@@ -411,8 +413,8 @@ class _SolutionScreenState extends State<SolutionScreen> {
                   ),
                 ),
               ),
-                          ],
-                        ),
+            ],
+          ),
         ],
       ),
     );
