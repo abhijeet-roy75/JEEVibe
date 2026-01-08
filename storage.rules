@@ -32,6 +32,25 @@ service firebase.storage {
     }
 
     // ========================================
+    // QUESTION IMAGES - Public Read Access
+    // ========================================
+    // Path: questions/{type}/{imageId}
+    // - Backend uploads using Admin SDK
+    // - Public read access (educational content, not sensitive)
+    // - Used for daily quiz and assessment question diagrams
+    // - No direct client uploads
+
+    match /questions/{type}/{imageId} {
+      // PUBLIC READ - Question images are educational content
+      // They need to be accessible via direct URL in flutter_svg
+      allow read: if true;
+
+      // DENY all writes from clients
+      // Backend uses Admin SDK which bypasses these rules
+      allow write: if false;
+    }
+
+    // ========================================
     // DEFAULT DENY ALL
     // ========================================
     // Any other paths are completely blocked
