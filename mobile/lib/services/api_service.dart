@@ -382,6 +382,7 @@ class ApiService {
 
   /// Get assessment questions
   /// Requires Firebase ID token for authentication
+  /// Note: Uses 60s timeout to handle Render.com cold starts (one-time operation)
   static Future<List<AssessmentQuestion>> getAssessmentQuestions({
     required String authToken,
   }) async {
@@ -392,7 +393,7 @@ class ApiService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $authToken',
         },
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
