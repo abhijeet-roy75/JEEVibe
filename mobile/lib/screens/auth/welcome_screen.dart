@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'phone_entry_screen.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/buttons/gradient_button.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -209,31 +210,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     ),
                     const SizedBox(height: 48),
                     // Continue Button
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: AppShadows.buttonShadow,
-                        gradient: AppColors.ctaGradient,
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _navigateToPhoneEntry,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          'Continue with Phone Number',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: Colors.white,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
+                    GradientButton(
+                      text: 'Continue with Phone Number',
+                      onPressed: _navigateToPhoneEntry,
+                      size: GradientButtonSize.large,
                     ),
                     const SizedBox(height: 16),
                     // Legal text
@@ -349,25 +329,24 @@ class _FeatureItem extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 48,
-          height: 48,
+          width: AppButtonSizes.iconButtonLg,
+          height: AppButtonSizes.iconButtonLg,
           decoration: BoxDecoration(
             color: iconColor,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadius.borderRadiusMd,
           ),
           child: Icon(
             icon,
             color: Colors.white,
-            size: 24,
+            size: AppIconSizes.lg,
           ),
         ),
-        const SizedBox(width: 16),
+        AppSpacing.gapHorizontalLg,
         Expanded(
           child: Text(
             title,
-            style: AppTextStyles.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppColors.textDark,
+            style: AppTextStyles.labelLarge.copyWith(
+              color: AppColors.textPrimary,
             ),
           ),
         ),

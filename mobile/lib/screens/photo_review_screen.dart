@@ -9,6 +9,7 @@ import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
+import '../widgets/buttons/gradient_button.dart';
 import 'solution_screen.dart';
 import '../utils/performance_tracker.dart';
 
@@ -384,73 +385,20 @@ class PhotoReviewScreen extends StatelessWidget {
       child: Column(
         children: [
           // Use This Photo button
-          Container(
-            width: double.infinity,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: AppColors.ctaGradient,
-              borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-              boxShadow: AppShadows.buttonShadow,
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => _usePhoto(context),
-                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.check, color: Colors.white),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Use This Photo',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          GradientButton(
+            text: 'Use This Photo',
+            onPressed: () => _usePhoto(context),
+            size: GradientButtonSize.large,
+            leadingIcon: Icons.check,
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Retake Photo button
-          Container(
-            width: double.infinity,
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-              border: Border.all(color: AppColors.borderGray, width: 2),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => _retakePhoto(context),
-                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.refresh, color: AppColors.textDark),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Retake Photo',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.textDark,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          AppOutlinedButton(
+            text: 'Retake Photo',
+            onPressed: () => _retakePhoto(context),
+            leadingIcon: Icons.refresh,
           ),
         ],
       ),

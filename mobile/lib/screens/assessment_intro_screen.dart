@@ -8,22 +8,18 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_header.dart';
 import '../widgets/priya_avatar.dart';
+import '../widgets/buttons/gradient_button.dart';
 import '../services/storage_service.dart';
 import '../services/firebase/firestore_user_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../services/api_service.dart';
 import '../models/user_profile.dart';
 import '../models/assessment_response.dart';
-import '../models/snap_data_model.dart';
-import '../widgets/subject_icon_widget.dart';
 import '../providers/app_state_provider.dart';
-import '../utils/text_preprocessor.dart';
 import 'profile/profile_view_screen.dart';
 import 'assessment_instructions_screen.dart';
-import 'camera_screen.dart';
 import 'daily_quiz_loading_screen.dart';
 import 'home_screen.dart';
-import 'solution_review_screen.dart';
 import 'all_solutions_screen.dart';
 
 class AssessmentIntroScreen extends StatefulWidget {
@@ -343,52 +339,25 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             ),
             const SizedBox(height: 20),
             // Get Started button
-            Container(
-              width: double.infinity,
-              height: 56,
-              decoration: BoxDecoration(
-                gradient: AppColors.ctaGradient,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: AppShadows.buttonShadow,
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () async {
-                    // Set status to in_progress when user clicks Get Started
-                    final storageService = StorageService();
-                    await storageService.setAssessmentStatus('in_progress');
-                    
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AssessmentInstructionsScreen(),
-                      ),
-                    ).then((_) {
-                      // Reload data when returning from instructions
-                      _loadData();
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Get Started',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-                      ],
-                    ),
+            GradientButton(
+              text: 'Get Started',
+              onPressed: () async {
+                // Set status to in_progress when user clicks Get Started
+                final storageService = StorageService();
+                await storageService.setAssessmentStatus('in_progress');
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AssessmentInstructionsScreen(),
                   ),
-                ),
-              ),
+                ).then((_) {
+                  // Reload data when returning from instructions
+                  _loadData();
+                });
+              },
+              size: GradientButtonSize.large,
+              trailingIcon: Icons.arrow_forward,
             ),
           ],
         ),
@@ -489,50 +458,20 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              height: 56,
-              decoration: BoxDecoration(
-                gradient: isUnlocked ? AppColors.ctaGradient : null,
-                color: isUnlocked ? null : Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: isUnlocked ? AppShadows.buttonShadow : null,
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: isUnlocked ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const DailyQuizLoadingScreen(),
-                      ),
-                    );
-                  } : null,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Start Practice',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: isUnlocked ? Colors.white : Colors.grey.shade600,
-                            fontSize: 16,
-                            fontWeight: isUnlocked ? FontWeight.bold : FontWeight.normal,
-                          ),
+            GradientButton(
+              text: 'Start Practice',
+              onPressed: isUnlocked
+                  ? () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DailyQuizLoadingScreen(),
                         ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.arrow_forward,
-                          color: isUnlocked ? Colors.white : Colors.grey.shade600,
-                          size: 20,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+                      );
+                    }
+                  : null,
+              size: GradientButtonSize.large,
+              trailingIcon: Icons.arrow_forward,
             ),
           ],
         ),
@@ -626,48 +565,19 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Container(
-                  width: double.infinity,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.ctaGradient,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: AppShadows.buttonShadow,
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => HomeScreen(),
-                            settings: const RouteSettings(name: '/snap_home'),
-                          ),
-                        ).then((_) => _loadData());
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.camera_alt, color: Colors.white, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Take a Photo',
-                              style: AppTextStyles.labelMedium.copyWith(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-                          ],
-                        ),
+                GradientButton(
+                  text: 'Take a Photo',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomeScreen(),
+                        settings: const RouteSettings(name: '/snap_home'),
                       ),
-                    ),
-                  ),
+                    ).then((_) => _loadData());
+                  },
+                  size: GradientButtonSize.large,
+                  leadingIcon: Icons.camera_alt,
                 ),
               ],
             ),

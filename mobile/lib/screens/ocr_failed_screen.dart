@@ -4,6 +4,8 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
+import '../widgets/buttons/gradient_button.dart';
+import '../widgets/buttons/icon_button.dart';
 
 class OCRFailedScreen extends StatelessWidget {
   final String? errorMessage;
@@ -46,9 +48,9 @@ class OCRFailedScreen extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     return AppHeader(
-      leading: IconButton(
-        icon: const Icon(Icons.close, color: Colors.white),
+      leading: AppIconButton.close(
         onPressed: () => Navigator.of(context).pop(),
+        color: Colors.white,
       ),
       centerContent: Container(
         width: 48, // Reduced from 64
@@ -279,72 +281,25 @@ class OCRFailedScreen extends StatelessWidget {
     return Column(
       children: [
         // Try Again with Camera button
-        Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: AppColors.ctaGradient,
-            borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-            boxShadow: AppShadows.buttonShadow,
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                // Pop back to camera screen
-                Navigator.of(context).pop();
-              },
-              borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.camera_alt, color: Colors.white),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Try Again with Camera',
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+        GradientButton(
+          text: 'Try Again with Camera',
+          onPressed: () {
+            // Pop back to camera screen
+            Navigator.of(context).pop();
+          },
+          size: GradientButtonSize.large,
+          leadingIcon: Icons.camera_alt,
         ),
-        
+
         const SizedBox(height: 12),
-        
+
         // Back to Dashboard button
-        Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-            border: Border.all(color: AppColors.borderGray, width: 2),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                // Pop all the way back to home
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              },
-              borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-              child: Center(
-                child: Text(
-                  'Back to Dashboard',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.textDark,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ),
-          ),
+        AppOutlinedButton(
+          text: 'Back to Dashboard',
+          onPressed: () {
+            // Pop all the way back to home
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          },
         ),
       ],
     );

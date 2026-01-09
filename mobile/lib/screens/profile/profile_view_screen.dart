@@ -89,7 +89,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
             )
           : Column(
               children: [
-                // Gradient Header Section - Full Width (matching onboarding style)
+                // Gradient Header Section - Minimal
                 Container(
                   width: double.infinity,
                   decoration: const BoxDecoration(
@@ -98,74 +98,22 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   child: SafeArea(
                     bottom: false,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-                      child: Column(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                      child: Row(
                         children: [
-                          // Back button aligned left
-                          Row(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: IconButton(
-                                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  padding: const EdgeInsets.all(8),
-                                  constraints: const BoxConstraints(),
-                                ),
-                              ),
-                            ],
+                          // Back button
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back, color: Colors.white),
+                            onPressed: () => Navigator.of(context).pop(),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
                           ),
-                          const SizedBox(height: 24),
-                          // Avatar with gradient background
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withValues(alpha: 0.3),
-                              border: Border.all(
-                                color: Colors.white,
-                                width: 3,
-                              ),
-                            ),
-                            child: Center(
-                              child: Text(
-                                (_profile!.firstName?.isNotEmpty ?? false)
-                                    ? _profile!.firstName![0].toUpperCase()
-                                    : '?',
-                                style: AppTextStyles.headerLarge.copyWith(
-                                  fontSize: 36,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          // User name
+                          const SizedBox(width: 16),
+                          // Title
                           Text(
-                            '${_profile!.firstName ?? ''} ${_profile!.lastName ?? ''}'.trim(),
-                            style: AppTextStyles.headerLarge.copyWith(
-                              fontSize: 24,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
+                            'Profile',
+                            style: AppTextStyles.headerWhite.copyWith(fontSize: 20),
                           ),
-                          const SizedBox(height: 8),
-                          // Phone number
-                          Text(
-                            _profile!.phoneNumber,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 14,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 32),
                         ],
                       ),
                     ),
@@ -178,24 +126,82 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Avatar and Name Card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundLight,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppColors.borderLight,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              // Avatar
+                              Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: AppColors.ctaGradient,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    (_profile!.firstName?.isNotEmpty ?? false)
+                                        ? _profile!.firstName![0].toUpperCase()
+                                        : '?',
+                                    style: AppTextStyles.headerLarge.copyWith(
+                                      fontSize: 28,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              // Name and phone
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${_profile!.firstName ?? ''} ${_profile!.lastName ?? ''}'.trim(),
+                                      style: AppTextStyles.headerMedium.copyWith(
+                                        fontSize: 20,
+                                        color: AppColors.textDark,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _profile!.phoneNumber,
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        color: AppColors.textMedium,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
                         // Profile Information Section
                         Text(
-                          'Profile Information',
+                          'JEE Preparation Details',
                           style: AppTextStyles.headerMedium.copyWith(
-                            fontSize: 20,
+                            fontSize: 18,
                             color: AppColors.textDark,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Your JEE preparation details',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textLight,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
 
                         // Information fields - Only show fields that have values
                         ..._buildProfileFields(),
