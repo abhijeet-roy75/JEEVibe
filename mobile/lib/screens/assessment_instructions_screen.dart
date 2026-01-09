@@ -5,6 +5,8 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_header.dart';
 import '../widgets/priya_avatar.dart';
+import '../widgets/buttons/gradient_button.dart';
+import '../widgets/buttons/icon_button.dart';
 import 'assessment_question_screen.dart';
 
 class AssessmentInstructionsScreen extends StatelessWidget {
@@ -71,38 +73,17 @@ class AssessmentInstructionsScreen extends StatelessWidget {
                     // Start Assessment button
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Container(
-                        width: double.infinity,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.ctaGradient,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: AppShadows.buttonShadow,
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const AssessmentQuestionScreen(),
-                                ),
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(12),
-                            child: Center(
-                              child: Text(
-                                'Start Assessment',
-                                style: AppTextStyles.labelMedium.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                      child: GradientButton(
+                        text: 'Start Assessment',
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AssessmentQuestionScreen(),
                             ),
-                          ),
-                        ),
+                          );
+                        },
+                        size: GradientButtonSize.large,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -142,16 +123,9 @@ class AssessmentInstructionsScreen extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     return AppHeader(
-      leading: IconButton(
-        icon: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-        ),
+      leading: AppIconButton.back(
         onPressed: () => Navigator.of(context).pop(),
+        color: Colors.white,
       ),
       centerContent: Container(
         width: 64,

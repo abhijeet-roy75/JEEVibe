@@ -9,6 +9,7 @@ import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/priya_avatar.dart';
+import '../widgets/buttons/gradient_button.dart';
 import 'daily_quiz_review_screen.dart';
 import 'daily_quiz_home_screen.dart';
 
@@ -841,41 +842,15 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
           ),
           const SizedBox(height: 12),
           // Back to Dashboard button
-          Container(
-            width: double.infinity,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: AppColors.ctaGradient,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primaryPurple.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const DailyQuizHomeScreen()),
-                    (route) => false,
-                  );
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Center(
-                  child: Text(
-                    'Back to Dashboard',
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          GradientButton(
+            text: 'Back to Dashboard',
+            onPressed: () {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const DailyQuizHomeScreen()),
+                (route) => false,
+              );
+            },
+            size: GradientButtonSize.large,
           ),
         ],
       ),

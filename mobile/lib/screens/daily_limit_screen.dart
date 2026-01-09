@@ -6,6 +6,7 @@ import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
+import '../widgets/buttons/gradient_button.dart';
 
 class DailyLimitScreen extends StatefulWidget {
   const DailyLimitScreen({super.key});
@@ -392,39 +393,13 @@ class _DailyLimitScreenState extends State<DailyLimitScreen> {
   }
 
   Widget _buildBackButton() {
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: AppColors.ctaGradient,
-        borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-        boxShadow: AppShadows.buttonShadow,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          },
-          borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.home, color: Colors.white),
-                const SizedBox(width: 12),
-                Text(
-                  'Back to Home',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return GradientButton(
+      text: 'Back to Home',
+      onPressed: () {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      },
+      size: GradientButtonSize.large,
+      leadingIcon: Icons.home,
     );
   }
 

@@ -6,6 +6,7 @@ import '../widgets/latex_widget.dart';
 import '../widgets/chemistry_text.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
+import '../widgets/buttons/gradient_button.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../config/content_config.dart';
@@ -530,56 +531,29 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
     return Column(
       children: [
         // Back to Snap and Solve
-        Container(
-          width: double.infinity,
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: AppColors.ctaGradient,
-            borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-            boxShadow: AppShadows.buttonShadow,
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                bool found = false;
-                Navigator.of(context).popUntil((route) {
-                  if (route.settings.name == '/snap_home') {
-                    found = true;
-                    return true;
-                  }
-                  return route.isFirst;
-                });
-                
-                if (!found) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => HomeScreen(),
-                      settings: const RouteSettings(name: '/snap_home'),
-                    ),
-                  );
-                }
-              },
-              borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.camera_alt, color: Colors.white, size: 20),
-                    const SizedBox(width: 12),
-                    Text(
-                      LocalizationService.getString('back_to_snap', _reconstructSolution(_currentSolution).language ?? 'en'),
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+        GradientButton(
+          text: LocalizationService.getString('back_to_snap', _reconstructSolution(_currentSolution).language ?? 'en'),
+          onPressed: () {
+            bool found = false;
+            Navigator.of(context).popUntil((route) {
+              if (route.settings.name == '/snap_home') {
+                found = true;
+                return true;
+              }
+              return route.isFirst;
+            });
+
+            if (!found) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => HomeScreen(),
+                  settings: const RouteSettings(name: '/snap_home'),
                 ),
-              ),
-            ),
-          ),
+              );
+            }
+          },
+          size: GradientButtonSize.large,
+          leadingIcon: Icons.camera_alt,
         ),
       ],
     );

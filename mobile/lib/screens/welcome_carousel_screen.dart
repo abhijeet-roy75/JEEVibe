@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/buttons/gradient_button.dart';
 import '../services/storage_service.dart';
 import 'assessment_intro_screen.dart';
 
@@ -278,38 +279,11 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen> with Tick
                 // Next Button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Container(
-                    width: double.infinity,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.ctaGradient,
-                      borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-                      boxShadow: AppShadows.buttonShadow,
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _nextPage,
-                        borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-                        child: Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Next',
-                                style: AppTextStyles.labelMedium.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                  child: GradientButton(
+                    text: 'Next',
+                    onPressed: _nextPage,
+                    size: GradientButtonSize.large,
+                    trailingIcon: Icons.arrow_forward,
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -465,38 +439,11 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen> with Tick
                     ),
                     const SizedBox(height: 24),
                     // Next Button
-                    Container(
-                      width: double.infinity,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.ctaGradient,
-                        borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-                        boxShadow: AppShadows.buttonShadow,
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: _nextPage,
-                          borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-                          child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Next',
-                                  style: AppTextStyles.labelMedium.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                    GradientButton(
+                      text: 'Next',
+                      onPressed: _nextPage,
+                      size: GradientButtonSize.large,
+                      trailingIcon: Icons.arrow_forward,
                     ),
                     const SizedBox(height: 32),
                   ],
@@ -768,38 +715,11 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen> with Tick
                     ),
                     const SizedBox(height: 24),
                     // Get Started Button
-                    Container(
-                      width: double.infinity,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.ctaGradient,
-                        borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-                        boxShadow: AppShadows.buttonShadow,
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: _handleComplete,
-                          borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-                          child: Center(
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Get Started',
-                                  style: AppTextStyles.labelMedium.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                    GradientButton(
+                      text: 'Get Started',
+                      onPressed: _handleComplete,
+                      size: GradientButtonSize.large,
+                      trailingIcon: Icons.arrow_forward,
                     ),
                     const SizedBox(height: 32),
                   ],

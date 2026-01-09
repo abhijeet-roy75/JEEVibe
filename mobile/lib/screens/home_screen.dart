@@ -16,6 +16,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
 import '../widgets/app_header.dart';
+import '../widgets/buttons/gradient_button.dart';
 import '../models/snap_data_model.dart';
 import '../services/storage_service.dart';
 import '../utils/text_preprocessor.dart';
@@ -402,37 +403,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBackToDashboardButton() {
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: AppColors.ctaGradient, // Using purple gradient as shown in design often
-        borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-        boxShadow: AppShadows.buttonShadow,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => Navigator.of(context).pop(),
-          borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.home, color: Colors.white),
-                const SizedBox(width: 12),
-                Text(
-                  'Back to Dashboard',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return GradientButton(
+      text: 'Back to Dashboard',
+      onPressed: () => Navigator.of(context).pop(),
+      size: GradientButtonSize.large,
+      leadingIcon: Icons.home,
     );
   }
 

@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../constants/profile_constants.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/buttons/gradient_button.dart';
+import '../../widgets/buttons/icon_button.dart';
 import '../../services/firebase/firestore_user_service.dart';
 import '../../models/user_profile.dart';
 import '../welcome_carousel_screen.dart';
@@ -147,17 +149,9 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                 child: Row(
                   children: [
                     // Back button
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                        onPressed: () => Navigator.of(context).pop(),
-                        padding: const EdgeInsets.all(6),
-                        constraints: const BoxConstraints(),
-                      ),
+                    AppIconButton.back(
+                      onPressed: () => Navigator.of(context).pop(),
+                      color: Colors.white,
                     ),
                     const SizedBox(width: 12),
                     // Wave emoji + Title inline
@@ -620,66 +614,20 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                     const SizedBox(height: 32),
 
                     // Continue button with gradient (now inside scroll)
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.ctaGradient,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primaryPurple.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _saveProfile,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : Text(
-                                'Continue',
-                                style: AppTextStyles.bodyLarge.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                      ),
+                    GradientButton(
+                      text: 'Continue',
+                      onPressed: _isLoading ? null : _saveProfile,
+                      isLoading: _isLoading,
+                      size: GradientButtonSize.large,
                     ),
 
                     const SizedBox(height: 12),
 
                     // Skip button (now inside scroll)
                     Center(
-                      child: TextButton(
+                      child: AppTextButton(
+                        text: 'Skip for now',
                         onPressed: _isLoading ? null : _skip,
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.textMedium,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: Text(
-                          'Skip for now',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
                       ),
                     ),
 
