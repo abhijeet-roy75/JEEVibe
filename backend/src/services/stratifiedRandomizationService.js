@@ -429,8 +429,11 @@ function stratifyAndRandomize(questions, userId) {
       const needed = blockConfig.target_count - selected.length;
       const blockSelectedIds = new Set(selected.map(q => q.question_id));
 
+      // Combine all excluded IDs: previous blocks + current block selections
+      const allExcludedIds = new Set([...allSelectedIds, ...blockSelectedIds]);
+
       // Try to find questions in adjacent difficulty range first (excluding all previously selected)
-      const extras = findQuestionsInAdjacentRange(questions, blockConfig, allSelectedIds, needed);
+      const extras = findQuestionsInAdjacentRange(questions, blockConfig, allExcludedIds, needed);
 
       // If still not enough, log warning and use any available questions
       if (selected.length + extras.length < blockConfig.target_count) {
