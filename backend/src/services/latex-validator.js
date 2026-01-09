@@ -78,8 +78,18 @@ function fixCommonErrors(text) {
   fixed = fixed.replace(/(?<!\\)frac\{/g, '\\frac{');
   fixed = fixed.replace(/(?<!\\)sqrt\{/g, '\\sqrt{');
 
-  // Fix ext{} -> \mathrm{} (common OCR error)
+  // Fix \text{} where \t became a tab character (common JSON parsing issue)
+  // Tab + "ext{" -> \mathrm{
+  fixed = fixed.replace(/\text\{/g, '\\mathrm{');
+
+  // Fix \times where \t became a tab character
+  // Tab + "imes" -> \times
+  fixed = fixed.replace(/\times/g, '\\times');
+
+  // Fix ext{} -> \mathrm{} (common OCR error, missing backslash)
   fixed = fixed.replace(/(?<!\\)ext\{/g, '\\mathrm{');
+
+  // Fix \text{} -> \mathrm{} (proper LaTeX but we prefer mathrm for chemistry)
   fixed = fixed.replace(/\\text\{/g, '\\mathrm{');
 
   // Ensure spaces in chemical formulas use ~ (non-breaking space)
