@@ -15,16 +15,11 @@ import '../services/firebase/auth_service.dart';
 import '../services/api_service.dart';
 import '../models/user_profile.dart';
 import '../models/assessment_response.dart';
-import '../models/snap_data_model.dart';
-import '../widgets/subject_icon_widget.dart';
 import '../providers/app_state_provider.dart';
-import '../utils/text_preprocessor.dart';
 import 'profile/profile_view_screen.dart';
 import 'assessment_instructions_screen.dart';
-import 'camera_screen.dart';
 import 'daily_quiz_loading_screen.dart';
 import 'home_screen.dart';
-import 'solution_review_screen.dart';
 import 'all_solutions_screen.dart';
 
 class AssessmentIntroScreen extends StatefulWidget {

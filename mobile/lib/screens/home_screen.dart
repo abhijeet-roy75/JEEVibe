@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'camera_screen.dart';
 import 'image_preview_screen.dart';
 import 'daily_limit_screen.dart';
 import 'solution_review_screen.dart';
@@ -15,13 +14,11 @@ import 'photo_review_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
-import '../widgets/app_header.dart';
 import '../widgets/buttons/gradient_button.dart';
 import '../models/snap_data_model.dart';
 import '../services/storage_service.dart';
 import '../utils/text_preprocessor.dart';
 import '../widgets/subject_icon_widget.dart';
-import 'profile/profile_view_screen.dart';
 import '../widgets/priya_avatar.dart';
 
 class HomeScreen extends StatefulWidget {
