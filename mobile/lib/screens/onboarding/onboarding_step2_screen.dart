@@ -6,7 +6,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../services/firebase/firestore_user_service.dart';
 import '../../models/user_profile.dart';
-import '../welcome_screen.dart';
+import '../welcome_carousel_screen.dart';
 
 /// Simplified Onboarding - Screen 2
 ///
@@ -101,11 +101,11 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
 
       if (!mounted) return;
 
-      // Navigate to Welcome Screen (3-slide carousel)
+      // Navigate to Welcome Carousel (3-slide feature introduction)
       // After onboarding, show the welcome carousel before going to home
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (context) => const WelcomeScreen(),
+          builder: (context) => const WelcomeCarouselScreen(),
         ),
         (route) => false, // Remove all previous routes
       );

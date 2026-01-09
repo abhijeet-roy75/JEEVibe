@@ -1,4 +1,5 @@
-/// Welcome Screen - 3-slide onboarding carousel
+/// Welcome Carousel Screen - 3-slide onboarding carousel
+/// Shown after profile setup to introduce app features
 /// Matches designs: 2a, 2b, 2c Welcome Screen.png
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -7,16 +8,16 @@ import '../theme/app_text_styles.dart';
 import '../services/storage_service.dart';
 import 'assessment_intro_screen.dart';
 
-class WelcomeScreen extends StatefulWidget {
+class WelcomeCarouselScreen extends StatefulWidget {
   final VoidCallback? onComplete;
 
-  const WelcomeScreen({super.key, this.onComplete});
+  const WelcomeCarouselScreen({super.key, this.onComplete});
 
   @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
+  State<WelcomeCarouselScreen> createState() => _WelcomeCarouselScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> with TickerProviderStateMixin {
+class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen> with TickerProviderStateMixin {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   
