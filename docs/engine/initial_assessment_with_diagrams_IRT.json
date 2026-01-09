@@ -1,0 +1,4215 @@
+{
+  "assessment_metadata": {
+    "assessment_id": "initial_diagnostic_v1",
+    "assessment_name": "JEEVibe Initial Placement Assessment",
+    "version": "1.0",
+    "total_questions": 30,
+    "time_limit_minutes": 45,
+    "difficulty_level": "moderate_jee_main",
+    "no_negative_marking": true,
+    "purpose": "IRT-based ability estimation for adaptive learning path",
+    "target_discrimination": "> 1.5",
+    "date_created": "2025-01-05T00:00:00Z",
+    "instructions": "Complete all 30 questions in one sitting. Cannot go back to previous questions.",
+    "average_time_per_question": 90
+  },
+  "distribution_summary": {
+    "physics": {
+      "total": 10,
+      "mechanics": 4,
+      "electrostatics_current": 3,
+      "magnetism_emi": 2,
+      "modern_physics": 1,
+      "mcq": 5,
+      "numerical": 5,
+      "with_diagram": 2
+    },
+    "chemistry": {
+      "total": 10,
+      "organic": 3,
+      "physical": 4,
+      "inorganic": 3,
+      "mcq": 5,
+      "numerical": 4,
+      "with_diagram": 1
+    },
+    "mathematics": {
+      "total": 10,
+      "calculus": 4,
+      "algebra": 4,
+      "coordinate_geometry": 2,
+      "mcq": 5,
+      "numerical": 5,
+      "with_diagram": 1
+    },
+    "totals": {
+      "mcq": 15,
+      "numerical": 14,
+      "with_diagram": 4
+    }
+  },
+  "questions": {
+    "ASSESS_PHY_MECH_001": {
+      "question_id": "ASSESS_PHY_MECH_001",
+      "subject": "Physics",
+      "chapter": "Mechanics",
+      "unit": "Unit 2",
+      "sub_topics": [
+        "Newton's Laws of Motion",
+        "Force Analysis"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.8,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "A block of mass 5 kg is placed on a horizontal surface. A force of 20 N is applied at an angle of 30° above the horizontal. If the coefficient of kinetic friction between the block and surface is 0.2, what is the acceleration of the block? (Take g = 10 m/s²)",
+      "question_text_html": "A block of mass <strong>5 kg</strong> is placed on a horizontal surface. A force of <strong>20 N</strong> is applied at an angle of <strong>30°</strong> above the horizontal. If the coefficient of kinetic friction between the block and surface is <strong>0.2</strong>, what is the acceleration of the block? (Take g = 10 m/s²)",
+      "question_latex": null,
+      "options": [
+        {
+          "option_id": "A",
+          "text": "2.0 m/s²",
+          "html": "<strong>2.0 m/s²</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "2.5 m/s²",
+          "html": "<strong>2.5 m/s²</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "3.0 m/s²",
+          "html": "<strong>3.0 m/s²</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "3.5 m/s²",
+          "html": "<strong>3.5 m/s²</strong>"
+        }
+      ],
+      "correct_answer": "A",
+      "correct_answer_text": "2.0 m/s²",
+      "correct_answer_exact": "2.0",
+      "correct_answer_unit": "m/s²",
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "Horizontal component of force: F_x = 20cos30° = 17.32 N. Vertical component: F_y = 20sin30° = 10 N. Normal force: N = mg - F_y = 50 - 10 = 40 N. Friction: f = μN = 0.2 × 40 = 8 N. Net force: F_net = 17.32 - 8 = 9.32 N. Acceleration: a = F_net/m = 9.32/5 ≈ 2.0 m/s²",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Resolve applied force into components",
+          "formula": "F_x = Fcos θ, F_y = Fsin θ",
+          "calculation": "F_x = 20cos30° = 17.32 N, F_y = 20sin30° = 10 N",
+          "explanation": "Break the 20 N force into horizontal and vertical components",
+          "result": "F_x = 17.32 N, F_y = 10 N"
+        },
+        {
+          "step_number": 2,
+          "description": "Calculate normal force",
+          "formula": "N = mg - F_y",
+          "calculation": "N = 5(10) - 10 = 40 N",
+          "explanation": "Vertical equilibrium: Normal force balances weight minus vertical component of applied force",
+          "result": "N = 40 N"
+        },
+        {
+          "step_number": 3,
+          "description": "Calculate friction force",
+          "formula": "f = μN",
+          "calculation": "f = 0.2 × 40 = 8 N",
+          "explanation": "Kinetic friction opposes motion",
+          "result": "f = 8 N"
+        },
+        {
+          "step_number": 4,
+          "description": "Apply Newton's second law",
+          "formula": "a = F_net/m",
+          "calculation": "a = (17.32 - 8)/5 = 9.32/5 = 1.864 ≈ 2.0 m/s²",
+          "explanation": "Net horizontal force divided by mass gives acceleration",
+          "result": "2.0 m/s²"
+        }
+      ],
+      "concepts_tested": [
+        "Force resolution",
+        "Newton's laws",
+        "Friction",
+        "Multi-step problem solving"
+      ],
+      "time_estimate": 120,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Multi-step mechanics problem with friction",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "F_net = ma, f = μN",
+        "common_mistakes": [
+          "Forgetting to subtract vertical component from normal force",
+          "Not resolving force into components",
+          "Wrong friction direction"
+        ],
+        "hint": "First resolve the applied force, then calculate normal force considering vertical component",
+        "key_insight": "Tests understanding of force resolution, friction, and Newton's second law in combination",
+        "elimination_strategy": "Rough estimate: If no friction, a ≈ 17/5 ≈ 3.4 m/s². With friction, must be less. Eliminates D."
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "mechanics",
+        "newtons-laws",
+        "friction",
+        "force-resolution",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "B": "Incorrect normal force calculation",
+        "C": "Forgot friction or wrong friction value",
+        "D": "Used full 20 N without resolving components"
+      },
+      "alternate_correct_answers": [
+        "1.86",
+        "1.9"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 0.8,
+        "discrimination_a": 1.4,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Excellent MCQ: 4 options, 7 concepts, strong distractors"
+      }
+    },
+    "ASSESS_PHY_MECH_002": {
+      "question_id": "ASSESS_PHY_MECH_002",
+      "subject": "Physics",
+      "chapter": "Mechanics",
+      "unit": "Unit 2",
+      "sub_topics": [
+        "Work, Energy and Power",
+        "Kinematics"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.0,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "A particle of mass 2 kg moves from rest under a constant force. If it travels 20 m in 4 seconds, find the power delivered by the force at t = 4 seconds. Express your answer in Watts.",
+      "question_text_html": "A particle of mass <strong>2 kg</strong> moves from rest under a constant force. If it travels <strong>20 m</strong> in <strong>4 seconds</strong>, find the power delivered by the force at <strong>t = 4 seconds</strong>. Express your answer in <strong>Watts</strong>.",
+      "question_latex": null,
+      "options": null,
+      "correct_answer": "50",
+      "correct_answer_text": "50 W",
+      "correct_answer_exact": "50",
+      "correct_answer_unit": "W",
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": 48,
+        "max": 52
+      },
+      "solution_text": "Using s = ½at², we get 20 = ½a(16), so a = 2.5 m/s². Force F = ma = 2 × 2.5 = 5 N. Velocity at t=4s: v = at = 2.5 × 4 = 10 m/s. Power P = Fv = 5 × 10 = 50 W",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Find acceleration using kinematic equation",
+          "formula": "s = ½at²",
+          "calculation": "20 = ½a(4²) → 20 = 8a → a = 2.5 m/s²",
+          "explanation": "Particle starts from rest, so use s = ½at²",
+          "result": "a = 2.5 m/s²"
+        },
+        {
+          "step_number": 2,
+          "description": "Calculate applied force",
+          "formula": "F = ma",
+          "calculation": "F = 2 × 2.5 = 5 N",
+          "explanation": "Newton's second law",
+          "result": "F = 5 N"
+        },
+        {
+          "step_number": 3,
+          "description": "Find velocity at t = 4s",
+          "formula": "v = u + at",
+          "calculation": "v = 0 + 2.5(4) = 10 m/s",
+          "explanation": "Starts from rest (u = 0)",
+          "result": "v = 10 m/s"
+        },
+        {
+          "step_number": 4,
+          "description": "Calculate instantaneous power",
+          "formula": "P = Fv",
+          "calculation": "P = 5 × 10 = 50 W",
+          "explanation": "Power is force times velocity at that instant",
+          "result": "50 W"
+        }
+      ],
+      "concepts_tested": [
+        "Kinematics with constant acceleration",
+        "Newton's second law",
+        "Instantaneous power",
+        "Integration of concepts"
+      ],
+      "time_estimate": 120,
+      "weightage_marks": 4,
+      "jee_year_similar": "2024",
+      "jee_pattern": "Multi-concept numerical combining kinematics and power",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "s = ½at², F = ma, P = Fv",
+        "common_mistakes": [
+          "Using average power instead of instantaneous",
+          "Forgetting starts from rest",
+          "Wrong kinematic equation"
+        ],
+        "hint": "First find acceleration from displacement-time data, then force, then velocity, finally power",
+        "key_insight": "Tests integration of kinematics, dynamics, and power concepts",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "mechanics",
+        "work-energy-power",
+        "kinematics",
+        "multi-step",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "50.0",
+        "50.00"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.0,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 6 concepts"
+      }
+    },
+    "ASSESS_PHY_MECH_003": {
+      "question_id": "ASSESS_PHY_MECH_003",
+      "subject": "Physics",
+      "chapter": "Mechanics",
+      "unit": "Unit 2",
+      "sub_topics": [
+        "Rotational Motion",
+        "Angular Momentum"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.2,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "A uniform disc of mass 4 kg and radius 0.5 m is rotating at 10 rad/s about its center. A point mass of 1 kg is gently placed at the edge of the disc. What will be the new angular velocity? (Moment of inertia of disc = ½MR²)",
+      "question_text_html": "A uniform disc of mass <strong>4 kg</strong> and radius <strong>0.5 m</strong> is rotating at <strong>10 rad/s</strong> about its center. A point mass of <strong>1 kg</strong> is gently placed at the edge of the disc. What will be the new angular velocity? (Moment of inertia of disc = ½MR²)",
+      "question_latex": null,
+      "options": [
+        {
+          "option_id": "A",
+          "text": "6.7 rad/s",
+          "html": "<strong>6.7 rad/s</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "7.3 rad/s",
+          "html": "<strong>7.3 rad/s</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "8.0 rad/s",
+          "html": "<strong>8.0 rad/s</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "8.9 rad/s",
+          "html": "<strong>8.9 rad/s</strong>"
+        }
+      ],
+      "correct_answer": "A",
+      "correct_answer_text": "6.7 rad/s",
+      "correct_answer_exact": "6.7",
+      "correct_answer_unit": "rad/s",
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "Initial angular momentum: L₁ = I₁ω₁ = (½ × 4 × 0.25) × 10 = 5 kg·m²/s. Final moment of inertia: I₂ = ½MR² + mR² = 0.5 + 0.25 = 0.75 kg·m². By conservation: ω₂ = L₁/I₂ = 5/0.75 = 6.67 rad/s",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Calculate initial moment of inertia",
+          "formula": "I₁ = ½MR²",
+          "calculation": "I₁ = ½ × 4 × (0.5)² = 0.5 kg·m²",
+          "explanation": "Moment of inertia of disc about its center",
+          "result": "I₁ = 0.5 kg·m²"
+        },
+        {
+          "step_number": 2,
+          "description": "Calculate initial angular momentum",
+          "formula": "L = Iω",
+          "calculation": "L = 0.5 × 10 = 5 kg·m²/s",
+          "explanation": "Angular momentum before mass is added",
+          "result": "L = 5 kg·m²/s"
+        },
+        {
+          "step_number": 3,
+          "description": "Calculate final moment of inertia",
+          "formula": "I₂ = I_disc + I_point",
+          "calculation": "I₂ = 0.5 + 1×(0.5)² = 0.5 + 0.25 = 0.75 kg·m²",
+          "explanation": "Add point mass contribution: mR²",
+          "result": "I₂ = 0.75 kg·m²"
+        },
+        {
+          "step_number": 4,
+          "description": "Apply conservation of angular momentum",
+          "formula": "L₁ = L₂ → I₁ω₁ = I₂ω₂",
+          "calculation": "ω₂ = L/I₂ = 5/0.75 = 6.67 rad/s",
+          "explanation": "Angular momentum is conserved when no external torque acts",
+          "result": "6.7 rad/s"
+        }
+      ],
+      "concepts_tested": [
+        "Rotational motion",
+        "Conservation of angular momentum",
+        "Moment of inertia calculations",
+        "Multi-step reasoning"
+      ],
+      "time_estimate": 120,
+      "weightage_marks": 4,
+      "jee_year_similar": "2022",
+      "jee_pattern": "Conservation laws in rotational motion",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Corrected answer from C to A (6.7 rad/s)",
+      "metadata": {
+        "formula_used": "L = Iω, I_disc = ½MR², I_point = mR²",
+        "common_mistakes": [
+          "Forgetting to add point mass MI",
+          "Wrong MI formula for disc",
+          "Not using conservation of angular momentum"
+        ],
+        "hint": "Angular momentum is conserved. Calculate before and after moments of inertia",
+        "key_insight": "High discrimination - tests moment of inertia concepts and conservation laws",
+        "elimination_strategy": "Adding mass increases I, so ω must decrease. Original is 10, so answer must be less. Eliminates nothing directly, but guides calculation check."
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "mechanics",
+        "rotational-motion",
+        "angular-momentum",
+        "conservation-laws",
+        "medium",
+        "diagram-based",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "A": "Wrong final MI calculation",
+        "B": "Calculation error in division",
+        "D": "Used wrong conservation principle",
+        "C": "Used incorrect I₂ value (0.625)"
+      },
+      "alternate_correct_answers": [
+        "6.67",
+        "6.66",
+        "6.7"
+      ],
+      "has_image": true,
+      "image_url": null,
+      "image_type": "diagram",
+      "image_description": "Top view of a circular disc rotating about its center axis. A point mass is shown at the edge of the disc. Arrows indicate rotation direction.",
+      "image_alt_text": "Rotating disc with point mass at edge",
+      "image_generation_method": "to_be_generated",
+      "diagram_code_python": "import matplotlib.pyplot as plt; import matplotlib.patches as patches; import numpy as np; fig, ax = plt.subplots(1, 1, figsize=(8, 6)); ax.set_xlim(-1.5, 1.5); ax.set_ylim(-1.5, 1.5); ax.set_aspect('equal'); circle = patches.Circle((0, 0), 0.5, linewidth=2, edgecolor='#6B46C1', facecolor='#E9D5FF', alpha=0.3); ax.add_patch(circle); ax.plot([0], [0], 'ko', markersize=8, label='Center'); ax.plot([0.5], [0], 'ro', markersize=12, label='Point mass (1 kg)'); ax.arrow(0, 0, 0.45, 0, head_width=0.08, head_length=0.05, fc='#6B46C1', ec='#6B46C1', linewidth=2); ax.text(0.25, 0.15, 'R = 0.5 m', fontsize=12, color='#6B46C1', fontweight='bold'); ax.arrow(0.3, 0.4, 0.15, 0.15, head_width=0.06, head_length=0.04, fc='#D946EF', ec='#D946EF', linewidth=2); ax.text(0.35, 0.55, 'ω', fontsize=16, color='#D946EF', fontweight='bold'); ax.text(0, -1.2, 'Rotating Disc (M = 4 kg)', fontsize=12, ha='center', fontweight='bold'); ax.grid(True, alpha=0.3, linestyle='--'); ax.legend(loc='upper left', fontsize=10); ax.set_xlabel('x (m)', fontsize=11); ax.set_ylabel('y (m)', fontsize=11); ax.set_title('Uniform Disc with Point Mass at Edge', fontsize=13, fontweight='bold', pad=15); plt.tight_layout(); plt.savefig('output.svg', format='svg', bbox_inches='tight'); plt.close()",
+      "diagram_config": {
+        "requires_diagram": true,
+        "diagram_complexity": "medium",
+        "discriminative_value": "high"
+      },
+      "irt_parameters": {
+        "difficulty_b": 1.2,
+        "discrimination_a": 1.4,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Excellent MCQ: 4 options, 6 concepts, strong distractors"
+      }
+    },
+    "ASSESS_PHY_MECH_004": {
+      "question_id": "ASSESS_PHY_MECH_004",
+      "subject": "Physics",
+      "chapter": "Mechanics",
+      "unit": "Unit 2",
+      "sub_topics": [
+        "Momentum and Collisions",
+        "Elastic Collision"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.9,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "A ball of mass 0.5 kg moving at 20 m/s collides head-on with a ball of mass 1.5 kg moving at 10 m/s in the opposite direction. If the collision is perfectly elastic, find the velocity of the 0.5 kg ball after collision (taking the initial direction of 0.5 kg ball as positive). Express your answer in m/s.",
+      "question_text_html": "A ball of mass <strong>0.5 kg</strong> moving at <strong>20 m/s</strong> collides head-on with a ball of mass <strong>1.5 kg</strong> moving at <strong>10 m/s</strong> in the opposite direction. If the collision is perfectly elastic, find the velocity of the <strong>0.5 kg</strong> ball after collision (taking the initial direction of 0.5 kg ball as positive). Express your answer in <strong>m/s</strong>.",
+      "question_latex": null,
+      "options": null,
+      "correct_answer": "-25",
+      "correct_answer_text": "-25 m/s",
+      "correct_answer_exact": "-25",
+      "correct_answer_unit": "m/s",
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": -26,
+        "max": -24
+      },
+      "solution_text": "For elastic collision: v₁ = [(m₁-m₂)u₁ + 2m₂u₂]/(m₁+m₂) = [(0.5-1.5)×20 + 2×1.5×(-10)]/(2) = [-20-30]/2 = -25 m/s. Negative sign indicates reversal of direction.",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Identify given values with sign convention",
+          "formula": null,
+          "calculation": "m₁ = 0.5 kg, u₁ = +20 m/s, m₂ = 1.5 kg, u₂ = -10 m/s",
+          "explanation": "Second ball moves in opposite direction, so u₂ is negative",
+          "result": "Values identified"
+        },
+        {
+          "step_number": 2,
+          "description": "Apply elastic collision formula for first body",
+          "formula": "v₁ = [(m₁-m₂)u₁ + 2m₂u₂]/(m₁+m₂)",
+          "calculation": "v₁ = [(0.5-1.5)×20 + 2×1.5×(-10)]/(0.5+1.5)",
+          "explanation": "Standard formula for elastic collision",
+          "result": "Setting up equation"
+        },
+        {
+          "step_number": 3,
+          "description": "Calculate numerator",
+          "formula": null,
+          "calculation": "Numerator = -1×20 + 3×(-10) = -20 - 30 = -50",
+          "explanation": "Simplify the numerator",
+          "result": "-50"
+        },
+        {
+          "step_number": 4,
+          "description": "Complete division",
+          "formula": null,
+          "calculation": "v₁ = -50/2 = -25 m/s",
+          "explanation": "Negative indicates ball bounces back in opposite direction",
+          "result": "-25 m/s"
+        }
+      ],
+      "concepts_tested": [
+        "Elastic collision formulas",
+        "Sign conventions in momentum",
+        "Vector nature of velocity",
+        "Conservation laws"
+      ],
+      "time_estimate": 90,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Standard elastic collision with head-on approach",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "v₁ = [(m₁-m₂)u₁ + 2m₂u₂]/(m₁+m₂)",
+        "common_mistakes": [
+          "Forgetting negative sign for opposite direction",
+          "Using wrong elastic collision formula",
+          "Sign errors in calculation"
+        ],
+        "hint": "Assign proper signs based on direction. Second ball moves opposite to first, so its velocity is negative",
+        "key_insight": "Tests understanding of elastic collision and vector sign conventions",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "mechanics",
+        "collisions",
+        "momentum",
+        "elastic-collision",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "-25.0",
+        "-25.00"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 0.9,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 1 concepts"
+      }
+    },
+    "ASSESS_PHY_ELEC_001": {
+      "question_id": "ASSESS_PHY_ELEC_001",
+      "subject": "Physics",
+      "chapter": "Electrostatics",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Capacitors",
+        "Series Combination"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.3,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "Three capacitors of capacitances 2 μF, 3 μF, and 6 μF are connected in series across a 120 V battery. What is the charge stored on the 3 μF capacitor?",
+      "question_text_html": "Three capacitors of capacitances <strong>2 μF</strong>, <strong>3 μF</strong>, and <strong>6 μF</strong> are connected in series across a <strong>120 V</strong> battery. What is the charge stored on the <strong>3 μF</strong> capacitor?",
+      "question_latex": null,
+      "options": [
+        {
+          "option_id": "A",
+          "text": "60 μC",
+          "html": "<strong>60 μC</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "80 μC",
+          "html": "<strong>80 μC</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "120 μC",
+          "html": "<strong>120 μC</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "180 μC",
+          "html": "<strong>180 μC</strong>"
+        }
+      ],
+      "correct_answer": "C",
+      "correct_answer_text": "120 μC",
+      "correct_answer_exact": "120",
+      "correct_answer_unit": "μC",
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "For series: 1/C_eq = 1/2 + 1/3 + 1/6 = (3+2+1)/6 = 1. So C_eq = 1 μF. Total charge Q = C_eq × V = 1 × 120 = 120 μC. In series, all capacitors have the same charge, so Q₃μF = 120 μC",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Calculate equivalent capacitance in series",
+          "formula": "1/C_eq = 1/C₁ + 1/C₂ + 1/C₃",
+          "calculation": "1/C_eq = 1/2 + 1/3 + 1/6 = 3/6 + 2/6 + 1/6 = 6/6 = 1",
+          "explanation": "For series capacitors, reciprocals add",
+          "result": "C_eq = 1 μF"
+        },
+        {
+          "step_number": 2,
+          "description": "Calculate total charge",
+          "formula": "Q = CV",
+          "calculation": "Q = 1 × 120 = 120 μC",
+          "explanation": "Charge stored by equivalent capacitance",
+          "result": "Q_total = 120 μC"
+        },
+        {
+          "step_number": 3,
+          "description": "Apply series capacitor property",
+          "formula": "Q₁ = Q₂ = Q₃ = Q_total (in series)",
+          "calculation": "Q_3μF = 120 μC",
+          "explanation": "In series connection, all capacitors store same charge",
+          "result": "120 μC"
+        }
+      ],
+      "concepts_tested": [
+        "Capacitors in series",
+        "Equivalent capacitance",
+        "Charge distribution",
+        "Series circuit properties"
+      ],
+      "time_estimate": 90,
+      "weightage_marks": 4,
+      "jee_year_similar": "2024",
+      "jee_pattern": "Standard capacitor series problem - high discrimination",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "1/C_eq = Σ(1/C_i), Q = CV, Q_series = constant",
+        "common_mistakes": [
+          "Adding capacitances directly (parallel formula)",
+          "Thinking charge divides in series",
+          "Calculating individual voltages unnecessarily"
+        ],
+        "hint": "Key property: In series, all capacitors have the SAME charge",
+        "key_insight": "High discrimination - tests understanding of series capacitor property vs parallel",
+        "elimination_strategy": "If using Q = CV for individual capacitor, would get 3×40=120 or 3×60=180, helping narrow choices"
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "electrostatics",
+        "capacitors",
+        "series-circuit",
+        "charge",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "A": "Used wrong voltage division",
+        "B": "Calculation error in equivalent capacitance",
+        "D": "Added capacitances directly (parallel mistake)"
+      },
+      "alternate_correct_answers": [
+        "120.0"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.3,
+        "discrimination_a": 1.4,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Excellent MCQ: 4 options, 3 concepts, strong distractors"
+      }
+    },
+    "ASSESS_PHY_ELEC_002": {
+      "question_id": "ASSESS_PHY_ELEC_002",
+      "subject": "Physics",
+      "chapter": "Electrostatics",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Electric Potential",
+        "Dipole"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.7,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "Two point charges +4 μC and -4 μC are placed 6 cm apart. Find the electric potential at the midpoint of the line joining them (in Volts). Take k = 9 × 10⁹ N·m²/C².",
+      "question_text_html": "Two point charges <strong>+4 μC</strong> and <strong>-4 μC</strong> are placed <strong>6 cm</strong> apart. Find the electric potential at the midpoint of the line joining them (in <strong>Volts</strong>). Take k = 9 × 10⁹ N·m²/C².",
+      "question_latex": null,
+      "options": null,
+      "correct_answer": "0",
+      "correct_answer_text": "0 V",
+      "correct_answer_exact": "0",
+      "correct_answer_unit": "V",
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": -0.1,
+        "max": 0.1
+      },
+      "solution_text": "At midpoint, distance from each charge = 3 cm = 0.03 m. V = k[q₁/r + q₂/r] = k[(4×10⁻⁶/0.03) + (-4×10⁻⁶/0.03)] = 0 V (potentials cancel due to equal and opposite charges)",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Find distance from midpoint to each charge",
+          "formula": null,
+          "calculation": "r = 6/2 = 3 cm = 0.03 m",
+          "explanation": "Midpoint is equidistant from both charges",
+          "result": "r = 0.03 m"
+        },
+        {
+          "step_number": 2,
+          "description": "Calculate potential due to positive charge",
+          "formula": "V₁ = kq₁/r",
+          "calculation": "V₁ = (9×10⁹ × 4×10⁻⁶)/0.03 = 1.2×10⁶ V",
+          "explanation": "Potential due to +4 μC charge",
+          "result": "V₁ = +1.2 MV"
+        },
+        {
+          "step_number": 3,
+          "description": "Calculate potential due to negative charge",
+          "formula": "V₂ = kq₂/r",
+          "calculation": "V₂ = (9×10⁹ × (-4×10⁻⁶))/0.03 = -1.2×10⁶ V",
+          "explanation": "Potential due to -4 μC charge (negative)",
+          "result": "V₂ = -1.2 MV"
+        },
+        {
+          "step_number": 4,
+          "description": "Apply superposition principle",
+          "formula": "V_net = V₁ + V₂",
+          "calculation": "V_net = 1.2×10⁶ + (-1.2×10⁶) = 0 V",
+          "explanation": "Potentials are scalar quantities and add algebraically",
+          "result": "0 V"
+        }
+      ],
+      "concepts_tested": [
+        "Electric potential",
+        "Superposition principle",
+        "Electric dipole properties",
+        "Scalar nature of potential"
+      ],
+      "time_estimate": 75,
+      "weightage_marks": 4,
+      "jee_year_similar": "2022",
+      "jee_pattern": "Dipole potential at special points",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "V = kq/r, V_net = ΣV_i",
+        "common_mistakes": [
+          "Calculating electric field instead of potential",
+          "Forgetting negative sign on negative charge",
+          "Not recognizing symmetry leading to zero"
+        ],
+        "hint": "This is an electric dipole. At the midpoint (perpendicular bisector), potentials from equal and opposite charges cancel",
+        "key_insight": "Tests understanding that potential is scalar and dipole creates zero potential at center",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "electrostatics",
+        "electric-potential",
+        "dipole",
+        "superposition",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "0.0",
+        "0.00"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 0.7,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 3 concepts"
+      }
+    },
+    "ASSESS_PHY_CURR_001": {
+      "question_id": "ASSESS_PHY_CURR_001",
+      "subject": "Physics",
+      "chapter": "Current Electricity",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Resistor Networks",
+        "Series and Parallel"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.0,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "In a circuit, three resistors of 2Ω, 3Ω, and 6Ω are connected such that the 2Ω and 3Ω resistors are in series, and this combination is in parallel with the 6Ω resistor. If a 10V battery is connected across this network, what is the total current drawn from the battery?",
+      "question_text_html": "In a circuit, three resistors of <strong>2Ω</strong>, <strong>3Ω</strong>, and <strong>6Ω</strong> are connected such that the <strong>2Ω and 3Ω</strong> resistors are in series, and this combination is in parallel with the <strong>6Ω</strong> resistor. If a <strong>10V</strong> battery is connected across this network, what is the total current drawn from the battery?",
+      "question_latex": null,
+      "options": [
+        {
+          "option_id": "A",
+          "text": "3.0 A",
+          "html": "<strong>3.0 A</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "3.7 A",
+          "html": "<strong>3.7 A</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "4.0 A",
+          "html": "<strong>4.0 A</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "5.0 A",
+          "html": "<strong>5.0 A</strong>"
+        }
+      ],
+      "correct_answer": "B",
+      "correct_answer_text": "3.7 A",
+      "correct_answer_exact": "3.67",
+      "correct_answer_unit": "A",
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "Series: R_series = 2 + 3 = 5Ω. Parallel: 1/R_eq = 1/5 + 1/6 = (6+5)/30 = 11/30. R_eq = 30/11 ≈ 2.727Ω. Current I = V/R = 10/2.727 ≈ 3.67 A ≈ 3.7 A",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Calculate series combination resistance",
+          "formula": "R_series = R₁ + R₂",
+          "calculation": "R_series = 2 + 3 = 5Ω",
+          "explanation": "2Ω and 3Ω resistors are in series",
+          "result": "R_series = 5Ω"
+        },
+        {
+          "step_number": 2,
+          "description": "Calculate equivalent resistance of parallel combination",
+          "formula": "1/R_eq = 1/R_series + 1/R_parallel",
+          "calculation": "1/R_eq = 1/5 + 1/6 = 6/30 + 5/30 = 11/30",
+          "explanation": "5Ω (series combination) and 6Ω are in parallel",
+          "result": "R_eq = 30/11 Ω"
+        },
+        {
+          "step_number": 3,
+          "description": "Calculate equivalent resistance value",
+          "formula": null,
+          "calculation": "R_eq = 30/11 = 2.727Ω",
+          "explanation": "Convert to decimal",
+          "result": "R_eq ≈ 2.73Ω"
+        },
+        {
+          "step_number": 4,
+          "description": "Apply Ohm's law",
+          "formula": "I = V/R",
+          "calculation": "I = 10/2.727 = 3.67 A",
+          "explanation": "Total current from battery",
+          "result": "3.7 A"
+        }
+      ],
+      "concepts_tested": [
+        "Series resistance",
+        "Parallel resistance",
+        "Equivalent resistance",
+        "Ohm's law",
+        "Circuit analysis"
+      ],
+      "time_estimate": 90,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Mixed series-parallel resistor network",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "R_series = ΣR, 1/R_parallel = Σ(1/R), I = V/R",
+        "common_mistakes": [
+          "Adding all resistances directly",
+          "Wrong order of series/parallel calculation",
+          "Arithmetic errors in fractions"
+        ],
+        "hint": "First combine series resistors, then find parallel combination with remaining resistor",
+        "key_insight": "Tests systematic circuit reduction and fraction manipulation",
+        "elimination_strategy": "Rough: If all in series, R=11Ω, I≈0.9A. If all parallel, R≈1Ω, I≈10A. Answer must be in between, closer to parallel. Eliminates A being too low."
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "current-electricity",
+        "resistors",
+        "circuit-analysis",
+        "ohms-law",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "A": "Used wrong parallel formula or calculation error",
+        "C": "Rounded incorrectly or wrong approach",
+        "D": "Added resistances incorrectly (all parallel mistake)"
+      },
+      "alternate_correct_answers": [
+        "3.67",
+        "3.66",
+        "3.6"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.0,
+        "discrimination_a": 1.4,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Excellent MCQ: 4 options, 3 concepts, strong distractors"
+      }
+    },
+    "ASSESS_PHY_MAG_001": {
+      "question_id": "ASSESS_PHY_MAG_001",
+      "subject": "Physics",
+      "chapter": "Magnetism",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Lorentz Force",
+        "Charged Particle in Magnetic Field"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.1,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "An electron moving with velocity 2 × 10⁶ m/s enters a uniform magnetic field of 0.5 T at right angles. Find the radius of the circular path in millimeters (mm). Take e = 1.6 × 10⁻¹⁹ C, m_e = 9.1 × 10⁻³¹ kg.",
+      "question_text_html": "An electron moving with velocity <strong>2 × 10⁶ m/s</strong> enters a uniform magnetic field of <strong>0.5 T</strong> at right angles. Find the radius of the circular path in <strong>millimeters (mm)</strong>. Take e = 1.6 × 10⁻¹⁹ C, m_e = 9.1 × 10⁻³¹ kg.",
+      "question_latex": null,
+      "options": null,
+      "correct_answer": "0.02275",
+      "correct_answer_text": "0.02275 mm",
+      "correct_answer_exact": "0.02275",
+      "correct_answer_unit": "mm",
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": 0.022,
+        "max": 0.024
+      },
+      "solution_text": "r = mv/(qB) = (9.1×10⁻³¹ × 2×10⁶)/(1.6×10⁻¹⁹ × 0.5) = (1.82×10⁻²⁴)/(8×10⁻²⁰) = 2.275 × 10⁻⁵ m = 0.02275 mm",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Identify the formula for radius of circular motion",
+          "formula": "r = mv/(qB)",
+          "calculation": null,
+          "explanation": "For charged particle in magnetic field, centripetal force equals Lorentz force",
+          "result": "Formula identified"
+        },
+        {
+          "step_number": 2,
+          "description": "Substitute known values",
+          "formula": "r = mv/(qB)",
+          "calculation": "r = (9.1×10⁻³¹ × 2×10⁶)/(1.6×10⁻¹⁹ × 0.5)",
+          "explanation": "Plug in all given values",
+          "result": "Expression set up"
+        },
+        {
+          "step_number": 3,
+          "description": "Calculate numerator and denominator",
+          "formula": null,
+          "calculation": "Numerator = 1.82×10⁻²⁴, Denominator = 8×10⁻²⁰",
+          "explanation": "Simplify multiplication",
+          "result": "Ready for division"
+        },
+        {
+          "step_number": 4,
+          "description": "Calculate radius and convert to mm",
+          "formula": null,
+          "calculation": "r = 2.275×10⁻⁵ m = 2.275×10⁻² mm = 0.02275 mm",
+          "explanation": "1 m = 1000 mm",
+          "result": "0.02275 mm"
+        }
+      ],
+      "concepts_tested": [
+        "Lorentz force",
+        "Circular motion in magnetic field",
+        "Unit conversions",
+        "Scientific notation"
+      ],
+      "time_estimate": 90,
+      "weightage_marks": 4,
+      "jee_year_similar": "2024",
+      "jee_pattern": "Standard charged particle motion in magnetic field",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "r = mv/(qB)",
+        "common_mistakes": [
+          "Wrong unit conversion (m to mm)",
+          "Scientific notation errors",
+          "Forgetting to use electron charge/mass"
+        ],
+        "hint": "Use formula r = mv/(qB). Careful with scientific notation and unit conversion to mm",
+        "key_insight": "Tests application of Lorentz force and numerical accuracy with small values",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "magnetism",
+        "lorentz-force",
+        "circular-motion",
+        "electrons",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "0.023",
+        "0.0228",
+        "2.275e-2"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.1,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 2 concepts"
+      }
+    },
+    "ASSESS_PHY_EMI_001": {
+      "question_id": "ASSESS_PHY_EMI_001",
+      "subject": "Physics",
+      "chapter": "Electromagnetic Induction",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Faraday's Law",
+        "Induced EMF"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.9,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "A rectangular coil of 50 turns with area 0.1 m² is placed perpendicular to a magnetic field. If the field changes uniformly from 0.2 T to 0.8 T in 0.3 seconds, what is the magnitude of induced EMF?",
+      "question_text_html": "A rectangular coil of <strong>50 turns</strong> with area <strong>0.1 m²</strong> is placed perpendicular to a magnetic field. If the field changes uniformly from <strong>0.2 T</strong> to <strong>0.8 T</strong> in <strong>0.3 seconds</strong>, what is the magnitude of induced EMF?",
+      "question_latex": null,
+      "options": [
+        {
+          "option_id": "A",
+          "text": "5 V",
+          "html": "<strong>5 V</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "10 V",
+          "html": "<strong>10 V</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "15 V",
+          "html": "<strong>15 V</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "20 V",
+          "html": "<strong>20 V</strong>"
+        }
+      ],
+      "correct_answer": "B",
+      "correct_answer_text": "10 V",
+      "correct_answer_exact": "10",
+      "correct_answer_unit": "V",
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "|ε| = N|dΦ/dt| = N × A × |dB/dt| = 50 × 0.1 × |(0.8-0.2)/0.3| = 50 × 0.1 × 2 = 10 V",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Calculate rate of change of magnetic field",
+          "formula": "dB/dt = ΔB/Δt",
+          "calculation": "dB/dt = (0.8 - 0.2)/0.3 = 0.6/0.3 = 2 T/s",
+          "explanation": "Field changes uniformly",
+          "result": "dB/dt = 2 T/s"
+        },
+        {
+          "step_number": 2,
+          "description": "Calculate rate of change of flux",
+          "formula": "dΦ/dt = A × dB/dt",
+          "calculation": "dΦ/dt = 0.1 × 2 = 0.2 Wb/s",
+          "explanation": "Flux = BA, coil perpendicular to field",
+          "result": "dΦ/dt = 0.2 Wb/s"
+        },
+        {
+          "step_number": 3,
+          "description": "Apply Faraday's law",
+          "formula": "ε = -N(dΦ/dt)",
+          "calculation": "|ε| = 50 × 0.2 = 10 V",
+          "explanation": "N = 50 turns, take magnitude",
+          "result": "10 V"
+        }
+      ],
+      "concepts_tested": [
+        "Faraday's law",
+        "Magnetic flux",
+        "Rate of change",
+        "Multi-turn coil"
+      ],
+      "time_estimate": 75,
+      "weightage_marks": 4,
+      "jee_year_similar": "2022",
+      "jee_pattern": "Direct application of Faraday's law",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "ε = -N(dΦ/dt) = -NA(dB/dt)",
+        "common_mistakes": [
+          "Forgetting the number of turns N",
+          "Wrong calculation of dB/dt",
+          "Not taking absolute value for magnitude"
+        ],
+        "hint": "Use Faraday's law: ε = N × A × (dB/dt). Calculate rate of change of B first",
+        "key_insight": "Tests understanding of Faraday's law with changing magnetic field",
+        "elimination_strategy": "Quick estimate: N×A×(ΔB/Δt) = 50×0.1×(0.6/0.3) = 5×2 = 10"
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "electromagnetic-induction",
+        "faradays-law",
+        "induced-emf",
+        "medium",
+        "diagram-based",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "A": "Forgot number of turns (N=50)",
+        "C": "Used wrong time or field change",
+        "D": "Calculation error in rate"
+      },
+      "alternate_correct_answers": [
+        "10.0"
+      ],
+      "has_image": true,
+      "image_url": null,
+      "image_type": "diagram",
+      "image_description": "Rectangular coil with 50 turns shown perpendicular to magnetic field lines. Arrows indicate field direction. Labels show area = 0.1 m², B changes from 0.2T to 0.8T.",
+      "image_alt_text": "Rectangular coil in changing magnetic field",
+      "image_generation_method": "to_be_generated",
+      "diagram_code_python": "import matplotlib.pyplot as plt; import matplotlib.patches as patches; import numpy as np; fig, ax = plt.subplots(1, 1, figsize=(8, 6)); ax.set_xlim(-0.5, 3.5); ax.set_ylim(-0.5, 2.8); ax.set_aspect('equal'); rect = patches.Rectangle((0.5, 0.5), 2, 1.5, linewidth=3, edgecolor='#6B46C1', facecolor='none'); ax.add_patch(rect); ax.text(1.5, 1.25, '50 turns', fontsize=11, ha='center', fontweight='bold', color='#6B46C1'); ax.text(1.5, 0.9, 'A = 0.1 m²', fontsize=10, ha='center', color='#6B46C1'); [ax.arrow(i, -0.3, 0, 0.4, head_width=0.08, head_length=0.08, fc='#D946EF', ec='#D946EF', linewidth=1.5, alpha=0.7) for i in np.linspace(-0.3, 3.3, 15)]; [ax.arrow(i, 2.2, 0, 0.4, head_width=0.08, head_length=0.08, fc='#D946EF', ec='#D946EF', linewidth=1.5, alpha=0.7) for i in np.linspace(-0.3, 3.3, 15)]; ax.text(-0.3, 1.25, 'B field', fontsize=12, rotation=90, va='center', fontweight='bold', color='#D946EF'); ax.text(3.5, 2.0, 'B: 0.2 T → 0.8 T', fontsize=10, bbox=dict(boxstyle='round', facecolor='#FDE68A', alpha=0.8)); ax.text(3.5, 1.6, 'Δt = 0.3 s', fontsize=10, bbox=dict(boxstyle='round', facecolor='#FDE68A', alpha=0.8)); ax.arrow(2.7, 1.25, 0.3, 0, head_width=0.1, head_length=0.08, fc='red', ec='red', linewidth=2); ax.text(3.2, 1.35, 'EMF', fontsize=14, color='red', fontweight='bold'); ax.axis('off'); ax.set_title('Rectangular Coil in Changing Magnetic Field', fontsize=13, fontweight='bold', pad=15); plt.tight_layout(); plt.savefig('output.svg', format='svg', bbox_inches='tight'); plt.close()",
+      "diagram_config": {
+        "requires_diagram": true,
+        "diagram_complexity": "medium",
+        "discriminative_value": "medium"
+      },
+      "irt_parameters": {
+        "difficulty_b": 0.9,
+        "discrimination_a": 1.4,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Excellent MCQ: 4 options, 3 concepts, strong distractors"
+      }
+    },
+    "ASSESS_PHY_MOD_001": {
+      "question_id": "ASSESS_PHY_MOD_001",
+      "subject": "Physics",
+      "chapter": "Modern Physics",
+      "unit": "Unit 4",
+      "sub_topics": [
+        "Photoelectric Effect",
+        "Energy Conservation"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.6,
+      "priority": "MEDIUM",
+      "question_type": "mcq_single",
+      "question_text": "Light of wavelength 400 nm is incident on a metal surface with work function 2.0 eV. What is the maximum kinetic energy of the emitted photoelectrons? (Take h = 6.63 × 10⁻³⁴ J·s, c = 3 × 10⁸ m/s, 1 eV = 1.6 × 10⁻¹⁹ J)",
+      "question_text_html": "Light of wavelength <strong>400 nm</strong> is incident on a metal surface with work function <strong>2.0 eV</strong>. What is the maximum kinetic energy of the emitted photoelectrons? (Take h = 6.63 × 10⁻³⁴ J·s, c = 3 × 10⁸ m/s, 1 eV = 1.6 × 10⁻¹⁹ J)",
+      "question_latex": null,
+      "options": [
+        {
+          "option_id": "A",
+          "text": "0.5 eV",
+          "html": "<strong>0.5 eV</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "1.1 eV",
+          "html": "<strong>1.1 eV</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "1.5 eV",
+          "html": "<strong>1.5 eV</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "2.1 eV",
+          "html": "<strong>2.1 eV</strong>"
+        }
+      ],
+      "correct_answer": "B",
+      "correct_answer_text": "1.1 eV",
+      "correct_answer_exact": "1.1",
+      "correct_answer_unit": "eV",
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "E = hc/λ = (6.63×10⁻³⁴ × 3×10⁸)/(400×10⁻⁹) = 4.97×10⁻¹⁹ J = 4.97/1.6 eV = 3.1 eV. KE_max = E - φ = 3.1 - 2.0 = 1.1 eV",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Calculate energy of incident photon",
+          "formula": "E = hc/λ",
+          "calculation": "E = (6.63×10⁻³⁴ × 3×10⁸)/(400×10⁻⁹) = 4.97×10⁻¹⁹ J",
+          "explanation": "Energy of photon from wavelength",
+          "result": "E = 4.97×10⁻¹⁹ J"
+        },
+        {
+          "step_number": 2,
+          "description": "Convert energy to eV",
+          "formula": "E(eV) = E(J) / (1.6×10⁻¹⁹)",
+          "calculation": "E = 4.97/1.6 = 3.106 eV ≈ 3.1 eV",
+          "explanation": "Convert from Joules to electron volts",
+          "result": "E = 3.1 eV"
+        },
+        {
+          "step_number": 3,
+          "description": "Apply Einstein's photoelectric equation",
+          "formula": "KE_max = E - φ",
+          "calculation": "KE_max = 3.1 - 2.0 = 1.1 eV",
+          "explanation": "Energy of photon minus work function gives maximum kinetic energy",
+          "result": "1.1 eV"
+        }
+      ],
+      "concepts_tested": [
+        "Photoelectric effect",
+        "Photon energy",
+        "Energy conservation",
+        "Unit conversion"
+      ],
+      "time_estimate": 90,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Standard photoelectric effect calculation",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "E = hc/λ, KE_max = E - φ",
+        "common_mistakes": [
+          "Wrong unit conversion (J to eV)",
+          "Using wrong wavelength units (nm to m)",
+          "Adding work function instead of subtracting"
+        ],
+        "hint": "First calculate photon energy in eV, then subtract work function",
+        "key_insight": "Tests understanding of photoelectric effect and careful unit management",
+        "elimination_strategy": "Photon energy ≈ 3 eV, work function = 2 eV, so KE must be around 1 eV. Eliminates C and D."
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "modern-physics",
+        "photoelectric-effect",
+        "photons",
+        "energy",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "A": "Calculation error in photon energy",
+        "C": "Wrong subtraction or unit conversion error",
+        "D": "Added work function instead of subtracting"
+      },
+      "alternate_correct_answers": [
+        "1.10",
+        "1.06"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 0.6,
+        "discrimination_a": 1.4,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Excellent MCQ: 4 options, 5 concepts, strong distractors"
+      }
+    },
+    "ASSESS_CHEM_ORG_001": {
+      "question_id": "ASSESS_CHEM_ORG_001",
+      "subject": "Chemistry",
+      "chapter": "Organic Chemistry",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Hybridization",
+        "Chemical Bonding",
+        "Structure"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.7,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "In the compound CH₃-CH=CH-C≡CH, what is the total number of sigma (σ) and pi (π) bonds?",
+      "question_text_html": "In the compound <strong>CH₃-CH=CH-C≡CH</strong>, what is the total number of <strong>sigma (σ)</strong> and <strong>pi (π)</strong> bonds?",
+      "question_latex": null,
+      "options": [
+        {
+          "option_id": "A",
+          "text": "8 σ and 3 π",
+          "html": "<strong>8 σ and 3 π</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "9 σ and 3 π",
+          "html": "<strong>9 σ and 3 π</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "10 σ and 3 π",
+          "html": "<strong>10 σ and 3 π</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "11 σ and 3 π",
+          "html": "<strong>11 σ and 3 π</strong>"
+        }
+      ],
+      "correct_answer": "C",
+      "correct_answer_text": "10 σ and 3 π",
+      "correct_answer_exact": "10 σ, 3 π",
+      "correct_answer_unit": null,
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "Structure: CH₃-CH=CH-C≡CH. Count σ bonds: 4 C-C σ bonds (including σ in double and triple bonds) + 6 C-H bonds = 10 σ bonds. Count π bonds: 1 in C=C + 2 in C≡C = 3 π bonds. Total: 10 σ and 3 π.",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Draw complete structure with all hydrogens",
+          "formula": null,
+          "calculation": "CH₃-CH=CH-C≡CH has 5 carbons, 6 hydrogens",
+          "explanation": "Visualize complete Lewis structure",
+          "result": "Structure identified"
+        },
+        {
+          "step_number": 2,
+          "description": "Count sigma bonds",
+          "formula": null,
+          "calculation": "CH₃-CH=CH-C≡CH has 5 carbons, 6 hydrogens",
+          "explanation": "Every single bond is σ. Every multiple bond has one σ",
+          "result": "10 σ bonds"
+        },
+        {
+          "step_number": 3,
+          "description": "Count pi bonds",
+          "formula": null,
+          "calculation": "C-C σ bonds: 4 (1 single + 1 from double + 1 single + 1 from triple). C-H bonds: 6. Total σ = 4 + 6 = 10",
+          "explanation": "Count all C-C σ bonds (every C-C connection has one σ) and all C-H bonds",
+          "result": "3 π bonds"
+        }
+      ],
+      "concepts_tested": [
+        "Hybridization",
+        "Sigma-pi bonding",
+        "Molecular structure",
+        "Bond counting"
+      ],
+      "time_estimate": 75,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Standard organic structure analysis",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Corrected solution explanation for bond counting",
+      "metadata": {
+        "formula_used": "Single bond = 1σ, Double = 1σ+1π, Triple = 1σ+2π",
+        "common_mistakes": [
+          "Forgetting σ bonds in multiple bonds",
+          "Miscounting C-H bonds",
+          "Confusing σ and π"
+        ],
+        "hint": "Draw complete structure. Count all single bonds + σ in multiple bonds. Then count π separately",
+        "key_insight": "Tests understanding of bond types in organic molecules",
+        "elimination_strategy": "5 carbons in chain = 4 C-C bonds minimum. Each has at least 1 σ. Plus C-H bonds. Helps estimate."
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "organic-chemistry",
+        "hybridization",
+        "bonding",
+        "structure",
+        "medium",
+        "diagram-based",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "A": "Undercounted σ bonds",
+        "B": "Missed one C-C bond",
+        "D": "Added extra bond incorrectly"
+      },
+      "alternate_correct_answers": [
+        "10 sigma, 3 pi"
+      ],
+      "has_image": true,
+      "image_url": null,
+      "image_type": "diagram",
+      "image_description": "Structural formula of CH₃-CH=CH-C≡CH showing all bonds and atoms clearly with proper bond notation",
+      "image_alt_text": "Organic compound with single, double, and triple bonds",
+      "image_generation_method": "to_be_generated",
+      "diagram_code_python": "import matplotlib.pyplot as plt; import numpy as np; fig, ax = plt.subplots(1, 1, figsize=(10, 5)); ax.set_xlim(-1, 11); ax.set_ylim(-1.5, 1.5); ax.set_aspect('equal'); c_positions = [(0, 0), (2, 0), (4, 0), (6, 0), (8, 0)]; [ax.plot(x, y, 'o', markersize=18, color='#6B46C1', zorder=3) or ax.text(x, y, 'C', fontsize=14, ha='center', va='center', color='white', fontweight='bold', zorder=4) for i, (x, y) in enumerate(c_positions)]; ax.plot([c_positions[0][0], c_positions[1][0]], [c_positions[0][1], c_positions[1][1]], 'k-', linewidth=3, zorder=1); ax.plot([c_positions[1][0], c_positions[2][0]], [c_positions[1][1], c_positions[2][1]], 'k-', linewidth=3, zorder=1); ax.plot([c_positions[1][0], c_positions[2][0]], [c_positions[1][1]+0.15, c_positions[2][1]+0.15], 'k-', linewidth=3, zorder=1); ax.plot([c_positions[2][0], c_positions[3][0]], [c_positions[2][1], c_positions[3][1]], 'k-', linewidth=3, zorder=1); ax.plot([c_positions[3][0], c_positions[4][0]], [c_positions[3][1], c_positions[4][1]], 'k-', linewidth=3, zorder=1); ax.plot([c_positions[3][0], c_positions[4][0]], [c_positions[3][1]+0.15, c_positions[4][1]+0.15], 'k-', linewidth=3, zorder=1); ax.plot([c_positions[3][0], c_positions[4][0]], [c_positions[3][1]-0.15, c_positions[4][1]-0.15], 'k-', linewidth=3, zorder=1); h_positions = [(0, -0.8), (0, 0.8), (-0.8, 0), (2, -0.8), (2, 0.8), (4, 0.8), (8, 0.8)]; [ax.text(x, y, 'H', fontsize=12, ha='center', va='center', color='#D946EF', fontweight='bold') for x, y in h_positions]; [ax.plot([min(c_positions, key=lambda p: np.sqrt((p[0]-x)**2 + (p[1]-y)**2))[0], x], [min(c_positions, key=lambda p: np.sqrt((p[0]-x)**2 + (p[1]-y)**2))[1], y], 'k-', linewidth=1.5, alpha=0.6) for x, y in h_positions[:6]]; ax.plot([8, 8], [0, 0.8], 'k-', linewidth=1.5, alpha=0.6); ax.text(1, -1.3, 'CH₃', fontsize=13, ha='center', bbox=dict(boxstyle='round', facecolor='#E9D5FF', alpha=0.7)); ax.text(3, -1.3, 'C=C', fontsize=13, ha='center', bbox=dict(boxstyle='round', facecolor='#FDE68A', alpha=0.7)); ax.text(7, -1.3, 'C≡C', fontsize=11, ha='center', bbox=dict(boxstyle='round', facecolor='#FECACA', alpha=0.7)); ax.text(5, 1.2, '10 σ bonds, 3 π bonds', fontsize=12, ha='center', fontweight='bold', bbox=dict(boxstyle='round', facecolor='white', edgecolor='#6B46C1', linewidth=2)); ax.axis('off'); ax.set_title('CH₃-CH=CH-C≡C-H Structure', fontsize=14, fontweight='bold', pad=15); plt.tight_layout(); plt.savefig('output.svg', format='svg', bbox_inches='tight'); plt.close()",
+      "diagram_config": {
+        "requires_diagram": true,
+        "diagram_complexity": "medium",
+        "discriminative_value": "medium"
+      },
+      "irt_parameters": {
+        "difficulty_b": 0.7,
+        "discrimination_a": 1.25,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Good MCQ: 4 options with quality distractors"
+      }
+    },
+    "ASSESS_CHEM_ORG_002": {
+      "question_id": "ASSESS_CHEM_ORG_002",
+      "subject": "Chemistry",
+      "chapter": "Organic Chemistry",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Reaction Mechanisms",
+        "Nucleophilic Substitution"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.1,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "A primary alkyl halide undergoes SN2 reaction with hydroxide ion with a rate constant of 2.5 × 10⁻³ M⁻¹s⁻¹. If the concentration of alkyl halide is 0.1 M and OH⁻ is 0.2 M, calculate the initial rate of reaction in M/s. Express in scientific notation as X × 10⁻⁵.",
+      "question_text_html": "A primary alkyl halide undergoes <strong>SN2 reaction</strong> with hydroxide ion with a rate constant of <strong>2.5 × 10⁻³ M⁻¹s⁻¹</strong>. If the concentration of alkyl halide is <strong>0.1 M</strong> and OH⁻ is <strong>0.2 M</strong>, calculate the initial rate of reaction in <strong>M/s</strong>. Express in scientific notation as <strong>X × 10⁻⁵</strong>.",
+      "question_latex": null,
+      "options": null,
+      "correct_answer": "5",
+      "correct_answer_text": "5 × 10⁻⁵ M/s",
+      "correct_answer_exact": "5",
+      "correct_answer_unit": "× 10⁻⁵ M/s",
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": 4.8,
+        "max": 5.2
+      },
+      "solution_text": "For SN2 reaction: Rate = k[RX][OH⁻] = (2.5×10⁻³)(0.1)(0.2) = 5×10⁻⁵ M/s. Express as 5 × 10⁻⁵",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Identify rate law for SN2",
+          "formula": "Rate = k[RX][Nucleophile]",
+          "calculation": null,
+          "explanation": "SN2 is second order - depends on both substrate and nucleophile",
+          "result": "Rate law identified"
+        },
+        {
+          "step_number": 2,
+          "description": "Substitute values",
+          "formula": "Rate = k[RX][OH⁻]",
+          "calculation": "Rate = (2.5×10⁻³)(0.1)(0.2)",
+          "explanation": "Plug in all given concentrations and rate constant",
+          "result": "Expression set up"
+        },
+        {
+          "step_number": 3,
+          "description": "Calculate rate",
+          "formula": null,
+          "calculation": "(2.5×10⁻³)(0.1)(0.2) = 2.5×10⁻³×0.02 = 5×10⁻⁵ M/s",
+          "explanation": "Multiply all terms",
+          "result": "5 × 10⁻⁵ M/s"
+        }
+      ],
+      "concepts_tested": [
+        "SN2 mechanism",
+        "Rate laws",
+        "Second order kinetics",
+        "Scientific notation"
+      ],
+      "time_estimate": 90,
+      "weightage_marks": 4,
+      "jee_year_similar": "2024",
+      "jee_pattern": "Kinetics calculation in organic reactions",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "Rate = k[RX][Nu]",
+        "common_mistakes": [
+          "Using first order rate law",
+          "Scientific notation errors",
+          "Wrong multiplication"
+        ],
+        "hint": "SN2 is second order. Rate depends on both reactants",
+        "key_insight": "Tests understanding of SN2 kinetics and numerical calculation",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "organic-chemistry",
+        "reaction-mechanisms",
+        "kinetics",
+        "sn2",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "5.0",
+        "5.00"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.1,
+        "discrimination_a": 1.6,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Moderate numerical: 3 steps, 2 concepts"
+      }
+    },
+    "ASSESS_CHEM_ORG_003": {
+      "question_id": "ASSESS_CHEM_ORG_003",
+      "subject": "Chemistry",
+      "chapter": "Organic Chemistry",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Acidity",
+        "Organic Acids",
+        "Electron Effects"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.9,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "Arrange the following compounds in order of increasing acidity: (I) CH₃CH₂COOH, (II) ClCH₂CH₂COOH, (III) Cl₂CHCH₂COOH, (IV) Cl₃CCH₂COOH",
+      "question_text_html": "Arrange the following compounds in order of <strong>increasing acidity</strong>: <br>(I) CH₃CH₂COOH<br>(II) ClCH₂CH₂COOH<br>(III) Cl₂CHCH₂COOH<br>(IV) Cl₃CCH₂COOH",
+      "question_latex": null,
+      "options": [
+        {
+          "option_id": "A",
+          "text": "I < II < III < IV",
+          "html": "<strong>I &lt; II &lt; III &lt; IV</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "IV < III < II < I",
+          "html": "<strong>IV &lt; III &lt; II &lt; I</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "I < III < II < IV",
+          "html": "<strong>I &lt; III &lt; II &lt; IV</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "II < I < III < IV",
+          "html": "<strong>II &lt; I &lt; III &lt; IV</strong>"
+        }
+      ],
+      "correct_answer": "A",
+      "correct_answer_text": "I < II < III < IV",
+      "correct_answer_exact": "I < II < III < IV",
+      "correct_answer_unit": null,
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "Chlorine is electron-withdrawing (-I effect), stabilizes conjugate base, increases acidity. More Cl atoms = stronger -I effect = more acidic. Order: CH₃CH₂COOH (no Cl) < ClCH₂CH₂COOH (1 Cl) < Cl₂CHCH₂COOH (2 Cl) < Cl₃CCH₂COOH (3 Cl). Answer: I < II < III < IV",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Identify electron-withdrawing groups",
+          "formula": null,
+          "calculation": "Count Cl atoms: I(0), II(1), III(2), IV(3)",
+          "explanation": "Chlorine withdraws electrons through inductive effect",
+          "result": "More Cl = stronger EWG effect"
+        },
+        {
+          "step_number": 2,
+          "description": "Understand effect on acidity",
+          "formula": null,
+          "calculation": null,
+          "explanation": "EWG stabilizes conjugate base (COO⁻), making acid stronger",
+          "result": "More Cl = more acidic"
+        },
+        {
+          "step_number": 3,
+          "description": "Arrange in order",
+          "formula": null,
+          "calculation": "0 Cl < 1 Cl < 2 Cl < 3 Cl",
+          "explanation": "Direct correlation between Cl count and acidity",
+          "result": "I < II < III < IV"
+        }
+      ],
+      "concepts_tested": [
+        "Acidity",
+        "Inductive effect",
+        "Electron-withdrawing groups",
+        "Conjugate base stability"
+      ],
+      "time_estimate": 75,
+      "weightage_marks": 4,
+      "jee_year_similar": "2022",
+      "jee_pattern": "Comparative acidity with inductive effects",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "Acidity ∝ Conjugate base stability",
+        "common_mistakes": [
+          "Confusing with basicity",
+          "Ignoring inductive effect",
+          "Wrong order of Cl effect"
+        ],
+        "hint": "Count Cl atoms. More Cl = stronger -I effect = more acidic",
+        "key_insight": "High discrimination - tests understanding of electron effects on acidity",
+        "elimination_strategy": "IV has most Cl, must be most acidic. I has no Cl, must be least acidic. Narrows to A or D."
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "organic-chemistry",
+        "acidity",
+        "inductive-effect",
+        "comparative",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "B": "Reversed order completely",
+        "C": "Wrong position of II and III",
+        "D": "Placed II before I incorrectly"
+      },
+      "alternate_correct_answers": [
+        "1 < 2 < 3 < 4"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 0.9,
+        "discrimination_a": 1.25,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Good MCQ: 4 options with quality distractors"
+      }
+    },
+    "ASSESS_CHEM_PHY_001": {
+      "question_id": "ASSESS_CHEM_PHY_001",
+      "subject": "Chemistry",
+      "chapter": "Physical Chemistry",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Thermodynamics",
+        "Enthalpy",
+        "Hess's Law"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.0,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "Given: C(s) + O₂(g) → CO₂(g), ΔH = -394 kJ/mol and H₂(g) + ½O₂(g) → H₂O(l), ΔH = -286 kJ/mol. If the enthalpy of combustion of CH₄(g) is -890 kJ/mol, calculate the enthalpy of formation of CH₄(g) in kJ/mol. (Take absolute value)",
+      "question_text_html": "Given: <strong>C(s) + O₂(g) → CO₂(g)</strong>, ΔH = <strong>-394 kJ/mol</strong> and <strong>H₂(g) + ½O₂(g) → H₂O(l)</strong>, ΔH = <strong>-286 kJ/mol</strong>. If the enthalpy of combustion of CH₄(g) is <strong>-890 kJ/mol</strong>, calculate the enthalpy of formation of CH₄(g) in <strong>kJ/mol</strong>. (Take absolute value)",
+      "question_latex": null,
+      "options": null,
+      "correct_answer": "76",
+      "correct_answer_text": "76 kJ/mol",
+      "correct_answer_exact": "76",
+      "correct_answer_unit": "kJ/mol",
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": 75,
+        "max": 77
+      },
+      "solution_text": "Combustion: CH₄ + 2O₂ → CO₂ + 2H₂O, ΔH = -890. Formation: C + 2H₂ → CH₄, ΔH_f = ? Using Hess's law: ΔH_combustion = ΔH_f(products) - ΔH_f(reactants). -890 = (-394 + 2×(-286)) - ΔH_f(CH₄). -890 = -966 - ΔH_f(CH₄). ΔH_f(CH₄) = -966 + 890 = -76 kJ/mol. Absolute value = 76",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Write combustion equation",
+          "formula": "CH₄ + 2O₂ → CO₂ + 2H₂O",
+          "calculation": "ΔH_comb = -890 kJ/mol",
+          "explanation": "Complete combustion of methane",
+          "result": "Equation established"
+        },
+        {
+          "step_number": 2,
+          "description": "Apply Hess's law",
+          "formula": "ΔH_rxn = ΣΔH_f(products) - ΣΔH_f(reactants)",
+          "calculation": "-890 = [(-394) + 2(-286)] - [ΔH_f(CH₄) + 0]",
+          "explanation": "ΔH_f of elements in standard state = 0",
+          "result": "Equation set up"
+        },
+        {
+          "step_number": 3,
+          "description": "Solve for ΔH_f(CH₄)",
+          "formula": null,
+          "calculation": "-890 = [(-394) + 2(-286)] - [ΔH_f(CH₄) + 0]",
+          "explanation": "Rearrange and solve",
+          "result": "ΔH_f = -75 kJ/mol"
+        },
+        {
+          "step_number": 4,
+          "description": "Take absolute value",
+          "formula": null,
+          "calculation": "|-76| = 76",
+          "explanation": "Question asks for absolute value",
+          "result": "76 kJ/mol"
+        }
+      ],
+      "concepts_tested": [
+        "Hess's law",
+        "Enthalpy of formation",
+        "Enthalpy of combustion",
+        "Thermochemistry"
+      ],
+      "time_estimate": 120,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Standard thermodynamics calculation with Hess's law",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Corrected answer from 75 to 76 kJ/mol",
+      "metadata": {
+        "formula_used": "ΔH_rxn = ΣΔH_f(products) - ΣΔH_f(reactants)",
+        "common_mistakes": [
+          "Wrong sign conventions",
+          "Forgetting coefficient for H₂O",
+          "Not taking absolute value"
+        ],
+        "hint": "Use Hess's law. Remember ΔH_f of O₂ = 0. Don't forget the factor of 2 for H₂O",
+        "key_insight": "Tests application of Hess's law to calculate unknown enthalpy",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "physical-chemistry",
+        "thermodynamics",
+        "enthalpy",
+        "hess-law",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "75",
+        "77",
+        "76.0"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.0,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 2 concepts"
+      }
+    },
+    "ASSESS_CHEM_PHY_002": {
+      "question_id": "ASSESS_CHEM_PHY_002",
+      "subject": "Chemistry",
+      "chapter": "Physical Chemistry",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Chemical Equilibrium",
+        "Equilibrium Constants"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.2,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "For the reaction N₂(g) + 3H₂(g) ⇌ 2NH₃(g), Kc = 0.5 at a certain temperature. Calculate Kp if the temperature is 400 K. (R = 0.082 L·atm·K⁻¹·mol⁻¹). Express your answer as X × 10⁻⁴.",
+      "question_text_html": "For the reaction <strong>N₂(g) + 3H₂(g) ⇌ 2NH₃(g)</strong>, K<sub>c</sub> = <strong>0.5</strong> at a certain temperature. Calculate K<sub>p</sub> if the temperature is <strong>400 K</strong>. (R = 0.082 L·atm·K⁻¹·mol⁻¹). Express your answer as <strong>X × 10⁻⁴</strong>.",
+      "question_latex": null,
+      "options": null,
+      "correct_answer": "4.6",
+      "correct_answer_text": "4.6 × 10⁻⁴",
+      "correct_answer_exact": "4.6",
+      "correct_answer_unit": "× 10⁻⁴",
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": 4.4,
+        "max": 4.8
+      },
+      "solution_text": "Δn = (moles of gaseous products) - (moles of gaseous reactants) = 2 - (1+3) = -2. Kp = Kc(RT)^Δn = 0.5(0.082×400)^(-2) = 0.5/(32.8)² = 0.5/1075.84 = 4.65×10⁻⁴",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Calculate Δn",
+          "formula": "Δn = Σn(products) - Σn(reactants)",
+          "calculation": "Δn = 2 - (1 + 3) = 2 - 4 = -2",
+          "explanation": "Change in moles of gas",
+          "result": "Δn = -2"
+        },
+        {
+          "step_number": 2,
+          "description": "Apply Kp-Kc relationship",
+          "formula": "Kp = Kc(RT)^Δn",
+          "calculation": "Kp = 0.5 × (0.082 × 400)^(-2)",
+          "explanation": "Standard conversion formula",
+          "result": "Expression set up"
+        },
+        {
+          "step_number": 3,
+          "description": "Calculate RT",
+          "formula": null,
+          "calculation": "RT = 0.082 × 400 = 32.8",
+          "explanation": "Multiply R and T",
+          "result": "RT = 32.8"
+        },
+        {
+          "step_number": 4,
+          "description": "Calculate Kp",
+          "formula": null,
+          "calculation": "Kp = 0.5 × (32.8)^(-2) = 0.5/1075.84 = 4.65×10⁻⁴",
+          "explanation": "Complete calculation",
+          "result": "4.6 × 10⁻⁴"
+        }
+      ],
+      "concepts_tested": [
+        "Chemical equilibrium",
+        "Kp-Kc relationship",
+        "Gas laws",
+        "Scientific notation"
+      ],
+      "time_estimate": 120,
+      "weightage_marks": 4,
+      "jee_year_similar": "2024",
+      "jee_pattern": "Equilibrium constant conversion",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "Kp = Kc(RT)^Δn",
+        "common_mistakes": [
+          "Wrong Δn calculation",
+          "Forgetting negative exponent",
+          "Calculation errors"
+        ],
+        "hint": "Calculate Δn first. Remember Δn = (products) - (reactants) for gases only",
+        "key_insight": "Tests understanding of relationship between Kp and Kc",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "physical-chemistry",
+        "equilibrium",
+        "kp-kc",
+        "gas-laws",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "4.65",
+        "4.7",
+        "4.5"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.2,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 2 concepts"
+      }
+    },
+    "ASSESS_CHEM_PHY_003": {
+      "question_id": "ASSESS_CHEM_PHY_003",
+      "subject": "Chemistry",
+      "chapter": "Physical Chemistry",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Electrochemistry",
+        "Cell Potential",
+        "Nernst Equation"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.8,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "For the cell Zn|Zn²⁺(0.1M)||Cu²⁺(0.01M)|Cu, E°(Zn²⁺/Zn) = -0.76 V and E°(Cu²⁺/Cu) = +0.34 V. What is the cell potential at 25°C? (2.303RT/F = 0.059 V)",
+      "question_text_html": "For the cell <strong>Zn|Zn²⁺(0.1M)||Cu²⁺(0.01M)|Cu</strong>, E°(Zn²⁺/Zn) = <strong>-0.76 V</strong> and E°(Cu²⁺/Cu) = <strong>+0.34 V</strong>. What is the cell potential at <strong>25°C</strong>? (2.303RT/F = 0.059 V)",
+      "question_latex": null,
+      "options": [
+        {
+          "option_id": "A",
+          "text": "1.07 V",
+          "html": "<strong>1.07 V</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "1.10 V",
+          "html": "<strong>1.10 V</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "1.13 V",
+          "html": "<strong>1.13 V</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "1.16 V",
+          "html": "<strong>1.16 V</strong>"
+        }
+      ],
+      "correct_answer": "A",
+      "correct_answer_text": "1.07 V",
+      "correct_answer_exact": "1.07",
+      "correct_answer_unit": "V",
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "E°_cell = E°_cathode - E°_anode = 0.34 - (-0.76) = 1.10 V. For Zn + Cu²⁺ → Zn²⁺ + Cu, n=2. Nernst: E = E° - (0.059/n)log([Zn²⁺]/[Cu²⁺]) = 1.10 - (0.059/2)log(0.1/0.01) = 1.10 - 0.0295×log(10) = 1.10 - 0.0295 = 1.0705 ≈ 1.07 V",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Calculate standard cell potential",
+          "formula": "E°_cell = E°_cathode - E°_anode",
+          "calculation": "E°_cell = 0.34 - (-0.76) = 1.10 V",
+          "explanation": "Cu is reduced (cathode), Zn is oxidized (anode)",
+          "result": "E°_cell = 1.10 V"
+        },
+        {
+          "step_number": 2,
+          "description": "Write cell reaction and identify n",
+          "formula": "Zn + Cu²⁺ → Zn²⁺ + Cu",
+          "calculation": "n = 2 electrons transferred",
+          "explanation": "Both Zn and Cu involve 2 electrons",
+          "result": "n = 2"
+        },
+        {
+          "step_number": 3,
+          "description": "Apply Nernst equation",
+          "formula": "E = E° - (0.059/n)log(Q)",
+          "calculation": "E = 1.10 - (0.059/2)log([Zn²⁺]/[Cu²⁺])",
+          "explanation": "Q = [products]/[reactants]",
+          "result": "Equation set up"
+        },
+        {
+          "step_number": 4,
+          "description": "Calculate",
+          "formula": null,
+          "calculation": "E = 1.10 - 0.0295×log(0.1/0.01) = 1.10 - 0.0295×1 = 1.0705 V",
+          "explanation": "log(10) = 1",
+          "result": "1.07 V"
+        }
+      ],
+      "concepts_tested": [
+        "Electrochemistry",
+        "Cell potential",
+        "Nernst equation",
+        "Concentration effects"
+      ],
+      "time_estimate": 90,
+      "weightage_marks": 4,
+      "jee_year_similar": "2022",
+      "jee_pattern": "Standard electrochemistry with Nernst equation",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "E°_cell = E°_cathode - E°_anode, Nernst: E = E° - (0.059/n)log(Q)",
+        "common_mistakes": [
+          "Wrong cathode-anode identification",
+          "Wrong Q expression",
+          "Calculation errors"
+        ],
+        "hint": "First find E°_cell. Then apply Nernst equation with Q = [Zn²⁺]/[Cu²⁺]",
+        "key_insight": "Tests Nernst equation application with concentration effects",
+        "elimination_strategy": "E° = 1.10 V. Concentration changes will alter this slightly. Helps narrow choices."
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "physical-chemistry",
+        "electrochemistry",
+        "nernst-equation",
+        "cell-potential",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "B": "Forgot to apply Nernst correction",
+        "C": "Wrong Q or calculation error",
+        "D": "Sign error in Nernst equation"
+      },
+      "alternate_correct_answers": [
+        "1.071",
+        "1.070"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 0.8,
+        "discrimination_a": 1.4,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Excellent MCQ: 4 options, 3 concepts, strong distractors"
+      }
+    },
+    "ASSESS_CHEM_PHY_004": {
+      "question_id": "ASSESS_CHEM_PHY_004",
+      "subject": "Chemistry",
+      "chapter": "Physical Chemistry",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Chemical Kinetics",
+        "Rate Constants",
+        "Half-life"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.0,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "A first-order reaction has a half-life of 20 minutes. Calculate the rate constant in min⁻¹. Express your answer as X × 10⁻².",
+      "question_text_html": "A <strong>first-order reaction</strong> has a half-life of <strong>20 minutes</strong>. Calculate the rate constant in <strong>min⁻¹</strong>. Express your answer as <strong>X × 10⁻²</strong>.",
+      "question_latex": null,
+      "options": null,
+      "correct_answer": "3.47",
+      "correct_answer_text": "3.47 × 10⁻² min⁻¹",
+      "correct_answer_exact": "3.47",
+      "correct_answer_unit": "× 10⁻² min⁻¹",
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": 3.4,
+        "max": 3.5
+      },
+      "solution_text": "For first order: t₁/₂ = 0.693/k. Therefore k = 0.693/t₁/₂ = 0.693/20 = 0.03465 min⁻¹ = 3.47 × 10⁻² min⁻¹",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Recall first-order half-life formula",
+          "formula": "t₁/₂ = 0.693/k",
+          "calculation": null,
+          "explanation": "For first order, half-life is independent of concentration",
+          "result": "Formula identified"
+        },
+        {
+          "step_number": 2,
+          "description": "Rearrange for k",
+          "formula": "k = 0.693/t₁/₂",
+          "calculation": "k = 0.693/20",
+          "explanation": "Solve for rate constant",
+          "result": "Expression set up"
+        },
+        {
+          "step_number": 3,
+          "description": "Calculate k",
+          "formula": null,
+          "calculation": "k = 0.693/20 = 0.03465 min⁻¹",
+          "explanation": "Divide to get rate constant",
+          "result": "k = 0.03465 min⁻¹"
+        },
+        {
+          "step_number": 4,
+          "description": "Express in scientific notation",
+          "formula": null,
+          "calculation": "0.03465 = 3.465 × 10⁻² ≈ 3.47 × 10⁻²",
+          "explanation": "Convert to required format",
+          "result": "3.47 × 10⁻²"
+        }
+      ],
+      "concepts_tested": [
+        "First-order kinetics",
+        "Half-life",
+        "Rate constant",
+        "Scientific notation"
+      ],
+      "time_estimate": 75,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Standard kinetics calculation",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "t₁/₂ = 0.693/k (first order)",
+        "common_mistakes": [
+          "Using wrong order formula",
+          "Calculation errors",
+          "Wrong scientific notation"
+        ],
+        "hint": "For first order: t₁/₂ = 0.693/k. Rearrange and solve",
+        "key_insight": "Tests understanding of first-order kinetics and half-life relationship",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "physical-chemistry",
+        "kinetics",
+        "half-life",
+        "first-order",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "3.46",
+        "3.5",
+        "3.465"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.0,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 2 concepts"
+      }
+    },
+    "ASSESS_CHEM_INORG_001": {
+      "question_id": "ASSESS_CHEM_INORG_001",
+      "subject": "Chemistry",
+      "chapter": "Inorganic Chemistry",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Periodic Trends",
+        "Ionization Energy"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.6,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "Which of the following elements has the highest first ionization energy?",
+      "question_text_html": "Which of the following elements has the <strong>highest first ionization energy</strong>?",
+      "question_latex": null,
+      "options": [
+        {
+          "option_id": "A",
+          "text": "Nitrogen (N)",
+          "html": "<strong>Nitrogen (N)</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "Oxygen (O)",
+          "html": "<strong>Oxygen (O)</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "Fluorine (F)",
+          "html": "<strong>Fluorine (F)</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "Neon (Ne)",
+          "html": "<strong>Neon (Ne)</strong>"
+        }
+      ],
+      "correct_answer": "D",
+      "correct_answer_text": "Neon (Ne)",
+      "correct_answer_exact": "Ne",
+      "correct_answer_unit": null,
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "Ionization energy increases left to right across a period (increasing nuclear charge) and decreases down a group. Noble gases have highest IE in their period due to stable filled shell. Among N, O, F, Ne - all in period 2 - Ne has highest IE. Note: N has higher IE than O due to half-filled stability.",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Identify periodic trend",
+          "formula": null,
+          "calculation": null,
+          "explanation": "IE generally increases left to right, decreases top to bottom",
+          "result": "Trend established"
+        },
+        {
+          "step_number": 2,
+          "description": "Consider electronic configuration",
+          "formula": null,
+          "calculation": "N: 1s²2s²2p³ (half-filled), O: 1s²2s²2p⁴, F: 1s²2s²2p⁵, Ne: 1s²2s²2p⁶ (filled)",
+          "explanation": "Noble gas has completely filled stable configuration",
+          "result": "Ne most stable"
+        },
+        {
+          "step_number": 3,
+          "description": "Determine highest IE",
+          "formula": null,
+          "calculation": null,
+          "explanation": "Noble gases require most energy to remove electron due to stability",
+          "result": "Ne has highest IE"
+        }
+      ],
+      "concepts_tested": [
+        "Periodic trends",
+        "Ionization energy",
+        "Electronic configuration",
+        "Noble gas stability"
+      ],
+      "time_estimate": 60,
+      "weightage_marks": 4,
+      "jee_year_similar": "2022",
+      "jee_pattern": "Standard periodic trend comparison",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "IE trend: increases → across period, decreases ↓ down group",
+        "common_mistakes": [
+          "Thinking F has highest (forgetting noble gas)",
+          "Not considering electronic stability"
+        ],
+        "hint": "Noble gases have highest IE in their period due to filled shell stability",
+        "key_insight": "Tests understanding of periodic trends and stability",
+        "elimination_strategy": "Noble gases are most stable. Ne should have highest IE among these."
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "inorganic-chemistry",
+        "periodic-trends",
+        "ionization-energy",
+        "noble-gases",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "A": "N has half-filled stability but not as high as Ne",
+        "B": "O has lower IE than N due to electron repulsion",
+        "C": "F has high IE but less than noble gas"
+      },
+      "alternate_correct_answers": [
+        "Neon"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 0.6,
+        "discrimination_a": 1.25,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Good MCQ: 4 options with quality distractors"
+      }
+    },
+    "ASSESS_CHEM_INORG_002": {
+      "question_id": "ASSESS_CHEM_INORG_002",
+      "subject": "Chemistry",
+      "chapter": "Inorganic Chemistry",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Chemical Bonding",
+        "Molecular Orbital Theory",
+        "Bond Order"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.1,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "Calculate the bond order of O₂⁺ ion using molecular orbital theory. Express as a decimal (e.g., 2.5).",
+      "question_text_html": "Calculate the bond order of <strong>O₂⁺ ion</strong> using molecular orbital theory. Express as a decimal (e.g., <strong>2.5</strong>).",
+      "question_latex": null,
+      "options": null,
+      "correct_answer": "2.5",
+      "correct_answer_text": "2.5",
+      "correct_answer_exact": "2.5",
+      "correct_answer_unit": null,
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": 2.4,
+        "max": 2.6
+      },
+      "solution_text": "O₂ has 16 electrons. O₂⁺ has 15 electrons. MO configuration: σ1s² σ*1s² σ2s² σ*2s² σ2p_z² π2p_x² π2p_y² π*2p_x¹. Bonding electrons = 10, Antibonding = 5. Bond order = (10-5)/2 = 2.5",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Count electrons",
+          "formula": null,
+          "calculation": "O₂ has 16 electrons, O₂⁺ has 15 electrons (lost one)",
+          "explanation": "Remove one electron from O₂",
+          "result": "15 electrons total"
+        },
+        {
+          "step_number": 2,
+          "description": "Fill molecular orbitals",
+          "formula": "σ1s² σ*1s² σ2s² σ*2s² σ2p² π2p⁴ π*2p¹",
+          "calculation": "Fill 15 electrons following Aufbau principle",
+          "explanation": "Electron removed from π* antibonding orbital",
+          "result": "MO configuration determined"
+        },
+        {
+          "step_number": 3,
+          "description": "Count bonding and antibonding electrons",
+          "formula": null,
+          "calculation": "Bonding: 2+2+2+4 = 10. Antibonding: 2+2+1 = 5",
+          "explanation": "Sum electrons in bonding and antibonding orbitals",
+          "result": "10 bonding, 5 antibonding"
+        },
+        {
+          "step_number": 4,
+          "description": "Calculate bond order",
+          "formula": "Bond order = (Bonding - Antibonding)/2",
+          "calculation": "BO = (10-5)/2 = 5/2 = 2.5",
+          "explanation": "Apply bond order formula",
+          "result": "2.5"
+        }
+      ],
+      "concepts_tested": [
+        "Molecular orbital theory",
+        "Bond order",
+        "Electronic configuration",
+        "Ions"
+      ],
+      "time_estimate": 90,
+      "weightage_marks": 4,
+      "jee_year_similar": "2024",
+      "jee_pattern": "MOT-based bond order calculation",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "Bond order = (Nb - Na)/2",
+        "common_mistakes": [
+          "Wrong electron count",
+          "Incorrect MO filling order",
+          "Calculation errors"
+        ],
+        "hint": "O₂⁺ has 15 electrons. Fill MOs. Count bonding and antibonding electrons",
+        "key_insight": "Tests MOT application to ions",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "inorganic-chemistry",
+        "chemical-bonding",
+        "MOT",
+        "bond-order",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "2.50",
+        "5/2"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.1,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 2 concepts"
+      }
+    },
+    "ASSESS_CHEM_INORG_003": {
+      "question_id": "ASSESS_CHEM_INORG_003",
+      "subject": "Chemistry",
+      "chapter": "Inorganic Chemistry",
+      "unit": "Unit 3",
+      "sub_topics": [
+        "Coordination Compounds",
+        "Geometry",
+        "Hybridization"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.8,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "What is the geometry and hybridization of [Ni(CN)₄]²⁻ complex? (Ni²⁺ is d⁸, CN⁻ is strong field ligand)",
+      "question_text_html": "What is the geometry and hybridization of <strong>[Ni(CN)₄]²⁻</strong> complex? (Ni²⁺ is d⁸, CN⁻ is strong field ligand)",
+      "question_latex": null,
+      "options": [
+        {
+          "option_id": "A",
+          "text": "Tetrahedral, sp³",
+          "html": "<strong>Tetrahedral, sp³</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "Square planar, dsp²",
+          "html": "<strong>Square planar, dsp²</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "Octahedral, sp³d²",
+          "html": "<strong>Octahedral, sp³d²</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "Square planar, sp³",
+          "html": "<strong>Square planar, sp³</strong>"
+        }
+      ],
+      "correct_answer": "B",
+      "correct_answer_text": "Square planar, dsp²",
+      "correct_answer_exact": "Square planar, dsp²",
+      "correct_answer_unit": null,
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "Ni²⁺ is d⁸. CN⁻ is strong field ligand causing pairing. Electronic config after pairing: d_xy², d_xz², d_yz², d_z²⁰, d_x²-y²⁰. Four vacant orbitals (d_x²-y², s, p_x, p_y) form dsp² hybrid orbitals. Four CN⁻ ligands give square planar geometry.",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Identify metal ion configuration",
+          "formula": null,
+          "calculation": "Ni²⁺: 3d⁸ = [Ar] 3d⁸",
+          "explanation": "d⁸ configuration for Ni²⁺",
+          "result": "d⁸ identified"
+        },
+        {
+          "step_number": 2,
+          "description": "Consider ligand field strength",
+          "formula": null,
+          "calculation": "CN⁻ is strong field → causes pairing",
+          "explanation": "Strong field ligands cause electron pairing",
+          "result": "Pairing occurs"
+        },
+        {
+          "step_number": 3,
+          "description": "Determine hybridization",
+          "formula": null,
+          "calculation": "4 ligands + d⁸ (paired) → dsp² hybridization",
+          "explanation": "One d, one s, two p orbitals",
+          "result": "dsp² hybrid"
+        },
+        {
+          "step_number": 4,
+          "description": "Determine geometry",
+          "formula": null,
+          "calculation": "dsp² → square planar",
+          "explanation": "dsp² hybridization gives square planar geometry",
+          "result": "Square planar"
+        }
+      ],
+      "concepts_tested": [
+        "Coordination chemistry",
+        "Crystal field theory",
+        "Hybridization",
+        "Geometry"
+      ],
+      "time_estimate": 75,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Geometry and hybridization of coordination compounds",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "dsp² → square planar, sp³ → tetrahedral",
+        "common_mistakes": [
+          "Assuming tetrahedral for 4 ligands",
+          "Not considering strong field effect"
+        ],
+        "hint": "CN⁻ is strong field. Causes pairing in d⁸. Four ligands with paired d⁸ gives dsp² = square planar",
+        "key_insight": "Tests understanding of ligand field effects and geometry prediction",
+        "elimination_strategy": "Strong field with d⁸ typically gives square planar, not tetrahedral. Eliminates A."
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "inorganic-chemistry",
+        "coordination-compounds",
+        "geometry",
+        "hybridization",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "A": "Didn't consider strong field effect",
+        "C": "Wrong coordination number",
+        "D": "Wrong hybridization for square planar"
+      },
+      "alternate_correct_answers": [
+        "B"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 0.8,
+        "discrimination_a": 1.25,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Good MCQ: 4 options with quality distractors"
+      }
+    },
+    "ASSESS_MATH_CALC_001": {
+      "question_id": "ASSESS_MATH_CALC_001",
+      "subject": "Mathematics",
+      "chapter": "Calculus",
+      "unit": "Unit 1",
+      "sub_topics": [
+        "Limits",
+        "L'Hopital's Rule",
+        "Indeterminate Forms"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.0,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "Evaluate: lim(x→0) [(sin(3x) - 3x)/(x³)]",
+      "question_text_html": "Evaluate: <strong>lim<sub>(x→0)</sub> [(sin(3x) - 3x)/(x³)]</strong>",
+      "question_latex": "\\lim_{x \\to 0} \\frac{\\sin(3x) - 3x}{x^3}",
+      "options": [
+        {
+          "option_id": "A",
+          "text": "-9/2",
+          "html": "<strong>-9/2</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "-27/6",
+          "html": "<strong>-27/6</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "0",
+          "html": "<strong>0</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "Does not exist",
+          "html": "<strong>Does not exist</strong>"
+        }
+      ],
+      "correct_answer": "A",
+      "correct_answer_text": "-9/2",
+      "correct_answer_exact": "-4.5",
+      "correct_answer_unit": null,
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "Direct substitution gives 0/0 form. Apply L'Hopital's rule three times. First: [3cos(3x)-3]/(3x²), still 0/0. Second: [-9sin(3x)]/(6x), still 0/0. Third: [-27cos(3x)]/6 = -27/6 = -9/2",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Check direct substitution",
+          "formula": null,
+          "calculation": "x=0: (0-0)/(0) = 0/0 indeterminate form",
+          "explanation": "Confirms we need L'Hopital's rule",
+          "result": "0/0 form"
+        },
+        {
+          "step_number": 2,
+          "description": "Apply L'Hopital's rule (1st time)",
+          "formula": "d/dx[sin(3x)-3x] / d/dx[x³]",
+          "calculation": "[3cos(3x)-3] / [3x²]",
+          "explanation": "Differentiate numerator and denominator",
+          "result": "Still 0/0 at x=0"
+        },
+        {
+          "step_number": 3,
+          "description": "Apply L'Hopital's rule (2nd time)",
+          "formula": "d/dx[3cos(3x)-3] / d/dx[3x²]",
+          "calculation": "[-9sin(3x)] / [6x]",
+          "explanation": "Apply L'Hopital again",
+          "result": "Still 0/0 at x=0"
+        },
+        {
+          "step_number": 4,
+          "description": "Apply L'Hopital's rule (3rd time)",
+          "formula": "d/dx[-9sin(3x)] / d/dx[6x]",
+          "calculation": "[-27cos(3x)] / 6 = -27cos(0)/6 = -27/6 = -9/2",
+          "explanation": "Now we can substitute x=0",
+          "result": "-9/2"
+        }
+      ],
+      "concepts_tested": [
+        "Limits",
+        "L'Hopital's rule",
+        "Indeterminate forms",
+        "Differentiation"
+      ],
+      "time_estimate": 120,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Multiple applications of L'Hopital's rule",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "L'Hopital's rule: lim f(x)/g(x) = lim f'(x)/g'(x) when 0/0",
+        "common_mistakes": [
+          "Applying L'Hopital only once",
+          "Sign errors in differentiation",
+          "Calculation errors"
+        ],
+        "hint": "0/0 form requires L'Hopital. May need to apply multiple times",
+        "key_insight": "High discrimination - tests repeated application of L'Hopital's rule",
+        "elimination_strategy": "Numerator is negative for small positive x (sin(3x) < 3x), denominator positive, so limit negative"
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "calculus",
+        "limits",
+        "lhopital",
+        "indeterminate-forms",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "B": "Correct numerator but forgot to simplify -27/6",
+        "C": "Stopped at first 0/0 without applying L'Hopital",
+        "D": "Gave up thinking limit doesn't exist"
+      },
+      "alternate_correct_answers": [
+        "-4.5",
+        "-9/2"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.0,
+        "discrimination_a": 1.4,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Excellent MCQ: 4 options, 3 concepts, strong distractors"
+      }
+    },
+    "ASSESS_MATH_CALC_002": {
+      "question_id": "ASSESS_MATH_CALC_002",
+      "subject": "Mathematics",
+      "chapter": "Calculus",
+      "unit": "Unit 1",
+      "sub_topics": [
+        "Derivatives",
+        "Rate of Change",
+        "Applications"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.9,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "The radius of a circular oil spill increases at a rate of 2 m/min. Find the rate at which the area is increasing when the radius is 10 m. Express your answer in m²/min.",
+      "question_text_html": "The radius of a circular oil spill increases at a rate of <strong>2 m/min</strong>. Find the rate at which the area is increasing when the radius is <strong>10 m</strong>. Express your answer in <strong>m²/min</strong>.",
+      "question_latex": null,
+      "options": null,
+      "correct_answer": "125.6",
+      "correct_answer_text": "125.6 m²/min",
+      "correct_answer_exact": "125.6",
+      "correct_answer_unit": "m²/min",
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": 125,
+        "max": 126
+      },
+      "solution_text": "A = πr². Given dr/dt = 2 m/min. Need dA/dt when r=10. dA/dt = dA/dr × dr/dt = 2πr × dr/dt = 2π(10) × 2 = 40π ≈ 125.66 m²/min",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Write area formula",
+          "formula": "A = πr²",
+          "calculation": null,
+          "explanation": "Area of circle in terms of radius",
+          "result": "Formula established"
+        },
+        {
+          "step_number": 2,
+          "description": "Differentiate with respect to time",
+          "formula": "dA/dt = dA/dr × dr/dt",
+          "calculation": "dA/dr = 2πr",
+          "explanation": "Apply chain rule",
+          "result": "dA/dt = 2πr × dr/dt"
+        },
+        {
+          "step_number": 3,
+          "description": "Substitute given values",
+          "formula": null,
+          "calculation": "dA/dt = 2π(10) × 2 = 40π",
+          "explanation": "r = 10 m, dr/dt = 2 m/min",
+          "result": "dA/dt = 40π"
+        },
+        {
+          "step_number": 4,
+          "description": "Calculate numerical value",
+          "formula": null,
+          "calculation": "40π ≈ 40 × 3.14159 ≈ 125.66 m²/min",
+          "explanation": "Use π ≈ 3.14159",
+          "result": "125.6 m²/min"
+        }
+      ],
+      "concepts_tested": [
+        "Related rates",
+        "Chain rule",
+        "Derivatives",
+        "Circle area"
+      ],
+      "time_estimate": 90,
+      "weightage_marks": 4,
+      "jee_year_similar": "2024",
+      "jee_pattern": "Standard related rates application",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "A = πr², dA/dt = 2πr(dr/dt)",
+        "common_mistakes": [
+          "Forgetting chain rule",
+          "Using diameter instead of radius",
+          "Calculation errors with π"
+        ],
+        "hint": "Use chain rule: dA/dt = (dA/dr)(dr/dt)",
+        "key_insight": "Tests understanding of related rates and chain rule application",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "calculus",
+        "derivatives",
+        "related-rates",
+        "chain-rule",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "125.66",
+        "126",
+        "125.7",
+        "40π"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 0.9,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 2 concepts"
+      }
+    },
+    "ASSESS_MATH_CALC_003": {
+      "question_id": "ASSESS_MATH_CALC_003",
+      "subject": "Mathematics",
+      "chapter": "Calculus",
+      "unit": "Unit 1",
+      "sub_topics": [
+        "Application of Derivatives",
+        "Maxima-Minima"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.1,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "Find the maximum value of the function f(x) = x³ - 3x² - 9x + 5 on the interval [-2, 4].",
+      "question_text_html": "Find the <strong>maximum value</strong> of the function <strong>f(x) = x³ - 3x² - 9x + 5</strong> on the interval <strong>[-2, 4]</strong>.",
+      "question_latex": "f(x) = x^3 - 3x^2 - 9x + 5",
+      "options": [
+        {
+          "option_id": "A",
+          "text": "10",
+          "html": "<strong>10</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "15",
+          "html": "<strong>15</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "27",
+          "html": "<strong>27</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "32",
+          "html": "<strong>32</strong>"
+        }
+      ],
+      "correct_answer": "A",
+      "correct_answer_text": "10",
+      "correct_answer_exact": "10",
+      "correct_answer_unit": null,
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "f'(x) = 3x² - 6x - 9 = 3(x²-2x-3) = 3(x-3)(x+1). Critical points: x=-1, x=3. Evaluate at critical points and endpoints: f(-2)=(-8)-3(4)-9(-2)+5=-8-12+18+5=3. f(-1)=(-1)-3(1)-9(-1)+5=-1-3+9+5=10. f(3)=(27)-3(9)-9(3)+5=27-27-27+5=-22. f(4)=(64)-3(16)-9(4)+5=64-48-36+5=-15. Maximum value is 10.",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Find critical points",
+          "formula": "f'(x) = 0",
+          "calculation": "f'(x) = 3x² - 6x - 9 = 3(x-3)(x+1) = 0 → x = -1 or x = 3",
+          "explanation": "Set derivative to zero",
+          "result": "Critical points: x = -1, x = 3"
+        },
+        {
+          "step_number": 2,
+          "description": "Check if critical points are in interval",
+          "formula": null,
+          "calculation": "Both -1 and 3 are in [-2, 4]",
+          "explanation": "Both valid for consideration",
+          "result": "Both included"
+        },
+        {
+          "step_number": 3,
+          "description": "Evaluate function at critical points and endpoints",
+          "formula": null,
+          "calculation": "f(-2)=3, f(-1)=10, f(3)=-22, f(4)=-15",
+          "explanation": "Evaluate function at all critical points and endpoints",
+          "result": "Values: 3, 10, -22, -15"
+        },
+        {
+          "step_number": 4,
+          "description": "Identify maximum",
+          "formula": null,
+          "calculation": "Compare all values: 3, 10, -22, -15",
+          "explanation": "Largest value is 10 at x=-1",
+          "result": "Maximum = 10"
+        }
+      ],
+      "concepts_tested": [
+        "Maxima-minima",
+        "Critical points",
+        "Application of derivatives",
+        "Function evaluation"
+      ],
+      "time_estimate": 120,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Maxima-minima on closed interval",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Corrected answer from C to A (10)",
+      "metadata": {
+        "formula_used": "f'(x)=0 for critical points, check endpoints",
+        "common_mistakes": [
+          "Forgetting to check endpoints",
+          "Arithmetic errors",
+          "Wrong derivative"
+        ],
+        "hint": "Find critical points, evaluate f at critical points AND endpoints",
+        "key_insight": "Tests complete process of finding absolute extrema on closed interval",
+        "elimination_strategy": "Cubic function on finite interval must have absolute max/min"
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "calculus",
+        "maxima-minima",
+        "aod",
+        "critical-points",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "A": "Value at one of the critical points",
+        "B": "Thought endpoint value was maximum",
+        "D": "Calculation error",
+        "C": "Incorrect calculation or wrong function"
+      },
+      "alternate_correct_answers": [
+        "10"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.1,
+        "discrimination_a": 1.25,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Good MCQ: 4 options with quality distractors"
+      }
+    },
+    "ASSESS_MATH_CALC_004": {
+      "question_id": "ASSESS_MATH_CALC_004",
+      "subject": "Mathematics",
+      "chapter": "Calculus",
+      "unit": "Unit 1",
+      "sub_topics": [
+        "Definite Integrals",
+        "Area Under Curve"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.0,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "Evaluate the definite integral: ∫₀² (x² + 2x) dx. Express your answer as a decimal.",
+      "question_text_html": "Evaluate the definite integral: <strong>∫<sub>0</sub><sup>2</sup> (x² + 2x) dx</strong>. Express your answer as a decimal.",
+      "question_latex": "\\int_0^2 (x^2 + 2x) dx",
+      "options": null,
+      "correct_answer": "6.67",
+      "correct_answer_text": "6.67",
+      "correct_answer_exact": "6.67",
+      "correct_answer_unit": null,
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": 6.6,
+        "max": 6.7
+      },
+      "solution_text": "∫(x²+2x)dx = x³/3 + x². Evaluate from 0 to 2: [2³/3 + 2²] - [0] = 8/3 + 4 = 8/3 + 12/3 = 20/3 ≈ 6.67",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Find antiderivative",
+          "formula": "∫(x² + 2x)dx",
+          "calculation": "= x³/3 + x² + C",
+          "explanation": "Integrate term by term",
+          "result": "F(x) = x³/3 + x²"
+        },
+        {
+          "step_number": 2,
+          "description": "Apply limits",
+          "formula": "F(b) - F(a)",
+          "calculation": "F(2) - F(0)",
+          "explanation": "Fundamental theorem of calculus",
+          "result": "[8/3 + 4] - [0]"
+        },
+        {
+          "step_number": 3,
+          "description": "Calculate F(2)",
+          "formula": null,
+          "calculation": "F(2) = 2³/3 + 2² = 8/3 + 4 = 8/3 + 12/3 = 20/3",
+          "explanation": "Substitute upper limit",
+          "result": "20/3"
+        },
+        {
+          "step_number": 4,
+          "description": "Convert to decimal",
+          "formula": null,
+          "calculation": "20/3 = 6.6666... ≈ 6.67",
+          "explanation": "Express as decimal",
+          "result": "6.67"
+        }
+      ],
+      "concepts_tested": [
+        "Definite integrals",
+        "Integration",
+        "Fundamental theorem",
+        "Area calculation"
+      ],
+      "time_estimate": 75,
+      "weightage_marks": 4,
+      "jee_year_similar": "2024",
+      "jee_pattern": "Standard definite integration",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "∫x^n dx = x^(n+1)/(n+1) + C",
+        "common_mistakes": [
+          "Wrong integration formula",
+          "Forgetting to subtract F(0)",
+          "Arithmetic errors"
+        ],
+        "hint": "Integrate term by term, then apply limits using fundamental theorem",
+        "key_insight": "Tests basic integration and application of fundamental theorem",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "calculus",
+        "definite-integrals",
+        "integration",
+        "area",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "6.666",
+        "6.66",
+        "20/3"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.0,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 3 concepts"
+      }
+    },
+    "ASSESS_MATH_ALG_001": {
+      "question_id": "ASSESS_MATH_ALG_001",
+      "subject": "Mathematics",
+      "chapter": "Algebra",
+      "unit": "Unit 1",
+      "sub_topics": [
+        "Quadratic Equations",
+        "Vieta's Formulas"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.7,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "If α and β are roots of the equation 2x² - 5x + 3 = 0, find the value of α² + β².",
+      "question_text_html": "If <strong>α</strong> and <strong>β</strong> are roots of the equation <strong>2x² - 5x + 3 = 0</strong>, find the value of <strong>α² + β²</strong>.",
+      "question_latex": "2x^2 - 5x + 3 = 0",
+      "options": [
+        {
+          "option_id": "A",
+          "text": "25/4",
+          "html": "<strong>25/4</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "13/4",
+          "html": "<strong>13/4</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "7/2",
+          "html": "<strong>7/2</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "19/4",
+          "html": "<strong>19/4</strong>"
+        }
+      ],
+      "correct_answer": "B",
+      "correct_answer_text": "13/4",
+      "correct_answer_exact": "3.25",
+      "correct_answer_unit": null,
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "Sum of roots: α+β = 5/2. Product of roots: αβ = 3/2. Using α²+β² = (α+β)² - 2αβ = (5/2)² - 2(3/2) = 25/4 - 6/2 = 25/4 - 12/4 = 13/4",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Find sum and product of roots",
+          "formula": "For ax²+bx+c=0: α+β=-b/a, αβ=c/a",
+          "calculation": "α+β = -(-5)/2 = 5/2, αβ = 3/2",
+          "explanation": "Apply Vieta's formulas",
+          "result": "α+β = 5/2, αβ = 3/2"
+        },
+        {
+          "step_number": 2,
+          "description": "Use algebraic identity",
+          "formula": "α² + β² = (α+β)² - 2αβ",
+          "calculation": null,
+          "explanation": "Standard algebraic identity",
+          "result": "Identity established"
+        },
+        {
+          "step_number": 3,
+          "description": "Substitute values",
+          "formula": null,
+          "calculation": "(5/2)² - 2(3/2) = 25/4 - 3",
+          "explanation": "Plug in the values",
+          "result": "25/4 - 3"
+        },
+        {
+          "step_number": 4,
+          "description": "Simplify",
+          "formula": null,
+          "calculation": "25/4 - 12/4 = 13/4",
+          "explanation": "Convert to common denominator",
+          "result": "13/4"
+        }
+      ],
+      "concepts_tested": [
+        "Quadratic equations",
+        "Vieta's formulas",
+        "Algebraic identities",
+        "Sum of squares"
+      ],
+      "time_estimate": 75,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Standard Vieta's formula application",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "α+β=-b/a, αβ=c/a, α²+β²=(α+β)²-2αβ",
+        "common_mistakes": [
+          "Using wrong identity",
+          "Arithmetic errors",
+          "Forgetting negative sign"
+        ],
+        "hint": "Use Vieta's formulas for sum and product, then identity for sum of squares",
+        "key_insight": "Tests Vieta's formulas and algebraic manipulation - high discrimination",
+        "elimination_strategy": "(α+β)²=25/4. Answer must be less than this since we subtract 2αβ>0. Eliminates A."
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "algebra",
+        "quadratic-equations",
+        "vietas-formulas",
+        "sum-of-squares",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "A": "Calculated (α+β)² without subtracting 2αβ",
+        "C": "Arithmetic error in calculation",
+        "D": "Wrong identity or calculation error"
+      },
+      "alternate_correct_answers": [
+        "3.25",
+        "13/4"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 0.7,
+        "discrimination_a": 1.4,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Excellent MCQ: 4 options, 2 concepts, strong distractors"
+      }
+    },
+    "ASSESS_MATH_ALG_002": {
+      "question_id": "ASSESS_MATH_ALG_002",
+      "subject": "Mathematics",
+      "chapter": "Algebra",
+      "unit": "Unit 1",
+      "sub_topics": [
+        "Sequences and Series",
+        "Geometric Progression"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.8,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "Find the sum of the infinite geometric series: 8 + 4 + 2 + 1 + ...",
+      "question_text_html": "Find the sum of the infinite geometric series: <strong>8 + 4 + 2 + 1 + ...</strong>",
+      "question_latex": null,
+      "options": null,
+      "correct_answer": "16",
+      "correct_answer_text": "16",
+      "correct_answer_exact": "16",
+      "correct_answer_unit": null,
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": 15.9,
+        "max": 16.1
+      },
+      "solution_text": "First term a=8, common ratio r=4/8=1/2. For |r|<1, sum to infinity S=a/(1-r) = 8/(1-0.5) = 8/0.5 = 16",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Identify first term and common ratio",
+          "formula": "r = a₂/a₁",
+          "calculation": "a = 8, r = 4/8 = 1/2",
+          "explanation": "First term and ratio between consecutive terms",
+          "result": "a = 8, r = 1/2"
+        },
+        {
+          "step_number": 2,
+          "description": "Check convergence condition",
+          "formula": "|r| < 1",
+          "calculation": "|1/2| = 0.5 < 1",
+          "explanation": "Series converges only if |r| < 1",
+          "result": "Series converges"
+        },
+        {
+          "step_number": 3,
+          "description": "Apply infinite GP sum formula",
+          "formula": "S∞ = a/(1-r)",
+          "calculation": "S = 8/(1-1/2) = 8/(1/2)",
+          "explanation": "Standard formula for infinite GP",
+          "result": "8/(1/2)"
+        },
+        {
+          "step_number": 4,
+          "description": "Calculate",
+          "formula": null,
+          "calculation": "8/(1/2) = 8 × 2 = 16",
+          "explanation": "Division by fraction",
+          "result": "16"
+        }
+      ],
+      "concepts_tested": [
+        "Geometric progression",
+        "Infinite series",
+        "Convergence",
+        "Sum formula"
+      ],
+      "time_estimate": 75,
+      "weightage_marks": 4,
+      "jee_year_similar": "2024",
+      "jee_pattern": "Infinite GP sum calculation",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "S∞ = a/(1-r) for |r|<1",
+        "common_mistakes": [
+          "Using finite series formula",
+          "Wrong common ratio",
+          "Not checking convergence"
+        ],
+        "hint": "Find common ratio first. Check |r|<1. Then use infinite GP sum formula",
+        "key_insight": "Tests understanding of infinite GP convergence and sum formula",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "algebra",
+        "geometric-progression",
+        "infinite-series",
+        "sequences",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "16.0",
+        "16.00"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 0.8,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 3 concepts"
+      }
+    },
+    "ASSESS_MATH_ALG_003": {
+      "question_id": "ASSESS_MATH_ALG_003",
+      "subject": "Mathematics",
+      "chapter": "Algebra",
+      "unit": "Unit 1",
+      "sub_topics": [
+        "Complex Numbers",
+        "Modulus and Argument"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.0,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "If z = 1 + i√3, find the principal argument of z.",
+      "question_text_html": "If <strong>z = 1 + i√3</strong>, find the <strong>principal argument</strong> of z.",
+      "question_latex": "z = 1 + i\\sqrt{3}",
+      "options": [
+        {
+          "option_id": "A",
+          "text": "π/6",
+          "html": "<strong>π/6</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "π/4",
+          "html": "<strong>π/4</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "π/3",
+          "html": "<strong>π/3</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "π/2",
+          "html": "<strong>π/2</strong>"
+        }
+      ],
+      "correct_answer": "C",
+      "correct_answer_text": "π/3",
+      "correct_answer_exact": "π/3",
+      "correct_answer_unit": null,
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "z = 1 + i√3 is in first quadrant (both parts positive). arg(z) = tan⁻¹(Im/Re) = tan⁻¹(√3/1) = tan⁻¹(√3) = π/3 (60°)",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Identify real and imaginary parts",
+          "formula": "z = x + iy",
+          "calculation": "x = 1, y = √3",
+          "explanation": "Separate into components",
+          "result": "Re(z) = 1, Im(z) = √3"
+        },
+        {
+          "step_number": 2,
+          "description": "Determine quadrant",
+          "formula": null,
+          "calculation": "Both x>0 and y>0",
+          "explanation": "Complex number is in first quadrant",
+          "result": "First quadrant"
+        },
+        {
+          "step_number": 3,
+          "description": "Calculate argument",
+          "formula": "arg(z) = tan⁻¹(y/x)",
+          "calculation": "arg(z) = tan⁻¹(√3/1) = tan⁻¹(√3)",
+          "explanation": "Standard argument formula for first quadrant",
+          "result": "tan⁻¹(√3)"
+        },
+        {
+          "step_number": 4,
+          "description": "Evaluate inverse tangent",
+          "formula": null,
+          "calculation": "tan⁻¹(√3) = π/3 (or 60°)",
+          "explanation": "Standard angle: tan(π/3) = √3",
+          "result": "π/3"
+        }
+      ],
+      "concepts_tested": [
+        "Complex numbers",
+        "Argument",
+        "Inverse trigonometry",
+        "Standard angles"
+      ],
+      "time_estimate": 75,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Argument of complex number",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "arg(z) = tan⁻¹(Im(z)/Re(z))",
+        "common_mistakes": [
+          "Wrong quadrant adjustment",
+          "Not recognizing tan⁻¹(√3)=π/3",
+          "Using degrees instead of radians"
+        ],
+        "hint": "Calculate tan⁻¹(imaginary/real). Recognize standard angle",
+        "key_insight": "Tests complex number argument and knowledge of standard angles",
+        "elimination_strategy": "tan(π/6)=1/√3, tan(π/4)=1, tan(π/3)=√3. Since ratio is √3, answer is π/3."
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "algebra",
+        "complex-numbers",
+        "argument",
+        "trigonometry",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "A": "Confused with tan⁻¹(1/√3)",
+        "B": "Used tan⁻¹(1) = π/4",
+        "D": "Major calculation error"
+      },
+      "alternate_correct_answers": [
+        "60°",
+        "pi/3"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.0,
+        "discrimination_a": 1.4,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Excellent MCQ: 4 options, 2 concepts, strong distractors"
+      }
+    },
+    "ASSESS_MATH_ALG_004": {
+      "question_id": "ASSESS_MATH_ALG_004",
+      "subject": "Mathematics",
+      "chapter": "Algebra",
+      "unit": "Unit 1",
+      "sub_topics": [
+        "Probability",
+        "Binomial",
+        "Combinations"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.2,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "A fair coin is tossed 5 times. What is the probability of getting exactly 3 heads? Express your answer as a decimal (round to 2 decimal places).",
+      "question_text_html": "A fair coin is tossed <strong>5 times</strong>. What is the probability of getting <strong>exactly 3 heads</strong>? Express your answer as a <strong>decimal</strong> (round to 2 decimal places).",
+      "question_latex": null,
+      "options": null,
+      "correct_answer": "0.31",
+      "correct_answer_text": "0.31",
+      "correct_answer_exact": "0.3125",
+      "correct_answer_unit": null,
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": 0.3,
+        "max": 0.32
+      },
+      "solution_text": "Using binomial probability: P(X=3) = ⁵C₃ × (1/2)³ × (1/2)² = 10 × (1/8) × (1/4) = 10/32 = 5/16 = 0.3125 ≈ 0.31",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Identify binomial parameters",
+          "formula": "n trials, k successes, probability p",
+          "calculation": "n=5, k=3, p=1/2",
+          "explanation": "5 tosses, want exactly 3 heads, fair coin",
+          "result": "n=5, k=3, p=1/2"
+        },
+        {
+          "step_number": 2,
+          "description": "Apply binomial probability formula",
+          "formula": "P(X=k) = ⁿCₖ × p^k × (1-p)^(n-k)",
+          "calculation": "P(X=3) = ⁵C₃ × (1/2)³ × (1/2)²",
+          "explanation": "Standard binomial formula",
+          "result": "Expression set up"
+        },
+        {
+          "step_number": 3,
+          "description": "Calculate combination",
+          "formula": "⁵C₃ = 5!/(3!×2!)",
+          "calculation": "⁵C₃ = (5×4)/(2×1) = 10",
+          "explanation": "Ways to choose 3 positions from 5",
+          "result": "⁵C₃ = 10"
+        },
+        {
+          "step_number": 4,
+          "description": "Calculate probability",
+          "formula": null,
+          "calculation": "10 × (1/8) × (1/4) = 10/32 = 5/16 = 0.3125",
+          "explanation": "Multiply all terms",
+          "result": "0.31 (rounded)"
+        }
+      ],
+      "concepts_tested": [
+        "Probability",
+        "Binomial distribution",
+        "Combinations",
+        "Fair coin"
+      ],
+      "time_estimate": 90,
+      "weightage_marks": 4,
+      "jee_year_similar": "2024",
+      "jee_pattern": "Standard binomial probability",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "P(X=k) = ⁿCₖ × p^k × (1-p)^(n-k)",
+        "common_mistakes": [
+          "Forgetting combination term",
+          "Wrong combination calculation",
+          "Arithmetic errors"
+        ],
+        "hint": "Use binomial probability formula. Don't forget ⁵C₃",
+        "key_insight": "High discrimination - tests binomial probability with combinations",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "algebra",
+        "probability",
+        "binomial",
+        "combinations",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "0.3125",
+        "5/16",
+        "0.313"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.2,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 3 concepts"
+      }
+    },
+    "ASSESS_MATH_COORD_001": {
+      "question_id": "ASSESS_MATH_COORD_001",
+      "subject": "Mathematics",
+      "chapter": "Coordinate Geometry",
+      "unit": "Unit 1",
+      "sub_topics": [
+        "Circle",
+        "Tangent",
+        "Equation"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 0.9,
+      "priority": "HIGH",
+      "question_type": "mcq_single",
+      "question_text": "Find the equation of the tangent to the circle x² + y² = 25 at the point (3, 4).",
+      "question_text_html": "Find the equation of the tangent to the circle <strong>x² + y² = 25</strong> at the point <strong>(3, 4)</strong>.",
+      "question_latex": "x^2 + y^2 = 25",
+      "options": [
+        {
+          "option_id": "A",
+          "text": "3x + 4y = 25",
+          "html": "<strong>3x + 4y = 25</strong>"
+        },
+        {
+          "option_id": "B",
+          "text": "4x + 3y = 24",
+          "html": "<strong>4x + 3y = 24</strong>"
+        },
+        {
+          "option_id": "C",
+          "text": "3x - 4y = 7",
+          "html": "<strong>3x - 4y = 7</strong>"
+        },
+        {
+          "option_id": "D",
+          "text": "4x - 3y = 0",
+          "html": "<strong>4x - 3y = 0</strong>"
+        }
+      ],
+      "correct_answer": "A",
+      "correct_answer_text": "3x + 4y = 25",
+      "correct_answer_exact": "3x + 4y = 25",
+      "correct_answer_unit": null,
+      "answer_type": "single_choice",
+      "answer_range": null,
+      "solution_text": "For circle x²+y²=r², tangent at (x₁,y₁) is xx₁+yy₁=r². Here (x₁,y₁)=(3,4) and r²=25. Tangent: 3x+4y=25",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Identify circle parameters",
+          "formula": "x² + y² = r²",
+          "calculation": "r² = 25, center (0,0), point (3,4)",
+          "explanation": "Standard form circle centered at origin",
+          "result": "r² = 25"
+        },
+        {
+          "step_number": 2,
+          "description": "Verify point is on circle",
+          "formula": null,
+          "calculation": "3² + 4² = 9 + 16 = 25 ✓",
+          "explanation": "Point satisfies circle equation",
+          "result": "Point confirmed on circle"
+        },
+        {
+          "step_number": 3,
+          "description": "Apply tangent formula",
+          "formula": "Tangent at (x₁,y₁): xx₁ + yy₁ = r²",
+          "calculation": "x(3) + y(4) = 25",
+          "explanation": "Standard formula for tangent to circle",
+          "result": "3x + 4y = 25"
+        }
+      ],
+      "concepts_tested": [
+        "Circle",
+        "Tangent equation",
+        "Coordinate geometry",
+        "Point-tangent formula"
+      ],
+      "time_estimate": 75,
+      "weightage_marks": 4,
+      "jee_year_similar": "2023",
+      "jee_pattern": "Tangent to circle at given point",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Approved without changes",
+      "metadata": {
+        "formula_used": "Tangent at (x₁,y₁) on x²+y²=r²: xx₁+yy₁=r²",
+        "common_mistakes": [
+          "Using wrong formula",
+          "Sign errors",
+          "Not simplifying"
+        ],
+        "hint": "For circle x²+y²=r², tangent at (x₁,y₁) is xx₁+yy₁=r²",
+        "key_insight": "Tests knowledge of tangent formula for circle",
+        "elimination_strategy": "Point (3,4) must satisfy tangent equation. Plug in to verify: only A works."
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "coordinate-geometry",
+        "circle",
+        "tangent",
+        "equation",
+        "medium",
+        "diagram-based",
+        "initial-assessment"
+      ],
+      "distractor_analysis": {
+        "B": "Swapped coefficients of x and y",
+        "C": "Wrong sign or different approach",
+        "D": "Major error in formula application"
+      },
+      "alternate_correct_answers": [
+        "3x+4y=25"
+      ],
+      "has_image": true,
+      "image_url": null,
+      "image_type": "diagram",
+      "image_description": "Circle centered at origin with radius 5, showing point (3,4) on the circle and the tangent line at that point",
+      "image_alt_text": "Circle with tangent at point (3,4)",
+      "image_generation_method": "to_be_generated",
+      "diagram_code_python": "import matplotlib.pyplot as plt; import numpy as np; fig, ax = plt.subplots(1, 1, figsize=(8, 8)); ax.set_xlim(-7, 7); ax.set_ylim(-7, 7); ax.set_aspect('equal'); theta = np.linspace(0, 2*np.pi, 200); x_circle = 5 * np.cos(theta); y_circle = 5 * np.sin(theta); ax.plot(x_circle, y_circle, linewidth=3, color='#6B46C1', label='x² + y² = 25'); ax.plot([3], [4], 'ro', markersize=12, label='Point (3, 4)', zorder=5); x_tangent = np.linspace(-2, 7, 100); y_tangent = (25 - 3*x_tangent) / 4; ax.plot(x_tangent, y_tangent, linewidth=2.5, color='#D946EF', linestyle='--', label='Tangent: 3x + 4y = 25'); ax.plot([0, 3], [0, 4], 'g--', linewidth=2, alpha=0.7, label='Radius'); ax.plot([0], [0], 'ko', markersize=10, label='Center O(0,0)'); ax.text(1.5, 2.5, 'r = 5', fontsize=12, color='green', fontweight='bold', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8)); ax.text(5, 5.5, '3x + 4y = 25', fontsize=12, color='#D946EF', fontweight='bold', bbox=dict(boxstyle='round', facecolor='#FDE68A', alpha=0.8)); ax.grid(True, alpha=0.3, linestyle='--'); ax.axhline(y=0, color='k', linewidth=0.5); ax.axvline(x=0, color='k', linewidth=0.5); ax.legend(loc='upper left', fontsize=10); ax.set_xlabel('x', fontsize=12); ax.set_ylabel('y', fontsize=12); ax.set_title('Circle x² + y² = 25 with Tangent at (3, 4)', fontsize=13, fontweight='bold', pad=15); plt.tight_layout(); plt.savefig('output.svg', format='svg', bbox_inches='tight'); plt.close()",
+      "diagram_config": {
+        "requires_diagram": true,
+        "diagram_complexity": "medium",
+        "discriminative_value": "medium"
+      },
+      "irt_parameters": {
+        "difficulty_b": 0.9,
+        "discrimination_a": 1.4,
+        "guessing_c": 0.25,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Excellent MCQ: 4 options, 3 concepts, strong distractors"
+      }
+    },
+    "ASSESS_MATH_COORD_002": {
+      "question_id": "ASSESS_MATH_COORD_002",
+      "subject": "Mathematics",
+      "chapter": "Coordinate Geometry",
+      "unit": "Unit 1",
+      "sub_topics": [
+        "Parabola",
+        "Focus",
+        "Directrix"
+      ],
+      "difficulty": "medium",
+      "difficulty_irt": 1.1,
+      "priority": "HIGH",
+      "question_type": "numerical",
+      "question_text": "Find the distance of the point (3, 8) from the focus of the parabola x² = 16y.",
+      "question_text_html": "Find the distance of the point <strong>(3, 8)</strong> from the focus of the parabola <strong>x² = 16y</strong>.",
+      "question_latex": "x^2 = 16y",
+      "options": null,
+      "correct_answer": "5",
+      "correct_answer_text": "5",
+      "correct_answer_exact": "5",
+      "correct_answer_unit": null,
+      "answer_type": "decimal",
+      "answer_range": {
+        "min": 4.9,
+        "max": 5.1
+      },
+      "solution_text": "For x²=4ay, focus is at (0,a). Here 4a=16, so a=4. Focus is at (0,4). Distance from (3,8) to (0,4) = √[(3-0)²+(8-4)²] = √[9+16] = √25 = 5",
+      "solution_steps": [
+        {
+          "step_number": 1,
+          "description": "Identify parabola parameters",
+          "formula": "x² = 4ay",
+          "calculation": "4a = 16 → a = 4",
+          "explanation": "Standard form of parabola",
+          "result": "a = 4"
+        },
+        {
+          "step_number": 2,
+          "description": "Find focus coordinates",
+          "formula": "Focus of x²=4ay is at (0,a)",
+          "calculation": "Focus = (0, 4)",
+          "explanation": "For parabola opening upward, focus on y-axis",
+          "result": "Focus at (4, 0)"
+        },
+        {
+          "step_number": 3,
+          "description": "Apply distance formula",
+          "formula": "d = √[(x₂-x₁)² + (y₂-y₁)²]",
+          "calculation": "d = √[(3-0)² + (8-4)²]",
+          "explanation": "Distance between two points",
+          "result": "√[1 + 64]"
+        },
+        {
+          "step_number": 4,
+          "description": "Calculate distance",
+          "formula": null,
+          "calculation": "√[9 + 16] = √25 = 5",
+          "explanation": "Calculate distance",
+          "result": "5"
+        }
+      ],
+      "concepts_tested": [
+        "Parabola",
+        "Focus",
+        "Distance formula",
+        "Conic sections"
+      ],
+      "time_estimate": 90,
+      "weightage_marks": 4,
+      "jee_year_similar": "2024",
+      "jee_pattern": "Parabola focus-point distance",
+      "created_date": "2025-01-05T00:00:00Z",
+      "created_by": "claude_ai",
+      "validated_by": "gemini_ai",
+      "validation_status": "approved",
+      "validation_date": "2025-01-05T00:00:00Z",
+      "validation_notes": "Gemini validated. Corrected parabola equation from y²=16x to x²=16y",
+      "metadata": {
+        "formula_used": "x²=4ay has focus at (0,a), d=√[(x₂-x₁)²+(y₂-y₁)²]",
+        "common_mistakes": [
+          "Wrong focus location",
+          "Calculation errors",
+          "Using directrix instead"
+        ],
+        "hint": "Find focus from parabola equation first, then use distance formula",
+        "key_insight": "Tests parabola properties and distance calculation",
+        "elimination_strategy": null
+      },
+      "usage_stats": {
+        "times_shown": 0,
+        "times_correct": 0,
+        "times_incorrect": 0,
+        "avg_time_taken": null,
+        "accuracy_rate": null,
+        "last_shown": null
+      },
+      "tags": [
+        "coordinate-geometry",
+        "parabola",
+        "focus",
+        "distance",
+        "medium",
+        "initial-assessment"
+      ],
+      "distractor_analysis": null,
+      "alternate_correct_answers": [
+        "5.0",
+        "5.00"
+      ],
+      "has_image": false,
+      "image_url": null,
+      "image_type": null,
+      "image_description": null,
+      "image_alt_text": null,
+      "image_generation_method": null,
+      "diagram_code_python": null,
+      "diagram_config": null,
+      "irt_parameters": {
+        "difficulty_b": 1.1,
+        "discrimination_a": 1.7,
+        "guessing_c": 0.0,
+        "calibration_status": "estimated",
+        "calibration_method": "rule_based",
+        "calibration_sample_size": 0,
+        "last_calibration": null,
+        "calibration_notes": "Multi-step numerical: 4 steps, 3 concepts"
+      }
+    }
+  }
+}

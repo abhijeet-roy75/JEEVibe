@@ -78,8 +78,7 @@ mobile/android/app/debug
 mobile/android/app/profile
 mobile/android/app/release
 
-# Docs and other folders (exclude from GitHub)
-docs/
+# Input files (exclude from GitHub)
 inputs/
 
 # Temporary files
