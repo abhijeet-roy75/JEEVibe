@@ -817,7 +817,7 @@ router.post('/complete', authenticateUser, validateQuizId, async (req, res, next
       accuracy: Math.round(accuracy * 1000) / 1000,
       score: correctCount,
       total: totalCount,
-      chapters_updated: chapterUpdates.filter(u => u !== null).length,
+      chapters_updated: Object.keys(chapterUpdateResults).length,
       requestId: req.id
     });
   } catch (error) {

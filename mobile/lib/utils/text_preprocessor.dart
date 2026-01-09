@@ -251,15 +251,21 @@ class TextPreprocessor {
   /// Removes LaTeX commands and leaves readable text
   static String cleanLatexForFallback(String text) {
     String cleaned = text;
-    
+
     // Remove LaTeX delimiters
     cleaned = cleaned.replaceAll(RegExp(r'\\[\(\[\)\]]'), '');
-    
-    // Remove \mathrm{} and keep content
-    cleaned = cleaned.replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1');
-    
+
+    // Remove \mathrm{} and keep content - use replaceAllMapped for proper group capture
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'\\mathrm\{([^}]+)\}'),
+      (match) => match.group(1) ?? '',
+    );
+
     // Remove subscripts/superscripts but keep content
-    cleaned = cleaned.replaceAll(RegExp(r'[_\^]\{?([^}\s]+)\}?'), r'$1');
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'[_\^]\{?([^}\s]+)\}?'),
+      (match) => match.group(1) ?? '',
+    );
     
     // Convert LaTeX commands to plain text (e.g., \tan -> tan)
     cleaned = cleaned.replaceAllMapped(RegExp(r'\\([a-zA-Z]+)'), (match) {

@@ -299,7 +299,10 @@ class LaTeXToText {
     );
     
     // Remove any remaining backslash commands: \command -> command
-    result = result.replaceAll(RegExp(r'\\([a-zA-Z]+)'), r'$1');
+    result = result.replaceAllMapped(
+      RegExp(r'\\([a-zA-Z]+)'),
+      (match) => match.group(1) ?? '',
+    );
     
     // Remove curly braces
     result = result.replaceAll('{', '');

@@ -91,7 +91,9 @@ class _CameraScreenState extends State<CameraScreen> {
     // On iOS, use native ImageCropper (which has proper Cancel/Next buttons)
     final isAndroid = defaultTargetPlatform == TargetPlatform.android;
 
-    if (isAndroid) {
+    const forceCustomPreview = false;
+
+    if (isAndroid || forceCustomPreview) {
       // Navigate to custom preview screen with large, easy-to-tap buttons
       if (mounted) {
         Navigator.of(context).push(

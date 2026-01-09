@@ -418,7 +418,7 @@ async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds =
       logger.warn('No questions match difficulty threshold', {
         chapterKey,
         theta,
-        threshold: DIFFICULTY_MATCH_THRESHOLD
+        threshold: DIFFICULTY_MATCH_THRESHOLD_MODERATE
       });
       // Fallback: use all questions if none match
       questions = snapshot.docs

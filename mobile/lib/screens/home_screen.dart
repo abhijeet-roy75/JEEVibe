@@ -1,11 +1,13 @@
 /// Home Screen - Matches design: Snap and Solve.PNG
 import 'dart:io';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'camera_screen.dart';
+import 'image_preview_screen.dart';
 import 'daily_limit_screen.dart';
 import 'solution_review_screen.dart';
 import 'all_solutions_screen.dart';
@@ -20,7 +22,6 @@ import '../utils/text_preprocessor.dart';
 import '../widgets/subject_icon_widget.dart';
 import 'profile/profile_view_screen.dart';
 import '../widgets/priya_avatar.dart';
-import '../utils/performance_tracker.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -521,47 +522,69 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _processImage(File imageFile) async {
-    final tracker = PerformanceTracker('Snap and Solve - Image Capture to Crop');
-    tracker.start();
+    // On Android, use custom preview screen with large buttons
+    // On iOS, use native ImageCropper (which has proper Cancel/Next buttons)
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
 
-    // Crop the image
-    tracker.step('Starting image crop');
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: imageFile.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Crop Question',
-          toolbarColor: AppColors.primaryPurple,
-          toolbarWidgetColor: Colors.white,
-          initAspectRatio: CropAspectRatioPreset.original,
-          lockAspectRatio: false,
-        ),
-        IOSUiSettings(
-          title: 'Crop Question',
-          doneButtonTitle: 'Next',
-          cancelButtonTitle: 'Cancel',
-          aspectRatioLockEnabled: false,
-        ),
-      ],
-    );
-    tracker.step('Image crop completed');
+    const forceCustomPreview = false;
 
-    if (croppedFile == null) {
-      tracker.end();
-      return;
+    if (isAndroid || forceCustomPreview) {
+      // Use custom preview screen with large, easy-to-tap buttons
+      if (mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => ImagePreviewScreen(
+              imageFile: imageFile,
+              onConfirm: (File finalImage) {
+                Navigator.of(context).pop(); // Pop preview screen
+                _navigateToPhotoReview(finalImage);
+              },
+              onCancel: () {
+                Navigator.of(context).pop(); // Pop preview screen
+              },
+            ),
+          ),
+        );
+      }
+    } else {
+      // iOS: Use native ImageCropper (has proper text buttons)
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Question',
+            toolbarColor: AppColors.primaryPurple,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+          ),
+          IOSUiSettings(
+            title: 'Crop Question',
+            doneButtonTitle: 'Next',
+            cancelButtonTitle: 'Cancel',
+            aspectRatioLockEnabled: false,
+          ),
+        ],
+      );
+
+      if (croppedFile == null) {
+        return;
+      }
+
+      _navigateToPhotoReview(File(croppedFile.path));
     }
+  }
 
-    tracker.step('Navigating to PhotoReviewScreen');
+  void _navigateToPhotoReview(File imageFile) {
     if (mounted) {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => PhotoReviewScreen(
-            imageFile: File(croppedFile.path),
+            imageFile: imageFile,
           ),
         ),
       );
     }
-    tracker.end();
   }
 
   Widget _buildActionButtons() {

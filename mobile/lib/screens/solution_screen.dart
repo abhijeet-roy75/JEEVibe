@@ -571,10 +571,21 @@ class _SolutionScreenState extends State<SolutionScreen> {
     String cleaned = text;
     // Remove LaTeX delimiters
     cleaned = cleaned.replaceAll(RegExp(r'\\[\(\[\)\]]'), '');
-    // Remove \mathrm{} and content
-    cleaned = cleaned.replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1');
+    // Remove \mathrm{} but keep content - use replaceAllMapped for proper group capture
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'\\mathrm\{([^}]+)\}'),
+      (match) => match.group(1) ?? '',
+    );
     // Remove subscripts/superscripts but keep content
-    cleaned = cleaned.replaceAll(RegExp(r'[_\^]\{([^}]+)\}'), r'$1');
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'[_\^]\{([^}]+)\}'),
+      (match) => match.group(1) ?? '',
+    );
+    // Also handle subscripts/superscripts without braces (e.g., _2, ^3)
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'[_\^](\d)'),
+      (match) => match.group(1) ?? '',
+    );
     // Remove standalone LaTeX commands
     cleaned = cleaned.replaceAll(RegExp(r'\\[a-zA-Z]+\{?[^}]*\}?'), '');
     // Clean up extra spaces
