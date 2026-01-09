@@ -411,6 +411,21 @@ class AppButtonSizes {
 }
 
 // =============================================================================
+// OPACITY VALUES
+// =============================================================================
+
+class AppOpacity {
+  AppOpacity._(); // Prevent instantiation
+
+  static const double full = 1.0;
+  static const double disabled = 0.6;
+  static const double hint = 0.5;
+  static const double subtle = 0.4;
+  static const double faint = 0.2;
+  static const double barely = 0.1;
+}
+
+// =============================================================================
 // ANIMATION DURATIONS
 // =============================================================================
 

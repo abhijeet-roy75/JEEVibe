@@ -6,6 +6,9 @@ import '../../theme/app_text_styles.dart';
 import '../../services/firebase/auth_service.dart';
 import '../../services/firebase/pin_service.dart';
 import '../../utils/auth_error_helper.dart';
+import '../../widgets/buttons/gradient_button.dart';
+import '../../widgets/buttons/icon_button.dart';
+import '../../widgets/inputs/form_text_field.dart';
 import 'otp_verification_screen.dart';
 
 /// Forgot PIN Screen
@@ -144,17 +147,9 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                 child: Row(
                   children: [
                     // Back button
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                        onPressed: () => Navigator.of(context).pop(),
-                        padding: const EdgeInsets.all(6),
-                        constraints: const BoxConstraints(),
-                      ),
+                    AppIconButton.back(
+                      onPressed: () => Navigator.of(context).pop(),
+                      color: Colors.white,
                     ),
                     const SizedBox(width: 12),
                     // Icon + Title inline
@@ -206,68 +201,21 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
 
                     // Phone number input
                     Text(
-                      'Phone Number',
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: AppColors.textDark,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
                       'Enter the phone number associated with your account',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textLight,
                       ),
                     ),
                     const SizedBox(height: 12),
-                    TextFormField(
+                    FormTextField(
+                      label: 'Phone Number',
+                      hint: '+91 1234567890',
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        hintText: '+91 1234567890',
-                        hintStyle: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textLight,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.phone_outlined,
-                          color: AppColors.textMedium,
-                        ),
-                        filled: true,
-                        fillColor: AppColors.cardWhite,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: AppColors.borderGray,
-                            width: 1,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: AppColors.borderGray,
-                            width: 1,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: AppColors.primaryPurple,
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: AppColors.errorRed,
-                            width: 1,
-                          ),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
-                        ),
+                      prefixIcon: const Icon(
+                        Icons.phone_outlined,
+                        color: AppColors.textSecondary,
                       ),
-                      style: AppTextStyles.bodyMedium,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Please enter your phone number';
@@ -315,49 +263,12 @@ class _ForgotPinScreenState extends State<ForgotPinScreen> {
                       const SizedBox(height: 20),
                     ],
 
-                    // Send OTP button with gradient (now inside scroll)
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.ctaGradient,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primaryPurple.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _sendOTP,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.white,
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : Text(
-                                'Send OTP',
-                                style: AppTextStyles.bodyLarge.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                      ),
+                    // Send OTP button
+                    GradientButton(
+                      text: 'Send OTP',
+                      onPressed: _sendOTP,
+                      isLoading: _isLoading,
+                      size: GradientButtonSize.large,
                     ),
 
                     const SizedBox(height: 16),
@@ -422,12 +333,8 @@ class ForgotPinOtpVerificationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // We'll modify OtpVerificationScreen to accept a flag for forgot PIN flow
     // For now, use the existing screen and handle the flow in the callback
-    return WillPopScope(
-      onWillPop: () async {
-        // Prevent back navigation during OTP verification
-        // User must complete flow or explicitly cancel
-        return false;
-      },
+    return PopScope(
+      canPop: false,
       child: OtpVerificationScreen(
         verificationId: verificationId,
         phoneNumber: phoneNumber,

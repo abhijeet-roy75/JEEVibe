@@ -146,7 +146,7 @@ class AppIconButton extends StatelessWidget {
 
     Widget button = AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
-      opacity: isEnabled ? 1.0 : 0.5,
+      opacity: isEnabled ? AppOpacity.full : AppOpacity.disabled,
       child: Container(
         width: buttonSize,
         height: buttonSize,

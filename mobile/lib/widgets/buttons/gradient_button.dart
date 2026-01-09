@@ -50,7 +50,7 @@ class GradientButton extends StatelessWidget {
 
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
-      opacity: isEnabled ? 1.0 : 0.6,
+      opacity: isEnabled ? AppOpacity.full : AppOpacity.disabled,
       child: Container(
         width: width ?? double.infinity,
         height: _getHeight(),
@@ -239,7 +239,7 @@ class AppOutlinedButton extends StatelessWidget {
 
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
-      opacity: isEnabled ? 1.0 : 0.6,
+      opacity: isEnabled ? AppOpacity.full : AppOpacity.disabled,
       child: Container(
         width: width ?? double.infinity,
         height: _getHeight(),
@@ -385,7 +385,7 @@ class AppTextButton extends StatelessWidget {
 
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
-      opacity: isEnabled ? 1.0 : 0.6,
+      opacity: isEnabled ? AppOpacity.full : AppOpacity.disabled,
       child: InkWell(
         onTap: isEnabled ? onPressed : null,
         borderRadius: BorderRadius.circular(AppRadius.sm),
