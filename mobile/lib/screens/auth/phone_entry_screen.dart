@@ -6,6 +6,8 @@ import '../../services/storage_service.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/buttons/gradient_button.dart';
+import '../../widgets/buttons/icon_button.dart';
 
 class PhoneEntryScreen extends StatefulWidget {
   const PhoneEntryScreen({super.key});
@@ -198,17 +200,9 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
                       child: Row(
                         children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: IconButton(
-                              icon: const Icon(Icons.arrow_back, color: Colors.white),
-                              onPressed: () => Navigator.of(context).pop(),
-                              padding: const EdgeInsets.all(8),
-                              constraints: const BoxConstraints(),
-                            ),
+                          AppIconButton.back(
+                            onPressed: () => Navigator.of(context).pop(),
+                            color: Colors.white,
                           ),
                           const Spacer(),
                           // Logo in circle (matching profile pages style)
@@ -378,36 +372,11 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
 
               const SizedBox(height: 24),
 
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  gradient: _isLoading ? null : AppColors.ctaGradient,
-                  color: _isLoading ? Colors.grey : null,
-                  boxShadow: _isLoading ? [] : AppShadows.buttonShadow,
-                ),
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _sendOTP,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.white,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: _isLoading 
-                    ? const SizedBox(
-                        height: 20, 
-                        width: 20, 
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                      )
-                    : Text(
-                        'Send Code',
-                        style: AppTextStyles.labelMedium.copyWith(fontSize: 16, color: Colors.white),
-                      ),
-                ),
+              GradientButton(
+                text: 'Send Code',
+                onPressed: _sendOTP,
+                isLoading: _isLoading,
+                size: GradientButtonSize.large,
               ),
               const SizedBox(height: 16),
                     ],
