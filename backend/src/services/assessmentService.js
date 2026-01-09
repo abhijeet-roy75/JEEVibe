@@ -391,11 +391,23 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
         assessment_baseline: baselineSnapshot  // Add baseline snapshot
       }, { merge: true });
       
+      // Clear old responses before saving new ones (for retakes during testing)
+      // Note: This happens outside the transaction since we can't delete in batches within a transaction
+      const oldResponsesRef = db.collection('assessment_responses')
+        .doc(userId)
+        .collection('responses');
+      const oldResponsesSnap = await oldResponsesRef.get();
+      if (!oldResponsesSnap.empty) {
+        const deletePromises = oldResponsesSnap.docs.map(doc => doc.ref.delete());
+        await Promise.all(deletePromises);
+        logger.info('Cleared old assessment responses', { userId, deletedCount: oldResponsesSnap.size });
+      }
+
       // Save individual responses in the same transaction
       const responsesRef = db.collection('assessment_responses')
         .doc(userId)
         .collection('responses');
-      
+
       responses.forEach((response, index) => {
         // Validate response_id if provided by client
         let responseId;
