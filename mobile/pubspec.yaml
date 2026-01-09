@@ -1,7 +1,7 @@
 name: jeevibe_mobile
 description: JEEVibe Snap & Solve POC - iOS Flutter App
 publish_to: 'none'
-version: 1.0.1+22
+version: 1.0.1+25
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -58,6 +58,9 @@ dependencies:
   pin_code_fields: ^8.0.1
   country_code_picker: ^3.0.0
   intl_phone_number_input: ^0.7.4
+
+  # App Info
+  package_info_plus: ^8.0.0
 
 dependency_overrides:
   image_cropper_platform_interface: 7.0.0

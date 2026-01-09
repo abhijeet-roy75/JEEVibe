@@ -195,13 +195,19 @@ class LaTeXWidget extends StatelessWidget {
     // Remove all \( \) pairs (can be nested, so do it multiple times)
     int iterations = 0;
     while (cleaned.contains('\\(') && cleaned.contains('\\)') && iterations < 10) {
-      cleaned = cleaned.replaceAll(RegExp(r'\\\(([^)]*)\\\)'), r'$1');
+      cleaned = cleaned.replaceAllMapped(
+        RegExp(r'\\\(([^)]*)\\\)'),
+        (match) => match.group(1) ?? '',
+      );
       iterations++;
     }
     // Remove all \[ \] pairs (can be nested, so do it multiple times)
     iterations = 0;
     while (cleaned.contains('\\[') && cleaned.contains('\\]') && iterations < 10) {
-      cleaned = cleaned.replaceAll(RegExp(r'\\\[([^\]]*)\\\]'), r'$1');
+      cleaned = cleaned.replaceAllMapped(
+        RegExp(r'\\\[([^\]]*)\\\]'),
+        (match) => match.group(1) ?? '',
+      );
       iterations++;
     }
     return cleaned;

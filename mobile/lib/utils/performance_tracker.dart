@@ -71,7 +71,14 @@ class PerformanceTracker {
       final stepName = steps[i];
       final duration = _stepDurations[stepName];
       if (duration != null) {
-        final percentage = (duration.inMilliseconds / totalDuration.inMilliseconds * 100).toStringAsFixed(1);
+        // Safety check for percentage calculation
+        String percentage = '0.0';
+        if (totalDuration.inMilliseconds > 0) {
+          final ratio = duration.inMilliseconds / totalDuration.inMilliseconds * 100;
+          if (ratio.isFinite) {
+            percentage = ratio.toStringAsFixed(1);
+          }
+        }
         final bar = _generateBar(duration.inMilliseconds, totalDuration.inMilliseconds);
         debugPrint('  $bar $stepName: ${duration.inMilliseconds}ms ($percentage%)');
       }
@@ -85,8 +92,17 @@ class PerformanceTracker {
 
   /// Generate visual bar for duration
   String _generateBar(int durationMs, int totalMs) {
-    final barLength = 20;
-    final filled = ((durationMs / totalMs) * barLength).round();
+    const barLength = 20;
+    // Safety check: avoid division by zero or invalid values
+    if (totalMs <= 0 || durationMs < 0) {
+      return '[${'░' * barLength}]';
+    }
+    final ratio = durationMs / totalMs;
+    // Safety check: ensure ratio is finite and in valid range
+    if (!ratio.isFinite || ratio < 0) {
+      return '[${'░' * barLength}]';
+    }
+    final filled = (ratio * barLength).clamp(0, barLength).round();
     final empty = barLength - filled;
     return '[${'█' * filled}${'░' * empty}]';
   }

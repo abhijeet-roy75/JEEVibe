@@ -99,10 +99,25 @@ class RecentSolution {
         .replaceAll(RegExp(r'\\\('), '') // Remove \(
         .replaceAll(RegExp(r'\\\)'), '') // Remove \)
         .replaceAll(RegExp(r'\\\['), '') // Remove \[
-        .replaceAll(RegExp(r'\\\]'), '') // Remove \]
-        .replaceAll(RegExp(r'\\mathrm\{([^}]+)\}'), r'$1') // \mathrm{X} -> X
-        .replaceAll(RegExp(r'\\text\{([^}]+)\}'), r'$1') // \text{X} -> X
-        .replaceAll(RegExp(r'[_^]\{([^}]+)\}'), r'$1') // _{X} or ^{X} -> X
+        .replaceAll(RegExp(r'\\\]'), ''); // Remove \]
+
+    // Use replaceAllMapped for proper regex group capture
+    cleanedQuestion = cleanedQuestion.replaceAllMapped(
+      RegExp(r'\\mathrm\{([^}]+)\}'),
+      (match) => match.group(1) ?? '',
+    ); // \mathrm{X} -> X
+
+    cleanedQuestion = cleanedQuestion.replaceAllMapped(
+      RegExp(r'\\text\{([^}]+)\}'),
+      (match) => match.group(1) ?? '',
+    ); // \text{X} -> X
+
+    cleanedQuestion = cleanedQuestion.replaceAllMapped(
+      RegExp(r'[_^]\{([^}]+)\}'),
+      (match) => match.group(1) ?? '',
+    ); // _{X} or ^{X} -> X
+
+    cleanedQuestion = cleanedQuestion
         .replaceAll(RegExp(r'\\[a-zA-Z]+'), '') // Remove LaTeX commands
         .replaceAll(RegExp(r'[{}]'), '') // Remove braces
         .replaceAll(RegExp(r'\s+'), ' ') // Normalize whitespace

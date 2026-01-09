@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../services/firebase/auth_service.dart';
 import '../../services/firebase/firestore_user_service.dart';
 import '../../models/user_profile.dart';
@@ -17,11 +18,22 @@ class ProfileViewScreen extends StatefulWidget {
 class _ProfileViewScreenState extends State<ProfileViewScreen> {
   UserProfile? _profile;
   bool _isLoading = true;
+  String _appVersion = '';
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() {
+        _appVersion = 'v${packageInfo.version} (${packageInfo.buildNumber})';
+      });
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -280,6 +292,19 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                           ),
                         ),
                         const SizedBox(height: 32),
+
+                        // App Version
+                        if (_appVersion.isNotEmpty)
+                          Center(
+                            child: Text(
+                              'JEEVibe $_appVersion',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textLight,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
