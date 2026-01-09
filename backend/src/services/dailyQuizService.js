@@ -30,8 +30,8 @@ const { formatChapterKey } = require('./thetaCalculationService');
 const QUIZ_SIZE = 10; // Questions per quiz
 const EXPLORATION_PHASE_QUIZZES = 14; // Quizzes 0-13 are exploration
 const REVIEW_QUESTIONS_PER_QUIZ = 1; // Number of review questions
-const EXPLORATION_QUESTIONS_PER_QUIZ = 7; // Exploration questions in exploration phase
-const DELIBERATE_PRACTICE_QUESTIONS_PER_QUIZ = 6; // Deliberate practice in exploitation phase
+const EXPLORATION_QUESTIONS_PER_QUIZ = 12; // Exploration chapters to select (buffer for failures)
+const DELIBERATE_PRACTICE_QUESTIONS_PER_QUIZ = 10; // Deliberate practice chapters (buffer for failures)
 const QUIZ_GENERATION_TIMEOUT_MS = 60000; // 60 seconds timeout for quiz generation
 
 // Subject distribution targets
@@ -601,35 +601,53 @@ async function generateDailyQuizInternal(userId) {
         note: 'This may be due to limited question bank. Consider adding more questions to the database.'
       });
 
-      // If we have zero questions, try fallback: get ANY available questions
-      if (selectedQuestions.length === 0) {
-        logger.info('No questions found from selected chapters, trying fallback: any available questions', { userId });
+      // Try fallback: get ANY available questions to fill remaining slots
+      const questionsNeeded = QUIZ_SIZE - selectedQuestions.length;
+      logger.info('Attempting to fill remaining slots with fallback questions', {
+        userId,
+        currentCount: selectedQuestions.length,
+        questionsNeeded
+      });
 
-        try {
-          const fallbackQuestions = await selectAnyAvailableQuestions(
-            excludeQuestionIds,
-            QUIZ_SIZE
+      try {
+        // Build exclude set including already selected questions
+        const alreadySelectedIds = new Set(selectedQuestions.map(q => q.question_id || q.id));
+        const combinedExcludeIds = new Set([...excludeQuestionIds, ...alreadySelectedIds]);
+
+        const fallbackQuestions = await selectAnyAvailableQuestions(
+          combinedExcludeIds,
+          questionsNeeded
+        );
+
+        if (fallbackQuestions.length > 0) {
+          logger.info('Fallback found additional questions', { userId, count: fallbackQuestions.length });
+          const formattedFallbacks = fallbackQuestions.map(q => ({
+            ...q,
+            selection_reason: 'fallback',
+            chapter_key: q.chapter_key || formatChapterKey(q.subject, q.chapter)
+          }));
+          selectedQuestions.push(...formattedFallbacks);
+          logger.info('Questions after fallback', { userId, totalCount: selectedQuestions.length });
+        } else if (selectedQuestions.length === 0) {
+          // Only throw error if we have ZERO questions
+          throw new Error(
+            'No questions available for quiz generation. ' +
+            'This is likely due to:\n' +
+            '1. Limited question bank - not all chapters have questions yet\n' +
+            '2. All available questions were recently answered\n' +
+            'Please ensure question bank is populated with questions for the chapters in your assessment.'
           );
-
-          if (fallbackQuestions.length > 0) {
-            logger.info('Fallback found questions', { userId, count: fallbackQuestions.length });
-            selectedQuestions = fallbackQuestions.map((q, index) => ({
-              ...q,
-              position: index + 1,
-              selection_reason: 'fallback',
-              chapter_key: q.chapter_key || formatChapterKey(q.subject, q.chapter)
-            }));
-          } else {
-            throw new Error(
-              'No questions available for quiz generation. ' +
-              'This is likely due to:\n' +
-              '1. Limited question bank - not all chapters have questions yet\n' +
-              '2. All available questions were recently answered\n' +
-              'Please ensure question bank is populated with questions for the chapters in your assessment.'
-            );
-          }
-        } catch (fallbackError) {
-          logger.error('Fallback question selection failed', {
+        } else {
+          // We have some questions but not enough, proceed with what we have
+          logger.info('Proceeding with partial quiz due to limited question bank', {
+            userId,
+            questionsCount: selectedQuestions.length,
+            required: QUIZ_SIZE
+          });
+        }
+      } catch (fallbackError) {
+        if (selectedQuestions.length === 0) {
+          logger.error('Fallback question selection failed with zero questions', {
             userId,
             error: fallbackError.message
           });
@@ -640,14 +658,14 @@ async function generateDailyQuizInternal(userId) {
             '2. All available questions were recently answered\n' +
             'Please ensure question bank is populated with questions for the chapters in your assessment.'
           );
+        } else {
+          // Log warning but proceed with partial quiz
+          logger.warn('Fallback failed but proceeding with partial quiz', {
+            userId,
+            questionsCount: selectedQuestions.length,
+            error: fallbackError.message
+          });
         }
-      } else {
-        // Log that we're proceeding with partial quiz
-        logger.info('Proceeding with partial quiz due to limited question bank', {
-          userId,
-          questionsCount: selectedQuestions.length,
-          required: QUIZ_SIZE
-        });
       }
     }
 
