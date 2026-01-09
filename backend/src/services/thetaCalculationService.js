@@ -217,7 +217,7 @@ function expandBroadChaptersToSpecific(thetaByChapter) {
 }
 
 const JEE_CHAPTER_WEIGHTS = {
-  // Physics (~21 chapters)
+  // Physics (~21 chapters) - Original format
   "physics_kinematics": 1.0,
   "physics_laws_of_motion": 1.0,
   "physics_work_energy_power": 1.0,
@@ -239,8 +239,11 @@ const JEE_CHAPTER_WEIGHTS = {
   "physics_dual_nature": 0.6,
   "physics_atoms_nuclei": 0.6,
   "physics_semiconductors": 0.4,
+  // Physics - Daily quiz chapter name variants
+  "physics_magnetic_effects_magnetism": 1.0,  // Variant of magnetic_effects
+  "physics_atoms_nuclei": 0.6,
 
-  // Chemistry (~27 chapters)
+  // Chemistry (~27 chapters) - Original format
   "chemistry_atomic_structure": 0.8,
   "chemistry_classification_elements": 0.6,
   "chemistry_chemical_bonding": 1.0,
@@ -268,8 +271,12 @@ const JEE_CHAPTER_WEIGHTS = {
   "chemistry_surface_chemistry": 0.4,
   "chemistry_coordination_compounds": 0.8,
   "chemistry_d_f_block": 0.8,
+  // Chemistry - Daily quiz chapter name variants
+  "chemistry_general_organic_chemistry": 0.8,  // Variant of organic_basics/GOC
+  "chemistry_p_block_elements": 1.0,           // Variant of p_block
+  "chemistry_pblock_elements": 1.0,            // Another variant of p_block
 
-  // Mathematics (~22 chapters)
+  // Mathematics (~22 chapters) - Original format
   "mathematics_sets_relations": 0.6,
   "mathematics_complex_numbers": 1.0,
   "mathematics_quadratic_equations": 0.8,
@@ -291,7 +298,9 @@ const JEE_CHAPTER_WEIGHTS = {
   "mathematics_vectors": 1.0,
   "mathematics_probability": 1.0,
   "mathematics_statistics": 0.6,
-  "mathematics_trigonometry": 0.8
+  "mathematics_trigonometry": 0.8,
+  // Mathematics - Daily quiz chapter name variants
+  "mathematics_limits_continuity_differentiability": 1.0  // Variant of limits_continuity
 };
 
 // ============================================================================

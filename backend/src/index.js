@@ -46,6 +46,10 @@ process.on('uncaughtException', (error) => {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for Render.com and other reverse proxies
+// Required for express-rate-limit to correctly identify users via X-Forwarded-For header
+app.set('trust proxy', 1);
+
 // ========================================
 // SECURITY MIDDLEWARE
 // ========================================
