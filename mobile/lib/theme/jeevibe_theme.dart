@@ -1,142 +1,117 @@
+/// JEEVibe Theme Configuration
+/// This file re-exports the consolidated design system for backward compatibility
+/// and provides the app ThemeData.
+///
+/// NOTE: JVColors and JVStyles are DEPRECATED.
+/// Use AppColors and AppTextStyles directly instead.
+/// These aliases will be removed in a future version.
+
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'app_colors.dart';
+import 'app_text_styles.dart';
 
+// =============================================================================
+// DEPRECATED: JVColors - Use AppColors instead
+// =============================================================================
+
+@Deprecated('Use AppColors instead')
 class JVColors {
-  // Purple/Pink Palette
-  static const Color primary = Color(0xFF9333EA); // Purple-600
-  static const Color primaryDark = Color(0xFF7E22CE); // Purple-700
-  static const Color secondary = Color(0xFFEC4899); // Pink-500
-  
-  // Backgrounds
-  static const Color background = Color(0xFFFAF5FF); // Purple-50
-  static const Color surface = Colors.white;
-  static const Color surfaceGrey = Color(0xFFF9FAFB); // Gray-50
-  
-  // Typography Colors
-  static const Color textPrimary = Color(0xFF1F2937); // Gray-800
-  static const Color textSecondary = Color(0xFF4B5563); // Gray-600
-  static const Color textTertiary = Color(0xFF9CA3AF); // Gray-400
-  
-  // Functional Colors
-  static const Color error = Color(0xFFEF4444); // Red-500
-  static const Color warning = Color(0xFFF59E0B); // Amber-500
-  static const Color success = Color(0xFF10B981); // Emerald-500
-  static const Color divider = Color(0xFFE5E7EB); // Gray-200
-  
+  JVColors._();
+
+  // Purple/Pink Palette - use AppColors.primary, etc.
+  static const Color primary = AppColors.primary;
+  static const Color primaryDark = AppColors.primaryDark;
+  static const Color secondary = AppColors.secondary;
+
+  // Backgrounds - use AppColors.background, etc.
+  static const Color background = AppColors.background;
+  static const Color surface = AppColors.surface;
+  static const Color surfaceGrey = AppColors.surfaceGrey;
+
+  // Typography Colors - use AppColors.textPrimary, etc.
+  static const Color textPrimary = AppColors.textPrimary;
+  static const Color textSecondary = AppColors.textSecondary;
+  static const Color textTertiary = AppColors.textTertiary;
+
+  // Functional Colors - use AppColors.error, etc.
+  static const Color error = AppColors.error;
+  static const Color warning = AppColors.warning;
+  static const Color success = AppColors.success;
+  static const Color divider = AppColors.divider;
+
   // Legacy/Compatibility
-  static const Color primaryLight = Color(0xFFF3E8FF); // Purple-100
-  static const Color purple = primary;
-  static const Color accentPurple = primary;
+  static const Color primaryLight = AppColors.cardLightPurple;
+  static const Color purple = AppColors.primary;
+  static const Color accentPurple = AppColors.primary;
 
-  // Gradients
-  static const LinearGradient primaryGradient = LinearGradient(
-    colors: [Color(0xFF9333EA), Color(0xFFEC4899)], // Purple to Pink
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  static const LinearGradient headerGradient = LinearGradient(
-    colors: [Color(0xFF9333EA), Color(0xFFA855F7)], // Purple-600 to Purple-500
-    begin: Alignment.centerLeft,
-    end: Alignment.centerRight,
-  );
-
-  static const LinearGradient priyaCardGradient = LinearGradient(
-    colors: [Color(0xFFF3E8FF), Color(0xFFFCE7F3)], // Purple-100 to Pink-100
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-  
-  static const LinearGradient finalAnswerGradient = LinearGradient(
-    colors: [Color(0xFFF0FDF4), Color(0xFFECFDF5)], // Green-50 to Emerald-50
-    begin: Alignment.centerLeft,
-    end: Alignment.centerRight,
-  );
+  // Gradients - use AppColors gradients
+  static const LinearGradient primaryGradient = AppColors.ctaGradient;
+  static const LinearGradient headerGradient = AppColors.headerGradient;
+  static const LinearGradient priyaCardGradient = AppColors.priyaCardGradient;
+  static const LinearGradient finalAnswerGradient = AppColors.finalAnswerGradient;
 }
 
+// =============================================================================
+// DEPRECATED: JVStyles - Use AppTextStyles instead
+// =============================================================================
+
+@Deprecated('Use AppTextStyles instead')
 class JVStyles {
-  // Typography - Inter
-  static TextStyle get h1 => GoogleFonts.inter(
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    color: JVColors.textPrimary,
-    letterSpacing: -0.5,
-  );
+  JVStyles._();
 
-  static TextStyle get h2 => GoogleFonts.inter(
-    fontSize: 20,
-    fontWeight: FontWeight.bold,
-    color: JVColors.textPrimary,
-    letterSpacing: -0.3,
-  );
-
-  static TextStyle get h3 => GoogleFonts.inter(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    color: JVColors.textPrimary,
-  );
-
-  static TextStyle get bodyLarge => GoogleFonts.inter(
-    fontSize: 16,
-    fontWeight: FontWeight.normal,
-    color: JVColors.textPrimary,
-    height: 1.5,
-  );
-
-  static TextStyle get bodyMedium => GoogleFonts.inter(
-    fontSize: 14,
-    fontWeight: FontWeight.normal,
-    color: JVColors.textSecondary,
-    height: 1.5,
-  );
-
-  static TextStyle get bodySmall => GoogleFonts.inter(
-    fontSize: 12,
-    fontWeight: FontWeight.w500,
-    color: JVColors.textTertiary,
-  );
-
-  static TextStyle get button => GoogleFonts.inter(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    color: Colors.white,
-  );
+  // Typography - use AppTextStyles
+  static TextStyle get h1 => AppTextStyles.h1;
+  static TextStyle get h2 => AppTextStyles.h2;
+  static TextStyle get h3 => AppTextStyles.h3;
+  static TextStyle get bodyLarge => AppTextStyles.bodyLarge;
+  static TextStyle get bodyMedium => AppTextStyles.bodyMedium;
+  static TextStyle get bodySmall => AppTextStyles.bodySmall;
+  static TextStyle get button => AppTextStyles.button;
 
   // Decorations
   static BoxDecoration cardDecoration = BoxDecoration(
-    color: JVColors.surface,
-    borderRadius: BorderRadius.circular(16),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withValues(alpha: 0.05),
-        blurRadius: 12,
-        offset: const Offset(0, 4),
-      ),
-    ],
-    border: Border.all(color: JVColors.divider, width: 1),
+    color: AppColors.surface,
+    borderRadius: AppRadius.borderRadiusLg,
+    boxShadow: AppShadows.card,
+    border: Border.all(color: AppColors.divider, width: 1),
   );
 }
 
+// =============================================================================
+// APP THEME
+// =============================================================================
+
 class JVTheme {
+  JVTheme._();
+
   static ThemeData get theme {
     return ThemeData(
-      primaryColor: JVColors.primary,
-      scaffoldBackgroundColor: JVColors.background,
+      primaryColor: AppColors.primary,
+      scaffoldBackgroundColor: AppColors.background,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: JVColors.primary,
-        primary: JVColors.primary,
-        secondary: JVColors.secondary,
-        error: JVColors.error,
-        surface: JVColors.surface,
-        background: JVColors.background,
+        seedColor: AppColors.primary,
+        primary: AppColors.primary,
+        secondary: AppColors.secondary,
+        error: AppColors.error,
+        surface: AppColors.surface,
       ),
-      
+
       textTheme: TextTheme(
-        displayLarge: JVStyles.h1,
-        displayMedium: JVStyles.h2,
-        titleLarge: JVStyles.h3,
-        bodyLarge: JVStyles.bodyLarge,
-        bodyMedium: JVStyles.bodyMedium,
+        displayLarge: AppTextStyles.displayLarge,
+        displayMedium: AppTextStyles.displayMedium,
+        displaySmall: AppTextStyles.displaySmall,
+        headlineLarge: AppTextStyles.headerLarge,
+        headlineMedium: AppTextStyles.headerMedium,
+        headlineSmall: AppTextStyles.headerSmall,
+        titleLarge: AppTextStyles.h3,
+        titleMedium: AppTextStyles.labelLarge,
+        titleSmall: AppTextStyles.labelMedium,
+        bodyLarge: AppTextStyles.bodyLarge,
+        bodyMedium: AppTextStyles.bodyMedium,
+        bodySmall: AppTextStyles.bodySmall,
+        labelLarge: AppTextStyles.labelLarge,
+        labelMedium: AppTextStyles.labelMedium,
+        labelSmall: AppTextStyles.labelSmall,
       ),
 
       appBarTheme: AppBarTheme(
@@ -144,35 +119,195 @@ class JVTheme {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: JVStyles.h3.copyWith(color: Colors.white),
+        titleTextStyle: AppTextStyles.h3.copyWith(color: Colors.white),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: JVColors.primary,
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 4,
-          shadowColor: JVColors.primary.withValues(alpha: 0.3),
+          shadowColor: AppColors.primary.withValues(alpha: 0.3),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
-          textStyle: JVStyles.button,
+          textStyle: AppTextStyles.button,
+        ),
+      ),
+
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          textStyle: AppTextStyles.button.copyWith(color: AppColors.primary),
+        ),
+      ),
+
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          textStyle: AppTextStyles.labelMedium,
         ),
       ),
 
       cardTheme: CardThemeData(
-        color: JVColors.surface,
+        color: AppColors.surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: JVColors.divider),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          side: const BorderSide(color: AppColors.divider),
         ),
         margin: EdgeInsets.zero,
       ),
-      
+
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.surface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.borderDefault),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.borderDefault),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: const BorderSide(color: AppColors.error, width: 2),
+        ),
+        hintStyle: AppTextStyles.inputHint,
+        errorStyle: AppTextStyles.inputError,
+      ),
+
+      dividerTheme: const DividerThemeData(
+        color: AppColors.divider,
+        thickness: 1,
+        space: 1,
+      ),
+
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.cardLightPurple,
+        labelStyle: AppTextStyles.labelSmall.copyWith(color: AppColors.primary),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.round),
+        ),
+      ),
+
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: AppColors.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
+
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        titleTextStyle: AppTextStyles.headerMedium,
+        contentTextStyle: AppTextStyles.bodyMedium,
+      ),
+
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.textPrimary,
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(color: Colors.white),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+
       useMaterial3: true,
     );
   }
+}
+
+// =============================================================================
+// APP DECORATIONS (Common BoxDecoration presets)
+// =============================================================================
+
+class AppDecorations {
+  AppDecorations._();
+
+  /// Standard card decoration with shadow
+  static BoxDecoration get card => BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.borderRadiusLg,
+        boxShadow: AppShadows.card,
+        border: Border.all(color: AppColors.divider, width: 1),
+      );
+
+  /// Elevated card decoration
+  static BoxDecoration get cardElevated => BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.borderRadiusLg,
+        boxShadow: AppShadows.cardElevated,
+      );
+
+  /// Card with gradient background
+  static BoxDecoration get gradientCard => BoxDecoration(
+        gradient: AppColors.priyaCardGradient,
+        borderRadius: AppRadius.borderRadiusLg,
+        boxShadow: AppShadows.soft,
+      );
+
+  /// Primary button decoration
+  static BoxDecoration get primaryButton => BoxDecoration(
+        gradient: AppColors.ctaGradient,
+        borderRadius: AppRadius.borderRadiusMd,
+        boxShadow: AppShadows.button,
+      );
+
+  /// Outlined card decoration (no shadow)
+  static BoxDecoration get cardOutlined => BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadius.borderRadiusLg,
+        border: Border.all(color: AppColors.borderDefault, width: 1),
+      );
+
+  /// Success card decoration
+  static BoxDecoration get cardSuccess => BoxDecoration(
+        color: AppColors.successBackground,
+        borderRadius: AppRadius.borderRadiusMd,
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+      );
+
+  /// Error card decoration
+  static BoxDecoration get cardError => BoxDecoration(
+        color: AppColors.errorBackground,
+        borderRadius: AppRadius.borderRadiusMd,
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+      );
+
+  /// Warning card decoration
+  static BoxDecoration get cardWarning => BoxDecoration(
+        color: AppColors.warningBackground,
+        borderRadius: AppRadius.borderRadiusMd,
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+      );
+
+  /// Info card decoration
+  static BoxDecoration get cardInfo => BoxDecoration(
+        color: AppColors.infoBackground,
+        borderRadius: AppRadius.borderRadiusMd,
+        border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
+      );
 }

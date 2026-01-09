@@ -79,7 +79,8 @@ mobile/android/app/profile
 mobile/android/app/release
 
 # Input files (exclude from GitHub)
-inputs/
+# Note: /inputs/ at root only, not lib/widgets/inputs/
+/inputs/
 
 # Temporary files
 *.tmp
