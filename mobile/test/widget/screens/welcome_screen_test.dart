@@ -1,23 +1,23 @@
-/// Widget tests for WelcomeScreen
+/// Widget tests for WelcomeCarouselScreen
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:jeevibe_mobile/screens/welcome_screen.dart';
+import 'package:jeevibe_mobile/screens/welcome_carousel_screen.dart';
 import '../../helpers/test_helpers.dart';
 
 void main() {
-  group('WelcomeScreen Widget Tests', () {
+  group('WelcomeCarouselScreen Widget Tests', () {
     testWidgets('renders welcome screen', (WidgetTester tester) async {
       await tester.pumpWidget(
-        createTestApp(const WelcomeScreen()),
+        createTestApp(const WelcomeCarouselScreen()),
       );
 
       // Verify welcome screen is displayed
-      expect(find.byType(WelcomeScreen), findsOneWidget);
+      expect(find.byType(WelcomeCarouselScreen), findsOneWidget);
     });
 
     testWidgets('shows page indicator', (WidgetTester tester) async {
       await tester.pumpWidget(
-        createTestApp(const WelcomeScreen()),
+        createTestApp(const WelcomeCarouselScreen()),
       );
 
       await waitForAsync(tester);
@@ -29,7 +29,7 @@ void main() {
 
     testWidgets('navigates to next page on tap', (WidgetTester tester) async {
       await tester.pumpWidget(
-        createTestApp(const WelcomeScreen()),
+        createTestApp(const WelcomeCarouselScreen()),
       );
 
       await waitForAsync(tester);
@@ -46,7 +46,7 @@ void main() {
 
     testWidgets('skips to end on skip tap', (WidgetTester tester) async {
       await tester.pumpWidget(
-        createTestApp(const WelcomeScreen()),
+        createTestApp(const WelcomeCarouselScreen()),
       );
 
       await waitForAsync(tester);
