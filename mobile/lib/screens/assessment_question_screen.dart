@@ -66,10 +66,14 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
 
     if (state == AppLifecycleState.resumed) {
       // App came back from background - recalculate timer based on wall clock
-      _recalculateRemainingTime();
+      if (mounted) {
+        _recalculateRemainingTime();
+      }
     } else if (state == AppLifecycleState.paused) {
       // App going to background - save state immediately
-      _saveState();
+      if (mounted) {
+        _saveState();
+      }
     }
   }
 

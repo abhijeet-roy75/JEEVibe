@@ -450,8 +450,10 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
 
   Widget _buildQuestionCard(Map<String, dynamic> question, int index) {
     final isCorrect = question['is_correct'] as bool? ?? false;
+    // Get the actual position from backend (0-indexed)
+    final actualPosition = question['position'] as int?;
     // Backend position is 0-indexed, add 1 for display (1-10 instead of 0-9)
-    final questionNumber = (question['position'] as int? ?? index) + 1;
+    final questionNumber = (actualPosition ?? index) + 1;
     final subject = question['subject'] as String? ?? 'Unknown';
     final chapter = question['chapter'] as String? ?? 'Unknown';
     final questionText = question['question_text'] as String? ?? '';
@@ -473,12 +475,15 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
       ),
       child: InkWell(
         onTap: () {
+          // Use actual position if available, otherwise use the filtered index
+          // This is critical when filtering - filtered index != original position
+          final navigationIndex = actualPosition ?? index;
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => DailyQuizQuestionReviewScreen(
                 quizId: widget.quizId,
-                questionIndex: questionNumber - 1, // 0-indexed
+                questionIndex: navigationIndex, // Already 0-indexed from backend
               ),
             ),
           );

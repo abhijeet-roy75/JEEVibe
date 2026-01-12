@@ -667,7 +667,8 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
                                 fontWeight: FontWeight.bold,
                               ),
                               textAlign: TextAlign.center,
-                              overflow: TextOverflow.visible,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                         ],
@@ -903,7 +904,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
             onPressed: () {
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (context) => const HomeScreen()),
-                (route) => false,
+                (route) => route.isFirst,
               );
             },
             size: GradientButtonSize.large,
