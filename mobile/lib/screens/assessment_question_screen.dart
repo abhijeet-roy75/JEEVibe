@@ -9,6 +9,7 @@ import '../models/assessment_question.dart';
 import '../models/assessment_response.dart';
 import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
+import '../services/assessment_storage_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/latex_widget.dart';
@@ -31,26 +32,68 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
   Map<int, DateTime> _questionStartTimes = {};
   Map<int, TextEditingController> _numericalControllers = {}; // Store controllers per question
   Timer? _timer;
+  Timer? _autoSaveTimer;
   int _remainingSeconds = 45 * 60; // 45 minutes in seconds
+  DateTime? _assessmentStartTime;
   bool _isLoading = true;
   bool _isSubmitting = false;
   String? _error;
+  final AssessmentStorageService _storageService = AssessmentStorageService();
 
   @override
   void initState() {
     super.initState();
-    _loadQuestions();
-    _startTimer();
+    _initializeAssessment();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _autoSaveTimer?.cancel();
     // Dispose all controllers
     for (var controller in _numericalControllers.values) {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _initializeAssessment() async {
+    // Try to restore saved state first
+    final savedState = await _storageService.loadAssessmentState();
+
+    if (!mounted) return; // Check after async operation
+
+    if (savedState != null) {
+      // Restore from saved state
+      setState(() {
+        _currentQuestionIndex = savedState.currentIndex;
+        _remainingSeconds = savedState.remainingSeconds;
+        _assessmentStartTime = savedState.startTime;
+        _questionStartTimes = savedState.questionStartTimes;
+
+        // Convert saved responses back to AssessmentResponse objects
+        // We'll fill in the questionId after loading questions
+        _responses = savedState.responses.map((key, value) => MapEntry(
+          key,
+          AssessmentResponse(
+            questionId: '', // Will be filled after loading questions
+            studentAnswer: value,
+            timeTakenSeconds: 0, // Will be recalculated
+          ),
+        ));
+      });
+    } else {
+      // New assessment
+      _assessmentStartTime = DateTime.now();
+    }
+
+    await _loadQuestions();
+    if (!mounted) return; // Check before starting timers
+
+    _startTimer();
+    if (!mounted) return; // Check before starting auto-save
+
+    _startAutoSave();
   }
 
   Future<void> _loadQuestions() async {
@@ -67,12 +110,28 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
       }
 
       final questions = await ApiService.getAssessmentQuestions(authToken: token);
-      
+
       if (mounted) {
         setState(() {
           _questions = questions;
           _isLoading = false;
-          if (questions.isNotEmpty) {
+
+          // Update response objects with correct question IDs
+          if (_responses.isNotEmpty) {
+            final updatedResponses = <int, AssessmentResponse>{};
+            for (var entry in _responses.entries) {
+              if (entry.key < questions.length) {
+                updatedResponses[entry.key] = AssessmentResponse(
+                  questionId: questions[entry.key].questionId,
+                  studentAnswer: entry.value.studentAnswer,
+                  timeTakenSeconds: entry.value.timeTakenSeconds,
+                );
+              }
+            }
+            _responses = updatedResponses;
+          }
+
+          if (questions.isNotEmpty && !_questionStartTimes.containsKey(0)) {
             _questionStartTimes[0] = DateTime.now();
           }
         });
@@ -91,23 +150,62 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
-          if (_remainingSeconds > 0) {
-            _remainingSeconds--;
-          } else {
-            // Time's up - auto-submit
-            _timer?.cancel();
-            _submitAssessment();
-          }
+          _remainingSeconds--;
+          // Note: We no longer auto-submit when timer expires
+          // User can continue past 45 minutes
         });
       }
     });
   }
 
-  String _formatTime(int seconds) {
-    final minutes = seconds ~/ 60;
-    final secs = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  void _startAutoSave() {
+    // Auto-save every 10 seconds
+    _autoSaveTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      _saveState();
+    });
   }
+
+  Future<void> _saveState() async {
+    if (_questions == null || _assessmentStartTime == null) return;
+
+    // Convert responses to simple map for storage
+    final responsesMap = _responses.map(
+      (key, value) => MapEntry(key, value.studentAnswer),
+    );
+
+    await _storageService.saveAssessmentState(
+      responses: responsesMap,
+      currentIndex: _currentQuestionIndex,
+      remainingSeconds: _remainingSeconds,
+      startTime: _assessmentStartTime!,
+      questionStartTimes: _questionStartTimes,
+    );
+  }
+
+  String _formatTime(int seconds) {
+    final isNegative = seconds < 0;
+    final absSeconds = seconds.abs();
+    final minutes = absSeconds ~/ 60;
+    final secs = absSeconds % 60;
+    final formatted = '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    return isNegative ? '+$formatted' : formatted;
+  }
+
+  Color _getTimerColor() {
+    if (_remainingSeconds < 0) {
+      // Overtime - red
+      return AppColors.errorRed;
+    } else if (_remainingSeconds < 300) {
+      // Less than 5 minutes remaining - orange
+      return Colors.orange;
+    } else {
+      // Normal - white
+      return Colors.white;
+    }
+  }
+
+  bool get _isTimerWarning => _remainingSeconds < 300 && _remainingSeconds >= 0;
+  bool get _isTimerOvertime => _remainingSeconds < 0;
 
   AssessmentQuestion? get _currentQuestion {
     if (_questions == null || _currentQuestionIndex >= _questions!.length) {
@@ -117,7 +215,11 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
   }
 
   bool get _isLastQuestion => _currentQuestionIndex == (_questions?.length ?? 0) - 1;
-  bool get _hasAnswer => _responses.containsKey(_currentQuestionIndex);
+  bool get _hasAnswer {
+    if (!_responses.containsKey(_currentQuestionIndex)) return false;
+    final answer = _responses[_currentQuestionIndex]?.studentAnswer ?? '';
+    return answer.trim().isNotEmpty;
+  }
 
   void _recordAnswer(String answer) {
     final question = _currentQuestion;
@@ -132,16 +234,26 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
       studentAnswer: answer,
       timeTakenSeconds: timeTaken,
     );
+
+    // Save state after recording answer
+    _saveState();
   }
 
   void _nextQuestion() {
     if (_isLastQuestion) {
       _submitAssessment();
     } else {
+      // Dispose controller for current question if it exists (memory leak fix)
+      // We're moving away from this question, so we don't need its controller anymore
+      final oldController = _numericalControllers.remove(_currentQuestionIndex);
+      oldController?.dispose();
+
       setState(() {
         _currentQuestionIndex++;
         _questionStartTimes[_currentQuestionIndex] = DateTime.now();
       });
+      // Save state after moving to next question
+      _saveState();
     }
   }
 
@@ -189,14 +301,22 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
 
       if (mounted) {
         if (result.success && result.data != null) {
+          // Clear saved state after successful submission
+          await _storageService.clearAssessmentState();
+
           // Get userId from auth service
           final currentUser = authService.currentUser;
           final userId = currentUser?.uid;
-          
+
           if (userId == null) {
             throw Exception('User not authenticated');
           }
-          
+
+          // Calculate total time taken
+          final totalSeconds = _assessmentStartTime != null
+              ? DateTime.now().difference(_assessmentStartTime!).inSeconds
+              : 0;
+
           // Navigate to loading screen (will poll for results)
           Navigator.pushReplacement(
             context,
@@ -205,6 +325,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
                 assessmentData: result.data!,
                 userId: userId, // Pass userId for polling
                 authToken: token, // Pass token for polling
+                totalTimeSeconds: totalSeconds, // Pass total time
               ),
             ),
           );
@@ -400,7 +521,11 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: _isTimerOvertime
+                          ? AppColors.errorRed
+                          : _isTimerWarning
+                              ? Colors.orange
+                              : Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
@@ -413,7 +538,11 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.timer, color: Colors.white, size: 16),
+                        Icon(
+                          Icons.timer,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           _formatTime(_remainingSeconds),

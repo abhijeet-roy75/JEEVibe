@@ -1,6 +1,6 @@
 /**
  * Assessment Service
- * 
+ *
  * Handles initial assessment processing:
  * - Groups responses by chapter
  * - Calculates theta estimates per chapter
@@ -9,6 +9,7 @@
 
 const { db, admin } = require('../config/firebase');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
+const logger = require('../utils/logger');
 const {
   accuracyToThetaMapping,
   calculateInitialSE,
@@ -322,7 +323,7 @@ async function processInitialAssessment(userId, enrichedResponses) {
 /**
  * Save assessment results atomically using Firestore transaction
  * Updates user profile and saves responses in a single atomic operation
- * 
+ *
  * @param {string} userId - Firebase Auth UID
  * @param {Object} assessmentResults - Assessment results object
  * @param {Array} responses - Array of response objects
@@ -338,16 +339,59 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
       `Cannot save ${responses.length} responses in single transaction.`
     );
   }
-  
-  return await retryFirestoreOperation(async () => {
+
+  // Clear old responses BEFORE transaction (for retakes during testing)
+  // This must happen outside the transaction since we can't mix regular deletes with transaction writes
+  const oldResponsesRef = db.collection('assessment_responses')
+    .doc(userId)
+    .collection('responses');
+
+  try {
+    const oldResponsesSnap = await oldResponsesRef.get();
+    if (!oldResponsesSnap.empty) {
+      // Delete in batches of 500 (Firestore batch limit)
+      const batchSize = 500;
+      const batches = [];
+      let currentBatch = db.batch();
+      let operationCounter = 0;
+
+      oldResponsesSnap.docs.forEach((doc) => {
+        currentBatch.delete(doc.ref);
+        operationCounter++;
+
+        if (operationCounter === batchSize) {
+          batches.push(currentBatch.commit());
+          currentBatch = db.batch();
+          operationCounter = 0;
+        }
+      });
+
+      // Commit the last batch if it has operations
+      if (operationCounter > 0) {
+        batches.push(currentBatch.commit());
+      }
+
+      await Promise.all(batches);
+      logger.info('Cleared old assessment responses', { userId, deletedCount: oldResponsesSnap.size });
+    }
+  } catch (deleteError) {
+    // Log but don't fail - we can still save new responses
+    logger.error('Error clearing old responses (continuing anyway)', {
+      userId,
+      error: deleteError.message
+    });
+  }
+
+  // Now run the transaction to save user profile and new responses
+  await retryFirestoreOperation(async () => {
     return await db.runTransaction(async (transaction) => {
       const userRef = db.collection('users').doc(userId);
-      
+
       // TEMPORARILY DISABLED FOR TESTING: Allow overwriting completed assessments
       // TODO: Re-enable this check before production
       // Read user document to check status and prevent race conditions
       const userDoc = await transaction.get(userRef);
-      
+
       // if (userDoc.exists) {
       //   const userData = userDoc.data();
       //   if (userData.assessment?.status === 'completed') {
@@ -358,7 +402,7 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
       //     throw error;
       //   }
       // }
-      
+
       // Create baseline snapshot (deep copy for preservation)
       const baselineSnapshot = {
         theta_by_chapter: JSON.parse(JSON.stringify(assessmentResults.theta_by_chapter)),
@@ -367,7 +411,7 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
         overall_percentile: assessmentResults.overall_percentile,
         captured_at: assessmentResults.assessment_completed_at
       };
-      
+
       // Update user profile atomically
       transaction.set(userRef, {
         assessment: assessmentResults.assessment,
@@ -390,18 +434,6 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
         subject_balance: assessmentResults.subject_balance,
         assessment_baseline: baselineSnapshot  // Add baseline snapshot
       }, { merge: true });
-      
-      // Clear old responses before saving new ones (for retakes during testing)
-      // Note: This happens outside the transaction since we can't delete in batches within a transaction
-      const oldResponsesRef = db.collection('assessment_responses')
-        .doc(userId)
-        .collection('responses');
-      const oldResponsesSnap = await oldResponsesRef.get();
-      if (!oldResponsesSnap.empty) {
-        const deletePromises = oldResponsesSnap.docs.map(doc => doc.ref.delete());
-        await Promise.all(deletePromises);
-        logger.info('Cleared old assessment responses', { userId, deletedCount: oldResponsesSnap.size });
-      }
 
       // Save individual responses in the same transaction
       const responsesRef = db.collection('assessment_responses')
@@ -425,7 +457,7 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
           const randomSuffix = Math.random().toString(36).substring(2, 9);
           responseId = `resp_${userId}_${response.question_id}_${Date.now()}_${index}_${randomSuffix}`;
         }
-        
+
         const responseDoc = {
           response_id: responseId,
           student_id: userId,
@@ -440,15 +472,15 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
           answered_at: admin.firestore.FieldValue.serverTimestamp(),
           created_at: admin.firestore.FieldValue.serverTimestamp()
         };
-        
+
         transaction.set(responsesRef.doc(responseId), responseDoc);
       });
-      
+
       // Transaction will commit automatically if no errors
       console.log(`Transaction prepared: updating user profile and saving ${responses.length} responses for ${userId}`);
     });
   });
-  
+
   console.log(`Successfully saved assessment results for ${userId}`);
 }
 

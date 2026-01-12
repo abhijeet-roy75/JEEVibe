@@ -9,6 +9,7 @@
 
 const express = require('express');
 const router = express.Router();
+const rateLimit = require('express-rate-limit');
 const { db, admin } = require('../config/firebase');
 const { getRandomizedAssessmentQuestions } = require('../services/stratifiedRandomizationService');
 const { processInitialAssessment, validateAssessmentResponses } = require('../services/assessmentService');
@@ -17,6 +18,20 @@ const { validateQuestionId, validateStudentAnswer, validateTimeTaken } = require
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
+
+// Rate limiter for results polling endpoint
+// Allows 30 requests per minute per user (one every 2 seconds)
+const resultsLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute window
+  max: 30, // 30 requests per minute
+  message: 'Too many requests for assessment results. Please try again later.',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // Use user ID as key for rate limiting
+  keyGenerator: (req) => {
+    return req.userId || req.ip; // Fall back to IP if no userId
+  },
+});
 
 /**
  * GET /api/assessment/questions
@@ -329,13 +344,14 @@ router.post('/submit', authenticateUser, async (req, res) => {
 
 /**
  * GET /api/assessment/results/:userId
- * 
+ *
  * Get assessment results for a user (if completed)
- * 
+ *
  * Authentication: Required (Bearer token in Authorization header)
  * User can only access their own results
+ * Rate Limited: 30 requests per minute per user
  */
-router.get('/results/:userId', authenticateUser, async (req, res) => {
+router.get('/results/:userId', resultsLimiter, authenticateUser, async (req, res) => {
   try {
     const { userId: paramUserId } = req.params;
     const authenticatedUserId = req.userId;

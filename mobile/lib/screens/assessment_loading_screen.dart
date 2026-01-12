@@ -15,12 +15,14 @@ class AssessmentLoadingScreen extends StatefulWidget {
   final AssessmentData assessmentData;
   final String? userId;
   final String? authToken;
+  final int? totalTimeSeconds;
 
   const AssessmentLoadingScreen({
     super.key,
     required this.assessmentData,
     this.userId,
     this.authToken,
+    this.totalTimeSeconds,
   });
 
   @override
@@ -37,6 +39,9 @@ class _AssessmentLoadingScreenState extends State<AssessmentLoadingScreen>
   bool _backendComplete = false;
   bool _minTimeElapsed = false;
   late final DateTime _startTime;
+  int _pollCount = 0;
+  static const int _maxPollAttempts = 90; // 3 minutes max (90 * 2 seconds)
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -88,27 +93,42 @@ class _AssessmentLoadingScreenState extends State<AssessmentLoadingScreen>
   void _startPolling() {
     if (_hasStartedPolling) return;
     _hasStartedPolling = true;
-    
-    // Poll every 2 seconds
+
+    // Poll every 2 seconds with maximum retry limit
     _pollingTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
       if (!mounted || _isComplete) {
         timer.cancel();
         return;
       }
-      
+
+      _pollCount++;
+
+      // Check if we've exceeded max attempts
+      if (_pollCount >= _maxPollAttempts) {
+        timer.cancel();
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Assessment processing is taking longer than expected. Please check back later or contact support.';
+            _backendComplete = true; // Allow user to exit
+          });
+          _showTimeoutError();
+        }
+        return;
+      }
+
       try {
         final result = await ApiService.getAssessmentResults(
           authToken: widget.authToken!,
           userId: widget.userId!,
         );
-        
+
         if (result.success && result.data != null) {
           final newStatus = result.data!.assessment['status'] as String?;
-          
+
           if (newStatus == 'completed') {
             // Results are ready!
             timer.cancel();
-            
+
             if (mounted) {
               setState(() {
                 _backendComplete = true;
@@ -120,25 +140,95 @@ class _AssessmentLoadingScreenState extends State<AssessmentLoadingScreen>
             timer.cancel();
             if (mounted) {
               setState(() {
-                _backendComplete = true; // Mark as complete to allow navigation
+                _errorMessage = result.error ?? 'An error occurred while processing your assessment.';
+                _backendComplete = true;
               });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error processing assessment: ${result.error ?? "Unknown error"}'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-              // Still navigate after minimum time even on error
-              _checkAndNavigate();
+              _showErrorDialog();
             }
           }
           // If still processing, continue polling
         }
       } catch (e) {
-        // Log error but continue polling
-        print('Error polling for results: $e');
+        // Log error but continue polling (network issues are transient)
+        print('Error polling for results (attempt $_pollCount/$_maxPollAttempts): $e');
+
+        // If we're near the limit and still getting errors, show error
+        if (_pollCount >= _maxPollAttempts - 5) {
+          print('Warning: Approaching max poll attempts with network errors');
+        }
       }
     });
+  }
+
+  void _showTimeoutError() {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Processing Timeout'),
+        content: Text(_errorMessage ?? 'Assessment processing is taking longer than expected.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              _retryPolling();
+            },
+            child: const Text('Retry'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              _navigateToDashboard();
+            },
+            child: const Text('Go to Dashboard'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog() {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Processing Error'),
+        content: Text(_errorMessage ?? 'An error occurred while processing your assessment.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              _retryPolling();
+            },
+            child: const Text('Retry'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              _navigateToDashboard();
+            },
+            child: const Text('Go to Dashboard'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _retryPolling() {
+    if (!mounted) return;
+
+    setState(() {
+      _pollCount = 0; // Reset poll count
+      _errorMessage = null;
+      _backendComplete = false;
+      _hasStartedPolling = false;
+    });
+
+    _startPolling();
   }
 
   @override
@@ -153,7 +243,7 @@ class _AssessmentLoadingScreenState extends State<AssessmentLoadingScreen>
     // Update local storage status
     final storageService = StorageService();
     await storageService.setAssessmentStatus('completed');
-    
+
     // Wait a bit for animation to complete
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
@@ -164,6 +254,38 @@ class _AssessmentLoadingScreenState extends State<AssessmentLoadingScreen>
         );
       }
     });
+  }
+
+  Widget _buildTimeTakenDisplay(int totalSeconds) {
+    final minutes = totalSeconds ~/ 60;
+    final seconds = totalSeconds % 60;
+    final timeString = 'Completed in $minutes minutes $seconds seconds';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.timer, color: Colors.white, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            timeString,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -225,6 +347,11 @@ class _AssessmentLoadingScreenState extends State<AssessmentLoadingScreen>
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
+                    // Total time taken (if provided)
+                    if (widget.totalTimeSeconds != null) ...[
+                      _buildTimeTakenDisplay(widget.totalTimeSeconds!),
+                      const SizedBox(height: 20),
+                    ],
                     // Purple heart
                     const Text(
                       '💜',
