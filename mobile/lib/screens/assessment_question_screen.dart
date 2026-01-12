@@ -839,10 +839,10 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
                       ),
                     ),
                     const SizedBox(width: 16),
-                    // Option text
+                    // Option text (use HTML version if available for proper formatting)
                     Expanded(
                       child: Html(
-                        data: option.text,
+                        data: option.html ?? option.text,
                         style: {
                           "body": Style(
                             fontSize: FontSize(AppTextStyles.bodyMedium.fontSize ?? 14),
