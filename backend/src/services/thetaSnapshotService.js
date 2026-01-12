@@ -13,6 +13,41 @@
 const { db, admin } = require('../config/firebase');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
+const { ApiError } = require('../middleware/errorHandler');
+
+/**
+ * Validate userId format
+ * @param {string} userId - The user ID to validate
+ * @throws {ApiError} If userId is invalid
+ */
+function validateUserId(userId) {
+  if (!userId || typeof userId !== 'string') {
+    throw new ApiError(400, 'userId is required and must be a string', 'INVALID_USER_ID');
+  }
+  if (userId.trim().length === 0) {
+    throw new ApiError(400, 'userId cannot be empty', 'INVALID_USER_ID');
+  }
+  if (userId.length > 128) {
+    throw new ApiError(400, 'userId too long (max 128 characters)', 'INVALID_USER_ID');
+  }
+}
+
+/**
+ * Validate quizId format
+ * @param {string} quizId - The quiz ID to validate
+ * @throws {ApiError} If quizId is invalid
+ */
+function validateQuizId(quizId) {
+  if (!quizId || typeof quizId !== 'string') {
+    throw new ApiError(400, 'quizId is required and must be a string', 'INVALID_QUIZ_ID');
+  }
+  if (quizId.trim().length === 0) {
+    throw new ApiError(400, 'quizId cannot be empty', 'INVALID_QUIZ_ID');
+  }
+  if (quizId.length > 100) {
+    throw new ApiError(400, 'quizId too long (max 100 characters)', 'INVALID_QUIZ_ID');
+  }
+}
 
 /**
  * Save a theta snapshot after quiz completion
@@ -26,11 +61,15 @@ const logger = require('../utils/logger');
  * @param {number} snapshotData.overall_percentile - Overall percentile
  * @param {Object} snapshotData.quiz_performance - Quiz performance summary
  * @param {Object} snapshotData.chapter_updates - Changes made in this quiz
+ * @param {number} snapshotData.quiz_number - The quiz number for this user
  * @returns {Promise<Object>} The saved snapshot with ID
  */
 async function saveThetaSnapshot(userId, quizId, snapshotData) {
-  if (!userId || !quizId) {
-    throw new Error('userId and quizId are required');
+  validateUserId(userId);
+  validateQuizId(quizId);
+
+  if (!snapshotData || typeof snapshotData !== 'object') {
+    throw new ApiError(400, 'snapshotData is required and must be an object', 'INVALID_SNAPSHOT_DATA');
   }
 
   const snapshotRef = db.collection('theta_snapshots')
@@ -39,9 +78,9 @@ async function saveThetaSnapshot(userId, quizId, snapshotData) {
     .doc(quizId);
 
   const snapshot = {
-    snapshot_id: quizId,
     student_id: userId,
     quiz_id: quizId,
+    quiz_number: snapshotData.quiz_number || null,
     snapshot_type: 'daily_quiz',
 
     // Complete theta state at this point in time
@@ -62,9 +101,8 @@ async function saveThetaSnapshot(userId, quizId, snapshotData) {
     // What changed in this quiz (for quick delta analysis)
     chapter_updates: snapshotData.chapter_updates || {},
 
-    // Metadata
-    captured_at: admin.firestore.FieldValue.serverTimestamp(),
-    created_at: admin.firestore.FieldValue.serverTimestamp()
+    // Metadata - single timestamp (captured_at serves as both creation and capture time)
+    captured_at: admin.firestore.FieldValue.serverTimestamp()
   };
 
   await retryFirestoreOperation(async () => {
@@ -74,6 +112,7 @@ async function saveThetaSnapshot(userId, quizId, snapshotData) {
   logger.info('Theta snapshot saved', {
     userId,
     quizId,
+    quizNumber: snapshot.quiz_number,
     overall_theta: snapshot.overall_theta,
     chapters_updated: Object.keys(snapshot.chapter_updates).length
   });
@@ -96,6 +135,8 @@ async function saveThetaSnapshot(userId, quizId, snapshotData) {
  * @returns {Promise<Object>} Snapshots with pagination info
  */
 async function getThetaSnapshots(userId, options = {}) {
+  validateUserId(userId);
+
   const {
     limit = 30,
     startDate = null,
@@ -116,13 +157,15 @@ async function getThetaSnapshots(userId, options = {}) {
     query = query.where('captured_at', '<=', admin.firestore.Timestamp.fromDate(endDate));
   }
 
-  // Apply cursor pagination
+  // Apply cursor pagination (with retry)
   if (startAfter) {
-    const cursorDoc = await db.collection('theta_snapshots')
-      .doc(userId)
-      .collection('daily')
-      .doc(startAfter)
-      .get();
+    const cursorDoc = await retryFirestoreOperation(async () => {
+      return await db.collection('theta_snapshots')
+        .doc(userId)
+        .collection('daily')
+        .doc(startAfter)
+        .get();
+    });
 
     if (cursorDoc.exists) {
       query = query.startAfter(cursorDoc);
@@ -143,6 +186,7 @@ async function getThetaSnapshots(userId, options = {}) {
     snapshots.push({
       snapshot_id: doc.id,
       quiz_id: data.quiz_id,
+      quiz_number: data.quiz_number,
       captured_at: data.captured_at?.toDate?.()?.toISOString() || data.captured_at,
       overall_theta: data.overall_theta,
       overall_percentile: data.overall_percentile,
@@ -174,6 +218,9 @@ async function getThetaSnapshots(userId, options = {}) {
  * @returns {Promise<Object|null>} The snapshot or null if not found
  */
 async function getThetaSnapshotByQuizId(userId, quizId) {
+  validateUserId(userId);
+  validateQuizId(quizId);
+
   const snapshotRef = db.collection('theta_snapshots')
     .doc(userId)
     .collection('daily')
@@ -191,6 +238,7 @@ async function getThetaSnapshotByQuizId(userId, quizId) {
   return {
     snapshot_id: doc.id,
     quiz_id: data.quiz_id,
+    quiz_number: data.quiz_number,
     captured_at: data.captured_at?.toDate?.()?.toISOString() || data.captured_at,
     overall_theta: data.overall_theta,
     overall_percentile: data.overall_percentile,
@@ -211,6 +259,12 @@ async function getThetaSnapshotByQuizId(userId, quizId) {
  * @returns {Promise<Array>} Array of {date, theta, percentile} objects
  */
 async function getChapterThetaProgression(userId, chapterKey, options = {}) {
+  validateUserId(userId);
+
+  if (!chapterKey || typeof chapterKey !== 'string') {
+    throw new ApiError(400, 'chapterKey is required and must be a string', 'INVALID_CHAPTER_KEY');
+  }
+
   const { limit = 30 } = options;
 
   const query = db.collection('theta_snapshots')
@@ -232,6 +286,7 @@ async function getChapterThetaProgression(userId, chapterKey, options = {}) {
     if (chapterData) {
       progression.push({
         quiz_id: data.quiz_id,
+        quiz_number: data.quiz_number,
         date: data.captured_at?.toDate?.()?.toISOString() || data.captured_at,
         theta: chapterData.theta || 0,
         percentile: chapterData.percentile || 50,
@@ -240,6 +295,15 @@ async function getChapterThetaProgression(userId, chapterKey, options = {}) {
       });
     }
   });
+
+  // Log if no data found for chapter (helps debug invalid chapter keys)
+  if (progression.length === 0 && snapshot.docs.length > 0) {
+    logger.warn('No theta progression data found for chapter', {
+      userId,
+      chapterKey,
+      snapshotsChecked: snapshot.docs.length
+    });
+  }
 
   // Reverse to get chronological order (oldest first)
   return progression.reverse();
@@ -255,6 +319,12 @@ async function getChapterThetaProgression(userId, chapterKey, options = {}) {
  * @returns {Promise<Array>} Array of {date, theta, percentile} objects
  */
 async function getSubjectThetaProgression(userId, subject, options = {}) {
+  validateUserId(userId);
+
+  if (!subject || typeof subject !== 'string') {
+    throw new ApiError(400, 'subject is required and must be a string', 'INVALID_SUBJECT');
+  }
+
   const { limit = 30 } = options;
 
   const query = db.collection('theta_snapshots')
@@ -276,6 +346,7 @@ async function getSubjectThetaProgression(userId, subject, options = {}) {
     if (subjectData) {
       progression.push({
         quiz_id: data.quiz_id,
+        quiz_number: data.quiz_number,
         date: data.captured_at?.toDate?.()?.toISOString() || data.captured_at,
         theta: subjectData.theta || 0,
         percentile: subjectData.percentile || 50
@@ -296,6 +367,8 @@ async function getSubjectThetaProgression(userId, subject, options = {}) {
  * @returns {Promise<Array>} Array of {date, theta, percentile} objects
  */
 async function getOverallThetaProgression(userId, options = {}) {
+  validateUserId(userId);
+
   const { limit = 30 } = options;
 
   const query = db.collection('theta_snapshots')
@@ -314,6 +387,7 @@ async function getOverallThetaProgression(userId, options = {}) {
     const data = doc.data();
     progression.push({
       quiz_id: data.quiz_id,
+      quiz_number: data.quiz_number,
       date: data.captured_at?.toDate?.()?.toISOString() || data.captured_at,
       theta: data.overall_theta || 0,
       percentile: data.overall_percentile || 50,
@@ -332,6 +406,8 @@ async function getOverallThetaProgression(userId, options = {}) {
  * @returns {Promise<number>} Total number of snapshots
  */
 async function getSnapshotCount(userId) {
+  validateUserId(userId);
+
   const countSnapshot = await retryFirestoreOperation(async () => {
     return await db.collection('theta_snapshots')
       .doc(userId)

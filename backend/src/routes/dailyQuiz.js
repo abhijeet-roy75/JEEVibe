@@ -32,7 +32,7 @@ const { updateReviewInterval } = require('../services/spacedRepetitionService');
 const { formatChapterKey } = require('../services/thetaCalculationService');
 const { getChapterProgress, getSubjectProgress, getAccuracyTrends, getCumulativeStats } = require('../services/progressService');
 const { getStreak, updateStreak } = require('../services/streakService');
-const { saveThetaSnapshot, getThetaSnapshots, getChapterThetaProgression, getSubjectThetaProgression, getOverallThetaProgression } = require('../services/thetaSnapshotService');
+const { saveThetaSnapshot, getThetaSnapshots, getThetaSnapshotByQuizId, getChapterThetaProgression, getSubjectThetaProgression, getOverallThetaProgression } = require('../services/thetaSnapshotService');
 
 // ============================================================================
 // VALIDATION MIDDLEWARE
@@ -686,39 +686,6 @@ router.post('/complete', authenticateUser, validateQuizId, async (req, res, next
       });
     }
 
-    // ========================================================================
-    // Save theta snapshot for analytics (non-blocking)
-    // ========================================================================
-    try {
-      await saveThetaSnapshot(userId, quiz_id, {
-        theta_by_chapter: updatedThetaByChapter,
-        theta_by_subject: subjectAndOverallUpdate.theta_by_subject,
-        overall_theta: subjectAndOverallUpdate.overall_theta,
-        overall_percentile: subjectAndOverallUpdate.overall_percentile,
-        quiz_performance: {
-          score: correctCount,
-          total: totalCount,
-          accuracy: accuracy,
-          total_time_seconds: totalTime,
-          chapters_tested: Object.keys(responsesByChapter)
-        },
-        chapter_updates: chapterUpdateResults
-      });
-      logger.info('Theta snapshot saved for analytics', {
-        userId,
-        quizId: quiz_id,
-        chapters_updated: Object.keys(chapterUpdateResults).length
-      });
-    } catch (error) {
-      // Non-blocking - log error but don't fail the request
-      logger.error('Error saving theta snapshot (non-blocking)', {
-        userId,
-        quizId: quiz_id,
-        error: error.message,
-        stack: error.stack
-      });
-    }
-
     // Update failure count (circuit breaker)
     try {
       await updateFailureCount(userId, quizPassed);
@@ -756,6 +723,41 @@ router.post('/complete', authenticateUser, validateQuizId, async (req, res, next
       return await quizRef.get();
     });
     const quizData = quizDoc.data();
+
+    // ========================================================================
+    // Save theta snapshot for analytics (non-blocking)
+    // ========================================================================
+    try {
+      await saveThetaSnapshot(userId, quiz_id, {
+        quiz_number: quizData.quiz_number,
+        theta_by_chapter: updatedThetaByChapter,
+        theta_by_subject: subjectAndOverallUpdate.theta_by_subject,
+        overall_theta: subjectAndOverallUpdate.overall_theta,
+        overall_percentile: subjectAndOverallUpdate.overall_percentile,
+        quiz_performance: {
+          score: correctCount,
+          total: totalCount,
+          accuracy: accuracy,
+          total_time_seconds: totalTime,
+          chapters_tested: Object.keys(responsesByChapter)
+        },
+        chapter_updates: chapterUpdateResults
+      });
+      logger.info('Theta snapshot saved for analytics', {
+        userId,
+        quizId: quiz_id,
+        quizNumber: quizData.quiz_number,
+        chapters_updated: Object.keys(chapterUpdateResults).length
+      });
+    } catch (error) {
+      // Non-blocking - log error but don't fail the request
+      logger.error('Error saving theta snapshot (non-blocking)', {
+        userId,
+        quizId: quiz_id,
+        error: error.message,
+        stack: error.stack
+      });
+    }
 
     // Get questions from subcollection for saving responses
     const questionsSnapshot = await retryFirestoreOperation(async () => {
@@ -1788,7 +1790,6 @@ router.get('/theta-snapshot/:quiz_id', authenticateUser, async (req, res, next) 
       throw new ApiError(400, 'quiz_id is required', 'MISSING_QUIZ_ID');
     }
 
-    const { getThetaSnapshotByQuizId } = require('../services/thetaSnapshotService');
     const snapshot = await getThetaSnapshotByQuizId(userId, quiz_id);
 
     if (!snapshot) {
