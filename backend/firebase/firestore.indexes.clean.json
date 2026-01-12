@@ -1,0 +1,169 @@
+{
+  "indexes": [
+    {
+      "comment": "Daily quiz queries - status filter + completion date sort",
+      "collectionGroup": "quizzes",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "completed_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Quiz history by user - most recent first",
+      "collectionGroup": "quizzes",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "student_id", "order": "ASCENDING" },
+        { "fieldPath": "completed_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Quiz history by learning phase",
+      "collectionGroup": "quizzes",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "student_id", "order": "ASCENDING" },
+        { "fieldPath": "learning_phase", "order": "ASCENDING" },
+        { "fieldPath": "completed_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Quiz history with chapter filter",
+      "collectionGroup": "quizzes",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "chapters_covered", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "completed_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Quiz position tracking for user",
+      "collectionGroup": "quizzes",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "student_id", "order": "ASCENDING" },
+        { "fieldPath": "quiz_number", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Question selection - subject + chapter + IRT difficulty",
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "subject", "order": "ASCENDING" },
+        { "fieldPath": "chapter", "order": "ASCENDING" },
+        { "fieldPath": "irt_parameters.difficulty_b", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "Question selection - discrimination parameter (for filtering high-quality questions)",
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "subject", "order": "ASCENDING" },
+        { "fieldPath": "chapter", "order": "ASCENDING" },
+        { "fieldPath": "irt_parameters.discrimination_a", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Question lookup by identifiers",
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "subject", "order": "ASCENDING" },
+        { "fieldPath": "chapter", "order": "ASCENDING" },
+        { "fieldPath": "question_id", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "NEW - Adaptive difficulty: chapter + active status + difficulty_b",
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "chapter", "order": "ASCENDING" },
+        { "fieldPath": "is_active", "order": "ASCENDING" },
+        { "fieldPath": "difficulty_b", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "NEW - Adaptive difficulty: chapter + active status + difficulty_irt (fallback)",
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "chapter", "order": "ASCENDING" },
+        { "fieldPath": "is_active", "order": "ASCENDING" },
+        { "fieldPath": "difficulty_irt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "Assessment question selection",
+      "collectionGroup": "initial_assessment_questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "subject", "order": "ASCENDING" },
+        { "fieldPath": "difficulty", "order": "ASCENDING" },
+        { "fieldPath": "question_id", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "User response history - recent responses",
+      "collectionGroup": "responses",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "student_id", "order": "ASCENDING" },
+        { "fieldPath": "answered_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Response history by chapter",
+      "collectionGroup": "responses",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "student_id", "order": "ASCENDING" },
+        { "fieldPath": "chapter_key", "order": "ASCENDING" },
+        { "fieldPath": "answered_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Quiz response retrieval in order",
+      "collectionGroup": "responses",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "student_id", "order": "ASCENDING" },
+        { "fieldPath": "quiz_id", "order": "ASCENDING" },
+        { "fieldPath": "question_position", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "CRITICAL - Review questions: incorrect responses in last 7 days",
+      "collectionGroup": "responses",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "student_id", "order": "ASCENDING" },
+        { "fieldPath": "is_correct", "order": "ASCENDING" },
+        { "fieldPath": "answered_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Weekly progress snapshots",
+      "collectionGroup": "snapshots",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "student_id", "order": "ASCENDING" },
+        { "fieldPath": "week_end", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Weekly snapshots by week number",
+      "collectionGroup": "snapshots",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "student_id", "order": "ASCENDING" },
+        { "fieldPath": "week_number", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

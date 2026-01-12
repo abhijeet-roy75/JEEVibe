@@ -4,10 +4,14 @@ node_modules/
 dist/
 logs/
 
-# Firebase
+# Firebase credentials (keep secret)
 serviceAccountKey.json
-*.json
+serviceAccountKey.json.backup.json
+
+# Ignore JSON in root, but allow in firebase/ folder
+/*.json
 !package*.json
+!firebase/*.json
 
 # Environment
 .env
