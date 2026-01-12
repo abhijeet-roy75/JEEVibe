@@ -35,7 +35,8 @@ class OCRFailedScreen extends StatelessWidget {
                     _buildQuickTips(),
                     const SizedBox(height: AppSpacing.space32),
                     _buildButtons(context),
-                    const SizedBox(height: AppSpacing.space32),
+                    // Bottom padding to account for Android navigation bar
+                    SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
                   ],
                 ),
               ),

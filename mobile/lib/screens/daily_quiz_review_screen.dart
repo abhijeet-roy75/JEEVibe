@@ -264,24 +264,26 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
   Widget _buildSummaryCards() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildSummaryCard('Total', '$_totalQuestions', AppColors.primaryPurple),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildSummaryCard('Correct', '$_correctCount', AppColors.successGreen),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildSummaryCard('Wrong', '$_wrongCount', AppColors.errorRed),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildSummaryCard('Avg Time', _formatTime(_avgTimeSeconds), AppColors.primaryPurple),
-          ),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildSummaryCard('Total', '$_totalQuestions', AppColors.primaryPurple),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard('Correct', '$_correctCount', AppColors.successGreen),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard('Wrong', '$_wrongCount', AppColors.errorRed),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard('Avg Time', _formatTime(_avgTimeSeconds), AppColors.primaryPurple),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -294,18 +296,25 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             value,
             style: AppTextStyles.headerWhite.copyWith(
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: AppTextStyles.bodyWhite.copyWith(fontSize: 12),
+            style: AppTextStyles.bodyWhite.copyWith(fontSize: 11),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -441,7 +450,8 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
 
   Widget _buildQuestionCard(Map<String, dynamic> question, int index) {
     final isCorrect = question['is_correct'] as bool? ?? false;
-    final questionNumber = question['position'] as int? ?? (index + 1);
+    // Backend position is 0-indexed, add 1 for display (1-10 instead of 0-9)
+    final questionNumber = (question['position'] as int? ?? index) + 1;
     final subject = question['subject'] as String? ?? 'Unknown';
     final chapter = question['chapter'] as String? ?? 'Unknown';
     final questionText = question['question_text'] as String? ?? '';

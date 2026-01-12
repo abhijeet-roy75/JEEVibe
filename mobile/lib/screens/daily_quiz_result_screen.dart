@@ -11,7 +11,7 @@ import '../theme/app_text_styles.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/buttons/gradient_button.dart';
 import 'daily_quiz_review_screen.dart';
-import 'daily_quiz_home_screen.dart';
+import 'home_screen.dart';
 
 class DailyQuizResultScreen extends StatefulWidget {
   final String quizId;
@@ -426,7 +426,8 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
                   const SizedBox(height: 16),
                   // Action buttons
                   _buildActionButtons(),
-                  const SizedBox(height: 32),
+                  // Bottom padding to account for Android navigation bar
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
                 ],
               ),
             ),
@@ -617,59 +618,106 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Column(
-                children: [
-                  Text(
-                    '$_score/$_total',
-                    style: AppTextStyles.headerLarge.copyWith(
-                      color: AppColors.primaryPurple,
-                      fontSize: 28,
-                    ),
+          // Stats with better layout and smaller text
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                // Score
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        '$_score/$_total',
+                        style: AppTextStyles.headerLarge.copyWith(
+                          color: AppColors.primaryPurple,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Score',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textLight,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              Container(
-                width: 1,
-                height: 40,
-                color: AppColors.borderGray,
-              ),
-              Row(
-                children: [
-                  const Icon(Icons.timer_outlined, 
-                      color: AppColors.primaryPurple, size: 20),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatTime(_totalTimeSeconds),
-                    style: AppTextStyles.headerLarge.copyWith(
-                      color: AppColors.primaryPurple,
-                      fontSize: 28,
-                    ),
+                ),
+                Container(
+                  width: 1,
+                  color: AppColors.borderGray,
+                ),
+                // Time
+                Expanded(
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.timer_outlined,
+                              color: AppColors.primaryPurple, size: 18),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              _formatTime(_totalTimeSeconds),
+                              style: AppTextStyles.headerLarge.copyWith(
+                                color: AppColors.primaryPurple,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.visible,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Time',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textLight,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              Container(
-                width: 1,
-                height: 40,
-                color: AppColors.borderGray,
-              ),
-              Row(
-                children: [
-                  const Icon(Icons.trending_up, 
-                      color: AppColors.primaryPurple, size: 20),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${(_accuracy * 100).toInt()}%',
-                    style: AppTextStyles.headerLarge.copyWith(
-                      color: AppColors.primaryPurple,
-                      fontSize: 28,
-                    ),
+                ),
+                Container(
+                  width: 1,
+                  color: AppColors.borderGray,
+                ),
+                // Accuracy
+                Expanded(
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.trending_up,
+                              color: AppColors.primaryPurple, size: 18),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${(_accuracy * 100).toInt()}%',
+                            style: AppTextStyles.headerLarge.copyWith(
+                              color: AppColors.primaryPurple,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Accuracy',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textLight,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -854,7 +902,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
             text: 'Back to Dashboard',
             onPressed: () {
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const DailyQuizHomeScreen()),
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
                 (route) => false,
               );
             },

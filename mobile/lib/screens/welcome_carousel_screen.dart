@@ -721,7 +721,8 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen> with Tick
                       size: GradientButtonSize.large,
                       trailingIcon: Icons.arrow_forward,
                     ),
-                    const SizedBox(height: 32),
+                    // Bottom padding to account for Android navigation bar
+                    SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
                   ],
                 ),
               ),
