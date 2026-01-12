@@ -1,12 +1,30 @@
 {
   "indexes": [
     {
-      "comment": "Daily quiz queries - status filter + completion date sort",
+      "comment": "Daily quiz queries - status filter + completion date sort (DESC)",
       "collectionGroup": "quizzes",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "completed_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Daily quiz queries - status filter + completion date sort (ASC) - for date range",
+      "collectionGroup": "quizzes",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "completed_at", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "Active quiz lookup - status + generated_at",
+      "collectionGroup": "quizzes",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "generated_at", "order": "DESCENDING" }
       ]
     },
     {
@@ -29,7 +47,7 @@
       ]
     },
     {
-      "comment": "Quiz history with chapter filter",
+      "comment": "Quiz history with chapter filter (array-contains)",
       "collectionGroup": "quizzes",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
@@ -58,7 +76,7 @@
       ]
     },
     {
-      "comment": "Question selection - discrimination parameter (for filtering high-quality questions)",
+      "comment": "Question selection - discrimination parameter (high-quality questions)",
       "collectionGroup": "questions",
       "queryScope": "COLLECTION",
       "fields": [
@@ -78,7 +96,7 @@
       ]
     },
     {
-      "comment": "NEW - Adaptive difficulty: chapter + active status + difficulty_b",
+      "comment": "Adaptive difficulty: chapter + active status + difficulty_b",
       "collectionGroup": "questions",
       "queryScope": "COLLECTION",
       "fields": [
@@ -88,7 +106,7 @@
       ]
     },
     {
-      "comment": "NEW - Adaptive difficulty: chapter + active status + difficulty_irt (fallback)",
+      "comment": "Adaptive difficulty: chapter + active status + difficulty_irt (fallback)",
       "collectionGroup": "questions",
       "queryScope": "COLLECTION",
       "fields": [
@@ -137,12 +155,30 @@
       ]
     },
     {
-      "comment": "CRITICAL - Review questions: incorrect responses in last 7 days",
+      "comment": "Review questions: incorrect responses by student",
       "collectionGroup": "responses",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "student_id", "order": "ASCENDING" },
         { "fieldPath": "is_correct", "order": "ASCENDING" },
+        { "fieldPath": "answered_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Review questions: incorrect responses (global) - for stats",
+      "collectionGroup": "responses",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "is_correct", "order": "ASCENDING" },
+        { "fieldPath": "answered_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Spaced repetition: question response history",
+      "collectionGroup": "responses",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "question_id", "order": "ASCENDING" },
         { "fieldPath": "answered_at", "order": "DESCENDING" }
       ]
     },
