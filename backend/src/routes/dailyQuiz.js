@@ -32,6 +32,7 @@ const { updateReviewInterval } = require('../services/spacedRepetitionService');
 const { formatChapterKey } = require('../services/thetaCalculationService');
 const { getChapterProgress, getSubjectProgress, getAccuracyTrends, getCumulativeStats } = require('../services/progressService');
 const { getStreak, updateStreak } = require('../services/streakService');
+const { saveThetaSnapshot, getThetaSnapshots, getChapterThetaProgression, getSubjectThetaProgression, getOverallThetaProgression } = require('../services/thetaSnapshotService');
 
 // ============================================================================
 // VALIDATION MIDDLEWARE
@@ -682,6 +683,39 @@ router.post('/complete', authenticateUser, validateQuizId, async (req, res, next
       logger.error('Error updating streak', {
         userId,
         error: error.message
+      });
+    }
+
+    // ========================================================================
+    // Save theta snapshot for analytics (non-blocking)
+    // ========================================================================
+    try {
+      await saveThetaSnapshot(userId, quiz_id, {
+        theta_by_chapter: updatedThetaByChapter,
+        theta_by_subject: subjectAndOverallUpdate.theta_by_subject,
+        overall_theta: subjectAndOverallUpdate.overall_theta,
+        overall_percentile: subjectAndOverallUpdate.overall_percentile,
+        quiz_performance: {
+          score: correctCount,
+          total: totalCount,
+          accuracy: accuracy,
+          total_time_seconds: totalTime,
+          chapters_tested: Object.keys(responsesByChapter)
+        },
+        chapter_updates: chapterUpdateResults
+      });
+      logger.info('Theta snapshot saved for analytics', {
+        userId,
+        quizId: quiz_id,
+        chapters_updated: Object.keys(chapterUpdateResults).length
+      });
+    } catch (error) {
+      // Non-blocking - log error but don't fail the request
+      logger.error('Error saving theta snapshot (non-blocking)', {
+        userId,
+        quizId: quiz_id,
+        error: error.message,
+        stack: error.stack
       });
     }
 
@@ -1609,6 +1643,161 @@ router.get('/chapter-progress/:chapter_key', authenticateUser, async (req, res, 
         status: status
       },
       recent_quizzes: recentQuizzes,
+      requestId: req.id
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================================================
+// THETA HISTORY & PROGRESSION
+// ============================================================================
+
+/**
+ * GET /api/daily-quiz/theta-history
+ *
+ * Get theta snapshots history for the user
+ * Returns list of theta states captured after each quiz
+ *
+ * Query params:
+ * - limit: Number of snapshots to return (default: 30, max: 100)
+ * - start_date: Filter snapshots from this date (ISO string)
+ * - end_date: Filter snapshots until this date (ISO string)
+ * - cursor: Pagination cursor (quiz_id of last item)
+ *
+ * Authentication: Required
+ */
+router.get('/theta-history', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const limit = Math.min(parseInt(req.query.limit) || 30, 100);
+
+    // Validate and parse date parameters
+    let startDate = null;
+    let endDate = null;
+
+    if (req.query.start_date) {
+      startDate = new Date(req.query.start_date);
+      if (isNaN(startDate.getTime())) {
+        throw new ApiError(400, 'Invalid start_date format', 'INVALID_DATE_FORMAT');
+      }
+    }
+
+    if (req.query.end_date) {
+      endDate = new Date(req.query.end_date);
+      if (isNaN(endDate.getTime())) {
+        throw new ApiError(400, 'Invalid end_date format', 'INVALID_DATE_FORMAT');
+      }
+    }
+
+    const cursor = req.query.cursor || null;
+
+    const result = await getThetaSnapshots(userId, {
+      limit,
+      startDate,
+      endDate,
+      startAfter: cursor
+    });
+
+    res.json({
+      success: true,
+      snapshots: result.snapshots,
+      pagination: result.pagination,
+      requestId: req.id
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/daily-quiz/theta-progression
+ *
+ * Get theta progression over time (for charts/graphs)
+ *
+ * Query params:
+ * - type: 'overall' | 'subject' | 'chapter' (default: 'overall')
+ * - subject: Subject name (required if type='subject')
+ * - chapter_key: Chapter key (required if type='chapter')
+ * - limit: Number of data points (default: 30, max: 100)
+ *
+ * Authentication: Required
+ */
+router.get('/theta-progression', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const type = req.query.type || 'overall';
+    const limit = Math.min(parseInt(req.query.limit) || 30, 100);
+
+    let progression;
+
+    switch (type) {
+      case 'overall':
+        progression = await getOverallThetaProgression(userId, { limit });
+        break;
+
+      case 'subject':
+        const subject = req.query.subject;
+        if (!subject) {
+          throw new ApiError(400, 'subject parameter is required for type=subject', 'MISSING_SUBJECT');
+        }
+        if (!['physics', 'chemistry', 'mathematics'].includes(subject.toLowerCase())) {
+          throw new ApiError(400, 'Invalid subject. Must be physics, chemistry, or mathematics', 'INVALID_SUBJECT');
+        }
+        progression = await getSubjectThetaProgression(userId, subject, { limit });
+        break;
+
+      case 'chapter':
+        const chapterKey = req.query.chapter_key;
+        if (!chapterKey) {
+          throw new ApiError(400, 'chapter_key parameter is required for type=chapter', 'MISSING_CHAPTER_KEY');
+        }
+        progression = await getChapterThetaProgression(userId, chapterKey, { limit });
+        break;
+
+      default:
+        throw new ApiError(400, 'Invalid type. Must be overall, subject, or chapter', 'INVALID_TYPE');
+    }
+
+    res.json({
+      success: true,
+      type,
+      progression,
+      count: progression.length,
+      requestId: req.id
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/daily-quiz/theta-snapshot/:quiz_id
+ *
+ * Get a specific theta snapshot by quiz ID
+ *
+ * Authentication: Required
+ */
+router.get('/theta-snapshot/:quiz_id', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const { quiz_id } = req.params;
+
+    if (!quiz_id) {
+      throw new ApiError(400, 'quiz_id is required', 'MISSING_QUIZ_ID');
+    }
+
+    const { getThetaSnapshotByQuizId } = require('../services/thetaSnapshotService');
+    const snapshot = await getThetaSnapshotByQuizId(userId, quiz_id);
+
+    if (!snapshot) {
+      throw new ApiError(404, `Theta snapshot for quiz ${quiz_id} not found`, 'SNAPSHOT_NOT_FOUND');
+    }
+
+    res.json({
+      success: true,
+      snapshot,
       requestId: req.id
     });
   } catch (error) {
