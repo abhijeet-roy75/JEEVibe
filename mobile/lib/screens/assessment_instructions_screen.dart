@@ -110,8 +110,8 @@ class AssessmentInstructionsScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Bottom padding to account for Android navigation bar
-                    SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
+                    // Bottom padding to account for Android navigation bar (using viewPadding for system UI)
+                    SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 24),
                   ],
                 ),
               ),

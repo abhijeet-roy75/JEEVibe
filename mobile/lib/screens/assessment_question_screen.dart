@@ -102,27 +102,34 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
     if (!mounted) return; // Check after async operation
 
     if (savedState != null) {
-      // Restore from saved state
-      setState(() {
-        _currentQuestionIndex = savedState.currentIndex;
-        _assessmentStartTime = savedState.startTime;
-        _questionStartTimes = savedState.questionStartTimes;
+      // Validate saved state has required data
+      if (savedState.startTime == null) {
+        print('[Assessment] WARNING: Saved state has null startTime, discarding saved state');
+        await _storageService.clearAssessmentState();
+        // Will fall through to load questions normally below
+      } else {
+        // Restore from saved state
+        setState(() {
+          _currentQuestionIndex = savedState.currentIndex;
+          _assessmentStartTime = savedState.startTime;
+          _questionStartTimes = savedState.questionStartTimes;
 
-        // Convert saved responses back to AssessmentResponse objects
-        // We'll fill in the questionId after loading questions
-        _responses = savedState.responses.map((key, value) => MapEntry(
-          key,
-          AssessmentResponse(
-            questionId: '', // Will be filled after loading questions
-            studentAnswer: value,
-            timeTakenSeconds: 0, // Will be recalculated
-          ),
-        ));
-      });
+          // Convert saved responses back to AssessmentResponse objects
+          // We'll fill in the questionId after loading questions
+          _responses = savedState.responses.map((key, value) => MapEntry(
+            key,
+            AssessmentResponse(
+              questionId: '', // Will be filled after loading questions
+              studentAnswer: value,
+              timeTakenSeconds: 0, // Will be recalculated
+            ),
+          ));
+        });
 
-      // Recalculate remaining time based on elapsed wall clock time
-      // This ensures timer is accurate even if app was killed/backgrounded
-      _recalculateRemainingTime();
+        // Recalculate remaining time based on elapsed wall clock time
+        // This ensures timer is accurate even if app was killed/backgrounded
+        _recalculateRemainingTime();
+      }
 
       print('[Timer] Restored state: startTime=${savedState.startTime}, savedRemaining=${savedState.remainingSeconds}s, recalculated=${_remainingSeconds}s');
     } else {

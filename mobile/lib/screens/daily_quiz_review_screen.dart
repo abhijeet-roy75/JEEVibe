@@ -264,26 +264,25 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
   Widget _buildSummaryCards() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Expanded(
-              child: _buildSummaryCard('Total', '$_totalQuestions', AppColors.primaryPurple),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildSummaryCard('Correct', '$_correctCount', AppColors.successGreen),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildSummaryCard('Wrong', '$_wrongCount', AppColors.errorRed),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildSummaryCard('Avg Time', _formatTime(_avgTimeSeconds), AppColors.primaryPurple),
-            ),
-          ],
-        ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _buildSummaryCard('Total', '$_totalQuestions', AppColors.primaryPurple),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildSummaryCard('Correct', '$_correctCount', AppColors.successGreen),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildSummaryCard('Wrong', '$_wrongCount', AppColors.errorRed),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildSummaryCard('Avg Time', _formatTime(_avgTimeSeconds), AppColors.primaryPurple),
+          ),
+        ],
       ),
     );
   }
@@ -423,14 +422,49 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
 
   Widget _buildQuestionList() {
     if (_filteredQuestions.isEmpty) {
+      // Context-aware empty state messages
+      String message;
+      IconData icon;
+      Color iconColor;
+
+      if (_allQuestions.isEmpty) {
+        // No questions at all - shouldn't normally happen
+        message = 'No questions available';
+        icon = Icons.quiz_outlined;
+        iconColor = AppColors.textLight;
+      } else if (_currentFilter == 'correct') {
+        // Filtered to correct but none found
+        message = 'No correct answers yet.\nKeep practicing!';
+        icon = Icons.emoji_emotions_outlined;
+        iconColor = AppColors.textLight;
+      } else if (_currentFilter == 'wrong') {
+        // Filtered to wrong but none found - positive message!
+        message = 'No wrong answers!\nGreat job! 🎉';
+        icon = Icons.celebration;
+        iconColor = AppColors.successGreen;
+      } else {
+        // All filter but nothing shown
+        message = 'No questions to review';
+        icon = Icons.quiz_outlined;
+        iconColor = AppColors.textLight;
+      }
+
       return Padding(
         padding: const EdgeInsets.all(24.0),
         child: Center(
-          child: Text(
-            'No questions found',
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textLight,
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 48, color: iconColor),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textLight,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -452,6 +486,12 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
     final isCorrect = question['is_correct'] as bool? ?? false;
     // Get the actual position from backend (0-indexed)
     final actualPosition = question['position'] as int?;
+
+    // Log if position is missing (helps debug data inconsistencies)
+    if (actualPosition == null) {
+      print('[DailyQuizReview] WARNING: Question missing position field, using fallback index $index. QuestionId: ${question['question_id']}');
+    }
+
     // Backend position is 0-indexed, add 1 for display (1-10 instead of 0-9)
     final questionNumber = (actualPosition ?? index) + 1;
     final subject = question['subject'] as String? ?? 'Unknown';
