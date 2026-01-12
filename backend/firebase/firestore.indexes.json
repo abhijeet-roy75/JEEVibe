@@ -199,14 +199,6 @@
         { "fieldPath": "student_id", "order": "ASCENDING" },
         { "fieldPath": "week_number", "order": "ASCENDING" }
       ]
-    },
-    {
-      "comment": "Theta snapshots - date range queries for analytics",
-      "collectionGroup": "daily",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "captured_at", "order": "DESCENDING" }
-      ]
     }
   ],
   "fieldOverrides": []
