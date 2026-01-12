@@ -25,7 +25,7 @@ class AssessmentQuestionScreen extends StatefulWidget {
   State<AssessmentQuestionScreen> createState() => _AssessmentQuestionScreenState();
 }
 
-class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
+class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> with WidgetsBindingObserver {
   List<AssessmentQuestion>? _questions;
   int _currentQuestionIndex = 0;
   Map<int, AssessmentResponse> _responses = {};
@@ -34,6 +34,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
   Timer? _timer;
   Timer? _autoSaveTimer;
   int _remainingSeconds = 45 * 60; // 45 minutes in seconds
+  static const int _totalAssessmentSeconds = 45 * 60; // 45 minutes - constant duration
   DateTime? _assessmentStartTime;
   bool _isLoading = true;
   bool _isSubmitting = false;
@@ -43,11 +44,13 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeAssessment();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _autoSaveTimer?.cancel();
     // Dispose all controllers
@@ -55,6 +58,37 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      // App came back from background - recalculate timer based on wall clock
+      _recalculateRemainingTime();
+    } else if (state == AppLifecycleState.paused) {
+      // App going to background - save state immediately
+      _saveState();
+    }
+  }
+
+  /// Recalculate remaining time based on wall clock time
+  /// This ensures timer continues even when app is backgrounded or device sleeps
+  void _recalculateRemainingTime() {
+    if (_assessmentStartTime == null) return;
+
+    final now = DateTime.now();
+    final elapsedSeconds = now.difference(_assessmentStartTime!).inSeconds;
+    final newRemainingSeconds = _totalAssessmentSeconds - elapsedSeconds;
+
+    if (mounted) {
+      setState(() {
+        _remainingSeconds = newRemainingSeconds;
+      });
+    }
+
+    print('[Timer] Recalculated: elapsed=${elapsedSeconds}s, remaining=${newRemainingSeconds}s');
   }
 
   Future<void> _initializeAssessment() async {
@@ -67,7 +101,6 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
       // Restore from saved state
       setState(() {
         _currentQuestionIndex = savedState.currentIndex;
-        _remainingSeconds = savedState.remainingSeconds;
         _assessmentStartTime = savedState.startTime;
         _questionStartTimes = savedState.questionStartTimes;
 
@@ -82,6 +115,12 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
           ),
         ));
       });
+
+      // Recalculate remaining time based on elapsed wall clock time
+      // This ensures timer is accurate even if app was killed/backgrounded
+      _recalculateRemainingTime();
+
+      print('[Timer] Restored state: startTime=${savedState.startTime}, savedRemaining=${savedState.remainingSeconds}s, recalculated=${_remainingSeconds}s');
     } else {
       // New assessment
       _assessmentStartTime = DateTime.now();
@@ -148,9 +187,15 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> {
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
+      if (mounted && _assessmentStartTime != null) {
+        // Recalculate based on wall clock time to ensure accuracy
+        // This way the timer continues correctly even if app was paused/resumed
+        final now = DateTime.now();
+        final elapsedSeconds = now.difference(_assessmentStartTime!).inSeconds;
+        final newRemainingSeconds = _totalAssessmentSeconds - elapsedSeconds;
+
         setState(() {
-          _remainingSeconds--;
+          _remainingSeconds = newRemainingSeconds;
           // Note: We no longer auto-submit when timer expires
           // User can continue past 45 minutes
         });
