@@ -141,7 +141,15 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
 
   String _formatTime(int seconds) {
     final minutes = seconds ~/ 60;
-    return '$minutes min';
+    final secs = seconds % 60;
+
+    if (minutes > 0 && secs > 0) {
+      return '$minutes minutes $secs seconds';
+    } else if (minutes > 0) {
+      return '$minutes ${minutes == 1 ? "minute" : "minutes"}';
+    } else {
+      return '$secs ${secs == 1 ? "second" : "seconds"}';
+    }
   }
 
   Map<String, Map<String, dynamic>> _getPerformanceByTopic() {

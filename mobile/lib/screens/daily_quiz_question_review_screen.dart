@@ -127,6 +127,11 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
     }
   }
 
+  void _handleDone() {
+    // Navigate back to review screen (previous screen)
+    Navigator.of(context).pop();
+  }
+
   String _formatTime(int seconds) {
     final minutes = seconds ~/ 60;
     final secs = seconds % 60;
@@ -872,7 +877,12 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
 
   Widget _buildNavigationButtons() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        16 + MediaQuery.of(context).viewPadding.bottom,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -909,7 +919,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
           const SizedBox(width: 12),
           Expanded(
             child: ElevatedButton(
-              onPressed: _isLastQuestion ? null : _nextQuestion,
+              onPressed: _isLastQuestion ? _handleDone : _nextQuestion,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryPurple,
                 foregroundColor: Colors.white,
@@ -921,9 +931,9 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Next'),
+                  Text(_isLastQuestion ? 'Done' : 'Next'),
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward, size: 20),
+                  Icon(_isLastQuestion ? Icons.check : Icons.arrow_forward, size: 20),
                 ],
               ),
             ),

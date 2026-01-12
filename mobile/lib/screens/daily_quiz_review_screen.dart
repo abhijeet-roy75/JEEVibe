@@ -181,6 +181,9 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
           // Scrollable content
           Expanded(
             child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewPadding.bottom,
+              ),
               child: Column(
                 children: [
                   const SizedBox(height: 16),

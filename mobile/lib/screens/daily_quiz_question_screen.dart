@@ -78,6 +78,9 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
 
   @override
   void dispose() {
+    // Cancel the local UI timer when screen is disposed
+    // The elapsed time is calculated from DateTime.now().difference(startTime)
+    // so it will be correct when user returns, even if time passed in background
     _timer?.cancel();
     super.dispose();
   }
@@ -117,7 +120,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
   void _startTimer() {
     _timer?.cancel();
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
-    
+
     // Use current index from provider inside timer to avoid stale closure
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
@@ -129,12 +132,16 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
       // Get current index fresh from provider each time
       final currentIndex = provider.currentQuestionIndex;
       final questionState = provider.getQuestionState(currentIndex);
-      
+
       if (questionState == null || questionState.isAnswered) {
         timer.cancel();
         return;
       }
 
+      // Calculate elapsed time from stored startTime
+      // This ensures timer continues correctly even after app goes to background
+      // When screen is recreated, it loads the saved startTime and calculates
+      // elapsed = now - startTime, which includes background time
       final elapsed = DateTime.now().difference(questionState.startTime).inSeconds;
       provider.updateQuestionTimer(currentIndex, elapsed);
     });
@@ -171,6 +178,16 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     if (quiz != null && currentIndex < quiz.questions.length) {
       final question = quiz.questions[currentIndex];
       if (question.isNumerical) {
+        // Check if answer is empty
+        if (answer.trim().isEmpty) {
+          if (mounted) {
+            ErrorHandler.showErrorSnackBar(
+              context,
+              message: 'Please enter an answer',
+            );
+          }
+          return;
+        }
         // Validate numerical input
         final numValue = double.tryParse(answer);
         if (numValue == null) {
@@ -404,18 +421,14 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                         showAnswerOptions: feedback == null,
                         // FIX: Simplified callback logic - always provide callback when not yet answered
                         onAnswerSelected: feedback == null ? _handleOptionSelection : null,
-                        onAnswerSubmitted: feedback == null 
+                        onAnswerSubmitted: feedback == null
                             ? ((question.options != null && question.options!.isNotEmpty && questionState?.selectedAnswer != null)
                                 ? () => _handleAnswerSubmission(questionState!.selectedAnswer!)
-                                : question.isNumerical
+                                : question.isNumerical && questionState?.selectedAnswer != null && questionState!.selectedAnswer!.trim().isNotEmpty
                                     ? () {
                                         // For numerical, get the answer from the text field
                                         // The onAnswerSelected callback will have been called when user types
-                                        final provider = Provider.of<DailyQuizProvider>(context, listen: false);
-                                        final currentState = provider.getQuestionState(provider.currentQuestionIndex);
-                                        if (currentState?.selectedAnswer != null) {
-                                          _handleAnswerSubmission(currentState!.selectedAnswer!);
-                                        }
+                                        _handleAnswerSubmission(questionState!.selectedAnswer!);
                                       }
                                     : null)
                             : null,

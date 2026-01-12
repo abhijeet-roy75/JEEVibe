@@ -80,7 +80,12 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
             _buildHeader(question, level),
             Expanded(
               child: SingleChildScrollView(
-                padding: AppSpacing.screenPadding,
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.space24,
+                  AppSpacing.space24,
+                  AppSpacing.space24,
+                  AppSpacing.space24 + MediaQuery.of(context).viewPadding.bottom,
+                ),
                 child: Column(
                   children: [
                     const SizedBox(height: AppSpacing.space24),

@@ -112,7 +112,12 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
             _buildHeader(context),
             Expanded(
               child: SingleChildScrollView(
-                padding: AppSpacing.screenPadding,
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.space24,
+                  AppSpacing.space24,
+                  AppSpacing.space24,
+                  AppSpacing.space24 + MediaQuery.of(context).viewPadding.bottom,
+                ),
                 child: Column(
                   children: [
                     const SizedBox(height: AppSpacing.space24),

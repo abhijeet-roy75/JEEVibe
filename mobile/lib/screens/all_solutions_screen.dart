@@ -159,7 +159,12 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
 
   Widget _buildFooter() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.fromLTRB(
+        24,
+        24,
+        24,
+        24 + MediaQuery.of(context).viewPadding.bottom,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [

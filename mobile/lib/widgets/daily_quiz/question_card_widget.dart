@@ -372,6 +372,8 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
           // Update provider state - DO NOT call setState here
           // The button will update via ValueListenableBuilder below
           if (widget.onAnswerSelected != null) {
+            // Only update if value is not empty, or if it's empty (to allow deletion)
+            // We want to store empty string so the button disables, but validation will catch it
             widget.onAnswerSelected!(value);
           }
         },

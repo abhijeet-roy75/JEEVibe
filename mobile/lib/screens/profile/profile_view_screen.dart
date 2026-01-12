@@ -122,7 +122,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                 // White Content Section
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24.0),
+                    padding: EdgeInsets.fromLTRB(
+                      24.0,
+                      24.0,
+                      24.0,
+                      24.0 + MediaQuery.of(context).viewPadding.bottom,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
