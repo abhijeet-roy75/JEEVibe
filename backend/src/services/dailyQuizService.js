@@ -33,6 +33,8 @@ const REVIEW_QUESTIONS_PER_QUIZ = 1; // Number of review questions
 const EXPLORATION_QUESTIONS_PER_QUIZ = 12; // Exploration chapters to select (buffer for failures)
 const DELIBERATE_PRACTICE_QUESTIONS_PER_QUIZ = 10; // Deliberate practice chapters (buffer for failures)
 const QUIZ_GENERATION_TIMEOUT_MS = 60000; // 60 seconds timeout for quiz generation
+const CHAPTER_RECENCY_LOOKBACK = 2; // Number of recent quizzes to check for chapter exclusion
+const MAX_CHAPTER_OVERLAP_RATIO = 0.3; // Maximum 30% overlap with previous quiz allowed
 
 // Subject distribution targets
 const SUBJECT_DISTRIBUTION = {
@@ -47,12 +49,80 @@ const SUBJECT_DISTRIBUTION = {
 
 /**
  * Determine learning phase based on completed quiz count
- * 
+ *
  * @param {number} completedQuizCount
  * @returns {string} 'exploration' or 'exploitation'
  */
 function getLearningPhase(completedQuizCount) {
   return completedQuizCount < EXPLORATION_PHASE_QUIZZES ? 'exploration' : 'exploitation';
+}
+
+// ============================================================================
+// RECENT CHAPTER TRACKING
+// ============================================================================
+
+/**
+ * Get chapters from recently completed quizzes to avoid repetition
+ * Uses the per-quiz theta snapshots which store chapter-level data
+ *
+ * @param {string} userId - User ID
+ * @param {number} lookback - Number of recent quizzes to check (default: CHAPTER_RECENCY_LOOKBACK)
+ * @returns {Promise<Set<string>>} Set of chapter keys from recent quizzes
+ */
+async function getRecentlyTestedChapters(userId, lookback = CHAPTER_RECENCY_LOOKBACK) {
+  const recentChapters = new Set();
+
+  try {
+    // Query recent completed quizzes from the user's quizzes subcollection
+    const quizzesRef = db.collection('users').doc(userId).collection('quizzes');
+    const recentQuizzesSnapshot = await retryFirestoreOperation(async () => {
+      return await quizzesRef
+        .where('status', '==', 'completed')
+        .orderBy('completed_at', 'desc')
+        .limit(lookback)
+        .get();
+    });
+
+    if (recentQuizzesSnapshot.empty) {
+      logger.info('No recent completed quizzes found for chapter tracking', { userId, lookback });
+      return recentChapters;
+    }
+
+    // Extract chapters from each quiz's theta snapshot or chapters_covered
+    for (const quizDoc of recentQuizzesSnapshot.docs) {
+      const quizData = quizDoc.data();
+
+      // First try to use the per-quiz theta snapshot (more accurate)
+      if (quizData.theta_snapshot?.by_chapter) {
+        Object.keys(quizData.theta_snapshot.by_chapter).forEach(chapterKey => {
+          recentChapters.add(chapterKey);
+        });
+      }
+      // Fallback to chapters_covered array
+      else if (quizData.chapters_covered && Array.isArray(quizData.chapters_covered)) {
+        quizData.chapters_covered.forEach(chapterKey => {
+          recentChapters.add(chapterKey);
+        });
+      }
+    }
+
+    logger.info('Recent chapters fetched for anti-repetition', {
+      userId,
+      lookback,
+      quizzesFound: recentQuizzesSnapshot.docs.length,
+      uniqueChapters: recentChapters.size,
+      chapters: Array.from(recentChapters).slice(0, 10) // Log first 10 for debugging
+    });
+
+    return recentChapters;
+  } catch (error) {
+    logger.warn('Failed to fetch recent chapters, proceeding without anti-repetition', {
+      userId,
+      lookback,
+      error: error.message
+    });
+    return recentChapters; // Return empty set on error, don't block quiz generation
+  }
 }
 
 // ============================================================================
@@ -62,12 +132,17 @@ function getLearningPhase(completedQuizCount) {
 /**
  * Select chapters for exploration phase
  * Prioritizes chapters with fewer attempts, ensuring subject diversity
- * 
+ * Avoids chapters from recent quizzes to ensure variety
+ *
  * @param {Object} chapterThetas - Object mapping chapterKey to theta data
  * @param {number} count - Number of chapters to select
+ * @param {Object} options - Selection options
+ * @param {Set} options.recentChapters - Chapters from recent quizzes to deprioritize
+ * @param {number} options.maxOverlap - Maximum number of recent chapters to allow (default: 30% of count)
  * @returns {Array} Selected chapter keys
  */
-function selectChaptersForExploration(chapterThetas, count = 7) {
+function selectChaptersForExploration(chapterThetas, count = 7, options = {}) {
+  const { recentChapters = new Set(), maxOverlap = Math.floor(count * MAX_CHAPTER_OVERLAP_RATIO) } = options;
   // Group chapters by subject
   const chaptersBySubject = {
     physics: [],
@@ -76,23 +151,34 @@ function selectChaptersForExploration(chapterThetas, count = 7) {
   };
 
   // Extract subject from chapter key (format: "subject_chapter_name")
+  // Mark chapters that were recently tested
   Object.entries(chapterThetas).forEach(([key, data]) => {
     const subject = key.split('_')[0]?.toLowerCase();
     if (subject && chaptersBySubject[subject]) {
       chaptersBySubject[subject].push({
         chapter_key: key,
         attempts: data.attempts || 0,
-        theta: data.theta || 0
+        theta: data.theta || 0,
+        isRecent: recentChapters.has(key) // Flag for recently tested chapters
       });
     }
   });
 
-  // Sort each subject's chapters by attempts (fewer attempts first), then by theta
+  // Sort each subject's chapters:
+  // 1. Non-recent chapters first (to avoid repetition)
+  // 2. Then by attempts (fewer attempts first)
+  // 3. Then by theta (lower first)
   Object.keys(chaptersBySubject).forEach(subject => {
     chaptersBySubject[subject].sort((a, b) => {
+      // Prioritize non-recent chapters
+      if (a.isRecent !== b.isRecent) {
+        return a.isRecent ? 1 : -1; // Non-recent first
+      }
+      // Then by attempts
       if (a.attempts !== b.attempts) {
         return a.attempts - b.attempts;
       }
+      // Then by theta
       return a.theta - b.theta;
     });
   });
@@ -168,8 +254,13 @@ function selectChaptersForExploration(chapterThetas, count = 7) {
     }
   }
 
+  // Count how many selected chapters were from recent quizzes
+  const recentSelectedCount = selected.filter(c => recentChapters.has(c)).length;
+
   logger.info('Chapters selected for exploration with subject diversity', {
     selected,
+    recentChaptersAvoided: recentChapters.size,
+    recentChaptersStillSelected: recentSelectedCount,
     subjectDistribution: {
       physics: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'physics').length,
       chemistry: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'chemistry').length,
@@ -183,12 +274,18 @@ function selectChaptersForExploration(chapterThetas, count = 7) {
 /**
  * Select chapters for exploitation phase (deliberate practice)
  * Prioritizes weak chapters (low theta), ensuring subject diversity
- * 
+ * Avoids chapters from recent quizzes to ensure variety
+ *
  * @param {Object} chapterThetas - Object mapping chapterKey to theta data
  * @param {number} count - Number of chapters to select
+ * @param {Object} options - Selection options
+ * @param {Set} options.recentChapters - Chapters from recent quizzes to deprioritize
+ * @param {number} options.maxOverlap - Maximum number of recent chapters to allow (default: 30% of count)
  * @returns {Array} Selected chapter keys
  */
-function selectChaptersForExploitation(chapterThetas, count = 6) {
+function selectChaptersForExploitation(chapterThetas, count = 6, options = {}) {
+  const { recentChapters = new Set(), maxOverlap = Math.floor(count * MAX_CHAPTER_OVERLAP_RATIO) } = options;
+
   // Group chapters by subject
   const chaptersBySubject = {
     physics: [],
@@ -197,6 +294,7 @@ function selectChaptersForExploitation(chapterThetas, count = 6) {
   };
 
   // Extract subject from chapter key and filter for explored chapters (>= 2 attempts)
+  // Mark chapters that were recently tested
   Object.entries(chapterThetas)
     .filter(([_, data]) => (data.attempts || 0) >= 2) // At least 2 attempts (explored)
     .forEach(([key, data]) => {
@@ -205,15 +303,23 @@ function selectChaptersForExploitation(chapterThetas, count = 6) {
         chaptersBySubject[subject].push({
           chapter_key: key,
           theta: data.theta || 0,
-          attempts: data.attempts || 0
+          attempts: data.attempts || 0,
+          isRecent: recentChapters.has(key) // Flag for recently tested chapters
         });
       }
     });
 
-  // Sort each subject's chapters by theta (lower = weaker = priority), then by attempts
+  // Sort each subject's chapters:
+  // 1. Non-recent chapters first (to avoid repetition)
+  // 2. Then by theta (lower = weaker = priority)
+  // 3. Then by attempts (more data = better estimates)
   Object.keys(chaptersBySubject).forEach(subject => {
     chaptersBySubject[subject].sort((a, b) => {
-      // Prioritize lower theta (weaker areas)
+      // Prioritize non-recent chapters
+      if (a.isRecent !== b.isRecent) {
+        return a.isRecent ? 1 : -1; // Non-recent first
+      }
+      // Then by theta (lower = weaker = priority)
       if (Math.abs(a.theta - b.theta) > 0.1) {
         return a.theta - b.theta;
       }
@@ -293,8 +399,13 @@ function selectChaptersForExploitation(chapterThetas, count = 6) {
     }
   }
 
+  // Count how many selected chapters were from recent quizzes
+  const recentSelectedCount = selected.filter(c => recentChapters.has(c)).length;
+
   logger.info('Chapters selected for exploitation with subject diversity', {
     selected,
+    recentChaptersAvoided: recentChapters.size,
+    recentChaptersStillSelected: recentSelectedCount,
     subjectDistribution: {
       physics: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'physics').length,
       chemistry: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'chemistry').length,
@@ -478,6 +589,14 @@ async function generateDailyQuizInternal(userId) {
     const excludeQuestionIds = await getRecentQuestionIds(userId);
     logger.info('Recent question IDs fetched', { userId, excludeCount: excludeQuestionIds.size });
 
+    // Get recently tested chapters to avoid repetition between consecutive quizzes
+    logger.info('Getting recently tested chapters', { userId });
+    const recentChapters = await getRecentlyTestedChapters(userId, CHAPTER_RECENCY_LOOKBACK);
+    logger.info('Recent chapters fetched for anti-repetition', {
+      userId,
+      recentChapterCount: recentChapters.size
+    });
+
     // Get review questions (1 per quiz)
     // If review questions fail (e.g., missing index), continue without them
     let reviewQuestions = [];
@@ -499,7 +618,11 @@ async function generateDailyQuizInternal(userId) {
     if (learningPhase === 'exploration') {
       logger.info('Exploration phase: selecting chapters', { userId });
       // Exploration phase: Map ability across topics
-      const selectedChapters = selectChaptersForExploration(thetaByChapter, EXPLORATION_QUESTIONS_PER_QUIZ);
+      // Pass recent chapters to avoid repetition from previous quizzes
+      const selectedChapters = selectChaptersForExploration(thetaByChapter, EXPLORATION_QUESTIONS_PER_QUIZ, {
+        recentChapters,
+        maxOverlap: Math.floor(EXPLORATION_QUESTIONS_PER_QUIZ * MAX_CHAPTER_OVERLAP_RATIO)
+      });
       logger.info('Chapters selected for exploration', { userId, selectedChapters, count: selectedChapters.length });
 
       if (selectedChapters.length === 0) {
@@ -528,7 +651,11 @@ async function generateDailyQuizInternal(userId) {
     } else {
       logger.info('Exploitation phase: selecting weak chapters', { userId });
       // Exploitation phase: Focus on weak areas
-      const selectedChapters = selectChaptersForExploitation(thetaByChapter, DELIBERATE_PRACTICE_QUESTIONS_PER_QUIZ);
+      // Pass recent chapters to avoid repetition from previous quizzes
+      const selectedChapters = selectChaptersForExploitation(thetaByChapter, DELIBERATE_PRACTICE_QUESTIONS_PER_QUIZ, {
+        recentChapters,
+        maxOverlap: Math.floor(DELIBERATE_PRACTICE_QUESTIONS_PER_QUIZ * MAX_CHAPTER_OVERLAP_RATIO)
+      });
       logger.info('Weak chapters selected', { userId, selectedChapters, count: selectedChapters.length });
 
       if (selectedChapters.length === 0) {
