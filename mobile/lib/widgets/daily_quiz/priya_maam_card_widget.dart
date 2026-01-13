@@ -41,13 +41,12 @@ class PriyaMaamCardWidget extends StatelessWidget {
                   children: [
                     Text(
                       'Priya Ma\'am',
-                      style: AppTextStyles.labelMedium.copyWith(
+                      style: AppTextStyles.priyaHeader.copyWith( // Guideline: 15px bold for header
                         color: AppColors.primaryPurple,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Text('✨', style: TextStyle(fontSize: 16)),
+                    const Text('✨', style: TextStyle(fontSize: 14)), // Slightly smaller emoji
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -65,7 +64,7 @@ class PriyaMaamCardWidget extends StatelessWidget {
     final parts = message.split('**');
     return RichText(
       text: TextSpan(
-        style: AppTextStyles.bodyMedium,
+        style: AppTextStyles.priyaMessage, // Guideline: 16px for message body
         children: parts.asMap().entries.map((entry) {
           final index = entry.key;
           final text = entry.value;
@@ -73,7 +72,7 @@ class PriyaMaamCardWidget extends StatelessWidget {
             // Odd indices are bold
             return TextSpan(
               text: text,
-              style: AppTextStyles.bodyMedium.copyWith(
+              style: AppTextStyles.priyaMessage.copyWith(
                 fontWeight: FontWeight.bold,
                 color: AppColors.primaryPurple,
               ),

@@ -72,24 +72,25 @@ class AppTextStyles {
 
   // ===========================================================================
   // BODY STYLES (Content text)
+  // Per Typography Guidelines: bodyLarge 16-17px, bodyMedium 16px, bodySmall 13px
   // ===========================================================================
 
   static TextStyle get bodyLarge => GoogleFonts.inter(
-        fontSize: 16,
+        fontSize: 17, // Updated: was 16, guideline says 16-17px
         fontWeight: FontWeight.w400,
         color: AppColors.textSecondary,
         height: 1.6,
       );
 
   static TextStyle get bodyMedium => GoogleFonts.inter(
-        fontSize: 14,
+        fontSize: 16, // Updated: was 14, guideline says 16px for options/body
         fontWeight: FontWeight.w400,
         color: AppColors.textSecondary,
         height: 1.5,
       );
 
   static TextStyle get bodySmall => GoogleFonts.inter(
-        fontSize: 12,
+        fontSize: 13, // Updated: was 12, guideline says 13px for bottom bar
         fontWeight: FontWeight.w400,
         color: AppColors.textTertiary,
         height: 1.5,
@@ -97,24 +98,25 @@ class AppTextStyles {
 
   // ===========================================================================
   // LABEL STYLES (UI labels, buttons)
+  // Per Typography Guidelines: labels 15-16px, chips/badges 12-13px
   // ===========================================================================
 
   static TextStyle get labelLarge => GoogleFonts.inter(
-        fontSize: 16,
+        fontSize: 16, // Guideline: 15-16px for labels
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
         height: 1.4,
       );
 
   static TextStyle get labelMedium => GoogleFonts.inter(
-        fontSize: 14,
+        fontSize: 15, // Updated: was 14, guideline says 15-16px for labels
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
         height: 1.4,
       );
 
   static TextStyle get labelSmall => GoogleFonts.inter(
-        fontSize: 12,
+        fontSize: 13, // Updated: was 12, guideline says 12-13px for chips/badges
         fontWeight: FontWeight.w600,
         color: AppColors.textTertiary,
         height: 1.4,
@@ -201,14 +203,14 @@ class AppTextStyles {
       );
 
   static TextStyle get bodyWhite => GoogleFonts.inter(
-        fontSize: 14,
+        fontSize: 16, // Updated: was 14, aligning with bodyMedium
         fontWeight: FontWeight.w400,
         color: AppColors.textWhite,
         height: 1.5,
       );
 
   static TextStyle get bodyWhiteLarge => GoogleFonts.inter(
-        fontSize: 16,
+        fontSize: 17, // Updated: aligning with bodyLarge
         fontWeight: FontWeight.w400,
         color: AppColors.textWhite,
         height: 1.6,
@@ -222,7 +224,7 @@ class AppTextStyles {
       );
 
   static TextStyle get labelWhite => GoogleFonts.inter(
-        fontSize: 14,
+        fontSize: 15, // Updated: was 14, aligning with labelMedium
         fontWeight: FontWeight.w600,
         color: AppColors.textWhite,
         height: 1.4,
@@ -237,30 +239,61 @@ class AppTextStyles {
 
   // ===========================================================================
   // CONTENT STYLES (from ContentConfig - for questions/solutions)
+  // Per Typography Guidelines for Quiz/Question and Solution screens
   // ===========================================================================
 
-  /// Question text style (main question display)
+  /// Question text style (main question display) - CRITICAL for readability
+  /// Guideline: 18-20px
   static TextStyle get question => GoogleFonts.inter(
-        fontSize: 18,
+        fontSize: 18, // Guideline: 18-20px
         fontWeight: FontWeight.w400,
         color: AppColors.textPrimary,
         height: 1.6,
       );
 
   /// Option text style (multiple choice options)
+  /// Guideline: 16px for answer options
   static TextStyle get option => GoogleFonts.inter(
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
+        fontSize: 16, // Guideline: 16px
+        fontWeight: FontWeight.w500, // Updated: medium weight for better readability
         color: AppColors.textPrimary,
-        height: 1.5,
+        height: 1.4,
+      );
+
+  /// Solution section header style (Quick Explanation, Step-by-Step, etc.)
+  /// Guideline: 17px semibold for section headers
+  static TextStyle get solutionHeader => GoogleFonts.inter(
+        fontSize: 17, // Guideline: 17px for section headers
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
+        height: 1.3,
       );
 
   /// Step/explanation text style
+  /// Guideline: 16px for explanation body and step text
   static TextStyle get step => GoogleFonts.inter(
-        fontSize: 16,
+        fontSize: 16, // Guideline: 16px for step text
         fontWeight: FontWeight.w400,
         color: AppColors.textSecondary,
         height: 1.6,
+      );
+
+  /// Explanation body text style
+  /// Guideline: 16px for explanation body
+  static TextStyle get explanationBody => GoogleFonts.inter(
+        fontSize: 16, // Guideline: 16px
+        fontWeight: FontWeight.w400,
+        color: AppColors.textSecondary,
+        height: 1.6,
+      );
+
+  /// Step number circle text style
+  /// Guideline: 14px for step numbers
+  static TextStyle get stepNumber => GoogleFonts.inter(
+        fontSize: 14, // Guideline: 14px for step number circles
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
+        height: 1.0,
       );
 
   /// Final answer text style
@@ -271,13 +304,30 @@ class AppTextStyles {
         height: 1.5,
       );
 
-  /// Priya's tip text style
-  static TextStyle get priyaTip => GoogleFonts.inter(
-        fontSize: 18,
+  /// Priya Ma'am header text style
+  /// Guideline: 15px bold for "Priya Ma'am ✨"
+  static TextStyle get priyaHeader => GoogleFonts.inter(
+        fontSize: 15, // Guideline: 15px for header
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
-        height: 1.8,
-        letterSpacing: 0.3,
+        height: 1.3,
+      );
+
+  /// Priya Ma'am message text style
+  /// Guideline: 16px for message body
+  static TextStyle get priyaMessage => GoogleFonts.inter(
+        fontSize: 16, // Guideline: 16px for messages
+        fontWeight: FontWeight.w400,
+        color: AppColors.textPrimary,
+        height: 1.5,
+      );
+
+  /// Priya's tip text style (legacy, kept for compatibility)
+  static TextStyle get priyaTip => GoogleFonts.inter(
+        fontSize: 16, // Updated: was 18, guideline says 16px
+        fontWeight: FontWeight.w400,
+        color: AppColors.textPrimary,
+        height: 1.5,
       );
 
   // ===========================================================================

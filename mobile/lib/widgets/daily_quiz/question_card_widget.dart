@@ -254,7 +254,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
             ],
           ),
           const SizedBox(height: 16),
-          // Question text
+          // Question text - Typography Guidelines: 18-20px
           if (widget.question.questionTextHtml != null)
             Html(
               data: widget.question.questionTextHtml,
@@ -262,15 +262,23 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                 'body': Style(
                   margin: Margins.zero,
                   padding: HtmlPaddings.zero,
+                  fontSize: FontSize(18), // Guideline: 18-20px for question text
+                  lineHeight: LineHeight(1.6),
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textPrimary,
+                ),
+                'strong': Style(
+                  fontWeight: FontWeight.w700,
+                ),
+                'b': Style(
+                  fontWeight: FontWeight.w700,
                 ),
               },
             )
           else
             Text(
               widget.question.questionText,
-              style: AppTextStyles.bodyLarge.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTextStyles.question, // Use dedicated question style (18px)
             ),
           if (widget.question.hasImage) ...[
             const SizedBox(height: 16),
@@ -506,12 +514,22 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                           'body': Style(
                             margin: Margins.zero,
                             padding: HtmlPaddings.zero,
+                            fontSize: FontSize(16), // Guideline: 16px for options
+                            lineHeight: LineHeight(1.4),
+                            fontWeight: FontWeight.w500,
+                            color: textColor,
+                          ),
+                          'strong': Style(
+                            fontWeight: FontWeight.w700,
+                          ),
+                          'b': Style(
+                            fontWeight: FontWeight.w700,
                           ),
                         },
                       )
                     : Text(
                         optionText,
-                        style: AppTextStyles.bodyMedium,
+                        style: AppTextStyles.option.copyWith(color: textColor), // 16px medium weight
                       ),
               ),
               // Label for correct/wrong answers

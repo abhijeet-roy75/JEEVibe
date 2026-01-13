@@ -137,9 +137,7 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
             children: [
               Text(
                 title,
-                style: AppTextStyles.labelMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppTextStyles.solutionHeader, // Guideline: 17px for section headers
               ),
               const SizedBox(height: 8),
               Html(
@@ -148,7 +146,15 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                   'body': Style(
                     margin: Margins.zero,
                     padding: HtmlPaddings.zero,
-                    fontSize: FontSize(14),
+                    fontSize: FontSize(16), // Guideline: 16px for explanation body
+                    lineHeight: LineHeight(1.6),
+                    color: AppColors.textSecondary,
+                  ),
+                  'strong': Style(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  'b': Style(
+                    fontWeight: FontWeight.w700,
                   ),
                 },
               ),
@@ -171,9 +177,7 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
             children: [
               Text(
                 'Step-by-Step Solution',
-                style: AppTextStyles.labelMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppTextStyles.solutionHeader, // Guideline: 17px for section headers
               ),
               const SizedBox(height: 12),
               ...steps.asMap().entries.map((entry) {
@@ -196,9 +200,8 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                         child: Center(
                           child: Text(
                             '${index + 1}',
-                            style: AppTextStyles.bodySmall.copyWith(
+                            style: AppTextStyles.stepNumber.copyWith( // Guideline: 14px for step numbers
                               color: AppColors.successGreen,
-                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
@@ -211,7 +214,15 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                             'body': Style(
                               margin: Margins.zero,
                               padding: HtmlPaddings.zero,
-                              fontSize: FontSize(14),
+                              fontSize: FontSize(16), // Guideline: 16-17px for step text
+                              lineHeight: LineHeight(1.5),
+                              color: AppColors.textSecondary,
+                            ),
+                            'strong': Style(
+                              fontWeight: FontWeight.w700,
+                            ),
+                            'b': Style(
+                              fontWeight: FontWeight.w700,
                             ),
                           },
                         ),
@@ -251,14 +262,12 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
             children: [
               Text(
                 'Why You Got This Wrong',
-                style: AppTextStyles.labelMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppTextStyles.solutionHeader, // Guideline: 17px for section headers
               ),
               const SizedBox(height: 8),
               Text(
                 'Review the explanation carefully. Understanding why you made this mistake helps you avoid it in the future.',
-                style: AppTextStyles.bodySmall,
+                style: AppTextStyles.explanationBody, // Guideline: 16px for body text
               ),
             ],
           ),
@@ -279,8 +288,7 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
             children: [
               Text(
                 'Key Takeaway',
-                style: AppTextStyles.labelMedium.copyWith(
-                  fontWeight: FontWeight.w600,
+                style: AppTextStyles.solutionHeader.copyWith( // Guideline: 16px for Key Takeaway header
                   color: AppColors.primaryPurple,
                 ),
               ),
@@ -291,7 +299,15 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                   'body': Style(
                     margin: Margins.zero,
                     padding: HtmlPaddings.zero,
-                    fontSize: FontSize(14),
+                    fontSize: FontSize(16), // Guideline: 16px for body text
+                    lineHeight: LineHeight(1.5),
+                    color: AppColors.textSecondary,
+                  ),
+                  'strong': Style(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  'b': Style(
+                    fontWeight: FontWeight.w700,
                   ),
                 },
               ),
