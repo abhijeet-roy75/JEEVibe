@@ -1,0 +1,60 @@
+{
+  "_description": "Priya Ma'am personalized message templates for analytics. Edit this file to customize messages.",
+  "_version": "1.1.0",
+  "_updated": "2025-01-13",
+  "_note": "Chapter display names are now fetched dynamically from the database via chapterMappingService",
+
+  "greetings": {
+    "morning": "Good morning, {firstName}!",
+    "afternoon": "Hey {firstName}!",
+    "evening": "Good evening, {firstName}!",
+    "night": "{firstName}, burning the midnight oil?",
+    "streak_champion": "{firstName}, my consistent star!",
+    "comeback": "Welcome back, {firstName}!"
+  },
+
+  "progress_celebration": {
+    "near_milestone_questions": "You're just {remaining} questions away from {milestone}!",
+    "hit_milestone_chapters": "{chaptersMastered} chapters mastered — impressive depth!",
+    "default": "{questionsSolved} questions and {chaptersMastered} chapters mastered — that's real progress!"
+  },
+
+  "strength_callout": {
+    "one_strongest": "Your {bestSubject} is strongest at {percent}%.",
+    "two_tied": "Your {subject1} and {subject2} are both looking solid!",
+    "all_balanced": "Nice balanced progress across all subjects!",
+    "exceptional": "Your {subject} is exceptional at {percent}% — JEE-ready!"
+  },
+
+  "focus_recommendation": {
+    "close_to_breakthrough": "For {subject}, focus on {chapter} next — you're close to a breakthrough.",
+    "needs_attention": "{chapter} needs attention — let's strengthen that foundation.",
+    "low_attempts": "Try more {chapter} questions — practice builds confidence.",
+    "no_weak_areas": "No major weak spots — keep pushing those growing chapters!"
+  },
+
+  "streak_motivation": {
+    "day_1": "Great start — come back tomorrow to build momentum!",
+    "days_2_to_6": "Keep that {streak}-day streak going!",
+    "days_7_to_13": "{streak} days strong — you're building a habit!",
+    "days_14_to_29": "{streak}-day streak! Consistency is your superpower.",
+    "days_30_plus": "Incredible {streak}-day streak — Priya Ma'am is proud!",
+    "no_streak": "Start today's quiz to get your streak going!"
+  },
+
+  "mastery_thresholds": {
+    "mastered_min_percentile": 80,
+    "growing_min_percentile": 40,
+    "focus_max_percentile": 40,
+    "exceptional_min_percentile": 85
+  },
+
+  "question_milestones": [100, 250, 500, 750, 1000, 1500, 2000, 3000, 5000],
+
+  "subject_display_names": {
+    "physics": "Physics",
+    "chemistry": "Chemistry",
+    "maths": "Maths",
+    "mathematics": "Maths"
+  }
+}

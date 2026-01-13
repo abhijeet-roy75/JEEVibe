@@ -164,6 +164,9 @@ app.use('/api/cron', cronRouter);
 const dailyQuizRouter = require('./routes/dailyQuiz');
 app.use('/api/daily-quiz', dailyQuizRouter);
 
+const analyticsRouter = require('./routes/analytics');
+app.use('/api/analytics', analyticsRouter);
+
 const snapHistoryRouter = require('./routes/snapHistory');
 app.use('/api', snapHistoryRouter);
 
@@ -211,6 +214,12 @@ app.get('/', (req, res) => {
         progress: 'GET /api/daily-quiz/progress',
         stats: 'GET /api/daily-quiz/stats',
         chapterProgress: 'GET /api/daily-quiz/chapter-progress/:chapter_key'
+      },
+      analytics: {
+        overview: 'GET /api/analytics/overview',
+        mastery: 'GET /api/analytics/mastery/:subject',
+        masteryTimeline: 'GET /api/analytics/mastery-timeline',
+        allChapters: 'GET /api/analytics/all-chapters'
       }
     }
   });
