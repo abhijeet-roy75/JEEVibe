@@ -1,34 +1,41 @@
 /// Widget tests for Assessment Loading Screen
 /// Tests timeout handling, error dialogs, and polling behavior
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
 import 'package:jeevibe_mobile/screens/assessment_loading_screen.dart';
 import 'package:jeevibe_mobile/models/assessment_response.dart';
-import 'package:jeevibe_mobile/services/api_service.dart';
-import 'package:jeevibe_mobile/services/storage_service.dart';
 
-// Generate mocks
-@GenerateMocks([ApiService, StorageService])
-import 'assessment_loading_screen_test.mocks.dart';
+// Note: Full mocking implementation requires:
+// - Adding @GenerateMocks([ApiService, StorageService]) annotation
+// - Running: dart run build_runner build
+// - Importing generated mocks file
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('AssessmentLoadingScreen', () {
-    late MockApiService mockApiService;
-    late MockStorageService mockStorageService;
-
     setUp(() {
-      mockApiService = MockApiService();
-      mockStorageService = MockStorageService();
+      // Mock setup would go here once build_runner generates mocks
     });
 
     testWidgets('should display loading UI elements', (tester) async {
       // Arrange
       final assessmentData = AssessmentData(
         assessment: {'status': 'processing'},
+        thetaByChapter: {},
+        thetaBySubject: {},
+        subjectAccuracy: {
+          'physics': {'accuracy': null, 'correct': 0, 'total': 0},
+          'chemistry': {'accuracy': null, 'correct': 0, 'total': 0},
+          'mathematics': {'accuracy': null, 'correct': 0, 'total': 0},
+        },
+        overallTheta: 0,
+        overallPercentile: 0,
+        chaptersExplored: 0,
+        chaptersConfident: 0,
+        subjectBalance: {},
       );
 
       // Act
@@ -81,6 +88,18 @@ void main() {
       // Arrange
       final assessmentData = AssessmentData(
         assessment: {'status': 'completed'},
+        thetaByChapter: {},
+        thetaBySubject: {},
+        subjectAccuracy: {
+          'physics': {'accuracy': null, 'correct': 0, 'total': 0},
+          'chemistry': {'accuracy': null, 'correct': 0, 'total': 0},
+          'mathematics': {'accuracy': null, 'correct': 0, 'total': 0},
+        },
+        overallTheta: 0,
+        overallPercentile: 0,
+        chaptersExplored: 0,
+        chaptersConfident: 0,
+        subjectBalance: {},
       );
 
       // Act
@@ -144,16 +163,4 @@ void main() {
       // Implementation requires HTTP mock
     });
   });
-});
-
-/// Note: Full implementation of these tests requires:
-/// 1. Mockito for mocking ApiService and StorageService
-/// 2. Timer mocking for testing polling behavior
-/// 3. NavigatorObserver for testing navigation
-/// 4. HTTP mock for testing API responses
-///
-/// To run these tests:
-/// 1. Add mockito dependencies to pubspec.yaml
-/// 2. Run: flutter pub run build_runner build
-/// 3. Implement mock responses in setUp
-/// 4. Run: flutter test test/widgets/assessment_loading_screen_test.dart
+}

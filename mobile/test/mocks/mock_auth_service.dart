@@ -21,7 +21,7 @@ class MockAuthService extends AuthService {
   bool get isAuthenticated => _isAuthenticated;
 
   @override
-  Future<String?> getIdToken() async {
+  Future<String?> getIdToken({bool forceRefresh = false}) async {
     return _mockToken;
   }
 

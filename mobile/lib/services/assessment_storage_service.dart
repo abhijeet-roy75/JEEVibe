@@ -1,6 +1,7 @@
 /// Assessment Storage Service
 /// Handles local persistence of initial assessment state
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AssessmentStorageService {
@@ -21,6 +22,12 @@ class AssessmentStorageService {
   AssessmentStorageService._internal();
 
   SharedPreferences? _prefs;
+
+  /// Reset internal state for testing purposes only
+  @visibleForTesting
+  void resetForTesting() {
+    _prefs = null;
+  }
 
   /// Initialize the storage service
   Future<void> initialize() async {

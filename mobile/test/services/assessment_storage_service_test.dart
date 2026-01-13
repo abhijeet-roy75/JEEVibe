@@ -10,8 +10,11 @@ void main() {
     late AssessmentStorageService service;
 
     setUp(() async {
+      // Reset SharedPreferences mock with empty values before each test
       SharedPreferences.setMockInitialValues({});
       service = AssessmentStorageService();
+      // Reset singleton's cached prefs to force it to get fresh SharedPreferences instance
+      service.resetForTesting();
       await service.initialize();
     });
 
@@ -122,8 +125,8 @@ void main() {
           questionStartTimes: {},
         );
 
-        // Assert - should still save with warning
-        expect(saved, isFalse); // Fails validation
+        // Assert - should still save with warning (code only warns, doesn't fail validation)
+        expect(saved, isTrue);
       });
     });
 
