@@ -280,24 +280,46 @@ function generatePriyaMaamMessage(userData, streakData, subjectProgress, focusAr
   parts.push(fillTemplate(greetingTemplate, { firstName }));
 
   // 2. PROGRESS CELEBRATION
-  const questionsSolved = userData.total_questions_solved || 0;
-  const chaptersMastered = countMasteredChapters(userData.theta_by_chapter || {});
-
-  const nextMilestone = findNextMilestone(questionsSolved, templates.question_milestones);
+  const questionsSolved = Number(userData.total_questions_solved || 0);
+  const chaptersMastered = Number(countMasteredChapters(userData.theta_by_chapter || {}));
 
   let progressTemplate;
-  if (nextMilestone) {
-    progressTemplate = templates.progress_celebration.near_milestone_questions;
+  
+  // Handle edge cases first - be explicit about the conditions
+  if (questionsSolved === 0 && chaptersMastered === 0) {
+    // Both are zero - new user
+    progressTemplate = templates.progress_celebration.both_zero;
+    parts.push(progressTemplate);
+  } else if (questionsSolved === 0 && chaptersMastered > 0) {
+    // Only chapters mastered (unlikely but handle it)
+    progressTemplate = templates.progress_celebration.chapters_only;
     parts.push(fillTemplate(progressTemplate, {
-      remaining: nextMilestone.remaining,
-      milestone: nextMilestone.milestone
-    }));
-  } else {
-    progressTemplate = templates.progress_celebration.default;
-    parts.push(fillTemplate(progressTemplate, {
-      questionsSolved,
       chaptersMastered
     }));
+  } else if (questionsSolved > 0 && chaptersMastered === 0) {
+    // Only questions solved, no chapters mastered yet - use questions_only template
+    progressTemplate = templates.progress_celebration.questions_only;
+    parts.push(fillTemplate(progressTemplate, {
+      questionsSolved
+    }));
+  } else if (questionsSolved > 0 && chaptersMastered > 0) {
+    // Both have values (questionsSolved > 0 && chaptersMastered > 0)
+    // Check for milestone or use default
+    const nextMilestone = findNextMilestone(questionsSolved, templates.question_milestones);
+    
+    if (nextMilestone) {
+      progressTemplate = templates.progress_celebration.near_milestone_questions;
+      parts.push(fillTemplate(progressTemplate, {
+        remaining: nextMilestone.remaining,
+        milestone: nextMilestone.milestone
+      }));
+    } else {
+      progressTemplate = templates.progress_celebration.default;
+      parts.push(fillTemplate(progressTemplate, {
+        questionsSolved,
+        chaptersMastered
+      }));
+    }
   }
 
   // 3. STRENGTH CALLOUT

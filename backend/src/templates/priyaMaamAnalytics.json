@@ -14,31 +14,34 @@
   },
 
   "progress_celebration": {
-    "near_milestone_questions": "You're just {remaining} questions away from {milestone}!",
-    "hit_milestone_chapters": "{chaptersMastered} chapters mastered — impressive depth!",
-    "default": "{questionsSolved} questions and {chaptersMastered} chapters mastered — that's real progress!"
+    "near_milestone_questions": "You're just **{remaining} questions** away from **{milestone}**!",
+    "hit_milestone_chapters": "**{chaptersMastered} chapters mastered** — impressive depth!",
+    "both_zero": "Let's get started! Complete your first quiz to begin tracking your progress.",
+    "questions_only": "**{questionsSolved} questions** completed — great start! Keep practicing to master your first chapter.",
+    "chapters_only": "**{chaptersMastered} chapters mastered** — impressive depth! Keep solving questions to build momentum.",
+    "default": "**{questionsSolved} questions** and **{chaptersMastered} chapters mastered** — that's real progress!"
   },
 
   "strength_callout": {
-    "one_strongest": "Your {bestSubject} is strongest at {percent}%.",
-    "two_tied": "Your {subject1} and {subject2} are both looking solid!",
+    "one_strongest": "Your **{bestSubject}** is strongest at **{percent}%**.",
+    "two_tied": "Your **{subject1}** and **{subject2}** are both looking solid!",
     "all_balanced": "Nice balanced progress across all subjects!",
-    "exceptional": "Your {subject} is exceptional at {percent}% — JEE-ready!"
+    "exceptional": "Your **{subject}** is exceptional at **{percent}%** — JEE-ready!"
   },
 
   "focus_recommendation": {
-    "close_to_breakthrough": "For {subject}, focus on {chapter} next — you're close to a breakthrough.",
-    "needs_attention": "{chapter} needs attention — let's strengthen that foundation.",
-    "low_attempts": "Try more {chapter} questions — practice builds confidence.",
+    "close_to_breakthrough": "For {subject}, focus on **{chapter}** next — you're close to a breakthrough.",
+    "needs_attention": "**{chapter}** needs attention — let's strengthen that foundation.",
+    "low_attempts": "Try more **{chapter}** questions — practice builds confidence.",
     "no_weak_areas": "No major weak spots — keep pushing those growing chapters!"
   },
 
   "streak_motivation": {
     "day_1": "Great start — come back tomorrow to build momentum!",
-    "days_2_to_6": "Keep that {streak}-day streak going!",
-    "days_7_to_13": "{streak} days strong — you're building a habit!",
-    "days_14_to_29": "{streak}-day streak! Consistency is your superpower.",
-    "days_30_plus": "Incredible {streak}-day streak — Priya Ma'am is proud!",
+    "days_2_to_6": "Keep that **{streak}-day streak** going!",
+    "days_7_to_13": "**{streak} days** strong — you're building a habit!",
+    "days_14_to_29": "**{streak}-day streak**! Consistency is your superpower.",
+    "days_30_plus": "Incredible **{streak}-day streak** — Priya Ma'am is proud!",
     "no_streak": "Start today's quiz to get your streak going!"
   },
 
