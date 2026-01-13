@@ -125,10 +125,15 @@ function validateAnswer(questionData, studentAnswer) {
  * @returns {Object} Feedback object
  */
 function generateFeedback(questionData, isCorrect, studentAnswer) {
+  // Ensure correct_answer is always a string (some DB entries have it as number)
+  const correctAnswer = questionData.correct_answer != null
+    ? String(questionData.correct_answer)
+    : null;
+
   const feedback = {
     is_correct: isCorrect,
-    correct_answer: questionData.correct_answer,
-    correct_answer_text: questionData.correct_answer_text || questionData.correct_answer,
+    correct_answer: correctAnswer,
+    correct_answer_text: questionData.correct_answer_text || correctAnswer,
     explanation: null,
     solution_text: questionData.solution_text || null,
     solution_steps: questionData.solution_steps || [],
@@ -238,10 +243,11 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
     const feedback = generateFeedback(questionData, validation.isCorrect, validation.validatedAnswer);
 
     // Prepare response data
+    // Ensure correct_answer is always stored as string for consistency
     const now = admin.firestore.Timestamp.now();
     const responseData = {
       student_answer: validation.validatedAnswer,
-      correct_answer: questionData.correct_answer,
+      correct_answer: questionData.correct_answer != null ? String(questionData.correct_answer) : null,
       is_correct: validation.isCorrect,
       time_taken_seconds: validatedTime,
       answered_at: now,
