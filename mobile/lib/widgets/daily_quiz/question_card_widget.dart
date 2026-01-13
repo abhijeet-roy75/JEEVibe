@@ -355,42 +355,45 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
   }
 
   Widget _buildNumericalInput() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(
-          color: AppColors.borderGray,
-          width: 1,
+    return TextField(
+      controller: _numericalController,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+      decoration: InputDecoration(
+        hintText: 'Enter your answer',
+        hintStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.textLight,
         ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: _numericalController,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
-        decoration: InputDecoration(
-          hintText: 'Enter your answer',
-          hintStyle: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textLight,
-          ),
-          border: InputBorder.none,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderGray),
         ),
-        style: AppTextStyles.bodyMedium,
-        onChanged: (value) {
-          // Update provider state - DO NOT call setState here
-          // The button will update via ValueListenableBuilder below
-          if (widget.onAnswerSelected != null) {
-            // Only update if value is not empty, or if it's empty (to allow deletion)
-            // We want to store empty string so the button disables, but validation will catch it
-            widget.onAnswerSelected!(value);
-          }
-        },
-        onSubmitted: (value) {
-          if (widget.onAnswerSelected != null) {
-            widget.onAnswerSelected!(value);
-          }
-        },
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderGray),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primaryPurple, width: 2),
+        ),
+        contentPadding: const EdgeInsets.all(16),
       ),
+      style: AppTextStyles.bodyMedium,
+      onChanged: (value) {
+        // Update provider state - DO NOT call setState here
+        // The button will update via ValueListenableBuilder below
+        if (widget.onAnswerSelected != null) {
+          // Only update if value is not empty, or if it's empty (to allow deletion)
+          // We want to store empty string so the button disables, but validation will catch it
+          widget.onAnswerSelected!(value);
+        }
+      },
+      onSubmitted: (value) {
+        if (widget.onAnswerSelected != null) {
+          widget.onAnswerSelected!(value);
+        }
+      },
     );
   }
 

@@ -264,25 +264,28 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
   Widget _buildSummaryCards() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _buildSummaryCard('Total', '$_totalQuestions', AppColors.primaryPurple),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildSummaryCard('Correct', '$_correctCount', AppColors.successGreen),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildSummaryCard('Wrong', '$_wrongCount', AppColors.errorRed),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildSummaryCard('Avg Time', _formatTime(_avgTimeSeconds), AppColors.primaryPurple),
-          ),
-        ],
+      // IntrinsicHeight ensures Row children can use CrossAxisAlignment.stretch properly
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: _buildSummaryCard('Total', '$_totalQuestions', AppColors.primaryPurple),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard('Correct', '$_correctCount', AppColors.successGreen),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard('Wrong', '$_wrongCount', AppColors.errorRed),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard('Avg Time', _formatTime(_avgTimeSeconds), AppColors.primaryPurple),
+            ),
+          ],
+        ),
       ),
     );
   }

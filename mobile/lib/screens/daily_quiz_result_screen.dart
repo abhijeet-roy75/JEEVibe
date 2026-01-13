@@ -144,11 +144,11 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
     final secs = seconds % 60;
 
     if (minutes > 0 && secs > 0) {
-      return '$minutes minutes $secs seconds';
+      return '${minutes}m ${secs}s';
     } else if (minutes > 0) {
-      return '$minutes ${minutes == 1 ? "minute" : "minutes"}';
+      return '${minutes}m';
     } else {
-      return '$secs ${secs == 1 ? "second" : "seconds"}';
+      return '${secs}s';
     }
   }
 
@@ -618,109 +618,111 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          // Stats with better layout and smaller text (using crossAxisAlignment for better performance)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Score
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '$_score/$_total',
-                      style: AppTextStyles.headerLarge.copyWith(
-                        color: AppColors.primaryPurple,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+          // Stats with dividers - use IntrinsicHeight to allow stretch cross-axis alignment
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Score
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '$_score/$_total',
+                        style: AppTextStyles.headerLarge.copyWith(
+                          color: AppColors.primaryPurple,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Score',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textLight,
+                      const SizedBox(height: 4),
+                      Text(
+                        'Score',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textLight,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Container(
-                width: 1,
-                color: AppColors.borderGray,
-              ),
-              // Time
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.timer_outlined,
-                            color: AppColors.primaryPurple, size: 18),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            _formatTime(_totalTimeSeconds),
+                Container(
+                  width: 1,
+                  color: AppColors.borderGray,
+                ),
+                // Time
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.timer_outlined,
+                              color: AppColors.primaryPurple, size: 18),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              _formatTime(_totalTimeSeconds),
+                              style: AppTextStyles.headerLarge.copyWith(
+                                color: AppColors.primaryPurple,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Time',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textLight,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  color: AppColors.borderGray,
+                ),
+                // Accuracy
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.trending_up,
+                              color: AppColors.primaryPurple, size: 18),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${(_accuracy * 100).toInt()}%',
                             style: AppTextStyles.headerLarge.copyWith(
                               color: AppColors.primaryPurple,
-                              fontSize: 16,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
-                            textAlign: TextAlign.center,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Time',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textLight,
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 1,
-                color: AppColors.borderGray,
-              ),
-              // Accuracy
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.trending_up,
-                            color: AppColors.primaryPurple, size: 18),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${(_accuracy * 100).toInt()}%',
-                          style: AppTextStyles.headerLarge.copyWith(
-                            color: AppColors.primaryPurple,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Accuracy',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textLight,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Accuracy',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textLight,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -906,7 +908,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
             onPressed: () {
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (context) => const HomeScreen()),
-                (route) => route.isFirst,
+                (route) => false, // Remove all routes, make HomeScreen the new root
               );
             },
             size: GradientButtonSize.large,
