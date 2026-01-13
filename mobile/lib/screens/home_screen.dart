@@ -20,6 +20,7 @@ import '../services/storage_service.dart';
 import '../utils/text_preprocessor.dart';
 import '../widgets/subject_icon_widget.dart';
 import '../widgets/priya_avatar.dart';
+import 'assessment_intro_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -402,7 +403,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBackToDashboardButton() {
     return GradientButton(
       text: 'Back to Dashboard',
-      onPressed: () => Navigator.of(context).pop(),
+      onPressed: () {
+        // Navigate to main home screen (AssessmentIntroScreen) where snap-and-solve card is
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
+          (route) => false,
+        );
+      },
       size: GradientButtonSize.large,
       leadingIcon: Icons.home,
     );

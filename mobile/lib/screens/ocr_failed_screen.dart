@@ -6,6 +6,7 @@ import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
 import '../widgets/buttons/gradient_button.dart';
 import '../widgets/buttons/icon_button.dart';
+import 'assessment_intro_screen.dart';
 
 class OCRFailedScreen extends StatelessWidget {
   final String? errorMessage;
@@ -298,8 +299,11 @@ class OCRFailedScreen extends StatelessWidget {
         AppOutlinedButton(
           text: 'Back to Dashboard',
           onPressed: () {
-            // Pop all the way back to home
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            // Navigate to main home screen (AssessmentIntroScreen) where snap-and-solve card is
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
+              (route) => false,
+            );
           },
         ),
       ],

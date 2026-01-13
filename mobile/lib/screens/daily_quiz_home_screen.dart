@@ -18,6 +18,7 @@ import '../widgets/daily_quiz/subject_progress_widget.dart';
 import '../providers/daily_quiz_provider.dart';
 import '../utils/error_handler.dart';
 import 'daily_quiz_loading_screen.dart';
+import 'analytics_screen.dart';
 
 enum UserState {
   newUserDay1,
@@ -1037,20 +1038,85 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with title and icon
+          // Header with title and View Insights link
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(
-                Icons.bar_chart,
-                size: 24,
-                color: AppColors.primaryPurple,
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.bar_chart,
+                      size: 20,
+                      color: AppColors.primaryPurple,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Assessment',
+                        style: AppTextStyles.headerSmall.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Your Assessment Results',
-                style: AppTextStyles.headerSmall.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+              // Analytics link with PRO badge
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AnalyticsScreen(),
+                    ),
+                  );
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.star,
+                            color: AppColors.primaryPurple,
+                            size: 10,
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            'PRO',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.primaryPurple,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Analytics',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.primaryPurple,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 12,
+                      color: AppColors.primaryPurple,
+                    ),
+                  ],
                 ),
               ),
             ],

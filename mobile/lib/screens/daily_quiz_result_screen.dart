@@ -11,7 +11,8 @@ import '../theme/app_text_styles.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/buttons/gradient_button.dart';
 import 'daily_quiz_review_screen.dart';
-import 'home_screen.dart';
+import 'assessment_intro_screen.dart';
+import 'analytics_screen.dart';
 
 class DailyQuizResultScreen extends StatefulWidget {
   final String quizId;
@@ -476,11 +477,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
   Widget _buildHeader() {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
+        gradient: AppColors.ctaGradient,
       ),
       child: SafeArea(
         bottom: false,
@@ -902,13 +899,31 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
             },
           ),
           const SizedBox(height: 12),
+          // View Insights button
+          _buildActionButton(
+            icon: Icons.insights,
+            iconColor: AppColors.primaryPurple,
+            label: 'View Insights',
+            backgroundColor: AppColors.primaryPurple.withValues(alpha: 0.1),
+            textColor: AppColors.primaryPurple,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AnalyticsScreen(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
           // Back to Dashboard button
           GradientButton(
             text: 'Back to Dashboard',
             onPressed: () {
+              // Navigate to main home screen (AssessmentIntroScreen) where snap-and-solve card is
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const HomeScreen()),
-                (route) => false, // Remove all routes, make HomeScreen the new root
+                MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
+                (route) => false, // Remove all routes, make AssessmentIntroScreen the new root
               );
             },
             size: GradientButtonSize.large,
@@ -924,7 +939,9 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
     required String label,
     required Color backgroundColor,
     required VoidCallback onTap,
+    Color? textColor,
   }) {
+    final effectiveTextColor = textColor ?? Colors.white;
     return Container(
       width: double.infinity,
       height: 56,
@@ -944,18 +961,18 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(icon, color: Colors.white, size: 20),
+                    Icon(icon, color: iconColor, size: 20),
                     const SizedBox(width: 12),
                     Text(
                       label,
                       style: AppTextStyles.labelMedium.copyWith(
-                        color: Colors.white,
+                        color: effectiveTextColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-                const Icon(Icons.chevron_right, color: Colors.white, size: 24),
+                Icon(Icons.chevron_right, color: effectiveTextColor, size: 24),
               ],
             ),
           ),

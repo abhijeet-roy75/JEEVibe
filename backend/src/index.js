@@ -170,6 +170,9 @@ app.use('/api/analytics', analyticsRouter);
 const snapHistoryRouter = require('./routes/snapHistory');
 app.use('/api', snapHistoryRouter);
 
+const feedbackRouter = require('./routes/feedback');
+app.use('/api/feedback', feedbackRouter);
+
 // Test endpoints (only in development)
 if (process.env.NODE_ENV !== 'production') {
   const testFirebaseRouter = require('./routes/test-firebase');

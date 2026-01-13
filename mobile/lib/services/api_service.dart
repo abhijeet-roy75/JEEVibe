@@ -856,5 +856,45 @@ class ApiService {
       }
     });
   }
+
+  /// Submit user feedback
+  /// Requires Firebase ID token for authentication
+  static Future<void> submitFeedback({
+    required String authToken,
+    required Map<String, dynamic> feedbackData,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/feedback'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+          body: json.encode(feedbackData),
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Failed to submit feedback';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to submit feedback';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to submit feedback: ${e.toString()}');
+      }
+    });
+  }
 }
 

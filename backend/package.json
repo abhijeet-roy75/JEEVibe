@@ -46,7 +46,8 @@
     "openai": "^6.9.1",
     "opossum": "^6.2.0",
     "uuid": "^9.0.1",
-    "winston": "^3.11.0"
+    "winston": "^3.11.0",
+    "nodemailer": "^6.9.8"
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",

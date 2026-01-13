@@ -1,7 +1,7 @@
 name: jeevibe_mobile
 description: JEEVibe Snap & Solve POC - iOS Flutter App
 publish_to: 'none'
-version: 1.0.1+35
+version: 1.0.1+36
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -42,6 +42,9 @@ dependencies:
   cupertino_icons: ^1.0.6
   image_cropper: 8.0.2
   google_fonts: ^6.2.1
+
+  # Charts
+  fl_chart: ^0.68.0
   
   # Firebase - Updated to latest versions for Xcode 26.1.1 compatibility
   firebase_core: ^3.8.1
@@ -61,6 +64,7 @@ dependencies:
 
   # App Info
   package_info_plus: ^8.0.0
+  device_info_plus: ^10.1.0
 
 dependency_overrides:
   image_cropper_platform_interface: 7.0.0

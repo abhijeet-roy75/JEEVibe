@@ -3,13 +3,16 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../screens/analytics_screen.dart';
 
 class SubjectProgressWidget extends StatelessWidget {
   final Map<String, dynamic> subjects;
+  final bool showViewInsights;
 
   const SubjectProgressWidget({
     super.key,
     required this.subjects,
+    this.showViewInsights = true,
   });
 
   Color _getSubjectColor(String subject) {
@@ -86,7 +89,36 @@ class SubjectProgressWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              // View All button removed
+              // View Insights link
+              if (showViewInsights)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AnalyticsScreen(),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'View Insights',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.primaryPurple,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 12,
+                        color: AppColors.primaryPurple,
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 16),
