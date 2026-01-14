@@ -1,6 +1,6 @@
 /**
  * Email Service
- * 
+ *
  * Handles sending emails for feedback notifications
  * Uses nodemailer with Gmail SMTP (or other SMTP provider)
  */
@@ -9,7 +9,7 @@ const logger = require('../utils/logger');
 
 // Email configuration from environment variables
 const getEmailConfig = () => {
-  return {
+  const config = {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.SMTP_PORT || '587', 10),
     secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
@@ -18,17 +18,164 @@ const getEmailConfig = () => {
       pass: process.env.SMTP_PASSWORD,
     },
   };
+
+  // Debug log the config (mask password)
+  logger.debug('Email config loaded', {
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    user: config.auth.user || '(not set)',
+    passwordSet: !!config.auth.pass,
+    passwordLength: config.auth.pass ? config.auth.pass.length : 0,
+  });
+
+  return config;
 };
 
 // Recipient emails (comma-separated in env, or default)
 const getRecipientEmails = () => {
   const envEmails = process.env.FEEDBACK_EMAIL_RECIPIENTS;
   if (envEmails) {
-    return envEmails.split(',').map(email => email.trim());
+    const emails = envEmails.split(',').map(email => email.trim());
+    logger.debug('Using custom recipient emails from env', { recipients: emails });
+    return emails;
   }
   // Default recipients
-  return ['aroy75@gmail.com', 'satishshetty@gmail.com'];
+  const defaultEmails = ['aroy75@gmail.com', 'satishshetty@gmail.com'];
+  logger.debug('Using default recipient emails', { recipients: defaultEmails });
+  return defaultEmails;
 };
+
+/**
+ * Check email configuration status
+ * Returns diagnostic information about email setup
+ */
+function getEmailDiagnostics() {
+  const config = getEmailConfig();
+  const recipients = getRecipientEmails();
+
+  let nodemailerInstalled = false;
+  let nodemailerVersion = null;
+  try {
+    const nodemailer = require('nodemailer');
+    nodemailerInstalled = true;
+    nodemailerVersion = require('nodemailer/package.json').version;
+  } catch (e) {
+    // nodemailer not installed
+  }
+
+  return {
+    nodemailerInstalled,
+    nodemailerVersion,
+    smtpHost: config.host,
+    smtpPort: config.port,
+    smtpSecure: config.secure,
+    smtpUserConfigured: !!config.auth.user,
+    smtpUser: config.auth.user ? `${config.auth.user.substring(0, 3)}***` : '(not set)',
+    smtpPasswordConfigured: !!config.auth.pass,
+    smtpPasswordLength: config.auth.pass ? config.auth.pass.length : 0,
+    recipients,
+    feedbackFeatureEnabled: process.env.ENABLE_FEEDBACK_FEATURE === 'true' || process.env.ENABLE_FEEDBACK_FEATURE === '1',
+  };
+}
+
+/**
+ * Test email configuration by verifying SMTP connection
+ * @returns {Object} Test result with success status and details
+ */
+async function testEmailConnection() {
+  const diagnostics = getEmailDiagnostics();
+  const result = {
+    timestamp: new Date().toISOString(),
+    diagnostics,
+    tests: [],
+  };
+
+  // Test 1: Check nodemailer installation
+  if (!diagnostics.nodemailerInstalled) {
+    result.tests.push({
+      name: 'nodemailer_installed',
+      passed: false,
+      error: 'nodemailer is not installed. Run: npm install nodemailer',
+    });
+    result.overallStatus = 'FAILED';
+    return result;
+  }
+  result.tests.push({
+    name: 'nodemailer_installed',
+    passed: true,
+    version: diagnostics.nodemailerVersion,
+  });
+
+  // Test 2: Check SMTP credentials
+  if (!diagnostics.smtpUserConfigured || !diagnostics.smtpPasswordConfigured) {
+    result.tests.push({
+      name: 'smtp_credentials',
+      passed: false,
+      error: 'SMTP credentials not configured. Set SMTP_USER and SMTP_PASSWORD environment variables.',
+      smtpUserSet: diagnostics.smtpUserConfigured,
+      smtpPasswordSet: diagnostics.smtpPasswordConfigured,
+    });
+    result.overallStatus = 'FAILED';
+    return result;
+  }
+  result.tests.push({
+    name: 'smtp_credentials',
+    passed: true,
+  });
+
+  // Test 3: Verify SMTP connection
+  try {
+    const nodemailer = require('nodemailer');
+    const config = getEmailConfig();
+    const transporter = nodemailer.createTransport(config);
+
+    logger.info('Testing SMTP connection...', {
+      host: config.host,
+      port: config.port,
+    });
+
+    await transporter.verify();
+
+    result.tests.push({
+      name: 'smtp_connection',
+      passed: true,
+      message: 'SMTP connection verified successfully',
+    });
+    result.overallStatus = 'PASSED';
+  } catch (error) {
+    result.tests.push({
+      name: 'smtp_connection',
+      passed: false,
+      error: error.message,
+      errorCode: error.code,
+      errorCommand: error.command,
+      hint: getSmtpErrorHint(error),
+    });
+    result.overallStatus = 'FAILED';
+  }
+
+  return result;
+}
+
+/**
+ * Get helpful hints for common SMTP errors
+ */
+function getSmtpErrorHint(error) {
+  if (error.code === 'EAUTH') {
+    return 'Authentication failed. For Gmail: 1) Enable 2FA, 2) Create an App Password at https://myaccount.google.com/apppasswords, 3) Use the App Password (not your regular password) for SMTP_PASSWORD';
+  }
+  if (error.code === 'ESOCKET' || error.code === 'ECONNECTION') {
+    return 'Could not connect to SMTP server. Check SMTP_HOST and SMTP_PORT. For Gmail use smtp.gmail.com:587';
+  }
+  if (error.code === 'ETIMEDOUT') {
+    return 'Connection timed out. The SMTP server may be unreachable or blocked by firewall.';
+  }
+  if (error.message && error.message.includes('Invalid login')) {
+    return 'Invalid credentials. For Gmail, you must use an App Password, not your regular password.';
+  }
+  return null;
+}
 
 /**
  * Send feedback notification email
@@ -41,33 +188,71 @@ const getRecipientEmails = () => {
  * @param {Object} feedbackData.context - Context data
  */
 async function sendFeedbackEmail(feedbackData) {
+  const logContext = {
+    feedbackId: feedbackData.feedbackId,
+    userId: feedbackData.userId,
+  };
+
+  logger.info('=== FEEDBACK EMAIL: Starting send process ===', logContext);
+
   try {
+    // Step 1: Get email config
+    logger.info('Step 1/5: Loading email configuration...', logContext);
     const emailConfig = getEmailConfig();
-    
+
     // Check if email is configured
     if (!emailConfig.auth.user || !emailConfig.auth.pass) {
-      logger.warn('Email service not configured. Skipping email notification.', {
-        feedbackId: feedbackData.feedbackId,
+      logger.warn('=== FEEDBACK EMAIL: SKIPPED - Email service not configured ===', {
+        ...logContext,
+        reason: 'SMTP credentials missing',
+        smtpUserSet: !!emailConfig.auth.user,
+        smtpPasswordSet: !!emailConfig.auth.pass,
+        hint: 'Set SMTP_USER and SMTP_PASSWORD environment variables',
       });
-      return;
+      return { sent: false, reason: 'SMTP not configured' };
     }
+    logger.info('Step 1/5: Email config loaded successfully', {
+      ...logContext,
+      host: emailConfig.host,
+      port: emailConfig.port,
+    });
 
-    // Try to load nodemailer (optional dependency)
+    // Step 2: Load nodemailer
+    logger.info('Step 2/5: Loading nodemailer...', logContext);
     let nodemailer;
     try {
       nodemailer = require('nodemailer');
-    } catch (error) {
-      logger.warn('nodemailer not installed. Install it to enable email notifications: npm install nodemailer', {
-        feedbackId: feedbackData.feedbackId,
+      logger.info('Step 2/5: nodemailer loaded successfully', {
+        ...logContext,
+        version: require('nodemailer/package.json').version,
       });
-      return;
+    } catch (error) {
+      logger.error('=== FEEDBACK EMAIL: FAILED - nodemailer not installed ===', {
+        ...logContext,
+        error: error.message,
+        hint: 'Run: npm install nodemailer',
+      });
+      return { sent: false, reason: 'nodemailer not installed' };
     }
 
-    // Create transporter
+    // Step 3: Create transporter
+    logger.info('Step 3/5: Creating SMTP transporter...', logContext);
     const transporter = nodemailer.createTransport(emailConfig);
 
-    // Verify connection
-    await transporter.verify();
+    // Step 4: Verify connection
+    logger.info('Step 4/5: Verifying SMTP connection...', logContext);
+    try {
+      await transporter.verify();
+      logger.info('Step 4/5: SMTP connection verified successfully', logContext);
+    } catch (verifyError) {
+      logger.error('=== FEEDBACK EMAIL: FAILED - SMTP verification failed ===', {
+        ...logContext,
+        error: verifyError.message,
+        errorCode: verifyError.code,
+        hint: getSmtpErrorHint(verifyError),
+      });
+      throw verifyError;
+    }
 
     // Prepare email content
     const recipientEmails = getRecipientEmails();
@@ -176,7 +361,13 @@ Device & App Info:
 - Timestamp: ${feedbackData.context.timestamp || 'N/A'}
 `;
 
-    // Send email
+    // Step 5: Send email
+    logger.info('Step 5/5: Sending email...', {
+      ...logContext,
+      recipients: recipientEmails,
+      subject: `JEEVibe Feedback - ${ratingStars} Rating`,
+    });
+
     const info = await transporter.sendMail({
       from: `"JEEVibe Feedback" <${emailConfig.auth.user}>`,
       to: recipientEmails.join(', '),
@@ -185,18 +376,28 @@ Device & App Info:
       html: htmlContent,
     });
 
-    logger.info('Feedback email sent successfully', {
-      feedbackId: feedbackData.feedbackId,
-      userId: feedbackData.userId,
+    logger.info('=== FEEDBACK EMAIL: SUCCESS ===', {
+      ...logContext,
       messageId: info.messageId,
+      response: info.response,
+      accepted: info.accepted,
+      rejected: info.rejected,
       recipients: recipientEmails,
     });
+
+    return {
+      sent: true,
+      messageId: info.messageId,
+      recipients: recipientEmails,
+    };
   } catch (error) {
-    logger.error('Error sending feedback email', {
-      feedbackId: feedbackData.feedbackId,
-      userId: feedbackData.userId,
+    logger.error('=== FEEDBACK EMAIL: FAILED ===', {
+      ...logContext,
       error: error.message,
+      errorCode: error.code,
+      errorCommand: error.command,
       stack: error.stack,
+      hint: getSmtpErrorHint(error),
     });
     throw error;
   }
@@ -204,4 +405,6 @@ Device & App Info:
 
 module.exports = {
   sendFeedbackEmail,
+  getEmailDiagnostics,
+  testEmailConnection,
 };
