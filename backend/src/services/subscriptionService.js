@@ -46,23 +46,55 @@ async function getEffectiveTier(userId) {
     // 1. Check override (beta testers, promotions) - HIGHEST PRIORITY
     if (userData.subscription?.override) {
       const override = userData.subscription.override;
-      const expiresAt = override.expires_at?.toDate ? override.expires_at.toDate() : new Date(override.expires_at);
 
-      if (expiresAt > now) {
-        logger.info('User has active override', {
+      // SECURITY: Validate required override fields strictly
+      const validTiers = ['pro', 'ultra'];
+      const tier = override.tier_id;
+
+      if (!tier || !validTiers.includes(tier)) {
+        logger.warn('Invalid or missing tier_id in override, ignoring', {
           userId,
-          tier: override.tier_id || 'ultra',
-          type: override.type,
-          expires_at: expiresAt.toISOString()
+          tier_id: tier,
+          override_type: override.type
         });
+        // Don't use override - fall through to other checks
+      } else {
+        // Parse expiry date safely
+        let expiresAt = null;
+        try {
+          if (override.expires_at?.toDate) {
+            expiresAt = override.expires_at.toDate();
+          } else if (override.expires_at) {
+            expiresAt = new Date(override.expires_at);
+          }
 
-        return {
-          tier: override.tier_id || 'ultra',
-          source: 'override',
-          expires_at: expiresAt.toISOString(),
-          override_type: override.type,
-          override_reason: override.reason
-        };
+          // Validate the parsed date is valid
+          if (!expiresAt || isNaN(expiresAt.getTime())) {
+            logger.warn('Invalid expires_at in override, ignoring', { userId, expires_at: override.expires_at });
+            expiresAt = null;
+          }
+        } catch (e) {
+          logger.warn('Error parsing override expires_at', { userId, error: e.message });
+          expiresAt = null;
+        }
+
+        // Only use override if expiry is valid and in the future
+        if (expiresAt && expiresAt > now) {
+          logger.info('User has active override', {
+            userId,
+            tier: tier,
+            type: override.type,
+            expires_at: expiresAt.toISOString()
+          });
+
+          return {
+            tier: tier,
+            source: 'override',
+            expires_at: expiresAt.toISOString(),
+            override_type: override.type,
+            override_reason: override.reason
+          };
+        }
       }
     }
 

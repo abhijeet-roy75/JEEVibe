@@ -19,7 +19,7 @@ const { ApiError } = require('../middleware/errorHandler');
 const { body, validationResult } = require('express-validator');
 
 // Subscription & Usage Services
-const { canUse, incrementUsage, getUsage } = require('../services/usageTrackingService');
+const { incrementUsage, decrementUsage, getUsage } = require('../services/usageTrackingService');
 
 // Services
 const { generateDailyQuiz } = require('../services/dailyQuizService');
@@ -152,33 +152,36 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
       });
     }
 
-    // Check daily quiz limit based on user's tier
-    const usageCheck = await canUse(userId, 'daily_quiz');
-    if (!usageCheck.allowed) {
+    // RACE CONDITION FIX: Reserve usage slot BEFORE generating quiz
+    // This atomically checks limit AND increments in one transaction
+    // If limit is reached, the increment is rejected and we return 429
+    const usageReservation = await incrementUsage(userId, 'daily_quiz');
+
+    if (!usageReservation.allowed) {
       logger.warn('Daily quiz limit reached', {
         userId,
-        tier: usageCheck.tier,
-        used: usageCheck.used,
-        limit: usageCheck.limit
+        tier: usageReservation.tier,
+        used: usageReservation.used,
+        limit: usageReservation.limit
       });
 
       return res.status(429).json({
         success: false,
         error: {
           code: 'LIMIT_REACHED',
-          message: usageCheck.tier === 'free'
+          message: usageReservation.tier === 'free'
             ? 'You have used your free daily quiz. Upgrade to Pro for 10 quizzes per day!'
-            : `Daily limit of ${usageCheck.limit} quizzes reached. Come back tomorrow!`,
-          details: `Daily quiz limit: ${usageCheck.limit} per day (resets at midnight IST)`
+            : `Daily limit of ${usageReservation.limit} quizzes reached. Come back tomorrow!`,
+          details: `Daily quiz limit: ${usageReservation.limit} per day (resets at midnight IST)`
         },
         usage: {
-          used: usageCheck.used,
-          limit: usageCheck.limit,
+          used: usageReservation.used,
+          limit: usageReservation.limit,
           remaining: 0,
-          resets_at: usageCheck.resets_at
+          resets_at: usageReservation.resets_at
         },
-        tier: usageCheck.tier,
-        upgrade_prompt: usageCheck.tier === 'free' ? {
+        tier: usageReservation.tier,
+        upgrade_prompt: usageReservation.tier === 'free' ? {
           message: 'Upgrade to Pro for 10 daily quizzes',
           cta: 'Upgrade Now'
         } : null,
@@ -186,15 +189,45 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
       });
     }
 
-    // Generate new quiz
-    logger.info('Generating daily quiz', { userId, requestId: req.id });
-    const quizData = await generateDailyQuiz(userId);
-    logger.info('Daily quiz generated successfully', {
+    // Usage slot reserved successfully - now generate the quiz
+    // If quiz generation fails, we rollback the usage reservation
+    logger.info('Generating daily quiz (usage reserved)', {
       userId,
-      quizId: quizData.quiz_id,
-      questionCount: quizData.questions?.length || 0,
+      usageUsed: usageReservation.used,
+      usageLimit: usageReservation.limit,
       requestId: req.id
     });
+
+    let quizData;
+    try {
+      quizData = await generateDailyQuiz(userId);
+      logger.info('Daily quiz generated successfully', {
+        userId,
+        quizId: quizData.quiz_id,
+        questionCount: quizData.questions?.length || 0,
+        requestId: req.id
+      });
+    } catch (quizGenerationError) {
+      // ROLLBACK: Quiz generation failed, restore the usage slot
+      logger.error('Quiz generation failed, rolling back usage reservation', {
+        userId,
+        error: quizGenerationError.message,
+        requestId: req.id
+      });
+
+      // Attempt to rollback - non-blocking (best effort)
+      if (!usageReservation.is_unlimited) {
+        decrementUsage(userId, 'daily_quiz').catch(rollbackError => {
+          logger.error('Usage rollback failed', {
+            userId,
+            error: rollbackError.message,
+            requestId: req.id
+          });
+        });
+      }
+
+      throw quizGenerationError;
+    }
 
     // Save quiz to Firestore atomically using transaction to prevent concurrent generation
     const quizRef = db.collection('daily_quizzes')
@@ -325,15 +358,7 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
       });
     }
 
-    // Increment daily quiz usage (tier-based tracking)
-    const updatedUsage = await incrementUsage(userId, 'daily_quiz');
-    logger.info('Daily quiz usage incremented', {
-      userId,
-      tier: updatedUsage.tier,
-      used: updatedUsage.used,
-      limit: updatedUsage.limit
-    });
-
+    // Usage was already reserved at the beginning - use those values
     res.json({
       success: true,
       quiz: {
@@ -346,14 +371,14 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
       },
       usage: {
         daily_quiz: {
-          used: updatedUsage.used,
-          limit: updatedUsage.limit,
-          remaining: updatedUsage.is_unlimited ? -1 : updatedUsage.remaining,
-          is_unlimited: updatedUsage.is_unlimited,
-          resets_at: updatedUsage.resets_at
+          used: usageReservation.used,
+          limit: usageReservation.limit,
+          remaining: usageReservation.is_unlimited ? -1 : usageReservation.remaining,
+          is_unlimited: usageReservation.is_unlimited,
+          resets_at: usageReservation.resets_at
         }
       },
-      tier: updatedUsage.tier,
+      tier: usageReservation.tier,
       requestId: req.id
     });
   } catch (error) {
@@ -620,6 +645,19 @@ router.post('/complete', authenticateUser, validateQuizId, async (req, res, next
         }
 
         const quizData = quizDoc.data();
+
+        // Security: Verify quiz belongs to authenticated user (defense in depth)
+        // The Firestore path already scopes to the user, but this explicit check
+        // protects against potential bugs in path construction
+        if (quizData.student_id && quizData.student_id !== userId) {
+          logger.warn('Quiz ownership mismatch detected', {
+            requestId: req.id,
+            userId,
+            quizStudentId: quizData.student_id,
+            quizId: quiz_id
+          });
+          throw new ApiError(403, 'Access denied: Quiz belongs to another user', 'FORBIDDEN');
+        }
 
         // Check if already completed (atomic check)
         if (quizData.status === 'completed') {

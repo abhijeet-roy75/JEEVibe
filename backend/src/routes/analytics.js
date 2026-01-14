@@ -41,28 +41,50 @@ router.get('/overview', authenticateUser, async (req, res, next) => {
     const tierInfo = await getEffectiveTier(userId);
 
     if (analyticsAccess === 'basic') {
-      // FREE tier: Return basic stats only
-      const userDoc = await db.collection('users').doc(userId).get();
+      // FREE tier: Return basic stats in same format as full analytics
+      // Fetch user data and streak data in parallel
+      const [userDoc, streakDoc] = await Promise.all([
+        db.collection('users').doc(userId).get(),
+        db.collection('practice_streaks').doc(userId).get()
+      ]);
       const userData = userDoc.exists ? userDoc.data() : {};
+      const streakData = streakDoc.exists ? streakDoc.data() : { current_streak: 0, longest_streak: 0 };
 
-      const basicStats = {
-        streak: userData.streak || 0,
-        total_questions_solved: userData.total_questions_solved || 0,
-        total_quizzes_completed: userData.completed_quiz_count || 0
+      // Format stats to match AnalyticsStats model expected by mobile
+      const stats = {
+        questions_solved: userData.total_questions_solved || 0,
+        quizzes_completed: userData.completed_quiz_count || 0,
+        chapters_mastered: 0, // Not tracked for basic
+        current_streak: streakData.current_streak || 0,
+        longest_streak: streakData.longest_streak || 0
+      };
+
+      // Basic user info
+      const user = {
+        first_name: userData.first_name || userData.firstName || 'Student',
+        last_name: userData.last_name || userData.lastName || ''
       };
 
       logger.info('Basic analytics overview retrieved', {
         requestId: req.id,
         userId,
         tier: tierInfo.tier,
-        access: 'basic'
+        access: 'basic',
+        questionsSolved: stats.questions_solved,
+        quizzesCompleted: stats.quizzes_completed,
+        currentStreak: stats.current_streak
       });
 
       return res.json({
         success: true,
         data: {
           access_level: 'basic',
-          basic_stats: basicStats,
+          user: user,
+          stats: stats,
+          subject_progress: {}, // Empty for basic tier
+          focus_areas: [], // Empty for basic tier
+          priya_maam_message: 'Keep learning! Upgrade to Pro for detailed insights.',
+          generated_at: new Date().toISOString(),
           upgrade_prompt: {
             message: 'Upgrade to Pro for detailed analytics, mastery tracking, and performance insights',
             cta_text: 'Unlock Full Analytics',

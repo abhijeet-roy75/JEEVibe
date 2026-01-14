@@ -22,38 +22,39 @@ const USAGE_TYPE_MAP = {
 };
 
 /**
- * Get the date key for today in IST timezone
+ * Get the date key for today in IST timezone (UTC+5:30)
  * @returns {string} Date string in YYYY-MM-DD format
  */
 function getTodayDateKey() {
-  // Get current time in IST (UTC+5:30)
-  const now = new Date();
-  const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
-  const istTime = new Date(now.getTime() + istOffset);
-  return istTime.toISOString().split('T')[0];
+  // Use Intl.DateTimeFormat for reliable timezone conversion
+  // This correctly handles DST (though IST doesn't have DST)
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  // en-CA locale gives YYYY-MM-DD format
+  return formatter.format(new Date());
 }
 
 /**
  * Get next midnight IST timestamp
- * @returns {Date} Midnight IST timestamp
+ * IST = UTC+5:30, so midnight IST = 18:30 UTC of previous calendar day
+ * Example: Jan 15 00:00 IST = Jan 14 18:30 UTC
+ * @returns {Date} Next midnight IST timestamp (as UTC Date object)
  */
 function getNextMidnightIST() {
-  const now = new Date();
-  const istOffset = 5.5 * 60; // 5.5 hours in minutes
+  // Get current date in IST timezone
+  const istDateStr = getTodayDateKey();
+  const [year, month, day] = istDateStr.split('-').map(Number);
 
-  // Convert to IST
-  const istNow = new Date(now.getTime() + (istOffset * 60 * 1000));
+  // Tomorrow in IST = current IST date + 1 day
+  // Tomorrow's midnight IST (00:00 IST) = today 18:30 UTC
+  // This is because IST is UTC+5:30, so subtracting 5:30 from 00:00 gives 18:30 previous day
+  const tomorrowMidnightIstAsUtc = new Date(Date.UTC(year, month - 1, day, 18, 30, 0, 0));
 
-  // Set to next midnight IST
-  const istMidnight = new Date(istNow);
-  istMidnight.setUTCHours(24 - 5, 30, 0, 0); // Next day 00:00 IST = 18:30 UTC previous day
-
-  // If we're past midnight IST today, move to next day
-  if (istMidnight <= now) {
-    istMidnight.setDate(istMidnight.getDate() + 1);
-  }
-
-  return istMidnight;
+  return tomorrowMidnightIstAsUtc;
 }
 
 /**
@@ -251,6 +252,49 @@ async function getAllUsage(userId) {
 }
 
 /**
+ * Decrement usage counter for a user (rollback operation)
+ * Used when an operation fails after usage was incremented
+ *
+ * @param {string} userId - User ID
+ * @param {string} usageType - Type of usage
+ * @returns {Promise<boolean>} Whether decrement was successful
+ */
+async function decrementUsage(userId, usageType) {
+  const dateKey = getTodayDateKey();
+
+  try {
+    const usageRef = db.collection('users').doc(userId).collection('daily_usage').doc(dateKey);
+
+    await retryFirestoreOperation(async () => {
+      await db.runTransaction(async (transaction) => {
+        const usageDoc = await transaction.get(usageRef);
+        const usageData = usageDoc.exists ? usageDoc.data() : {};
+        const currentUsed = usageData[usageType] || 0;
+
+        // Only decrement if usage is greater than 0
+        if (currentUsed > 0) {
+          transaction.set(usageRef, {
+            [usageType]: currentUsed - 1,
+            last_updated: admin.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
+      });
+    });
+
+    logger.info('Usage decremented (rollback)', {
+      userId,
+      usageType,
+      dateKey
+    });
+
+    return true;
+  } catch (error) {
+    logger.error('Error decrementing usage', { userId, usageType, error: error.message });
+    return false;
+  }
+}
+
+/**
  * Reset daily usage (for cron job at midnight IST)
  * Note: We use date-based documents, so old documents auto-expire
  * This function is mainly for cleanup/manual reset
@@ -272,6 +316,7 @@ module.exports = {
   getUsage,
   canUse,
   incrementUsage,
+  decrementUsage,
   getAllUsage,
   resetDailyUsage,
   getTodayDateKey,

@@ -76,9 +76,34 @@ const imageProcessingLimiter = rateLimit({
   },
 });
 
+// Admin operations rate limiter - prevent abuse of privileged endpoints
+const adminLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 50, // Limit each IP to 50 admin requests per hour
+  message: (req) => ({
+    success: false,
+    error: 'Admin operation rate limit exceeded. Please try again later.',
+    code: 'ADMIN_RATE_LIMIT_EXCEEDED',
+    requestId: req.id || 'unknown',
+  }),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res, next, options) => {
+    logger.warn('Admin rate limit exceeded', {
+      requestId: req.id || 'unknown',
+      ip: req.ip,
+      path: req.path,
+      method: req.method,
+      userId: req.userId || 'unknown',
+    });
+    res.status(options.statusCode).send(options.message);
+  },
+});
+
 module.exports = {
   apiLimiter,
   strictLimiter,
   imageProcessingLimiter,
+  adminLimiter,
 };
 

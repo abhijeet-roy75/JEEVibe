@@ -12,11 +12,47 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateUser } = require('../middleware/auth');
+const { adminLimiter } = require('../middleware/rateLimiter');
 const logger = require('../utils/logger');
+const { db, admin } = require('../config/firebase');
 
 const { getSubscriptionStatus, grantOverride, revokeOverride } = require('../services/subscriptionService');
 const { getAllUsage } = require('../services/usageTrackingService');
 const { getPurchasablePlans, getTierConfig } = require('../services/tierConfigService');
+
+// Admin UIDs allowed to grant overrides (should be moved to environment config)
+const ADMIN_UIDS = process.env.ADMIN_UIDS ? process.env.ADMIN_UIDS.split(',') : [];
+
+/**
+ * Check if user is an admin
+ * Checks: 1) UID in ADMIN_UIDS env var, 2) Firebase custom claim, 3) Firestore admin role
+ * @param {string} userId - User ID to check
+ * @returns {Promise<boolean>} Whether user is admin
+ */
+async function isAdmin(userId) {
+  // Check environment variable list first (fastest)
+  if (ADMIN_UIDS.includes(userId)) {
+    return true;
+  }
+
+  try {
+    // Check Firebase custom claims
+    const userRecord = await admin.auth().getUser(userId);
+    if (userRecord.customClaims?.admin === true) {
+      return true;
+    }
+
+    // Check Firestore admin role as fallback
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (userDoc.exists && userDoc.data()?.role === 'admin') {
+      return true;
+    }
+  } catch (error) {
+    logger.error('Error checking admin status', { userId, error: error.message });
+  }
+
+  return false;
+}
 
 // ============================================================================
 // SUBSCRIPTION STATUS
@@ -204,19 +240,64 @@ router.get('/usage', authenticateUser, async (req, res, next) => {
  *   reason: string
  * }
  */
-router.post('/admin/grant-override', authenticateUser, async (req, res, next) => {
+router.post('/admin/grant-override', adminLimiter, authenticateUser, async (req, res, next) => {
   try {
     const adminUserId = req.userId;
     const { user_id, type, tier_id, duration_days, reason } = req.body;
 
-    // TODO: Add proper admin role check
-    // For now, we'll allow any authenticated user (should be restricted in production)
-    logger.warn('Override granted without admin check', { adminUserId, targetUserId: user_id });
+    // SECURITY: Verify admin role before allowing override grant
+    const adminCheck = await isAdmin(adminUserId);
+    if (!adminCheck) {
+      logger.warn('Unauthorized override attempt', {
+        requestId: req.id,
+        attemptedBy: adminUserId,
+        targetUserId: user_id
+      });
+      return res.status(403).json({
+        success: false,
+        error: 'Unauthorized: Admin access required',
+        code: 'ADMIN_REQUIRED',
+        requestId: req.id
+      });
+    }
 
     if (!user_id) {
       return res.status(400).json({
         success: false,
         error: 'user_id is required',
+        code: 'MISSING_USER_ID',
+        requestId: req.id
+      });
+    }
+
+    // Validate tier_id if provided
+    const validTiers = ['pro', 'ultra'];
+    if (tier_id && !validTiers.includes(tier_id)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid tier_id. Must be one of: ${validTiers.join(', ')}`,
+        code: 'INVALID_TIER',
+        requestId: req.id
+      });
+    }
+
+    // Validate duration_days: must be positive integer between 1 and 365
+    const parsedDuration = duration_days !== undefined ? parseInt(duration_days, 10) : 90;
+    if (isNaN(parsedDuration) || parsedDuration < 1 || parsedDuration > 365) {
+      return res.status(400).json({
+        success: false,
+        error: 'duration_days must be a positive integer between 1 and 365',
+        code: 'INVALID_DURATION',
+        requestId: req.id
+      });
+    }
+
+    // Validate reason length if provided
+    if (reason && reason.length > 500) {
+      return res.status(400).json({
+        success: false,
+        error: 'reason must be 500 characters or less',
+        code: 'INVALID_REASON',
         requestId: req.id
       });
     }
@@ -224,7 +305,7 @@ router.post('/admin/grant-override', authenticateUser, async (req, res, next) =>
     const result = await grantOverride(user_id, {
       type: type || 'beta_tester',
       tier_id: tier_id || 'ultra',
-      duration_days: duration_days || 90,
+      duration_days: parsedDuration,
       reason: reason || '',
       granted_by: adminUserId
     });
@@ -255,18 +336,32 @@ router.post('/admin/grant-override', authenticateUser, async (req, res, next) =>
  *
  * Body: { user_id: string }
  */
-router.post('/admin/revoke-override', authenticateUser, async (req, res, next) => {
+router.post('/admin/revoke-override', adminLimiter, authenticateUser, async (req, res, next) => {
   try {
     const adminUserId = req.userId;
     const { user_id } = req.body;
 
-    // TODO: Add proper admin role check
-    logger.warn('Override revoked without admin check', { adminUserId, targetUserId: user_id });
+    // SECURITY: Verify admin role before allowing override revoke
+    const adminCheck = await isAdmin(adminUserId);
+    if (!adminCheck) {
+      logger.warn('Unauthorized revoke attempt', {
+        requestId: req.id,
+        attemptedBy: adminUserId,
+        targetUserId: user_id
+      });
+      return res.status(403).json({
+        success: false,
+        error: 'Unauthorized: Admin access required',
+        code: 'ADMIN_REQUIRED',
+        requestId: req.id
+      });
+    }
 
     if (!user_id) {
       return res.status(400).json({
         success: false,
         error: 'user_id is required',
+        code: 'MISSING_USER_ID',
         requestId: req.id
       });
     }
