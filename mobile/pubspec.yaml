@@ -22,10 +22,11 @@ dependencies:
   http: ^1.1.2
   http_parser: ^4.0.2
   
-  # LaTeX Rendering - using latest from git for Flutter 3.27+ compatibility
+  # LaTeX Rendering - using patched fork for Flutter 3.27+ compatibility
+  # PR: https://github.com/simpleclub-extended/flutter_math_fork/pull/111
   flutter_math_fork:
     git:
-      url: https://github.com/simpleclub-extended/flutter_math_fork.git
+      url: https://github.com/mehmetakdumn604/flutter_math_fork.git
       ref: main
   
   # SVG Rendering
