@@ -41,7 +41,7 @@ router.get('/overview', authenticateUser, async (req, res, next) => {
     const tierInfo = await getEffectiveTier(userId);
 
     if (analyticsAccess === 'basic') {
-      // FREE tier: Return basic stats in same format as full analytics
+      // FREE tier: Return basic stats with simple subject progress
       // Fetch user data and streak data in parallel
       const [userDoc, streakDoc] = await Promise.all([
         db.collection('users').doc(userId).get(),
@@ -65,6 +65,22 @@ router.get('/overview', authenticateUser, async (req, res, next) => {
         last_name: userData.last_name || userData.lastName || ''
       };
 
+      // Basic subject progress - just overall percentile for each subject
+      const thetaBySubject = userData.theta_by_subject || {};
+      const basicSubjectProgress = {};
+
+      const subjects = ['physics', 'chemistry', 'maths'];
+      for (const subject of subjects) {
+        const subjectData = thetaBySubject[subject] || {};
+        basicSubjectProgress[subject] = {
+          display_name: subject.charAt(0).toUpperCase() + subject.slice(1),
+          percentile: Math.round(subjectData.percentile || 0),
+          // Don't include detailed chapter data for basic tier
+          chapters_tested: 0, // Hidden for basic
+          status: 'FOCUS' // Default status, detailed status is PRO feature
+        };
+      }
+
       logger.info('Basic analytics overview retrieved', {
         requestId: req.id,
         userId,
@@ -81,12 +97,12 @@ router.get('/overview', authenticateUser, async (req, res, next) => {
           access_level: 'basic',
           user: user,
           stats: stats,
-          subject_progress: {}, // Empty for basic tier
-          focus_areas: [], // Empty for basic tier
+          subject_progress: basicSubjectProgress,
+          focus_areas: [], // Empty for basic tier - detailed focus areas are PRO
           priya_maam_message: 'Keep learning! Upgrade to Pro for detailed insights.',
           generated_at: new Date().toISOString(),
           upgrade_prompt: {
-            message: 'Upgrade to Pro for detailed analytics, mastery tracking, and performance insights',
+            message: 'Upgrade to Pro for detailed chapter mastery and focus areas',
             cta_text: 'Unlock Full Analytics',
             current_tier: tierInfo.tier
           }
