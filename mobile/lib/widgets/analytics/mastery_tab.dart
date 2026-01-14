@@ -1,5 +1,6 @@
 /// Mastery Tab Widget
 /// Displays subject mastery details with chapter breakdown and chart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -58,8 +59,16 @@ class _MasteryTabState extends State<MasteryTab> {
       ]);
 
       if (mounted) {
+        final masteryDetails = results[0] as SubjectMasteryDetails;
+        debugPrint('[MasteryTab] Loaded mastery details for ${_selectedSubject}:');
+        debugPrint('  - Overall percentile: ${masteryDetails.overallPercentile}');
+        debugPrint('  - Chapters tested: ${masteryDetails.chaptersTested}');
+        debugPrint('  - Chapters count: ${masteryDetails.chapters.length}');
+        if (masteryDetails.chapters.isNotEmpty) {
+          debugPrint('  - First chapter: ${masteryDetails.chapters.first.chapterName} (${masteryDetails.chapters.first.percentile}%)');
+        }
         setState(() {
-          _masteryDetails = results[0] as SubjectMasteryDetails;
+          _masteryDetails = masteryDetails;
           _timeline = results[1] as MasteryTimeline;
           _isLoading = false;
         });
@@ -99,39 +108,49 @@ class _MasteryTabState extends State<MasteryTab> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Subject filter chips
-          _buildSubjectFilters(),
-          const SizedBox(height: 20),
-          // Content based on loading state
-          if (_isLoading)
-            _buildLoadingState()
-          else if (_error != null)
-            _buildErrorState()
-          else if (_masteryDetails != null) ...[
-            // Overall mastery card
-            _buildOverallMasteryCard(),
-            const SizedBox(height: 20),
-            // Mastery over time chart
-            _buildChartCard(),
-            const SizedBox(height: 20),
-            // Chapter breakdown
-            _buildChapterBreakdown(),
-            const SizedBox(height: 20),
-            // Priya Ma'am card
-            _buildPriyaMaamCard(),
-            const SizedBox(height: 20),
-          ],
-          // Back to Dashboard button
-          _buildBackToDashboardButton(),
-          // Bottom padding to account for Android navigation bar
-          SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 24),
-        ],
-      ),
+    return Column(
+      children: [
+        // Subject filter chips - fixed at top with background
+        Container(
+          color: AppColors.backgroundLight,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: _buildSubjectFilters(),
+        ),
+        // Scrollable content
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Content based on loading state
+                if (_isLoading)
+                  _buildLoadingState()
+                else if (_error != null)
+                  _buildErrorState()
+                else if (_masteryDetails != null) ...[
+                  // Overall mastery card
+                  _buildOverallMasteryCard(),
+                  const SizedBox(height: 20),
+                  // Mastery over time chart
+                  _buildChartCard(),
+                  const SizedBox(height: 20),
+                  // Chapter list (directly, not in a card)
+                  _buildChapterList(),
+                  const SizedBox(height: 20),
+                  // Priya Ma'am card
+                  _buildPriyaMaamCard(),
+                  const SizedBox(height: 20),
+                ],
+                // Back to Dashboard button
+                _buildBackToDashboardButton(),
+                // Bottom padding to account for Android navigation bar
+                SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 24),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -170,12 +189,13 @@ class _MasteryTabState extends State<MasteryTab> {
       onTap: () => _onSubjectChanged(value),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? color : Colors.white,
+          gradient: isSelected ? AppColors.ctaGradient : null,
+          color: isSelected ? null : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? color : AppColors.borderDefault,
+            color: isSelected ? Colors.transparent : AppColors.borderDefault,
             width: 1.5,
           ),
         ),
@@ -184,15 +204,16 @@ class _MasteryTabState extends State<MasteryTab> {
           children: [
             Icon(
               icon,
-              size: 18,
+              size: 16,
               color: isSelected ? Colors.white : color,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             Text(
               label,
-              style: AppTextStyles.labelMedium.copyWith(
+              style: AppTextStyles.labelSmall.copyWith(
                 color: isSelected ? Colors.white : color,
                 fontWeight: FontWeight.w600,
+                fontSize: 13,
               ),
             ),
           ],
@@ -356,87 +377,49 @@ class _MasteryTabState extends State<MasteryTab> {
     );
   }
 
-  Widget _buildChapterBreakdown() {
+  Widget _buildChapterList() {
     final details = _masteryDetails!;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    if (details.chapters.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            'No chapters tested yet. Complete quizzes to see your mastery progress.',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textTertiary,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.list_alt, color: AppColors.textMedium, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'Chapter Breakdown',
-                style: AppTextStyles.headerSmall.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ...details.chapters.map((chapter) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ChapterMasteryItem(
+                chapter: chapter,
+                progressColor: _subjectColor,
               ),
-              const Spacer(),
-              // Summary badges
-              _buildSummaryBadge(details.summary.mastered, AppColors.success, 'M'),
-              const SizedBox(width: 6),
-              _buildSummaryBadge(details.summary.growing, AppColors.warning, 'G'),
-              const SizedBox(width: 6),
-              _buildSummaryBadge(details.summary.focus, AppColors.error, 'F'),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ...details.chapters.map((chapter) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: ChapterMasteryItem(
-                  chapter: chapter,
-                  progressColor: _subjectColor,
-                ),
-              )),
-        ],
-      ),
+            )),
+      ],
     );
   }
 
-  Widget _buildSummaryBadge(int count, Color color, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            '$count',
-            style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildPriyaMaamCard() {
     // Generate simplified message focused on topic recommendations for mastery tab

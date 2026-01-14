@@ -590,9 +590,19 @@ async function getSubjectMasteryDetails(userId, subject) {
     }
 
     // Filter chapters for this subject
+    // Note: Chapter keys are stored as "mathematics_*" in database, but UI uses "maths"
+    // So we need to check for both "maths_" and "mathematics_" prefixes
     const chapters = [];
+    const prefixesToCheck = [];
+    if (normalizedSubject === 'maths' || normalizedSubject === 'mathematics') {
+      prefixesToCheck.push('maths_', 'mathematics_');
+    } else {
+      prefixesToCheck.push(subjectPrefix + '_', normalizedSubject + '_');
+    }
+    
     for (const [chapterKey, data] of Object.entries(thetaByChapter)) {
-      if (chapterKey.startsWith(subjectPrefix + '_') || chapterKey.startsWith(normalizedSubject + '_')) {
+      const matches = prefixesToCheck.some(prefix => chapterKey.startsWith(prefix));
+      if (matches) {
         // Get display name from mappings or fallback
         const mapping = chapterMappings.get(chapterKey);
         const chapterName = mapping?.chapter || formatChapterKeyToDisplayName(chapterKey);

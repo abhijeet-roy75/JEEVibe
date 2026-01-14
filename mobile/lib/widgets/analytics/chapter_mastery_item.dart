@@ -25,76 +25,79 @@ class ChapterMasteryItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.borderLight),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Colored side bar - must stretch to full height
-          Container(
-            width: 4,
-            decoration: BoxDecoration(
-              color: statusColor,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                bottomLeft: Radius.circular(12),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Colored side bar - stretches to full height via IntrinsicHeight
+            Container(
+              width: 4,
+              decoration: BoxDecoration(
+                color: statusColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
+                ),
               ),
             ),
-          ),
-          // Content
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Chapter name and status badge
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          chapter.chapterName,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
+            // Content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Chapter name and status badge
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            chapter.chapterName,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildStatusBadge(),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Progress bar and percentage
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: chapter.percentile / 100,
-                            backgroundColor: AppColors.borderGray,
-                            valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-                            minHeight: 8,
+                        const SizedBox(width: 8),
+                        _buildStatusBadge(),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Progress bar and percentage
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: chapter.percentile / 100,
+                              backgroundColor: AppColors.borderGray,
+                              valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                              minHeight: 8,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      SizedBox(
-                        width: 45,
-                        child: Text(
-                          '${chapter.percentile.toInt()}%',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: statusColor,
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 45,
+                          child: Text(
+                            '${chapter.percentile.toInt()}%',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: statusColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.right,
                           ),
-                          textAlign: TextAlign.right,
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
