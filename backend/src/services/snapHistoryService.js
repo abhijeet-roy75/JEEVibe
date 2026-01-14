@@ -125,15 +125,25 @@ async function updateSnapStats(userId, subject) {
  * @param {string} userId - User ID
  * @param {number} limit - Number of records to fetch
  * @param {string} lastDocId - For pagination (optional)
+ * @param {number} historyDays - Number of days of history to return (-1 for unlimited)
  * @returns {Promise<Array>} List of snap records
  */
-async function getSnapHistory(userId, limit = 20, lastDocId = null) {
+async function getSnapHistory(userId, limit = 20, lastDocId = null, historyDays = -1) {
     try {
         let query = db.collection('users')
             .doc(userId)
             .collection('snaps')
-            .orderBy('timestamp', 'desc')
-            .limit(limit);
+            .orderBy('timestamp', 'desc');
+
+        // Apply date filter based on tier's history limit
+        if (historyDays > 0) {
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - historyDays);
+            cutoffDate.setHours(0, 0, 0, 0);
+            query = query.where('timestamp', '>=', cutoffDate);
+        }
+
+        query = query.limit(limit);
 
         if (lastDocId) {
             const lastDoc = await db.collection('users').doc(userId).collection('snaps').doc(lastDocId).get();
