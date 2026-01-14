@@ -327,7 +327,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        initialValue: _state,
+                        value: _state,
                         decoration: InputDecoration(
                           hintText: 'Select state',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
@@ -485,7 +485,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        initialValue: _dreamBranch,
+                        value: _dreamBranch,
                         decoration: InputDecoration(
                           hintText: 'Select branch',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
