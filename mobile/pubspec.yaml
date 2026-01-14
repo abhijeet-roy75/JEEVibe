@@ -1,7 +1,7 @@
 name: jeevibe_mobile
 description: JEEVibe Snap & Solve POC - iOS Flutter App
 publish_to: 'none'
-version: 1.0.1+36
+version: 1.0.1+37
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -22,8 +22,11 @@ dependencies:
   http: ^1.1.2
   http_parser: ^4.0.2
   
-  # LaTeX Rendering
-  flutter_math_fork: 0.7.4
+  # LaTeX Rendering - using latest from git for Flutter 3.27+ compatibility
+  flutter_math_fork:
+    git:
+      url: https://github.com/simpleclub-extended/flutter_math_fork.git
+      ref: main
   
   # SVG Rendering
   flutter_svg: ^2.0.9
