@@ -311,7 +311,7 @@ class ApiService {
     }
   }
 
-  /// Get snap limits and usage from backend
+  /// Get snap limits and usage from backend (uses subscription status API)
   /// Requires Firebase ID token for authentication
   static Future<Map<String, dynamic>> getSnapLimit({
     required String authToken,
@@ -319,7 +319,7 @@ class ApiService {
     return _retryRequest(() async {
       try {
         final response = await http.get(
-          Uri.parse('$baseUrl/api/snap-limit'),
+          Uri.parse('$baseUrl/api/subscriptions/status'),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer $authToken',
@@ -329,7 +329,22 @@ class ApiService {
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
           if (jsonData['success'] == true && jsonData['data'] != null) {
-            return jsonData['data'] as Map<String, dynamic>;
+            final data = jsonData['data'];
+            final snapUsage = data['usage']?['snap_solve'] ?? {};
+
+            // Extract snap data from subscription status
+            // Handle unlimited (-1) case
+            final int limit = snapUsage['limit'] ?? 5;
+            final int used = snapUsage['used'] ?? 0;
+            final bool isUnlimited = snapUsage['is_unlimited'] ?? false;
+
+            return {
+              'used': used,
+              'limit': isUnlimited ? 999 : limit, // Use high number for unlimited
+              'isUnlimited': isUnlimited,
+              'resetsAt': snapUsage['resets_at'],
+              'tier': data['subscription']?['tier'] ?? 'free',
+            };
           } else {
             throw Exception(jsonData['error'] ?? 'Invalid response format');
           }

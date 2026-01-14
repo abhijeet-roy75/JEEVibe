@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../services/firebase/auth_service.dart';
 import '../services/firebase/firestore_user_service.dart';
 import '../services/analytics_service.dart';
+import '../services/subscription_service.dart';
 import '../models/analytics_data.dart';
 import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
@@ -12,7 +13,7 @@ import '../theme/app_text_styles.dart';
 import '../widgets/analytics/overview_tab.dart';
 import '../widgets/analytics/mastery_tab.dart';
 import '../widgets/buttons/gradient_button.dart';
-import 'assessment_intro_screen.dart';
+import 'subscription/paywall_screen.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -29,6 +30,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   bool _isLoading = true;
   String? _error;
   String? _authToken;
+  final SubscriptionService _subscriptionService = SubscriptionService();
+  bool _hasFullAnalytics = false; // true for PRO/ULTRA, false for FREE
 
   @override
   void initState() {
@@ -72,6 +75,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           _userProfile = profile;
         }
       }
+
+      // Load subscription status to determine analytics access level
+      await _subscriptionService.fetchStatus(token);
+      final analyticsAccess = _subscriptionService.status?.features.analyticsAccess ?? 'basic';
+      _hasFullAnalytics = analyticsAccess == 'full';
 
       final overview = await AnalyticsService.getOverview(authToken: token);
 
@@ -173,31 +181,47 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       ],
                     ),
                   ),
-                  // PRO badge
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.auto_awesome,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'PRO',
-                          style: AppTextStyles.labelSmall.copyWith(
+                  // Tier badge
+                  GestureDetector(
+                    onTap: _hasFullAnalytics
+                        ? null
+                        : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PaywallScreen(
+                                  featureName: 'Full Analytics',
+                                ),
+                              ),
+                            );
+                          },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _hasFullAnalytics ? Icons.auto_awesome : Icons.lock_outline,
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 11,
+                            size: 14,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Text(
+                            _hasFullAnalytics
+                                ? (_subscriptionService.currentTier.name.toUpperCase())
+                                : 'FREE',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -297,10 +321,101 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     return TabBarView(
       controller: _tabController,
       children: [
-        OverviewTab(overview: _overview!),
-        MasteryTab(
-          authToken: _authToken!,
+        OverviewTab(
           overview: _overview!,
+          isBasicView: !_hasFullAnalytics,
+        ),
+        _hasFullAnalytics
+            ? MasteryTab(
+                authToken: _authToken!,
+                overview: _overview!,
+              )
+            : _buildLockedMasteryTab(),
+      ],
+    );
+  }
+
+  Widget _buildLockedMasteryTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          const SizedBox(height: 60),
+          // Lock icon
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.cardLightPurple,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(
+              Icons.lock_outline,
+              color: AppColors.primaryPurple,
+              size: 40,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Unlock Detailed Mastery',
+            style: AppTextStyles.headerMedium.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Upgrade to Pro to see chapter-by-chapter progress, mastery trends over time, and personalized recommendations.',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 32),
+          // Feature list
+          _buildLockedFeatureItem(Icons.menu_book, 'Chapter-by-chapter mastery'),
+          const SizedBox(height: 12),
+          _buildLockedFeatureItem(Icons.trending_up, 'Progress trends over time'),
+          const SizedBox(height: 12),
+          _buildLockedFeatureItem(Icons.gps_fixed, 'Personalized focus areas'),
+          const SizedBox(height: 32),
+          // Upgrade button
+          GradientButton(
+            text: 'Upgrade to Pro',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PaywallScreen(
+                    featureName: 'Full Analytics',
+                  ),
+                ),
+              );
+            },
+            size: GradientButtonSize.large,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLockedFeatureItem(IconData icon, String text) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: AppColors.cardLightGreen,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: AppColors.success, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          text,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textPrimary,
+          ),
         ),
       ],
     );

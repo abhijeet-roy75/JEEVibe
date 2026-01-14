@@ -10,6 +10,7 @@ class DailyQuizCardWidget extends StatelessWidget {
   final VoidCallback? onStartQuiz;
   final int? questionCount; // C8: Dynamic quiz size
   final int? estimatedTimeMinutes; // C8: Dynamic time estimate
+  final int? quizzesRemaining; // null = unlimited, otherwise shows remaining
 
   const DailyQuizCardWidget({
     super.key,
@@ -18,6 +19,7 @@ class DailyQuizCardWidget extends StatelessWidget {
     this.onStartQuiz,
     this.questionCount,
     this.estimatedTimeMinutes,
+    this.quizzesRemaining,
   });
 
   @override
@@ -106,13 +108,51 @@ class DailyQuizCardWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              Text(
-                'Personalized for you',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.primaryPurple,
-                  fontWeight: FontWeight.w600,
+              if (quizzesRemaining != null && quizzesRemaining! >= 0) ...[
+                // Show count for limited users (0 or positive)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: quizzesRemaining! > 0
+                        ? AppColors.primaryPurple.withValues(alpha: 0.1)
+                        : AppColors.warningAmber.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$quizzesRemaining left today',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: quizzesRemaining! > 0
+                          ? AppColors.primaryPurple
+                          : AppColors.warningAmber,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ),
+              ] else if (quizzesRemaining != null && quizzesRemaining! < 0) ...[
+                // -1 means unlimited - show "Unlimited" badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.successGreen.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Unlimited',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.successGreen,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ] else ...[
+                Text(
+                  'Personalized for you',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.primaryPurple,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 16),
@@ -153,7 +193,9 @@ class DailyQuizCardWidget extends StatelessWidget {
                       disabledBackgroundColor: AppColors.borderGray,
                     ),
                     child: Text(
-                      'Completed for Today',
+                      quizzesRemaining != null && quizzesRemaining! <= 0
+                          ? 'Daily Limit Reached'
+                          : 'Completed for Today',
                       style: AppTextStyles.labelMedium.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

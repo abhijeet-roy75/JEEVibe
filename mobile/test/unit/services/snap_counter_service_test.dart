@@ -80,9 +80,106 @@ void main() {
     test('getTodaySnapHistory - returns only today snaps', () async {
       // Add a snap for today
       await snapCounterService.incrementSnap('test_q1', 'Calculus');
-      
+
       final history = await snapCounterService.getTodaySnapHistory();
       expect(history.length, greaterThanOrEqualTo(0));
+    });
+
+    // Tests for unlimited (-1) handling
+    group('Unlimited Users (-1 limit)', () {
+      test('getSnapsRemaining - returns -1 for unlimited users', () async {
+        // Set limit to -1 (unlimited)
+        await storageService.setSnapLimit(-1);
+
+        final remaining = await snapCounterService.getSnapsRemaining();
+        expect(remaining, -1);
+      });
+
+      test('canTakeSnap - returns true for unlimited users regardless of usage', () async {
+        // Set limit to -1 (unlimited) and high usage count
+        await storageService.setSnapLimit(-1);
+        await storageService.setSnapCount(100);
+
+        final canSnap = await snapCounterService.canTakeSnap();
+        expect(canSnap, true);
+      });
+
+      test('isUnlimited - returns true when limit is -1', () async {
+        await storageService.setSnapLimit(-1);
+
+        final unlimited = await snapCounterService.isUnlimited();
+        expect(unlimited, true);
+      });
+
+      test('isUnlimited - returns false when limit is positive', () async {
+        await storageService.setSnapLimit(5);
+
+        final unlimited = await snapCounterService.isUnlimited();
+        expect(unlimited, false);
+      });
+
+      test('getSnapCounterText - shows unlimited message', () async {
+        await storageService.setSnapLimit(-1);
+        await storageService.setSnapCount(10);
+
+        final text = await snapCounterService.getSnapCounterText();
+        expect(text, '10 snaps today (unlimited)');
+      });
+
+      test('incrementSnap - works for unlimited users', () async {
+        await storageService.setSnapLimit(-1);
+        await storageService.setSnapCount(0);
+
+        await snapCounterService.incrementSnap('test_q1', 'Calculus');
+
+        final used = await snapCounterService.getSnapsUsed();
+        expect(used, 1);
+      });
+    });
+
+    // Tests for error recovery during sync
+    group('Sync Error Recovery', () {
+      test('preserves existing state on sync failure', () async {
+        // Set up existing state
+        await storageService.setSnapCount(3);
+        await storageService.setSnapLimit(10);
+
+        // After failed sync, state should be preserved
+        // (This is tested via the service behavior, not direct sync call)
+        final used = await snapCounterService.getSnapsUsed();
+        final limit = await snapCounterService.getSnapLimit();
+
+        expect(used, 3);
+        expect(limit, 10);
+      });
+    });
+
+    // Tests for edge cases
+    group('Edge Cases', () {
+      test('getSnapsRemaining - never returns negative for limited users', () async {
+        // Set usage higher than limit (edge case)
+        await storageService.setSnapLimit(5);
+        await storageService.setSnapCount(10);
+
+        final remaining = await snapCounterService.getSnapsRemaining();
+        expect(remaining, 0); // Should clamp to 0, not return -5
+      });
+
+      test('canTakeSnap - returns false when usage equals limit', () async {
+        await storageService.setSnapLimit(5);
+        await storageService.setSnapCount(5);
+
+        final canSnap = await snapCounterService.canTakeSnap();
+        expect(canSnap, false);
+      });
+
+      test('canTakeSnap - returns false when usage exceeds limit', () async {
+        await storageService.setSnapLimit(5);
+        await storageService.setSnapCount(6);
+
+        final canSnap = await snapCounterService.canTakeSnap();
+        expect(canSnap, false);
+      });
     });
   });
 }

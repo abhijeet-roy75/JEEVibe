@@ -272,6 +272,21 @@ class _AppInitializerState extends State<AppInitializer> {
       }
       
       // User has valid profile - proceed with normal flow
+
+      // DEBUG: Print auth token for API testing
+      try {
+        final token = await authService.currentUser?.getIdToken();
+        if (token != null) {
+          print('');
+          print('========== AUTH TOKEN FOR TESTING ==========');
+          print(token);
+          print('=============================================');
+          print('');
+        }
+      } catch (e) {
+        print('Error getting auth token: $e');
+      }
+
       final pinService = PinService();
       final hasPin = await pinService.pinExists();
       

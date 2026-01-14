@@ -7,8 +7,10 @@ import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../services/firebase/firestore_user_service.dart';
 import '../services/storage_service.dart';
+import '../services/subscription_service.dart';
 import '../models/user_profile.dart';
 import '../models/assessment_response.dart';
+import '../models/subscription_models.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/priya_avatar.dart';
@@ -19,6 +21,7 @@ import '../providers/daily_quiz_provider.dart';
 import '../utils/error_handler.dart';
 import 'daily_quiz_loading_screen.dart';
 import 'analytics_screen.dart';
+import 'subscription/paywall_screen.dart';
 
 enum UserState {
   newUserDay1,
@@ -40,6 +43,10 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
   UserState _userState = UserState.newUserDay1;
   AssessmentData? _assessmentData;
   bool _isLoadingAssessment = false;
+  bool _isCheckingQuizAccess = false; // Loading state for paywall check
+  final SubscriptionService _subscriptionService = SubscriptionService();
+  int _quizzesRemaining = 1; // Default for free tier
+  bool _isQuizUnlimited = false;
 
   @override
   void initState() {
@@ -59,6 +66,19 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
           setState(() {
             _userProfile = profile;
           });
+        }
+
+        // Load subscription status for quiz gating
+        final token = await authService.getIdToken();
+        if (token != null) {
+          await _subscriptionService.fetchStatus(token);
+          final quizUsage = _subscriptionService.getUsageInfo(UsageType.dailyQuiz);
+          if (mounted && quizUsage != null) {
+            setState(() {
+              _isQuizUnlimited = quizUsage.isUnlimited;
+              _quizzesRemaining = quizUsage.isUnlimited ? 999 : quizUsage.remaining;
+            });
+          }
         }
       }
 
@@ -337,38 +357,21 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
   Widget _buildDailyQuizCard() {
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
     final hasActiveQuiz = provider.hasActiveQuiz;
-    
-    // Check if quiz was completed today
-    bool canStartQuiz = true;
-    final summary = provider.summary;
-    if (summary != null) {
-      final lastQuizCompleted = summary['last_quiz_completed_at'] as String?;
-      if (lastQuizCompleted != null) {
-        try {
-          final lastDate = DateTime.parse(lastQuizCompleted);
-          final now = DateTime.now();
-          final daysSinceLastQuiz = now.difference(lastDate).inDays;
-          // Disable if quiz was completed today (0 days since last quiz)
-          // canStartQuiz = daysSinceLastQuiz > 0;
-          canStartQuiz = true; // RESTORE: Temporarily enabled for testing
-        } catch (e) {
-          // Invalid date, allow quiz
-          canStartQuiz = true;
-        }
-      }
-    }
-    
+
+    // Check if user has quizzes remaining (tier-based)
+    // Disable button while checking access to prevent double-tap
+    bool canStartQuiz = !_isCheckingQuizAccess && (_isQuizUnlimited || _quizzesRemaining > 0);
+
     // C8: Get dynamic quiz size from summary or current quiz
     int? questionCount;
     int? estimatedTimeMinutes;
-    
+
     if (provider.currentQuiz != null) {
       questionCount = provider.currentQuiz!.totalQuestions;
       // Estimate: 1.5 minutes per question
       estimatedTimeMinutes = (questionCount * 1.5).round();
     } else if (provider.summary != null) {
       // Try to get from summary if available
-      final summary = provider.summary!;
       // Default to 10 if not available
       questionCount = 10;
       estimatedTimeMinutes = 15;
@@ -376,20 +379,75 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
       questionCount = 10;
       estimatedTimeMinutes = 15;
     }
-    
-    return DailyQuizCardWidget(
-      hasActiveQuiz: hasActiveQuiz,
-      canStartQuiz: canStartQuiz,
-      questionCount: questionCount,
-      estimatedTimeMinutes: estimatedTimeMinutes,
-      onStartQuiz: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const DailyQuizLoadingScreen(),
+
+    return Stack(
+      children: [
+        DailyQuizCardWidget(
+          hasActiveQuiz: hasActiveQuiz,
+          canStartQuiz: canStartQuiz,
+          questionCount: questionCount,
+          estimatedTimeMinutes: estimatedTimeMinutes,
+          quizzesRemaining: _isQuizUnlimited ? -1 : _quizzesRemaining,
+          onStartQuiz: _isCheckingQuizAccess ? null : () async {
+            // Prevent double-tap by showing loading state
+            if (_isCheckingQuizAccess) return;
+
+            setState(() {
+              _isCheckingQuizAccess = true;
+            });
+
+            try {
+              // Gate check before starting quiz
+              final authService = Provider.of<AuthService>(context, listen: false);
+              final token = await authService.getIdToken();
+
+              if (token != null) {
+                final canProceed = await _subscriptionService.gatekeepFeature(
+                  context,
+                  UsageType.dailyQuiz,
+                  'Daily Quiz',
+                  token,
+                );
+
+                if (!canProceed) {
+                  // Paywall was shown, don't proceed
+                  return;
+                }
+              }
+
+              // Proceed to quiz
+              if (mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DailyQuizLoadingScreen(),
+                  ),
+                );
+              }
+            } finally {
+              if (mounted) {
+                setState(() {
+                  _isCheckingQuizAccess = false;
+                });
+              }
+            }
+          },
+        ),
+        // Loading overlay when checking access
+        if (_isCheckingQuizAccess)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              child: const Center(
+                child: CircularProgressIndicator(color: AppColors.primaryPurple),
+              ),
+            ),
           ),
-        );
-      },
+      ],
     );
   }
 

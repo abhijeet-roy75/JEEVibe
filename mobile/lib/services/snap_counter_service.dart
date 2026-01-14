@@ -17,31 +17,48 @@ class SnapCounterService {
   /// Sync limits and history from backend
   Future<void> syncWithBackend(String authToken) async {
     try {
-      // 1. Fetch limit/usage
+      // 1. Fetch limit/usage from subscription status
       final limitData = await ApiService.getSnapLimit(authToken: authToken);
       final int used = limitData['used'] ?? 0;
       final int limit = limitData['limit'] ?? StorageService.defaultSnapLimit;
-      final String? resetsAt = limitData['resetsAt'];
+      final bool isUnlimited = limitData['isUnlimited'] ?? false;
+      final String? tier = limitData['tier'];
 
       // 2. Save to local storage for offline access and quick retrieval
       await _storage.setSnapCount(used);
-      await _storage.setSnapLimit(limit);
-      
+      // Store -1 for unlimited, otherwise store the actual limit
+      await _storage.setSnapLimit(isUnlimited ? -1 : limit);
+
       // Mark today as safe (synced) so we don't auto-reset locally
       await _storage.setLastResetDate(_getTodayDateString());
 
-      // 3. Fetch history
-      final historyData = await ApiService.getSnapHistory(authToken: authToken, limit: 10);
-      final historyRecords = historyData.map((json) => RecentSolution.fromJson(json)).toList();
-      
-      // 4. Save history to local storage
-      await _storage.setRecentSolutions(historyRecords);
-      
-      debugPrint('Synced snap counter and history with backend. Used: $used/$limit');
+      // 3. Fetch history (non-critical, don't fail sync if this fails)
+      try {
+        final historyData = await ApiService.getSnapHistory(authToken: authToken, limit: 10);
+        final historyRecords = historyData.map((json) => RecentSolution.fromJson(json)).toList();
+        // 4. Save history to local storage
+        await _storage.setRecentSolutions(historyRecords);
+      } catch (historyError) {
+        debugPrint('Error fetching history (non-critical): $historyError');
+      }
+
+      final limitDisplay = isUnlimited ? 'unlimited' : '$limit';
+      debugPrint('Synced snap counter with backend. Tier: $tier, Used: $used/$limitDisplay');
     } catch (e) {
       debugPrint('Error syncing with backend: $e');
-      // Fallback to checkAndResetIfNeeded for local-only behavior
-      await checkAndResetIfNeeded();
+      // ERROR RECOVERY: Preserve existing state, only reset if it's a new day
+      // Don't call checkAndResetIfNeeded here as it would reset count to 0
+      // which could confuse users who had usage tracked
+      final lastResetDate = await _storage.getLastResetDate();
+      final today = _getTodayDateString();
+      if (lastResetDate == null || lastResetDate != today) {
+        // New day detected locally - reset counter but keep existing limit
+        await _storage.setSnapCount(0);
+        await _storage.setLastResetDate(today);
+        debugPrint('New day detected during offline sync - reset count only');
+      } else {
+        debugPrint('Sync failed, preserving existing local state');
+      }
     }
   }
 
@@ -73,20 +90,41 @@ class SnapCounterService {
   }
 
   /// Get number of snaps remaining today
+  /// Returns -1 for unlimited users
   Future<int> getSnapsRemaining() async {
     try {
-      final used = await getSnapsUsed();
       final limit = await _storage.getSnapLimit();
-      return limit - used;
+      // -1 means unlimited - return -1 to indicate unlimited remaining
+      if (limit == -1) {
+        return -1;
+      }
+      final used = await getSnapsUsed();
+      return (limit - used).clamp(0, limit); // Never return negative
     } catch (e) {
       debugPrint('Error getting snaps remaining: $e');
       return StorageService.defaultSnapLimit;
     }
   }
 
+  /// Check if limit is unlimited (-1)
+  Future<bool> isUnlimited() async {
+    try {
+      final limit = await _storage.getSnapLimit();
+      return limit == -1;
+    } catch (e) {
+      debugPrint('Error checking if unlimited: $e');
+      return false;
+    }
+  }
+
   /// Check if user can take another snap
   Future<bool> canTakeSnap() async {
     try {
+      final limit = await _storage.getSnapLimit();
+      // Unlimited users can always take snaps
+      if (limit == -1) {
+        return true;
+      }
       final remaining = await getSnapsRemaining();
       return remaining > 0;
     } catch (e) {
@@ -144,6 +182,10 @@ class SnapCounterService {
     try {
       final used = await getSnapsUsed();
       final limit = await _storage.getSnapLimit();
+      // Handle unlimited display
+      if (limit == -1) {
+        return '$used snaps today (unlimited)';
+      }
       return '$used/$limit snaps today';
     } catch (e) {
       debugPrint('Error getting snap counter text: $e');

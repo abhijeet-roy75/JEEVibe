@@ -6,15 +6,18 @@ import '../../theme/app_text_styles.dart';
 import '../../models/analytics_data.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../screens/assessment_intro_screen.dart';
+import '../../screens/subscription/paywall_screen.dart';
 import '../priya_avatar.dart';
 import 'stat_card.dart';
 
 class OverviewTab extends StatelessWidget {
   final AnalyticsOverview overview;
+  final bool isBasicView; // true for FREE tier, false for PRO/ULTRA
 
   const OverviewTab({
     super.key,
     required this.overview,
+    this.isBasicView = false,
   });
 
   @override
@@ -33,9 +36,14 @@ class OverviewTab extends StatelessWidget {
           // Subject progress section
           _buildSubjectMasteryCard(),
           const SizedBox(height: 20),
-          // Focus Areas section
-          if (overview.focusAreas.isNotEmpty) ...[
+          // Focus Areas section (only for full analytics - PRO/ULTRA)
+          if (!isBasicView && overview.focusAreas.isNotEmpty) ...[
             _buildFocusAreasCard(),
+            const SizedBox(height: 20),
+          ],
+          // Upgrade prompt for basic view
+          if (isBasicView) ...[
+            _buildUpgradePrompt(context),
             const SizedBox(height: 20),
           ],
           // Back to Dashboard button
@@ -322,6 +330,89 @@ class OverviewTab extends StatelessWidget {
           );
         },
         size: GradientButtonSize.large,
+      ),
+    );
+  }
+
+  Widget _buildUpgradePrompt(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const PaywallScreen(
+              featureName: 'Full Analytics',
+            ),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.cardLightPurple,
+              AppColors.cardLightPink,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryPurple.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.workspace_premium_rounded,
+                    color: AppColors.primaryPurple,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Unlock Full Analytics',
+                        style: AppTextStyles.headerSmall.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'See focus areas, mastery trends & more',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  color: AppColors.primaryPurple,
+                  size: 18,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
