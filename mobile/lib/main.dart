@@ -10,7 +10,12 @@ import 'services/storage_service.dart';
 import 'services/snap_counter_service.dart';
 import 'services/firebase/auth_service.dart';
 import 'services/firebase/firestore_user_service.dart';
+import 'services/subscription_service.dart';
+import 'services/offline/connectivity_service.dart';
+import 'services/offline/database_service.dart';
+import 'services/offline/image_cache_service.dart';
 import 'providers/app_state_provider.dart';
+import 'providers/offline_provider.dart';
 
 // Screens
 import 'screens/auth/welcome_screen.dart'; // The new Auth Wrapper
@@ -26,7 +31,14 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
+
+  // Initialize connectivity service for offline detection
+  await ConnectivityService().initialize();
+
+  // Initialize offline database and image cache
+  await DatabaseService().initialize();
+  await ImageCacheService().initialize();
+
   // Suppress harmless SVG warnings and LaTeX debug messages
   // These are informational and don't affect functionality
   final originalDebugPrint = debugPrint;
@@ -112,9 +124,12 @@ void main() async {
         // Daily Quiz State
         ChangeNotifierProxyProvider<AuthService, DailyQuizProvider>(
           create: (_) => DailyQuizProvider(AuthService()),
-          update: (_, authService, previous) => 
+          update: (_, authService, previous) =>
             previous ?? DailyQuizProvider(authService),
         ),
+
+        // Offline Mode Provider
+        ChangeNotifierProvider(create: (_) => OfflineProvider()),
       ],
       child: const JEEVibeApp(),
     ),
@@ -273,19 +288,44 @@ class _AppInitializerState extends State<AppInitializer> {
       
       // User has valid profile - proceed with normal flow
 
-      // DEBUG: Print auth token for API testing
+      // Get auth token for API calls
+      String? authToken;
       try {
-        final token = await authService.currentUser?.getIdToken();
-        if (token != null) {
+        authToken = await authService.currentUser?.getIdToken();
+        if (authToken != null) {
           print('');
           print('========== AUTH TOKEN FOR TESTING ==========');
-          print(token);
+          print(authToken);
           print('=============================================');
           print('');
         }
       } catch (e) {
         print('Error getting auth token: $e');
       }
+
+      // Initialize OfflineProvider with user ID, auth token, and subscription status
+      if (mounted) {
+        final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);
+
+        // Fetch subscription status to determine offline capability (BUG-001 fix)
+        bool offlineEnabled = false;
+        if (authToken != null) {
+          try {
+            final subscriptionStatus = await SubscriptionService().fetchStatus(authToken);
+            offlineEnabled = subscriptionStatus?.limits.offlineEnabled ?? false;
+          } catch (e) {
+            print('Error fetching subscription status: $e');
+          }
+        }
+
+        await offlineProvider.initialize(
+          authService.currentUser!.uid,
+          offlineEnabled: offlineEnabled,
+          authToken: authToken,
+        );
+      }
+
+      if (!mounted) return;
 
       final pinService = PinService();
       final hasPin = await pinService.pinExists();

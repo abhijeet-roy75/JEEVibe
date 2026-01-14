@@ -1,7 +1,7 @@
 name: jeevibe_mobile
 description: JEEVibe Snap & Solve POC - iOS Flutter App
 publish_to: 'none'
-version: 1.0.1+41
+version: 1.0.1+42
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -69,6 +69,21 @@ dependencies:
   package_info_plus: ^8.0.0
   device_info_plus: ^10.1.0
 
+  # Offline Mode - Database & Caching
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  flutter_cache_manager: ^3.3.1
+  cached_network_image: ^3.3.1
+
+  # Connectivity Detection
+  connectivity_plus: ^5.0.2
+
+  # Background Sync - workmanager removed (incompatible with Flutter 3.27+, not currently used)
+  # Can be re-added when needed: workmanager: ^0.9.0
+
+  # Path utilities
+  path_provider: ^2.1.2
+
 dependency_overrides:
   image_cropper_platform_interface: 7.0.0
 
@@ -81,6 +96,8 @@ dev_dependencies:
   mockito: ^5.4.4
   build_runner: ^2.4.7
   http_mock_adapter: ^0.6.1
+  # Isar code generation
+  isar_generator: ^3.1.0+1
 
 flutter:
   uses-material-design: true

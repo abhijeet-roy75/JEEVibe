@@ -17,7 +17,9 @@ import '../widgets/priya_avatar.dart';
 import '../widgets/daily_quiz/priya_maam_card_widget.dart';
 import '../widgets/daily_quiz/daily_quiz_card_widget.dart';
 import '../widgets/daily_quiz/subject_progress_widget.dart';
+import '../widgets/offline/offline_banner.dart';
 import '../providers/daily_quiz_provider.dart';
+import '../providers/offline_provider.dart';
 import '../utils/error_handler.dart';
 import 'daily_quiz_loading_screen.dart';
 import 'analytics_screen.dart';
@@ -303,6 +305,8 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
       backgroundColor: AppColors.backgroundLight,
       body: Column(
         children: [
+          // Offline banner at top
+          const OfflineBanner(),
           // Purple gradient header
           _buildHeader(),
           // Scrollable content
@@ -356,11 +360,16 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
 
   Widget _buildDailyQuizCard() {
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
+    final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);
     final hasActiveQuiz = provider.hasActiveQuiz;
+    final isOffline = offlineProvider.isOffline;
 
     // Check if user has quizzes remaining (tier-based)
     // Disable button while checking access to prevent double-tap
-    bool canStartQuiz = !_isCheckingQuizAccess && (_isQuizUnlimited || _quizzesRemaining > 0);
+    // Also disable if offline and no active quiz (can't generate new quiz)
+    bool canStartQuiz = !_isCheckingQuizAccess &&
+        (_isQuizUnlimited || _quizzesRemaining > 0) &&
+        (!isOffline || hasActiveQuiz); // Can continue active quiz offline, but not start new
 
     // C8: Get dynamic quiz size from summary or current quiz
     int? questionCount;

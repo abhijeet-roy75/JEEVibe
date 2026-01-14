@@ -13,6 +13,7 @@ import '../theme/app_text_styles.dart';
 import '../widgets/analytics/overview_tab.dart';
 import '../widgets/analytics/mastery_tab.dart';
 import '../widgets/buttons/gradient_button.dart';
+import '../widgets/offline/offline_banner.dart';
 import 'subscription/paywall_screen.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -109,6 +110,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       backgroundColor: AppColors.backgroundLight,
       body: Column(
         children: [
+          // Offline banner at top
+          const OfflineBanner(),
           // Header with gradient
           _buildHeader(),
           // Tab bar

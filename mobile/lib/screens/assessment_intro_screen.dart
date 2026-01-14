@@ -1,5 +1,5 @@
-/// Assessment Intro Screen - New Home Page/Dashboard
-/// Shows Initial Assessment prompt, Daily Practice (locked), and Snap & Solve
+// Assessment Intro Screen - New Home Page/Dashboard
+// Shows Initial Assessment prompt, Daily Practice (locked), and Snap & Solve
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +9,7 @@ import '../theme/app_text_styles.dart';
 import '../widgets/app_header.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/buttons/gradient_button.dart';
+import '../widgets/offline/offline_banner.dart';
 import '../services/storage_service.dart';
 import '../services/firebase/firestore_user_service.dart';
 import '../services/firebase/auth_service.dart';
@@ -16,6 +17,7 @@ import '../services/api_service.dart';
 import '../models/user_profile.dart';
 import '../models/assessment_response.dart';
 import '../providers/app_state_provider.dart';
+import '../providers/offline_provider.dart';
 import 'profile/profile_view_screen.dart';
 import 'assessment_instructions_screen.dart';
 import 'daily_quiz_loading_screen.dart';
@@ -76,6 +78,18 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
         remainingSnaps = appState.snapsRemaining.clamp(0, 5);
       } catch (e) {
         debugPrint('Error getting snap count: $e');
+      }
+
+      // Initialize offline provider
+      try {
+        if (user != null) {
+          final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);
+          // Check if user has Pro/Ultra tier for offline access
+          // For now, initialize with basic offline detection (offlineEnabled will be updated when subscription status is fetched)
+          await offlineProvider.initialize(user.uid, offlineEnabled: false);
+        }
+      } catch (e) {
+        debugPrint('Error initializing offline provider: $e');
       }
       
       if (user != null) {
@@ -161,6 +175,8 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
         ),
         child: Column(
           children: [
+            // Offline banner (shows when offline)
+            const OfflineBanner(),
             // Header with logo, title, profile
             _buildHeader(),
             // Scrollable content
@@ -582,19 +598,68 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                GradientButton(
-                  text: 'Take a Photo',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HomeScreen(),
-                        settings: const RouteSettings(name: '/snap_home'),
-                      ),
-                    ).then((_) => _loadData());
+                Consumer<OfflineProvider>(
+                  builder: (context, offlineProvider, child) {
+                    final isOffline = offlineProvider.isInitialized && offlineProvider.isOffline;
+
+                    if (isOffline) {
+                      // Show disabled state when offline
+                      return Column(
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              color: AppColors.textLight.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.cloud_off,
+                                  color: AppColors.textMedium,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Camera unavailable offline',
+                                  style: AppTextStyles.labelMedium.copyWith(
+                                    color: AppColors.textMedium,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Snap & Solve requires internet to analyze your questions',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textLight,
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      );
+                    }
+
+                    return GradientButton(
+                      text: 'Take a Photo',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => HomeScreen(),
+                            settings: const RouteSettings(name: '/snap_home'),
+                          ),
+                        ).then((_) => _loadData());
+                      },
+                      size: GradientButtonSize.large,
+                      leadingIcon: Icons.camera_alt,
+                    );
                   },
-                  size: GradientButtonSize.large,
-                  leadingIcon: Icons.camera_alt,
                 ),
               ],
             ),

@@ -3,9 +3,14 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:provider/provider.dart';
 import '../services/storage_service.dart';
+import '../services/offline/sync_service.dart';
 import '../models/snap_data_model.dart';
+import '../providers/offline_provider.dart';
 import '../widgets/app_header.dart';
+import '../widgets/offline/offline_banner.dart';
+import '../widgets/offline/cached_image_widget.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'solution_review_screen.dart';
@@ -46,9 +51,29 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
 
     try {
       final storage = StorageService();
-      // Get ALL solutions from history
+      final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);
+
+      // If offline and have cached solutions, load from cache
+      if (offlineProvider.isOffline && offlineProvider.offlineEnabled) {
+        final cachedSolutions = await offlineProvider.getCachedSolutions();
+        if (cachedSolutions.isNotEmpty) {
+          final syncService = SyncService();
+          final solutions = cachedSolutions
+              .map((cached) => syncService.convertToRecentSolution(cached))
+              .toList();
+          setState(() {
+            _allSolutions = solutions;
+            _calculateStats();
+            _filterSolutions();
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+
+      // Get ALL solutions from history (online mode or no cache)
       final solutions = await storage.getAllSolutions();
-      
+
       setState(() {
         _allSolutions = solutions;
         _calculateStats();
@@ -236,6 +261,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
         ),
         child: Column(
           children: [
+            const OfflineBanner(),
             _buildHeader(),
             Expanded(
               child: _isLoading
@@ -515,47 +541,32 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
 
   Widget _buildThumbnail(RecentSolution solution) {
     if (solution.imageUrl == null) {
-      return SubjectIconWidget(subject: solution.subject, size: 24);
+      return Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: AppColors.backgroundLight,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: SubjectIconWidget(subject: solution.subject, size: 24),
+        ),
+      );
     }
 
-    return FutureBuilder<String>(
-      future: _resolveImageUrl(solution.imageUrl!),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: AppColors.backgroundLight,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Center(
-              child: SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryPurple),
-              ),
-            ),
-          );
-        }
-
-        return Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.borderLight),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              snapshot.data!,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => SubjectIconWidget(subject: solution.subject, size: 20),
-            ),
-          ),
-        );
-      },
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.borderLight),
+      ),
+      child: OfflineAwareImage(
+        imageUrl: solution.imageUrl,
+        width: 60,
+        height: 60,
+        fit: BoxFit.cover,
+      ),
     );
   }
 }

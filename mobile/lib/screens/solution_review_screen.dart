@@ -7,6 +7,8 @@ import '../widgets/chemistry_text.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
 import '../widgets/buttons/gradient_button.dart';
+import '../widgets/offline/offline_banner.dart';
+import '../widgets/offline/cached_image_widget.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../config/content_config.dart';
@@ -109,6 +111,7 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
         ),
         child: Column(
           children: [
+            const OfflineBanner(),
             _buildHeader(context),
             Expanded(
               child: SingleChildScrollView(
@@ -201,52 +204,21 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
           const SizedBox(height: 12),
           // Display question image if available (from URL)
           if (solution.imageUrl != null) ...[
-            FutureBuilder<String>(
-              future: _resolveImageUrl(solution.imageUrl!),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const SizedBox(
-                    height: 200, 
-                    child: Center(child: CircularProgressIndicator(color: AppColors.primaryPurple))
-                  );
-                }
-                
-                return Column(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      constraints: const BoxConstraints(maxHeight: 250),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                        border: Border.all(color: AppColors.borderLight),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                        child: Image.network(
-                          snapshot.data!,
-                          fit: BoxFit.contain,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                        loadingProgress.expectedTotalBytes!
-                                    : null,
-                              ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) => const Center(
-                            child: Icon(Icons.broken_image, color: AppColors.textLight, size: 48),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                );
-              }
+            Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(maxHeight: 250),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                border: Border.all(color: AppColors.borderLight),
+              ),
+              child: CachedImageWidget(
+                imageUrl: solution.imageUrl,
+                fit: BoxFit.contain,
+                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                height: 200,
+              ),
             ),
+            const SizedBox(height: 16),
           ],
           _buildContentWidget(
             solution.recognizedQuestion,

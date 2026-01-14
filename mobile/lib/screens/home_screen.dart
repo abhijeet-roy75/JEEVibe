@@ -14,7 +14,9 @@ import 'photo_review_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
+import '../providers/offline_provider.dart';
 import '../widgets/buttons/gradient_button.dart';
+import '../widgets/offline/offline_banner.dart';
 import '../models/snap_data_model.dart';
 import '../services/storage_service.dart';
 import '../utils/text_preprocessor.dart';
@@ -58,11 +60,36 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _showOfflineMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.cloud_off, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'You\'re offline. Snap & Solve requires an internet connection.',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.textMedium,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
+          // Offline banner at the very top
+          const OfflineBanner(),
           _buildHeader(),
           Expanded(
             child: Container(
@@ -419,7 +446,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _capturePhoto() async {
     if (_isProcessing) return;
-    
+
+    // Check offline status first
+    final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);
+    if (offlineProvider.isOffline) {
+      _showOfflineMessage();
+      return;
+    }
+
     final appState = Provider.of<AppStateProvider>(context, listen: false);
     if (!appState.canTakeSnap) {
       Navigator.of(context).push(
@@ -461,7 +495,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _pickFromGallery() async {
     if (_isProcessing) return;
-    
+
+    // Check offline status first
+    final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);
+    if (offlineProvider.isOffline) {
+      _showOfflineMessage();
+      return;
+    }
+
     final appState = Provider.of<AppStateProvider>(context, listen: false);
     if (!appState.canTakeSnap) {
       Navigator.of(context).push(
@@ -567,9 +608,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildActionButtons() {
-    return Consumer<AppStateProvider>(
-      builder: (context, appState, child) {
-        final canSnap = appState.canTakeSnap;
+    return Consumer2<AppStateProvider, OfflineProvider>(
+      builder: (context, appState, offlineProvider, child) {
+        final isOffline = offlineProvider.isOffline;
+        final canSnap = appState.canTakeSnap && !isOffline;
 
         return Padding(
           padding: AppSpacing.screenPadding,
@@ -605,7 +647,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               )
                             else
                               Icon(
-                                canSnap ? Icons.camera_alt : Icons.lock,
+                                isOffline
+                                    ? Icons.cloud_off
+                                    : (canSnap ? Icons.camera_alt : Icons.lock),
                                 color: canSnap ? Colors.white : AppColors.textGray,
                                 size: 20,
                               ),
