@@ -20,12 +20,12 @@ Implementing a subscription paywall with:
 | Feature | Free Tier | Pro Tier |
 |---------|-----------|----------|
 | **Trial Duration** | 7 days unlimited | - |
-| **Daily Snaps** | 5/day | Unlimited ♾️ |
-| **Daily Quizzes** | 1 quiz/day (10 questions) | Unlimited ♾️ |
-| **Solutions** | Basic explanations | Detailed step-by-step |
-| **Doubt Library** | ❌ | ✅ Personal library |
-| **Analytics** | ❌ | ✅ Performance tracking |
-| **Study Recommendations** | ❌ | ✅ AI-powered suggestions |
+| **Daily Snaps** | 3/day | 10/day |
+| **Daily Quizzes** | 1 quiz/day | 10/day |
+| **Solutions** | Full step-by-step | Full step-by-step |
+| **Analytics** | Basic only | ✅ Full analytics |
+
+> **Updated**: Solutions are always full step-by-step for all tiers. See [TIER-SYSTEM-ARCHITECTURE.md](./TIER-SYSTEM-ARCHITECTURE.md) for current tier structure.
 
 ### Pricing (INR)
 
@@ -259,11 +259,9 @@ Day 7+: Hit limit → Show paywall
   features: {
     unlimited_snaps: boolean,
     unlimited_quizzes: boolean,
-    detailed_solutions: boolean,
-    doubt_library: boolean,
     analytics: boolean,
-    study_recommendations: boolean,
   },
+  // Note: Solutions are always full step-by-step for all tiers (not gated)
 }
 ```
 
@@ -710,23 +708,14 @@ class PaymentWebViewScreen extends StatefulWidget {
 ┌─────────────────────────────────────┐
 │  Unlock Your Full Potential         │
 ├─────────────────────────────────────┤
-│  ✓ Unlimited Snaps                  │
-│    Never stop learning              │
+│  ✓ 10 Snaps per Day                 │
+│    Solve more problems daily        │
 │                                     │
-│  ✓ Unlimited Daily Quizzes          │
+│  ✓ 10 Daily Quizzes                 │
 │    Practice makes perfect           │
 │                                     │
-│  ✓ Detailed Step-by-Step Solutions  │
-│    Understand every concept         │
-│                                     │
-│  ✓ Personal Doubt Library           │
-│    Track your learning journey      │
-│                                     │
-│  ✓ Performance Analytics            │
+│  ✓ Full Performance Analytics       │
 │    Know your strengths & weaknesses │
-│                                     │
-│  ✓ Smart Study Recommendations      │
-│    AI-powered personalized tips     │
 ├─────────────────────────────────────┤
 │  [See Plans] →                      │
 │  [Maybe Later]                      │
@@ -752,12 +741,10 @@ class PaymentWebViewScreen extends StatefulWidget {
 ├─────────────────────────────────────┤
 │  Feature         | Free    | Pro    │
 │  ────────────────┼─────────┼────────│
-│  Daily Snaps     | 5       | ∞      │
-│  Daily Quizzes   | 1       | ∞      │
-│  Solutions       | Basic   | Full   │
-│  Doubt Library   | ✗       | ✓      │
-│  Analytics       | ✗       | ✓      │
-│  Recommendations | ✗       | ✓      │
+│  Daily Snaps     | 3       | 10     │
+│  Daily Quizzes   | 1       | 10     │
+│  Solutions       | ✓ Full  | ✓ Full │
+│  Analytics       | Basic   | Full   │
 ├─────────────────────────────────────┤
 │  [Choose Plan] →                    │
 └─────────────────────────────────────┘

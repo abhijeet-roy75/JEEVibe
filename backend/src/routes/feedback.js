@@ -107,21 +107,30 @@ router.post(
       });
 
       // Send email notification (async, don't wait for it)
-      sendFeedbackEmail({
-        feedbackId: feedbackRef.id,
-        userId,
-        rating,
-        description,
-        context,
-      }).catch((error) => {
-        logger.error('Failed to send feedback email', {
+      // Only send if SMTP is configured (check env vars)
+      if (process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+        sendFeedbackEmail({
+          feedbackId: feedbackRef.id,
+          userId,
+          rating,
+          description,
+          context,
+        }).catch((error) => {
+          logger.error('Failed to send feedback email', {
+            requestId: req.id,
+            userId,
+            feedbackId: feedbackRef.id,
+            error: error.message,
+          });
+          // Don't fail the request if email fails
+        });
+      } else {
+        logger.info('Email notification skipped - SMTP not configured', {
           requestId: req.id,
           userId,
           feedbackId: feedbackRef.id,
-          error: error.message,
         });
-        // Don't fail the request if email fails
-      });
+      }
 
       res.status(201).json({
         success: true,
