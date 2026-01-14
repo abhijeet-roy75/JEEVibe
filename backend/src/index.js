@@ -173,6 +173,9 @@ app.use('/api', snapHistoryRouter);
 const feedbackRouter = require('./routes/feedback');
 app.use('/api/feedback', feedbackRouter);
 
+const subscriptionsRouter = require('./routes/subscriptions');
+app.use('/api/subscriptions', subscriptionsRouter);
+
 // Test endpoints (only in development)
 if (process.env.NODE_ENV !== 'production') {
   const testFirebaseRouter = require('./routes/test-firebase');
@@ -223,6 +226,11 @@ app.get('/', (req, res) => {
         mastery: 'GET /api/analytics/mastery/:subject',
         masteryTimeline: 'GET /api/analytics/mastery-timeline',
         allChapters: 'GET /api/analytics/all-chapters'
+      },
+      subscriptions: {
+        status: 'GET /api/subscriptions/status',
+        plans: 'GET /api/subscriptions/plans',
+        usage: 'GET /api/subscriptions/usage'
       }
     }
   });

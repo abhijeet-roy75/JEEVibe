@@ -18,6 +18,9 @@ const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
 const { body, validationResult } = require('express-validator');
 
+// Subscription & Usage Services
+const { canUse, incrementUsage, getUsage } = require('../services/usageTrackingService');
+
 // Services
 const { generateDailyQuiz } = require('../services/dailyQuizService');
 const { submitAnswer, getQuizResponses } = require('../services/quizResponseService');
@@ -149,47 +152,39 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
       });
     }
 
-    // Check daily limit: one quiz per day (resets at midnight)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(today);
-    todayEnd.setHours(23, 59, 59, 999);
+    // Check daily quiz limit based on user's tier
+    const usageCheck = await canUse(userId, 'daily_quiz');
+    if (!usageCheck.allowed) {
+      logger.warn('Daily quiz limit reached', {
+        userId,
+        tier: usageCheck.tier,
+        used: usageCheck.used,
+        limit: usageCheck.limit
+      });
 
-    const todayQuizzesRef = db.collection('daily_quizzes')
-      .doc(userId)
-      .collection('quizzes')
-      .where('status', '==', 'completed')
-      .where('completed_at', '>=', admin.firestore.Timestamp.fromDate(today))
-      .where('completed_at', '<=', admin.firestore.Timestamp.fromDate(todayEnd))
-      .limit(1);
-
-    const todayQuizzesSnapshot = await retryFirestoreOperation(async () => {
-      return await todayQuizzesRef.get();
-    });
-
-    /*
-    if (!todayQuizzesSnapshot.empty) {
-      const completedQuiz = todayQuizzesSnapshot.docs[0].data();
-      const completedQuizId = todayQuizzesSnapshot.docs[0].id;
-      
-      // User has already completed a quiz today
       return res.status(429).json({
         success: false,
         error: {
-          code: 'DAILY_LIMIT_REACHED',
-          message: 'You have already completed your daily quiz today. Come back tomorrow for a new quiz!',
-          details: 'Daily quiz limit: 1 quiz per day (resets at midnight)'
+          code: 'LIMIT_REACHED',
+          message: usageCheck.tier === 'free'
+            ? 'You have used your free daily quiz. Upgrade to Pro for 10 quizzes per day!'
+            : `Daily limit of ${usageCheck.limit} quizzes reached. Come back tomorrow!`,
+          details: `Daily quiz limit: ${usageCheck.limit} per day (resets at midnight IST)`
         },
-        completed_quiz: {
-          quiz_id: completedQuizId,
-          quiz_number: completedQuiz.quiz_number,
-          completed_at: completedQuiz.completed_at?.toDate?.()?.toISOString() || completedQuiz.completed_at
+        usage: {
+          used: usageCheck.used,
+          limit: usageCheck.limit,
+          remaining: 0,
+          resets_at: usageCheck.resets_at
         },
-        next_quiz_available: new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow at midnight
+        tier: usageCheck.tier,
+        upgrade_prompt: usageCheck.tier === 'free' ? {
+          message: 'Upgrade to Pro for 10 daily quizzes',
+          cta: 'Upgrade Now'
+        } : null,
         requestId: req.id
       });
     }
-    */
 
     // Generate new quiz
     logger.info('Generating daily quiz', { userId, requestId: req.id });
@@ -330,6 +325,15 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
       });
     }
 
+    // Increment daily quiz usage (tier-based tracking)
+    const updatedUsage = await incrementUsage(userId, 'daily_quiz');
+    logger.info('Daily quiz usage incremented', {
+      userId,
+      tier: updatedUsage.tier,
+      used: updatedUsage.used,
+      limit: updatedUsage.limit
+    });
+
     res.json({
       success: true,
       quiz: {
@@ -340,6 +344,16 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
         generated_at: quizData.generated_at,
         is_recovery_quiz: quizData.is_recovery_quiz || false
       },
+      usage: {
+        daily_quiz: {
+          used: updatedUsage.used,
+          limit: updatedUsage.limit,
+          remaining: updatedUsage.is_unlimited ? -1 : updatedUsage.remaining,
+          is_unlimited: updatedUsage.is_unlimited,
+          resets_at: updatedUsage.resets_at
+        }
+      },
+      tier: updatedUsage.tier,
       requestId: req.id
     });
   } catch (error) {

@@ -72,6 +72,7 @@ async function incrementDailyUsage(userId, subject) {
 
 /**
  * Save a snap record to user's history
+ * Note: Usage tracking is now handled separately by usageTrackingService
  * @param {string} userId - User ID
  * @param {Object} snapData - Snap data including solution, question, etc.
  * @returns {Promise<string>} Snap record ID
@@ -88,13 +89,34 @@ async function saveSnapRecord(userId, snapData) {
 
         const docRef = await snapsRef.add(record);
 
-        // Increment usage after successful save
-        await incrementDailyUsage(userId, snapData.subject);
+        // Update subject-level stats only (usage tracking handled by usageTrackingService)
+        await updateSnapStats(userId, snapData.subject);
 
         return docRef.id;
     } catch (error) {
         logger.error('Error saving snap record:', { userId, error: error.message });
         throw error;
+    }
+}
+
+/**
+ * Update snap statistics (without usage counting)
+ * @param {string} userId - User ID
+ * @param {string} subject - Subject of the snap
+ */
+async function updateSnapStats(userId, subject) {
+    try {
+        const userRef = db.collection('users').doc(userId);
+        const subjectKey = subject ? subject.toLowerCase() : 'unknown';
+
+        await userRef.update({
+            'snap_stats.total_snaps': admin.firestore.FieldValue.increment(1),
+            [`snap_stats.subject_counts.${subjectKey}`]: admin.firestore.FieldValue.increment(1),
+            'snap_stats.last_snap_at': admin.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (error) {
+        // Non-blocking - log error but don't fail
+        logger.warn('Error updating snap stats:', { userId, error: error.message });
     }
 }
 

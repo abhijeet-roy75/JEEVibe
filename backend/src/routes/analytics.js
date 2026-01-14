@@ -13,9 +13,12 @@ const express = require('express');
 const router = express.Router();
 const { authenticateUser } = require('../middleware/auth');
 const logger = require('../utils/logger');
+const { db } = require('../config/firebase');
 
 const analyticsService = require('../services/analyticsService');
 const thetaSnapshotService = require('../services/thetaSnapshotService');
+const { getAnalyticsAccess } = require('../middleware/featureGate');
+const { getEffectiveTier } = require('../services/subscriptionService');
 
 // ============================================================================
 // ANALYTICS OVERVIEW
@@ -33,18 +36,61 @@ router.get('/overview', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
 
+    // Check analytics access level based on tier
+    const analyticsAccess = await getAnalyticsAccess(userId);
+    const tierInfo = await getEffectiveTier(userId);
+
+    if (analyticsAccess === 'basic') {
+      // FREE tier: Return basic stats only
+      const userDoc = await db.collection('users').doc(userId).get();
+      const userData = userDoc.exists ? userDoc.data() : {};
+
+      const basicStats = {
+        streak: userData.streak || 0,
+        total_questions_solved: userData.total_questions_solved || 0,
+        total_quizzes_completed: userData.completed_quiz_count || 0
+      };
+
+      logger.info('Basic analytics overview retrieved', {
+        requestId: req.id,
+        userId,
+        tier: tierInfo.tier,
+        access: 'basic'
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          access_level: 'basic',
+          basic_stats: basicStats,
+          upgrade_prompt: {
+            message: 'Upgrade to Pro for detailed analytics, mastery tracking, and performance insights',
+            cta_text: 'Unlock Full Analytics',
+            current_tier: tierInfo.tier
+          }
+        },
+        requestId: req.id
+      });
+    }
+
+    // PRO/ULTRA: Return full analytics
     const overview = await analyticsService.getAnalyticsOverview(userId);
 
-    logger.info('Analytics overview retrieved', {
+    logger.info('Full analytics overview retrieved', {
       requestId: req.id,
       userId,
+      tier: tierInfo.tier,
+      access: 'full',
       questionsSolved: overview.stats.questions_solved,
       chaptersMastered: overview.stats.chapters_mastered
     });
 
     res.json({
       success: true,
-      data: overview,
+      data: {
+        access_level: 'full',
+        ...overview
+      },
       requestId: req.id
     });
   } catch (error) {

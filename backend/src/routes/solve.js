@@ -12,7 +12,8 @@ const { authenticateUser } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
 const { storage } = require('../config/firebase');
-const { getDailyUsage, saveSnapRecord } = require('../services/snapHistoryService');
+const { saveSnapRecord } = require('../services/snapHistoryService');
+const { canUse, incrementUsage, getUsage } = require('../services/usageTrackingService');
 const { v4: uuidv4 } = require('uuid');
 
 
@@ -142,13 +143,25 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
       throw new ApiError(400, `Invalid image type. Allowed types: ${allowedMimeTypes.join(', ')}`);
     }
 
-    // Check daily limit first
-    const usage = await getDailyUsage(userId);
-    if (usage.used >= usage.limit) {
-      logger.warn('Daily snap limit reached', { userId, used: usage.used, limit: usage.limit });
-      throw new ApiError(429, `Daily limit of ${usage.limit} snaps reached. Please come back tomorrow!`, {
-        code: 'LIMIT_EXHAUSTED',
-        resetsAt: usage.resetsAt
+    // Check daily limit based on user's tier
+    const usageCheck = await canUse(userId, 'snap_solve');
+    if (!usageCheck.allowed) {
+      logger.warn('Daily snap limit reached', {
+        userId,
+        tier: usageCheck.tier,
+        used: usageCheck.used,
+        limit: usageCheck.limit
+      });
+      throw new ApiError(429, `Daily limit of ${usageCheck.limit} snaps reached. ${usageCheck.tier === 'free' ? 'Upgrade to Pro for more!' : 'Please come back tomorrow!'}`, {
+        code: 'LIMIT_REACHED',
+        usage: {
+          used: usageCheck.used,
+          limit: usageCheck.limit,
+          remaining: 0,
+          resets_at: usageCheck.resets_at
+        },
+        tier: usageCheck.tier,
+        upgrade_prompt: usageCheck.tier === 'free' ? 'Upgrade to Pro for 10 daily snaps' : null
       });
     }
 
@@ -206,7 +219,7 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
       topic: solutionData.topic,
     });
 
-    // Run Firestore operations in parallel (save + usage check)
+    // Run Firestore operations in parallel (save + increment usage)
     // This saves ~1-2 seconds by avoiding sequential round-trips to Firestore
     const firestoreStart = Date.now();
     const [snapId, updatedUsage] = await Promise.all([
@@ -220,7 +233,7 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
         imageUrl: imageUrl,
         requestId: req.id
       }),
-      getDailyUsage(userId)
+      incrementUsage(userId, 'snap_solve')
     ]);
     perfSteps.firestoreOperations = Date.now() - firestoreStart;
     logger.info(`⏱️  [PERF] Firestore operations (parallel): ${perfSteps.firestoreOperations}ms`, { requestId: req.id });
@@ -253,8 +266,10 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
         language: solutionData.language,
         solution: solutionData.solution,
         imageUrl: imageUrl,
-        remainingSnaps: updatedUsage.limit - updatedUsage.used,
-        resetsAt: updatedUsage.resetsAt
+        remainingSnaps: updatedUsage.is_unlimited ? -1 : updatedUsage.remaining,
+        dailyLimit: updatedUsage.limit,
+        tier: updatedUsage.tier,
+        resetsAt: updatedUsage.resets_at
       },
       requestId: req.id,
     });
