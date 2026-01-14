@@ -124,34 +124,56 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top row with greeting and PRO badge
+              // Top row with back button, greeting, and PRO badge
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Greeting
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Hi ${_getUserName()}! 👋',
-                        style: AppTextStyles.headerWhite.copyWith(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  // Back button
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                        size: 20,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Pro Analytics',
-                        style: AppTextStyles.bodyWhite.copyWith(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      padding: const EdgeInsets.all(8),
+                      constraints: const BoxConstraints(),
+                    ),
                   ),
-                  // PRO badge - small pill style per design
+                  // Centered greeting
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          'Hi ${_getUserName()}! 👋',
+                          style: AppTextStyles.headerWhite.copyWith(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Historical Analytics',
+                          style: AppTextStyles.bodyWhite.copyWith(
+                            fontSize: 14,
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // PRO badge
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
@@ -162,7 +184,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
-                          Icons.star,
+                          Icons.auto_awesome,
                           color: Colors.white,
                           size: 14,
                         ),
