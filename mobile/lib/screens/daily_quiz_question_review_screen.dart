@@ -3,13 +3,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/daily_quiz_question.dart';
+import '../models/ai_tutor_models.dart';
 import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
+import '../services/subscription_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/safe_svg_widget.dart';
 import '../widgets/priya_avatar.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'ai_tutor_chat_screen.dart';
 
 class DailyQuizQuestionReviewScreen extends StatefulWidget {
   final String quizId;
@@ -185,6 +188,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
+      floatingActionButton: _buildAiTutorFab(question),
       body: Column(
         children: [
           // Header
@@ -214,6 +218,42 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
           // Navigation buttons
           _buildNavigationButtons(),
         ],
+      ),
+    );
+  }
+
+  /// Build the AI Tutor FAB (Ultra tier only)
+  Widget? _buildAiTutorFab(Map<String, dynamic> question) {
+    final subscriptionService = SubscriptionService();
+    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
+    if (!hasAiTutorAccess) return null;
+
+    final subject = question['subject'] as String? ?? 'Unknown';
+    final chapter = question['chapter'] as String? ?? 'Unknown';
+    final questionId = question['question_id'] as String? ?? '';
+
+    return FloatingActionButton.extended(
+      onPressed: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AiTutorChatScreen(
+              injectContext: TutorContext(
+                type: TutorContextType.quiz,
+                id: questionId,
+                title: '$chapter - $subject',
+              ),
+            ),
+          ),
+        );
+      },
+      backgroundColor: AppColors.primaryPurple,
+      icon: const PriyaAvatar(size: 24, showShadow: false),
+      label: const Text(
+        'Ask Priya Ma\'am',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

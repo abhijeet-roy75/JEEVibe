@@ -117,19 +117,113 @@ class ChatBubble extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              child: LaTeXWidget(
-                text: message.content ?? '',
-                textStyle: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 15,
-                  height: 1.5,
-                ),
-                allowWrapping: true,
-              ),
+              child: _buildFormattedContent(message.content ?? ''),
             ),
           ),
         ],
       ),
     );
+  }
+
+  /// Build formatted content that preserves paragraph structure
+  /// and handles steps/lists properly
+  Widget _buildFormattedContent(String content) {
+    const textStyle = TextStyle(
+      color: AppColors.textPrimary,
+      fontSize: 15,
+      height: 1.5,
+    );
+
+    // Split by double newlines (paragraphs) or numbered/bullet lists
+    // Preserve structure while still handling LaTeX within each block
+    final paragraphs = _splitIntoParagraphs(content);
+
+    if (paragraphs.length == 1) {
+      // Single paragraph - render normally
+      return LaTeXWidget(
+        text: content,
+        textStyle: textStyle,
+        allowWrapping: true,
+      );
+    }
+
+    // Multiple paragraphs - render each with spacing
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: paragraphs.asMap().entries.map((entry) {
+        final index = entry.key;
+        final paragraph = entry.value.trim();
+
+        if (paragraph.isEmpty) {
+          return const SizedBox(height: 8);
+        }
+
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: index < paragraphs.length - 1 ? 12 : 0,
+          ),
+          child: LaTeXWidget(
+            text: paragraph,
+            textStyle: textStyle,
+            allowWrapping: true,
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  /// Split content into paragraphs while preserving structure
+  List<String> _splitIntoParagraphs(String content) {
+    // First, normalize different newline formats
+    String normalized = content
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n');
+
+    // Split by:
+    // 1. Double newlines (paragraph breaks)
+    // 2. Lines starting with numbers (1., 2., etc.) or bullets (-, *, •)
+    final List<String> result = [];
+    final lines = normalized.split('\n');
+
+    StringBuffer currentParagraph = StringBuffer();
+
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      final trimmedLine = line.trim();
+
+      // Check if this line starts a new numbered/bulleted item
+      final isListItem = RegExp(r'^(\d+[\.\)]\s|[-*•]\s)').hasMatch(trimmedLine);
+
+      // Check if previous line was empty (paragraph break)
+      final prevWasEmpty = i > 0 && lines[i - 1].trim().isEmpty;
+
+      if (trimmedLine.isEmpty) {
+        // Empty line - save current paragraph if any
+        if (currentParagraph.isNotEmpty) {
+          result.add(currentParagraph.toString().trim());
+          currentParagraph.clear();
+        }
+      } else if (isListItem || prevWasEmpty) {
+        // New list item or after paragraph break - start new paragraph
+        if (currentParagraph.isNotEmpty) {
+          result.add(currentParagraph.toString().trim());
+          currentParagraph.clear();
+        }
+        currentParagraph.write(trimmedLine);
+      } else {
+        // Continue current paragraph
+        if (currentParagraph.isNotEmpty) {
+          currentParagraph.write(' ');
+        }
+        currentParagraph.write(trimmedLine);
+      }
+    }
+
+    // Don't forget the last paragraph
+    if (currentParagraph.isNotEmpty) {
+      result.add(currentParagraph.toString().trim());
+    }
+
+    return result.isEmpty ? [content] : result;
   }
 }

@@ -27,7 +27,6 @@ import 'analytics_screen.dart';
 import '../widgets/feedback/feedback_fab.dart';
 import '../services/session_tracking_service.dart';
 import 'ai_tutor_chat_screen.dart';
-import '../models/ai_tutor_models.dart';
 import '../services/subscription_service.dart';
 
 class AssessmentIntroScreen extends StatefulWidget {
@@ -202,9 +201,6 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     const SizedBox(height: 24),
                     // Snap & Solve Card
                     _buildSnapSolveCard(),
-                    const SizedBox(height: 24),
-                    // AI Tutor Card (Ultra tier only)
-                    _buildAiTutorCard(),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -677,98 +673,10 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     );
   }
 
-  /// AI Tutor Card - Chat with Priya Ma'am (Ultra tier only)
-  Widget _buildAiTutorCard() {
+  Widget _buildPriyaMessageCard() {
     final subscriptionService = SubscriptionService();
     final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
-    if (!hasAiTutorAccess) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              Color(0xFFF3E8FF), // Light purple
-              Color(0xFFFCE7F3), // Light pink
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.15),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                // Priya Ma'am avatar
-                const PriyaAvatar(size: 56),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Chat with Priya Ma\'am',
-                        style: AppTextStyles.headerMedium.copyWith(
-                          color: AppColors.textPrimary,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Ask questions, get study tips, or discuss your JEE preparation',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AiTutorChatScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.chat_bubble_outline),
-                label: const Text('Start Chat'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  side: BorderSide(
-                    color: AppColors.primary.withValues(alpha: 0.5),
-                    width: 1.5,
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPriyaMessageCard() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
@@ -792,7 +700,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PriyaAvatar(size: 56),
+                const PriyaAvatar(size: 56),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -838,6 +746,23 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            // Chat with Priya button (Ultra tier only)
+            if (hasAiTutorAccess) ...[
+              const SizedBox(height: 16),
+              GradientButton(
+                text: 'Chat with Priya Ma\'am',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AiTutorChatScreen(),
+                    ),
+                  );
+                },
+                size: GradientButtonSize.large,
+                leadingIcon: Icons.chat_bubble_outline,
+              ),
+            ],
           ],
         ),
       ),

@@ -560,27 +560,50 @@ class LaTeXWidget extends StatelessWidget {
           fontWeight: latexWeight ?? ContentConfig.latexFontWeight,
         );
         
-        // Render LaTeX inline without FittedBox to maintain readable size
+        // Render LaTeX inline with overflow protection
         try {
-          final mathWidget = Math.tex(
-            processedContent,
-            mathStyle: match.isInline ? MathStyle.text : MathStyle.display,
-            textStyle: boldStyle,
-          );
-          
-          spans.add(WidgetSpan(
-            child: mathWidget,
-            alignment: PlaceholderAlignment.middle,
-          ));
+          // For very long formulas, use text fallback to prevent overflow
+          if (processedContent.length > 80) {
+            debugPrint('[LaTeX] Long formula detected, using text fallback');
+            String displayText = TextPreprocessor.cleanLatexForFallback(match.content);
+            displayText = TextPreprocessor.normalizeWhitespace(displayText);
+            spans.add(TextSpan(
+              text: displayText.isEmpty ? match.content : displayText,
+              style: boldStyle,
+            ));
+          } else {
+            final mathWidget = Math.tex(
+              processedContent,
+              mathStyle: match.isInline ? MathStyle.text : MathStyle.display,
+              textStyle: boldStyle,
+              onErrorFallback: (err) {
+                // On error, return text fallback
+                return Text(
+                  TextPreprocessor.cleanLatexForFallback(match.content),
+                  style: boldStyle,
+                );
+              },
+            );
+
+            // Wrap in LayoutBuilder to detect overflow and clip if needed
+            spans.add(WidgetSpan(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 280),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: mathWidget,
+                ),
+              ),
+              alignment: PlaceholderAlignment.middle,
+            ));
+          }
         } catch (mathError) {
           debugPrint('Math.tex error in mixed content: $mathError');
           // If Math.tex fails, add as plain text
           String displayText = TextPreprocessor.cleanLatexForFallback(match.content);
           displayText = TextPreprocessor.normalizeWhitespace(displayText);
-          
-          final boldStyle = style.copyWith(
-            fontWeight: latexWeight ?? ContentConfig.latexFontWeight,
-          );
+
           spans.add(TextSpan(
             text: displayText.isEmpty ? match.content : displayText,
             style: boldStyle,
