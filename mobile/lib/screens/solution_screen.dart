@@ -19,6 +19,9 @@ import '../config/content_config.dart';
 import '../utils/text_preprocessor.dart';
 import '../providers/offline_provider.dart';
 import '../services/offline/sync_service.dart';
+import '../models/ai_tutor_models.dart';
+import 'ai_tutor_chat_screen.dart';
+import '../services/subscription_service.dart';
 
 class SolutionScreen extends StatefulWidget {
   final Future<Solution> solutionFuture;
@@ -911,8 +914,65 @@ class _SolutionScreenState extends State<SolutionScreen> {
   Widget _buildActionButtons(Solution solution) {
     return Consumer<AppStateProvider>(
       builder: (context, appState, child) {
+        // Check if user has AI Tutor access (Ultra tier)
+        final subscriptionService = SubscriptionService();
+        final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
+
         return Column(
           children: [
+            // Ask Priya Ma'am button (Ultra tier only)
+            if (hasAiTutorAccess) ...[
+              Container(
+                width: double.infinity,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
+                  boxShadow: AppShadows.cardShadow,
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => AiTutorChatScreen(
+                            injectContext: TutorContext(
+                              type: TutorContextType.solution,
+                              id: solution.id ?? 'snap_${DateTime.now().millisecondsSinceEpoch}',
+                              title: '${solution.topic} - ${solution.subject}',
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const PriyaAvatar(size: 24, showShadow: false),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Ask Priya Ma\'am',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColors.primary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             // Back to Snap and Solve - Single button since both buttons went to same destination
             Container(
               width: double.infinity,

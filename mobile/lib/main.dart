@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/daily_quiz_provider.dart';
+import 'providers/ai_tutor_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -127,6 +128,13 @@ void main() async {
           create: (_) => DailyQuizProvider(AuthService()),
           update: (_, authService, previous) =>
             previous ?? DailyQuizProvider(authService),
+        ),
+
+        // AI Tutor (Priya Ma'am) State
+        ChangeNotifierProxyProvider<AuthService, AiTutorProvider>(
+          create: (_) => AiTutorProvider(AuthService()),
+          update: (_, authService, previous) =>
+            previous ?? AiTutorProvider(authService),
         ),
 
         // Offline Mode Provider

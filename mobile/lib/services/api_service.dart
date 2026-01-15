@@ -911,5 +911,155 @@ class ApiService {
       }
     });
   }
+
+  // ==========================================================================
+  // AI TUTOR (Priya Ma'am) APIs
+  // ==========================================================================
+
+  /// Get AI Tutor conversation history
+  /// Returns messages, current context, and quick actions
+  static Future<Map<String, dynamic>> getAiTutorConversation({
+    required String authToken,
+    int limit = 50,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/ai-tutor/conversation?limit=$limit'),
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            'Content-Type': 'application/json',
+          },
+        ).timeout(const Duration(seconds: 30));
+
+        if (response.statusCode == 200) {
+          return json.decode(response.body);
+        } else if (response.statusCode == 403) {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'AI Tutor requires Ultra subscription');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to load conversation');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } on TimeoutException {
+        throw Exception('Request timed out. Please try again.');
+      }
+    });
+  }
+
+  /// Inject context into AI Tutor conversation
+  /// Called when opening chat from solution/quiz/analytics screen
+  static Future<Map<String, dynamic>> injectAiTutorContext({
+    required String authToken,
+    required String contextType,
+    String? contextId,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final body = {
+          'contextType': contextType,
+          if (contextId != null) 'contextId': contextId,
+        };
+
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/ai-tutor/inject-context'),
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            'Content-Type': 'application/json',
+          },
+          body: json.encode(body),
+        ).timeout(const Duration(seconds: 60));
+
+        if (response.statusCode == 200) {
+          return json.decode(response.body);
+        } else if (response.statusCode == 403) {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'AI Tutor requires Ultra subscription');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to inject context');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } on TimeoutException {
+        throw Exception('Request timed out. Please try again.');
+      }
+    });
+  }
+
+  /// Send a message to AI Tutor
+  static Future<Map<String, dynamic>> sendAiTutorMessage({
+    required String authToken,
+    required String message,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/ai-tutor/message'),
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            'Content-Type': 'application/json',
+          },
+          body: json.encode({'message': message}),
+        ).timeout(const Duration(seconds: 90));
+
+        if (response.statusCode == 200) {
+          return json.decode(response.body);
+        } else if (response.statusCode == 403) {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'AI Tutor requires Ultra subscription');
+        } else if (response.statusCode == 429) {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Daily message limit reached');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to send message');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } on TimeoutException {
+        throw Exception('Priya Ma\'am is thinking... please wait a moment and try again.');
+      }
+    });
+  }
+
+  /// Clear AI Tutor conversation
+  static Future<void> clearAiTutorConversation({
+    required String authToken,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.delete(
+          Uri.parse('$baseUrl/api/ai-tutor/conversation'),
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            'Content-Type': 'application/json',
+          },
+        ).timeout(const Duration(seconds: 30));
+
+        if (response.statusCode == 200) {
+          return;
+        } else if (response.statusCode == 403) {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'AI Tutor requires Ultra subscription');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to clear conversation');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
 }
 

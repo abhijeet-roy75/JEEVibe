@@ -13,6 +13,9 @@ import '../widgets/buttons/gradient_button.dart';
 import 'daily_quiz_review_screen.dart';
 import 'assessment_intro_screen.dart';
 import 'analytics_screen.dart';
+import 'ai_tutor_chat_screen.dart';
+import '../models/ai_tutor_models.dart';
+import '../services/subscription_service.dart';
 
 class DailyQuizResultScreen extends StatefulWidget {
   final String quizId;
@@ -916,6 +919,42 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
             },
           ),
           const SizedBox(height: 12),
+          // Discuss with Priya Ma'am button (Ultra tier only)
+          Builder(
+            builder: (context) {
+              final subscriptionService = SubscriptionService();
+              final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
+              if (!hasAiTutorAccess) return const SizedBox.shrink();
+
+              return Column(
+                children: [
+                  _buildActionButton(
+                    icon: Icons.chat_bubble_outline,
+                    iconColor: AppColors.secondary,
+                    label: 'Discuss with Priya Ma\'am',
+                    backgroundColor: AppColors.secondary.withValues(alpha: 0.1),
+                    textColor: AppColors.secondary,
+                    onTap: () {
+                      final quizNumber = _quizResult?['quiz']?['quiz_number'];
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AiTutorChatScreen(
+                            injectContext: TutorContext(
+                              type: TutorContextType.quiz,
+                              id: widget.quizId,
+                              title: 'Daily Quiz ${quizNumber ?? ''}',
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              );
+            },
+          ),
           // Back to Dashboard button
           GradientButton(
             text: 'Back to Dashboard',
