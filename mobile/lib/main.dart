@@ -296,20 +296,55 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
     String userId,
     String authToken,
   ) {
+    // Only sync if online and initialized
+    if (!offlineProvider.isOnline || !offlineProvider.isInitialized) {
+      return;
+    }
+
+    // Trigger sync in background (async, don't wait)
+    () async {
+      try {
+        // Get subscription status to determine solution limit
+        final subscriptionStatus = await SubscriptionService().fetchStatus(authToken);
+        if (subscriptionStatus == null) {
+          return;
+        }
+
+        final maxSolutions = subscriptionStatus.limits.offlineSolutionsLimit;
+        // -1 means unlimited, use a reasonable default for unlimited
+        final limit = maxSolutions == -1 ? 200 : maxSolutions;
+
+        // Trigger sync in background
+        final syncService = SyncService();
+        final result = await syncService.syncSolutions(
+          userId: userId,
+          authToken: authToken,
+          maxSolutions: limit,
+        );
+
+        if (result.success) {
+          print('Background sync completed: ${result.syncedCount} solutions synced');
+        } else {
+          print('Background sync failed: ${result.error}');
+        }
+      } catch (e) {
+        print('Error starting background sync: $e');
+      }
+    }();
+  }
 
   Future<void> _checkLoginStatus() async {
-    
-    // 2. Check Auth & Profile
+    // Check Auth & Profile
     if (!mounted) return;
-    
+
     final authService = Provider.of<AuthService>(context, listen: false);
-    
+
     if (authService.isAuthenticated) {
       // Verify that user has a valid profile in Firestore
       // If no profile exists, sign out and redirect to welcome screen
       final firestoreService = Provider.of<FirestoreUserService>(context, listen: false);
       bool hasValidProfile = false;
-      
+
       try {
         final profile = await firestoreService.getUserProfile(authService.currentUser!.uid);
         hasValidProfile = profile != null;
@@ -317,9 +352,9 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
         print('Error checking profile: $e');
         hasValidProfile = false;
       }
-      
+
       if (!mounted) return;
-      
+
       // If authenticated but no profile exists, sign out and show welcome screen
       // This handles cases where Firestore data was deleted but Auth session persists
       if (!hasValidProfile) {
@@ -327,7 +362,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
         await authService.signOut();
         final pinService = PinService();
         await pinService.clearPin(); // Clear any local PIN data too
-        
+
         if (mounted) {
           setState(() {
             _targetScreen = const WelcomeScreen();
@@ -336,7 +371,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
         }
         return;
       }
-      
+
       // User has valid profile - proceed with normal flow
 
       // Get auth token for API calls
@@ -389,52 +424,17 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
           }
         }
       }
-    // Only sync if online and initialized
-    if (!offlineProvider.isOnline || !offlineProvider.isInitialized) {
-      return;
-    }
-
-    try {
-      // Get subscription status to determine solution limit
-      final subscriptionStatus = await SubscriptionService().fetchStatus(authToken);
-      if (subscriptionStatus == null) {
-        return;
-      }
-
-      final maxSolutions = subscriptionStatus.limits.offlineSolutionsLimit;
-      // -1 means unlimited, use a reasonable default for unlimited
-      final limit = maxSolutions == -1 ? 200 : maxSolutions;
-
-      // Trigger sync in background
-      final syncService = SyncService();
-      syncService.syncSolutions(
-        userId: userId,
-        authToken: authToken,
-        maxSolutions: limit,
-      ).then((result) {
-        if (result.success) {
-          print('Background sync completed: ${result.syncedCount} solutions synced');
-        } else {
-          print('Background sync failed: ${result.error}');
-        }
-      }).catchError((e) {
-        print('Background sync error: $e');
-      });
-    } catch (e) {
-      print('Error starting background sync: $e');
-    }
-      }
 
       if (!mounted) return;
 
       final pinService = PinService();
       final hasPin = await pinService.pinExists();
-      
+
       if (!mounted) return;
-      
+
       // Determine target screen (Assessment Intro is the new home)
       final targetScreen = const AssessmentIntroScreen();
-      
+
       // If PIN exists, show PIN verification screen, otherwise go directly to home
       if (hasPin) {
         _targetScreen = PinVerificationScreen(
@@ -446,7 +446,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
     } else {
       _targetScreen = const WelcomeScreen();
     }
-    
+
     if (mounted) {
       setState(() {
         _isLoading = false;
