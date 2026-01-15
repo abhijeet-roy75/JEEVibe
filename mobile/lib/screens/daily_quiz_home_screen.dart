@@ -272,27 +272,89 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
         }
 
         if (hasError && provider.summary == null) {
+          // Detect if error is network-related
+          final errorMsg = (provider.error ?? '').toLowerCase();
+          final isOffline = errorMsg.contains('socketexception') ||
+              errorMsg.contains('connection') ||
+              errorMsg.contains('network') ||
+              errorMsg.contains('timeout') ||
+              errorMsg.contains('host') ||
+              errorMsg.contains('internet');
+
           return Scaffold(
             backgroundColor: AppColors.backgroundLight,
-            body: Center(
+            body: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline, size: 64, color: AppColors.errorRed),
-                    const SizedBox(height: 16),
-                    Text('Error', style: AppTextStyles.headerMedium),
-                    const SizedBox(height: 8),
-                    Text(
-                      provider.error ?? 'Failed to load data',
-                      style: AppTextStyles.bodyMedium,
-                      textAlign: TextAlign.center,
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppColors.errorRed.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isOffline ? Icons.wifi_off_rounded : Icons.error_outline,
+                        size: 40,
+                        color: AppColors.errorRed,
+                      ),
                     ),
                     const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _loadData,
-                      child: const Text('Retry'),
+                    Text(
+                      isOffline ? 'You\'re Offline' : 'Something Went Wrong',
+                      style: AppTextStyles.headerMedium.copyWith(
+                        color: AppColors.textDark,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      isOffline
+                          ? 'Please check your internet connection and try again.'
+                          : 'We couldn\'t load your quiz progress. Please try again.',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textMedium,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    // Go Back button (primary)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.arrow_back),
+                        label: const Text('Go Back'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryPurple,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Try Again button (secondary)
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _loadData,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try Again'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primaryPurple,
+                          side: const BorderSide(color: AppColors.primaryPurple),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

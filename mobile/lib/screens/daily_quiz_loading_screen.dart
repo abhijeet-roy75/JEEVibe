@@ -7,6 +7,7 @@ import '../models/subscription_models.dart';
 import '../providers/daily_quiz_provider.dart';
 import '../services/firebase/auth_service.dart';
 import '../services/subscription_service.dart';
+import '../services/offline/connectivity_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/priya_avatar.dart';
@@ -25,6 +26,7 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
     with SingleTickerProviderStateMixin {
   String? _error;
   bool _isLoading = true;
+  bool _isOffline = false;
   late AnimationController _avatarAnimationController;
 
   @override
@@ -48,6 +50,21 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
 
   Future<void> _generateQuiz() async {
     try {
+      // Check connectivity first
+      final connectivityService = ConnectivityService();
+      final isOnline = await connectivityService.checkRealConnectivity();
+
+      if (!isOnline) {
+        if (mounted) {
+          setState(() {
+            _isOffline = true;
+            _error = 'No internet connection';
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
       final provider = Provider.of<DailyQuizProvider>(context, listen: false);
 
       // Check if there's a saved quiz state first
@@ -116,7 +133,16 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
       }
 
       if (mounted) {
+        // Check if error is network-related
+        final errorMsg = e.toString().toLowerCase();
+        final isNetworkError = errorMsg.contains('socketexception') ||
+            errorMsg.contains('connection') ||
+            errorMsg.contains('network') ||
+            errorMsg.contains('timeout') ||
+            errorMsg.contains('host');
+
         setState(() {
+          _isOffline = isNetworkError;
           _error = ErrorHandler.getErrorMessage(e);
           _isLoading = false;
         });
@@ -137,64 +163,89 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
   Widget build(BuildContext context) {
     if (_error != null) {
       return Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            // Purple to pink gradient background matching assessment header
-            gradient: LinearGradient(
-              colors: [Color(0xFF9333EA), Color(0xFFEC4899)], // Purple to pink
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: SafeArea(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.white.withValues(alpha: 0.95),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Error',
-                      style: AppTextStyles.headerMedium.copyWith(
-                        color: Colors.white.withValues(alpha: 0.95),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _error!,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _error = null;
-                          _isLoading = true;
-                        });
-                        _generateQuiz();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: AppColors.primaryPurple,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
-                      ),
-                      child: const Text('Retry'),
-                    ),
-                  ],
+        backgroundColor: AppColors.backgroundLight,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Icon based on error type
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppColors.errorRed.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _isOffline ? Icons.wifi_off_rounded : Icons.error_outline,
+                    size: 40,
+                    color: AppColors.errorRed,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 24),
+                Text(
+                  _isOffline ? 'You\'re Offline' : 'Something Went Wrong',
+                  style: AppTextStyles.headerMedium.copyWith(
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _isOffline
+                      ? 'Daily Quiz requires an internet connection to generate questions.'
+                      : 'We couldn\'t load your quiz. Please try again.',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textMedium,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                // Go Back button (primary)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('Go Back'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryPurple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Try Again button (secondary)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _error = null;
+                        _isOffline = false;
+                        _isLoading = true;
+                      });
+                      _generateQuiz();
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Try Again'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primaryPurple,
+                      side: const BorderSide(color: AppColors.primaryPurple),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
