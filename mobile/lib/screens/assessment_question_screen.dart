@@ -10,6 +10,7 @@ import '../models/assessment_response.dart';
 import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../services/assessment_storage_service.dart';
+import '../services/offline/connectivity_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/latex_widget.dart';
@@ -39,6 +40,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
   bool _isLoading = true;
   bool _isSubmitting = false;
   String? _error;
+  bool _isOffline = false; // Track if error is due to being offline
   final AssessmentStorageService _storageService = AssessmentStorageService();
 
   @override
@@ -148,9 +150,24 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
 
   Future<void> _loadQuestions() async {
     try {
+      // Check connectivity first
+      final connectivityService = ConnectivityService();
+      final isOnline = await connectivityService.checkRealConnectivity();
+
+      if (!isOnline) {
+        if (mounted) {
+          setState(() {
+            _isOffline = true;
+            _error = 'No internet connection';
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
       final authService = Provider.of<AuthService>(context, listen: false);
       final token = await authService.getIdToken();
-      
+
       if (token == null) {
         setState(() {
           _error = 'Authentication required. Please log in again.';
@@ -165,6 +182,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
         setState(() {
           _questions = questions;
           _isLoading = false;
+          _isOffline = false;
 
           // Update response objects with correct question IDs
           if (_responses.isNotEmpty) {
@@ -188,8 +206,19 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
       }
     } catch (e) {
       if (mounted) {
+        // Check if error is due to network issue
+        final errorMsg = e.toString().toLowerCase();
+        final isNetworkError = errorMsg.contains('socketexception') ||
+            errorMsg.contains('connection') ||
+            errorMsg.contains('network') ||
+            errorMsg.contains('timeout') ||
+            errorMsg.contains('host');
+
         setState(() {
-          _error = e.toString().replaceFirst('Exception: ', '');
+          _isOffline = isNetworkError;
+          _error = isNetworkError
+              ? 'No internet connection'
+              : e.toString().replaceFirst('Exception: ', '');
           _isLoading = false;
         });
       }
@@ -424,42 +453,175 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
     }
 
     if (_error != null) {
+      // Show user-friendly offline screen
+      if (_isOffline) {
+        return Scaffold(
+          backgroundColor: AppColors.backgroundLight,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Offline icon
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: AppColors.errorRed.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.wifi_off_rounded,
+                      size: 40,
+                      color: AppColors.errorRed,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'You\'re Offline',
+                    style: AppTextStyles.headerMedium.copyWith(
+                      color: AppColors.textDark,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Initial Assessment requires an internet connection to load questions.',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textMedium,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  // Go Back button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Go Back'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryPurple,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Retry button (secondary)
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _error = null;
+                          _isOffline = false;
+                          _isLoading = true;
+                        });
+                        _loadQuestions();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Try Again'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primaryPurple,
+                        side: const BorderSide(color: AppColors.primaryPurple),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+
+      // Show generic error screen with back button
       return Scaffold(
         backgroundColor: AppColors.backgroundLight,
-        body: Center(
+        body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, size: 64, color: AppColors.errorRed),
-                const SizedBox(height: 16),
-                Text(
-                  'Error',
-                  style: AppTextStyles.headerMedium.copyWith(
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppColors.errorRed.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.error_outline,
+                    size: 40,
                     color: AppColors.errorRed,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 24),
+                Text(
+                  'Something Went Wrong',
+                  style: AppTextStyles.headerMedium.copyWith(
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Text(
                   _error!,
-                  style: AppTextStyles.bodyMedium,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textMedium,
+                  ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _error = null;
-                      _isLoading = true;
-                    });
-                    _loadQuestions();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryPurple,
-                    foregroundColor: Colors.white,
+                const SizedBox(height: 32),
+                // Go Back button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('Go Back'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryPurple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
                   ),
-                  child: const Text('Retry'),
+                ),
+                const SizedBox(height: 12),
+                // Retry button (secondary)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _error = null;
+                        _isLoading = true;
+                      });
+                      _loadQuestions();
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Try Again'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primaryPurple,
+                      side: const BorderSide(color: AppColors.primaryPurple),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
