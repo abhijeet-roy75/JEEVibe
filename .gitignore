@@ -86,3 +86,6 @@ mobile/android/app/release
 *.tmp
 *.temp
 .cache/
+
+# Firebase
+.firebase/

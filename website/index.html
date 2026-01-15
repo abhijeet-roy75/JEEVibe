@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="JEEVibe - AI-powered JEE preparation with adaptive learning, instant solutions, and personalized tutoring from Priya Ma'am.">
+  <title>JEEVibe - Crack JEE with AI-Powered Learning</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/output.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="assets/images/logo-240.png">
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
+    <div class="container-narrow">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-2">
+          <img src="assets/images/logo-240.png" alt="JEEVibe" class="h-8 w-auto">
+          <span class="font-bold text-xl text-text">JEEVibe</span>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#features" class="text-text-muted hover:text-primary transition-colors">Features</a>
+          <a href="approach.html" class="text-text-muted hover:text-primary transition-colors">Our Approach</a>
+          <a href="#download" class="btn-primary">Download App</a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-button" class="md:hidden p-2" aria-expanded="false" aria-label="Toggle menu">
+          <svg class="w-6 h-6 text-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="hidden md:hidden pb-4">
+        <div class="flex flex-col gap-4">
+          <a href="#features" class="text-text-muted hover:text-primary transition-colors">Features</a>
+          <a href="approach.html" class="text-text-muted hover:text-primary transition-colors">Our Approach</a>
+          <a href="#download" class="btn-primary text-center">Download App</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="section pt-12 md:pt-20 overflow-hidden">
+    <div class="container-narrow">
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-text leading-tight">
+            Crack JEE with <span
+              class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">AI-Powered</span>
+            Learning
+          </h1>
+          <p class="mt-6 text-lg text-text-muted leading-relaxed">
+            Adaptive daily quizzes that match your exact level. Initial assessment to know your strengths. AI that
+            actually helps you improve.
+          </p>
+          <div class="mt-8 flex flex-wrap gap-4">
+            <a href="#download" class="btn-primary">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+              </svg>
+              App Store
+            </a>
+            <a href="#download" class="btn-secondary">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 010 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z" />
+              </svg>
+              Google Play
+            </a>
+          </div>
+          <p class="mt-4 text-sm text-text-muted">Free to start. No credit card required.</p>
+        </div>
+        <div class="relative">
+          <!-- App Mockup Placeholder -->
+          <div class="relative mx-auto w-64 md:w-72">
+            <div class="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-[40px] p-4">
+              <div class="bg-white rounded-[32px] shadow-xl overflow-hidden">
+                <div class="bg-gradient-to-r from-primary to-secondary h-20 flex items-center justify-center">
+                  <span class="text-white font-semibold">Adaptive Daily Quiz</span>
+                </div>
+                <div class="p-4 space-y-3">
+                  <!-- Question preview -->
+                  <div class="text-xs text-text-muted">Question 4 of 10</div>
+                  <div class="h-3 bg-gray-100 rounded w-full"></div>
+                  <div class="h-3 bg-gray-100 rounded w-4/5"></div>
+                  <!-- Difficulty indicator -->
+                  <div class="flex items-center gap-2 mt-2">
+                    <span class="text-xs text-text-muted">Your level:</span>
+                    <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div class="h-full bg-gradient-to-r from-primary to-secondary rounded-full" style="width: 65%">
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Options -->
+                  <div class="space-y-2 mt-3">
+                    <div class="p-2 bg-gray-50 rounded-lg text-xs text-text-muted">A) Option...</div>
+                    <div class="p-2 bg-primary/10 border border-primary/30 rounded-lg text-xs text-primary">B) Selected
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Decorative Elements -->
+          <div class="absolute -top-8 -right-8 w-32 h-32 bg-secondary/10 rounded-full blur-3xl"></div>
+          <div class="absolute -bottom-8 -left-8 w-40 h-40 bg-primary/10 rounded-full blur-3xl"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="section bg-white">
+    <div class="container-narrow">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-text">Everything You Need to Crack JEE</h2>
+        <p class="mt-4 text-text-muted">Powerful AI-driven features designed to maximize your preparation efficiency.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Feature 1: Initial Assessment -->
+        <div class="card hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-lg text-text">Initial Assessment</h3>
+          <p class="mt-2 text-text-muted text-sm">10-minute assessment to establish your baseline across Physics,
+            Chemistry, and Math.</p>
+        </div>
+
+        <!-- Feature 2: Adaptive Daily Quiz -->
+        <div class="card hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-lg text-text">Adaptive Daily Quiz</h3>
+          <p class="mt-2 text-text-muted text-sm">IRT-powered questions that adapt to your exact level. Always the right
+            challenge.</p>
+        </div>
+
+        <!-- Feature 3: Snap & Solve -->
+        <div class="card hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-lg text-text">Snap & Solve</h3>
+          <p class="mt-2 text-text-muted text-sm">Photo any JEE question and get instant AI-powered step-by-step
+            solutions.</p>
+        </div>
+
+        <!-- Feature 4: Smart Analytics -->
+        <div class="card hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-lg text-text">Smart Analytics</h3>
+          <p class="mt-2 text-text-muted text-sm">Track your progress across Physics, Chemistry, and Math with detailed
+            insights.</p>
+        </div>
+
+        <!-- Feature 5: Priya Ma'am -->
+        <div class="card hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-lg text-text">Priya Ma'am</h3>
+          <p class="mt-2 text-text-muted text-sm">Your warm, encouraging AI persona who explains solutions with care and motivates you.</p>
+        </div>
+
+        <!-- Feature 6: AI Tutor (Coming Soon) -->
+        <div class="card hover:shadow-md transition-shadow relative overflow-hidden">
+          <span class="absolute top-3 right-3 text-xs font-medium text-white bg-gradient-to-r from-primary to-secondary px-2 py-0.5 rounded-full">Coming Soon</span>
+          <div class="w-12 h-12 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-lg text-text">AI Tutor Chat</h3>
+          <p class="mt-2 text-text-muted text-sm">Chat with Priya Ma'am to ask doubts, learn concepts, and get personalized study plans.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why JEEVibe Section -->
+  <section class="section">
+    <div class="container-narrow">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-text">Why JEEVibe?</h2>
+        <p class="mt-4 text-text-muted">We're not just another study app. We're built on science to improve your scores.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-6">
+        <!-- Differentiator 1: Adaptive Learning -->
+        <a href="approach.html#adaptive" class="card group hover:shadow-md hover:border-primary/20 transition-all">
+          <div class="flex items-start gap-4">
+            <div
+              class="w-10 h-10 bg-gradient-to-br from-primary to-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-lg text-text group-hover:text-primary transition-colors">Questions that
+                Adapt to YOU</h3>
+              <p class="mt-1 text-text-muted text-sm">IRT-powered quizzes that match your exact level. Not too easy, not
+                too hard.</p>
+            </div>
+          </div>
+        </a>
+
+        <!-- Differentiator 2: Initial Assessment -->
+        <a href="approach.html#assessment" class="card group hover:shadow-md hover:border-primary/20 transition-all">
+          <div class="flex items-start gap-4">
+            <div
+              class="w-10 h-10 bg-gradient-to-br from-secondary to-secondary-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-lg text-text group-hover:text-primary transition-colors">Personalized from
+                Day 1</h3>
+              <p class="mt-1 text-text-muted text-sm">Know your strengths and weaknesses instantly with our initial
+                assessment.</p>
+            </div>
+          </div>
+        </a>
+
+        <!-- Differentiator 3: AI-Native -->
+        <a href="approach.html#ai-native" class="card group hover:shadow-md hover:border-primary/20 transition-all">
+          <div class="flex items-start gap-4">
+            <div
+              class="w-10 h-10 bg-gradient-to-br from-success to-success-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-lg text-text group-hover:text-primary transition-colors">Real AI, Not
+                Question Banks</h3>
+              <p class="mt-1 text-text-muted text-sm">Fresh questions generated in real-time. Every problem is unique
+                and relevant.</p>
+            </div>
+          </div>
+        </a>
+
+        <!-- Differentiator 4: AI Tutor -->
+        <a href="approach.html#priya-maam"
+          class="card group hover:shadow-md hover:border-primary/20 transition-all relative overflow-hidden">
+          <span
+            class="absolute top-2 right-2 text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">Coming
+            Soon</span>
+          <div class="flex items-start gap-4">
+            <div
+              class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-lg text-text group-hover:text-primary transition-colors">Your Personal AI
+                Tutor</h3>
+              <p class="mt-1 text-text-muted text-sm">Chat with Priya Ma'am to resolve doubts, learn concepts, and get
+                personalized guidance.</p>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <div class="text-center mt-8">
+        <a href="approach.html"
+          class="inline-flex items-center text-primary font-medium hover:text-primary-600 transition-colors">
+          Learn more about our approach
+          <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="section bg-white">
+    <div class="container-narrow">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-text">Get Started in 3 Steps</h2>
+        <p class="mt-4 text-text-muted">Start improving your JEE scores in minutes.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Step 1 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl font-bold text-primary">1</span>
+          </div>
+          <h3 class="font-semibold text-lg text-text">Download & Sign Up</h3>
+          <p class="mt-2 text-text-muted text-sm">Quick sign-up with your phone number. No email needed.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl font-bold text-secondary">2</span>
+          </div>
+          <h3 class="font-semibold text-lg text-text">Take Initial Assessment</h3>
+          <p class="mt-2 text-text-muted text-sm">10-minute assessment to understand your current level.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="text-2xl font-bold text-success">3</span>
+          </div>
+          <h3 class="font-semibold text-lg text-text">Start Learning</h3>
+          <p class="mt-2 text-text-muted text-sm">Daily quizzes + Snap & Solve, personalized for you.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download CTA Section -->
+  <section id="download" class="section">
+    <div class="container-narrow">
+      <div class="bg-gradient-to-r from-primary to-secondary rounded-xl p-8 md:p-12 text-center text-white">
+        <h2 class="text-3xl md:text-4xl font-bold">Ready to Crack JEE?</h2>
+        <p class="mt-4 text-white/90 max-w-xl mx-auto">Join thousands of students improving their scores with AI-powered
+          learning.</p>
+        <div class="mt-8 flex flex-wrap justify-center gap-4">
+          <a href="#"
+            class="inline-flex items-center px-6 py-3 bg-white text-primary font-semibold rounded-md hover:bg-gray-100 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+            </svg>
+            App Store
+          </a>
+          <a href="#"
+            class="inline-flex items-center px-6 py-3 bg-white/10 text-white font-semibold rounded-md border border-white/30 hover:bg-white/20 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 010 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z" />
+            </svg>
+            Google Play
+          </a>
+        </div>
+        <p class="mt-4 text-white/70 text-sm">Free to start. No credit card required.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-gray-100 py-12">
+    <div class="container-narrow">
+      <div class="grid md:grid-cols-4 gap-8">
+        <!-- Brand -->
+        <div class="md:col-span-2">
+          <a href="/" class="flex items-center gap-2">
+            <img src="assets/images/logo-240.png" alt="JEEVibe" class="h-8 w-auto">
+            <span class="font-bold text-xl text-text">JEEVibe</span>
+          </a>
+          <p class="mt-4 text-text-muted text-sm max-w-xs">AI-powered JEE preparation with adaptive learning and
+            personalized tutoring.</p>
+        </div>
+
+        <!-- Links -->
+        <div>
+          <h4 class="font-semibold text-text mb-4">Product</h4>
+          <ul class="space-y-2">
+            <li><a href="#features" class="text-text-muted hover:text-primary text-sm transition-colors">Features</a>
+            </li>
+            <li><a href="approach.html" class="text-text-muted hover:text-primary text-sm transition-colors">Our
+                Approach</a></li>
+            <li><a href="#download" class="text-text-muted hover:text-primary text-sm transition-colors">Download</a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Legal -->
+        <div>
+          <h4 class="font-semibold text-text mb-4">Legal</h4>
+          <ul class="space-y-2">
+            <li><a href="terms.html" class="text-text-muted hover:text-primary text-sm transition-colors">Terms &
+                Conditions</a></li>
+            <li><a href="privacy.html" class="text-text-muted hover:text-primary text-sm transition-colors">Privacy
+                Policy</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-12 pt-8 border-t border-gray-100 text-center">
+        <p class="text-text-muted text-sm">&copy; 2026 JEEVibe. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+</body>
+
+</html>
