@@ -3,12 +3,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/daily_quiz_question.dart';
+import '../models/subscription_models.dart';
 import '../providers/daily_quiz_provider.dart';
+import '../services/firebase/auth_service.dart';
+import '../services/subscription_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/priya_avatar.dart';
 import '../utils/error_handler.dart';
 import 'daily_quiz_question_screen.dart';
+import 'subscription/paywall_screen.dart';
 
 class DailyQuizLoadingScreen extends StatefulWidget {
   const DailyQuizLoadingScreen({super.key});
@@ -45,7 +49,7 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
   Future<void> _generateQuiz() async {
     try {
       final provider = Provider.of<DailyQuizProvider>(context, listen: false);
-      
+
       // Check if there's a saved quiz state first
       final hasSavedState = await provider.hasSavedState();
       if (hasSavedState && provider.currentQuiz != null) {
@@ -60,12 +64,33 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
         return;
       }
 
+      // Safety gate check before generating new quiz
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final token = await authService.getIdToken();
+      if (token != null) {
+        final subscriptionService = SubscriptionService();
+        final canProceed = await subscriptionService.gatekeepFeature(
+          context,
+          UsageType.dailyQuiz,
+          'Daily Quiz',
+          token,
+        );
+
+        if (!canProceed) {
+          // Paywall was shown, go back
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+          return;
+        }
+      }
+
       // Generate new quiz
       final quiz = await ErrorHandler.withRetry(
         operation: () => provider.generateQuiz(),
         maxRetries: 3,
       );
-      
+
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -74,6 +99,22 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
         );
       }
     } catch (e) {
+      // Check if error is quota-related - redirect to paywall instead of showing error
+      final errorMessage = e.toString().toLowerCase();
+      if (_isQuotaError(errorMessage)) {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const PaywallScreen(
+                limitReachedMessage: 'You\'ve used your free daily quiz. Upgrade for more!',
+                featureName: 'Daily Quiz',
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
       if (mounted) {
         setState(() {
           _error = ErrorHandler.getErrorMessage(e);
@@ -81,6 +122,15 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
         });
       }
     }
+  }
+
+  /// Check if error message indicates quota exceeded
+  bool _isQuotaError(String errorMessage) {
+    return errorMessage.contains('quota') ||
+        errorMessage.contains('limit') ||
+        errorMessage.contains('exceeded') ||
+        errorMessage.contains('free daily') ||
+        errorMessage.contains('upgrade to pro');
   }
 
   @override

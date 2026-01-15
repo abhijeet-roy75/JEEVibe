@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/subscription_models.dart';
+import '../screens/subscription/paywall_screen.dart';
 import 'api_service.dart';
 
 /// Subscription Service
@@ -112,8 +113,8 @@ class SubscriptionService extends ChangeNotifier {
     String featureName,
     String authToken,
   ) async {
-    // Refresh status first
-    await fetchStatus(authToken);
+    // Force refresh status to get latest usage counts
+    await fetchStatus(authToken, forceRefresh: true);
 
     if (_cachedStatus == null) {
       // Allow if we couldn't fetch - backend will handle the check
@@ -124,84 +125,37 @@ class SubscriptionService extends ChangeNotifier {
       return true;
     }
 
-    // Show paywall
+    // Navigate directly to paywall instead of showing dialog
     if (context.mounted) {
-      await _showLimitReachedDialog(context, type, featureName);
+      await _navigateToPaywall(context, type, featureName);
     }
     return false;
   }
 
-  /// Show limit reached dialog
-  Future<void> _showLimitReachedDialog(
+  /// Navigate to paywall screen with context about which limit was reached
+  Future<void> _navigateToPaywall(
     BuildContext context,
     UsageType type,
     String featureName,
   ) async {
-    final usageInfo = getUsageInfo(type);
     final tier = currentTier;
 
-    String message;
-    String ctaText;
-
+    // Determine the appropriate message for the paywall
+    String? limitMessage;
     if (tier == SubscriptionTier.free) {
-      message = 'You\'ve used your free daily limit for $featureName.\n\nUpgrade to Pro for more!';
-      ctaText = 'Upgrade to Pro';
+      limitMessage = 'You\'ve used your free daily $featureName. Upgrade for more!';
     } else {
-      message = 'You\'ve reached your daily limit for $featureName.\n\nCome back tomorrow!';
-      ctaText = 'OK';
+      limitMessage = 'You\'ve reached your daily $featureName limit.';
     }
 
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Daily Limit Reached'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(message),
-              if (usageInfo != null && usageInfo.resetsAt != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  'Resets at midnight IST',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ],
-          ),
-          actions: [
-            if (tier == SubscriptionTier.free) ...[
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Maybe Later'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _navigateToPaywall(context);
-                },
-                child: Text(ctaText),
-              ),
-            ] else ...[
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(ctaText),
-              ),
-            ],
-          ],
-        );
-      },
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PaywallScreen(
+          limitReachedMessage: limitMessage,
+          featureName: featureName,
+        ),
+      ),
     );
-  }
-
-  /// Navigate to paywall screen
-  void _navigateToPaywall(BuildContext context) {
-    Navigator.of(context).pushNamed('/paywall');
   }
 
   /// Update local usage after successful action

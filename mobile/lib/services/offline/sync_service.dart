@@ -26,8 +26,12 @@ class SyncService {
   Completer<SyncResult>? _syncCompleter;
   bool _isSyncing = false;
 
-  // Cache limits by tier
+  // Note: Solution limits are now fetched from subscription status
+  // These are fallback values only (should not be used in production)
+  // Backend config: Pro/Ultra both have offline_solutions_limit: -1 (unlimited)
+  @Deprecated('Use subscription status limit instead')
   static const int proTierSolutionLimit = 50;
+  @Deprecated('Use subscription status limit instead')
   static const int ultraTierSolutionLimit = 200;
 
   // HTTP timeout
@@ -290,6 +294,57 @@ class SyncService {
       solutionData: solutionData,
       language: cached.language,
     );
+  }
+
+  /// Cache a single solution immediately (for automatic caching after Snap & Solve)
+  /// Returns true if cached successfully, false otherwise
+  Future<bool> cacheSolution({
+    required RecentSolution solution,
+    required String userId,
+    String? imageUrl,
+  }) async {
+    try {
+      if (kDebugMode) {
+        print('SyncService: Caching solution ${solution.id} for offline access');
+      }
+
+      // Convert to CachedSolution
+      final cachedSolution = _convertToCachedSolution(solution, userId);
+
+      // Cache image if available
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        try {
+          final localPath = await _imageCacheService.cacheImage(imageUrl);
+          if (localPath != null) {
+            cachedSolution.localImagePath = localPath;
+            cachedSolution.isImageCached = true;
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print('SyncService: Error caching image for solution ${solution.id}: $e');
+          }
+          // Continue even if image caching fails
+        }
+      }
+
+      // Save to database
+      await _databaseService.saveCachedSolution(cachedSolution);
+
+      // Check if we need to evict excess solutions
+      // Get limit from subscription status (will be handled by caller if needed)
+      // For now, we'll let the periodic sync handle eviction
+
+      if (kDebugMode) {
+        print('SyncService: Successfully cached solution ${solution.id}');
+      }
+
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('SyncService: Error caching solution ${solution.id}: $e');
+      }
+      return false;
+    }
   }
 
   /// Get sync progress info

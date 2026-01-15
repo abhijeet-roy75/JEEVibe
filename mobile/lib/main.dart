@@ -14,6 +14,7 @@ import 'services/subscription_service.dart';
 import 'services/offline/connectivity_service.dart';
 import 'services/offline/database_service.dart';
 import 'services/offline/image_cache_service.dart';
+import 'services/offline/sync_service.dart';
 import 'providers/app_state_provider.dart';
 import 'providers/offline_provider.dart';
 
@@ -236,15 +237,65 @@ class AppInitializer extends StatefulWidget {
   State<AppInitializer> createState() => _AppInitializerState();
 }
 
-class _AppInitializerState extends State<AppInitializer> {
+class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObserver {
   bool _isLoading = true;
   Widget? _targetScreen;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkLoginStatus();
   }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // Trigger sync when app comes to foreground if user has offline access
+    if (state == AppLifecycleState.resumed) {
+      _triggerForegroundSync();
+    }
+  }
+
+  /// Trigger sync when app comes to foreground
+  Future<void> _triggerForegroundSync() async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      if (!authService.isAuthenticated) {
+        return;
+      }
+
+      final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);
+      if (!offlineProvider.offlineEnabled || !offlineProvider.isOnline) {
+        return;
+      }
+
+      final authToken = await authService.currentUser?.getIdToken();
+      if (authToken != null && authService.currentUser != null) {
+        _triggerBackgroundSync(
+          offlineProvider,
+          authService.currentUser!.uid,
+          authToken,
+        );
+      }
+    } catch (e) {
+      print('Error triggering foreground sync: $e');
+    }
+  }
+
+  /// Trigger background sync for offline solutions
+  void _triggerBackgroundSync(
+    OfflineProvider offlineProvider,
+    String userId,
+    String authToken,
+  ) {
 
   Future<void> _checkLoginStatus() async {
     
@@ -323,6 +374,55 @@ class _AppInitializerState extends State<AppInitializer> {
           offlineEnabled: offlineEnabled,
           authToken: authToken,
         );
+
+        // Trigger automatic sync for Pro/Ultra users if online
+        if (offlineEnabled && authToken != null && mounted) {
+          try {
+            // Sync in background (don't wait for it)
+            _triggerBackgroundSync(
+              offlineProvider,
+              authService.currentUser!.uid,
+              authToken,
+            );
+          } catch (e) {
+            print('Error triggering background sync: $e');
+          }
+        }
+      }
+    // Only sync if online and initialized
+    if (!offlineProvider.isOnline || !offlineProvider.isInitialized) {
+      return;
+    }
+
+    try {
+      // Get subscription status to determine solution limit
+      final subscriptionStatus = await SubscriptionService().fetchStatus(authToken);
+      if (subscriptionStatus == null) {
+        return;
+      }
+
+      final maxSolutions = subscriptionStatus.limits.offlineSolutionsLimit;
+      // -1 means unlimited, use a reasonable default for unlimited
+      final limit = maxSolutions == -1 ? 200 : maxSolutions;
+
+      // Trigger sync in background
+      final syncService = SyncService();
+      syncService.syncSolutions(
+        userId: userId,
+        authToken: authToken,
+        maxSolutions: limit,
+      ).then((result) {
+        if (result.success) {
+          print('Background sync completed: ${result.syncedCount} solutions synced');
+        } else {
+          print('Background sync failed: ${result.error}');
+        }
+      }).catchError((e) {
+        print('Background sync error: $e');
+      });
+    } catch (e) {
+      print('Error starting background sync: $e');
+    }
       }
 
       if (!mounted) return;

@@ -17,6 +17,8 @@ import '../services/localization_service.dart';
 import '../providers/app_state_provider.dart';
 import '../config/content_config.dart';
 import '../utils/text_preprocessor.dart';
+import '../providers/offline_provider.dart';
+import '../services/offline/sync_service.dart';
 
 class SolutionScreen extends StatefulWidget {
   final Future<Solution> solutionFuture;
@@ -60,6 +62,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
   Future<void> _incrementSnapAndSaveSolution(Solution solution) async {
     try {
       final appState = Provider.of<AppStateProvider>(context, listen: false);
+      final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);
       
       final questionId = solution.id ?? 'snap_${DateTime.now().millisecondsSinceEpoch}';
       await appState.incrementSnap(
@@ -84,9 +87,26 @@ class _SolutionScreenState extends State<SolutionScreen> {
           'difficulty': solution.difficulty,
         },
         imageUrl: solution.imageUrl,
+        language: solution.language,
       );
       
       await appState.addRecentSolution(recentSolution);
+
+      // Automatically cache solution for offline access if user has Pro/Ultra tier
+      if (offlineProvider.offlineEnabled && offlineProvider.currentUserId != null) {
+        try {
+          final syncService = SyncService();
+          await syncService.cacheSolution(
+            solution: recentSolution,
+            userId: offlineProvider.currentUserId!,
+            imageUrl: solution.imageUrl,
+          );
+          // Refresh counts will happen automatically via provider
+        } catch (e) {
+          debugPrint('Error caching solution for offline access: $e');
+          // Don't fail the whole operation if caching fails
+        }
+      }
     } catch (e) {
       debugPrint('Error incrementing snap/saving solution: $e');
     }

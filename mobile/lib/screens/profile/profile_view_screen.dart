@@ -9,6 +9,7 @@ import '../../models/user_profile.dart';
 import '../../models/subscription_models.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/buttons/icon_button.dart';
 import '../auth/welcome_screen.dart';
 import '../subscription/paywall_screen.dart';
 
@@ -91,6 +92,63 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     }
   }
 
+  String _getUserName() {
+    if (_profile?.firstName != null && _profile!.firstName!.isNotEmpty) {
+      return _profile!.firstName!;
+    }
+    return 'Student';
+  }
+
+  Widget _buildHeaderTierBadge() {
+    if (_loadingSubscription) {
+      return const SizedBox(
+        width: 60,
+        height: 28,
+        child: Center(
+          child: SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final tierEnum = _subscriptionStatus?.subscription.tier ?? SubscriptionTier.free;
+    final isFreeTier = tierEnum == SubscriptionTier.free;
+    final tierName = isFreeTier ? 'FREE' : tierEnum.name.toUpperCase();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isFreeTier ? Icons.lock_outline : Icons.auto_awesome,
+            color: Colors.white,
+            size: 14,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            tierName,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _signOut() async {
     final authService = Provider.of<AuthService>(context, listen: false);
 
@@ -139,7 +197,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
             )
           : Column(
               children: [
-                // Gradient Header Section - Minimal
+                // Enhanced Header Section with Greeting and Tier Badge
                 Container(
                   width: double.infinity,
                   decoration: const BoxDecoration(
@@ -148,22 +206,49 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   child: SafeArea(
                     bottom: false,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           // Back button
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back, color: Colors.white),
-                            onPressed: () => Navigator.of(context).pop(),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: AppIconButton.back(
+                              onPressed: () => Navigator.of(context).pop(),
+                              color: Colors.white,
+                              size: AppIconButtonSize.small,
+                            ),
                           ),
-                          const SizedBox(width: 16),
-                          // Title
-                          Text(
-                            'Profile',
-                            style: AppTextStyles.headerWhite.copyWith(fontSize: 20),
+                          // Centered greeting
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Hi ${_getUserName()}! 👋',
+                                  style: AppTextStyles.headerWhite.copyWith(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Profile',
+                                  style: AppTextStyles.bodyWhite.copyWith(
+                                    fontSize: 14,
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
                           ),
+                          // Tier badge
+                          _buildHeaderTierBadge(),
                         ],
                       ),
                     ),
@@ -173,35 +258,37 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.fromLTRB(
-                      24.0,
-                      24.0,
-                      24.0,
-                      24.0 + MediaQuery.of(context).viewPadding.bottom,
+                      AppSpacing.xxl,
+                      AppSpacing.xxl,
+                      AppSpacing.xxl,
+                      AppSpacing.xxl + MediaQuery.of(context).viewPadding.bottom,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Avatar and Name Card
+                        // Enhanced Avatar and Name Card
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: AppColors.backgroundLight,
-                            borderRadius: BorderRadius.circular(16),
+                            color: AppColors.backgroundWhite,
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
                             border: Border.all(
                               color: AppColors.borderLight,
                               width: 1,
                             ),
+                            boxShadow: AppShadows.card,
                           ),
                           child: Row(
                             children: [
-                              // Avatar
+                              // Enhanced Avatar with shadow
                               Container(
-                                width: 64,
-                                height: 64,
+                                width: 72,
+                                height: 72,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   gradient: AppColors.ctaGradient,
+                                  boxShadow: AppShadows.soft,
                                 ),
                                 child: Center(
                                   child: Text(
@@ -209,14 +296,14 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                                         ? _profile!.firstName![0].toUpperCase()
                                         : '?',
                                     style: AppTextStyles.headerLarge.copyWith(
-                                      fontSize: 28,
+                                      fontSize: 32,
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 16),
+                              const SizedBox(width: AppSpacing.lg),
                               // Name and phone
                               Expanded(
                                 child: Column(
@@ -232,13 +319,23 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _profile!.phoneNumber,
-                                      style: AppTextStyles.bodyMedium.copyWith(
-                                        color: AppColors.textMedium,
-                                        fontSize: 14,
-                                      ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.phone_outlined,
+                                          size: 16,
+                                          color: AppColors.textMedium,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          _profile!.phoneNumber,
+                                          style: AppTextStyles.bodyMedium.copyWith(
+                                            color: AppColors.textMedium,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -246,8 +343,8 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 24),
-                        // Profile Information Section
+                        const SizedBox(height: AppSpacing.xxl),
+                        // Profile Information Section - Grouped Card
                         Text(
                           'JEE Preparation Details',
                           style: AppTextStyles.headerMedium.copyWith(
@@ -256,74 +353,37 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
 
-                        // Information fields - Only show fields that have values
-                        ..._buildProfileFields(),
+                        // Unified Information Card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundWhite,
+                            borderRadius: BorderRadius.circular(AppRadius.lg),
+                            border: Border.all(
+                              color: AppColors.borderLight,
+                              width: 1,
+                            ),
+                            boxShadow: AppShadows.card,
+                          ),
+                          child: _buildGroupedProfileFields(),
+                        ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: AppSpacing.xxl),
 
                         // Subscription & Plan Section
                         _buildSubscriptionSection(),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: AppSpacing.xxl),
 
-                        /*
-                        // Get API Token Button (for testing)
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppColors.primaryPurple,
-                              width: 2,
-                            ),
-                            boxShadow: AppShadows.buttonShadow,
-                          ),
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const TokenDisplayScreen(),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: AppColors.primaryPurple,
-                              shadowColor: Colors.transparent,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.vpn_key, size: 20),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Get API Token',
-                                  style: AppTextStyles.labelMedium.copyWith(
-                                    fontSize: 16,
-                                    color: AppColors.primaryPurple,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 16),
-                        */
-                        
                         // Sign Out Button
                         Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            gradient: LinearGradient(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            gradient: const LinearGradient(
                               colors: [AppColors.errorRed, AppColors.errorRedLight],
                               begin: Alignment.centerLeft,
                               end: Alignment.centerRight,
@@ -338,7 +398,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               shadowColor: Colors.transparent,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(AppRadius.md),
                               ),
                             ),
                             child: Row(
@@ -351,13 +411,14 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                                   style: AppTextStyles.labelMedium.copyWith(
                                     fontSize: 16,
                                     color: Colors.white,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
                             ),
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: AppSpacing.xxl),
 
                         // App Version
                         if (_appVersion.isNotEmpty)
@@ -370,7 +431,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               ),
                             ),
                           ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
                       ],
                     ),
                   ),
@@ -380,64 +441,96 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     );
   }
 
-  List<Widget> _buildProfileFields() {
+  Widget _buildGroupedProfileFields() {
     final fields = <Widget>[];
+    int fieldCount = 0;
 
-    void addField(String label, String? value) {
+    void addField(IconData icon, String label, String? value) {
       if (value != null && value.isNotEmpty) {
-        if (fields.isNotEmpty) {
-          fields.add(const SizedBox(height: 16));
+        if (fieldCount > 0) {
+          fields.add(const Divider(
+            height: 24,
+            thickness: 1,
+            color: AppColors.borderLight,
+          ));
         }
-        fields.add(_buildInfoField(label, value));
+        fields.add(_buildInfoFieldWithIcon(icon, label, value));
+        fieldCount++;
       }
     }
 
-    addField('Target Year', _profile!.targetYear);
-    addField('Target Exam', _profile!.targetExam);
-    addField('Email', _profile!.email);
-    addField('State', _profile!.state);
-    addField('Dream Branch', _profile!.dreamBranch);
+    addField(Icons.calendar_today_outlined, 'Target Year', _profile!.targetYear);
+    addField(Icons.school_outlined, 'Target Exam', _profile!.targetExam);
+    addField(Icons.email_outlined, 'Email', _profile!.email);
+    addField(Icons.location_on_outlined, 'State', _profile!.state);
+    addField(Icons.workspace_premium_outlined, 'Dream Branch', _profile!.dreamBranch);
     if (_profile!.studySetup.isNotEmpty) {
-      addField('Study Setup', _profile!.studySetup.join(', '));
+      addField(Icons.book_outlined, 'Study Setup', _profile!.studySetup.join(', '));
     }
 
-    return fields;
+    if (fields.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Center(
+          child: Text(
+            'No profile information available',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textMedium,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: fields,
+    );
   }
 
-  Widget _buildInfoField(String label, String value) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundLight,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.borderLight,
-          width: 1,
+  Widget _buildInfoFieldWithIcon(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: AppColors.primaryPurple.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: AppColors.primaryPurple,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textLight,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+        const SizedBox(width: AppSpacing.lg),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textMedium,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textDark,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textDark,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -454,17 +547,17 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         // Tier Badge Card
         _buildTierBadge(),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.lg),
 
         // Usage Section
         if (!_loadingSubscription && _subscriptionStatus != null) ...[
           _buildUsageSection(),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
         ],
 
         // Upgrade or Manage Button
@@ -479,9 +572,10 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.backgroundLight,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderLight),
+          color: AppColors.backgroundWhite,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: AppColors.borderLight, width: 1),
+          boxShadow: AppShadows.soft,
         ),
         child: const Center(
           child: SizedBox(
@@ -553,14 +647,15 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: badgeGradient,
-        color: badgeGradient == null ? AppColors.backgroundLight : null,
-        borderRadius: BorderRadius.circular(12),
+        color: badgeGradient == null ? AppColors.backgroundWhite : null,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
         border: badgeGradient == null
-            ? Border.all(color: AppColors.borderLight)
+            ? Border.all(color: AppColors.borderLight, width: 1)
             : null,
+        boxShadow: badgeGradient != null ? AppShadows.card : AppShadows.soft,
       ),
       child: Row(
         children: [
@@ -579,7 +674,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
               size: 28,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -618,11 +713,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.backgroundLight,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderLight),
+        color: AppColors.backgroundWhite,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.borderLight, width: 1),
+        boxShadow: AppShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -635,7 +731,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
               fontSize: 14,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           // Snap & Solve usage
           _buildUsageBar(
             icon: Icons.camera_alt_outlined,
@@ -643,7 +739,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
             used: usage.snapSolve.used,
             limit: limits.snapSolveDaily,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           // Daily Quiz usage
           _buildUsageBar(
             icon: Icons.quiz_outlined,
@@ -731,7 +827,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       return Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           gradient: AppColors.ctaGradient,
           boxShadow: AppShadows.buttonShadow,
         ),
@@ -752,7 +848,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
             shadowColor: Colors.transparent,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
           ),
           child: Row(
@@ -778,11 +874,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
           color: AppColors.primaryPurple,
           width: 1.5,
         ),
+        boxShadow: AppShadows.soft,
       ),
       child: ElevatedButton(
         onPressed: () {
@@ -800,7 +897,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
           shadowColor: Colors.transparent,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
         ),
         child: Row(

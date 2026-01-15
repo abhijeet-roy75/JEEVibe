@@ -10,11 +10,13 @@ import '../../services/subscription_service.dart';
 class PaywallScreen extends StatefulWidget {
   final String? featureName;
   final UsageType? usageType;
+  final String? limitReachedMessage;
 
   const PaywallScreen({
     super.key,
     this.featureName,
     this.usageType,
+    this.limitReachedMessage,
   });
 
   @override
@@ -96,6 +98,41 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget _buildHeroSection() {
     return Column(
       children: [
+        // Show limit reached banner if applicable
+        if (widget.limitReachedMessage != null) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.warningAmber.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.warningAmber.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  color: AppColors.warningAmber,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.limitReachedMessage!,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
         // Crown icon
         Container(
           width: 80,
@@ -123,7 +160,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
         const SizedBox(height: 8),
         Text(
           widget.featureName != null
-              ? 'Upgrade to get ${widget.featureName} and unlock features'
+              ? 'Upgrade to get more ${widget.featureName} and unlock your potential'
               : 'Upgrade to Pro for unlimited access',
           textAlign: TextAlign.center,
           style: const TextStyle(
@@ -229,7 +266,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           const SizedBox(height: 8),
           _buildFeatureRow(Icons.camera_alt_outlined, 'Snap & Solve', '5/day', '10/day'),
           _buildFeatureRow(Icons.quiz_outlined, 'Daily Quizzes', '1/day', '10/day'),
-          _buildFeatureRow(Icons.analytics_outlined, 'Analytics', 'Basic', 'Full Access'),
+          _buildFeatureRow(Icons.analytics_outlined, 'Analytics', 'Basic', 'Full'),
           _buildFeatureRow(Icons.history_outlined, 'Solution History', '7 days', '30 days'),
           _buildFeatureRow(Icons.offline_bolt_outlined, 'Offline Mode', 'No', 'Yes'),
         ],

@@ -11,6 +11,7 @@ import 'daily_limit_screen.dart';
 import 'solution_review_screen.dart';
 import 'all_solutions_screen.dart';
 import 'photo_review_screen.dart';
+import 'subscription/paywall_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
@@ -18,7 +19,10 @@ import '../providers/offline_provider.dart';
 import '../widgets/buttons/gradient_button.dart';
 import '../widgets/offline/offline_banner.dart';
 import '../models/snap_data_model.dart';
+import '../models/subscription_models.dart';
 import '../services/storage_service.dart';
+import '../services/firebase/auth_service.dart';
+import '../services/subscription_service.dart';
 import '../utils/text_preprocessor.dart';
 import '../widgets/subject_icon_widget.dart';
 import '../widgets/priya_avatar.dart';
@@ -454,15 +458,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    final appState = Provider.of<AppStateProvider>(context, listen: false);
-    if (!appState.canTakeSnap) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => const DailyLimitScreen(),
-        ),
-      );
-      return;
-    }
+    // Check subscription-based snap limit
+    final canProceed = await _checkSnapAccess();
+    if (!canProceed) return;
 
     setState(() => _isProcessing = true);
 
@@ -493,6 +491,42 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Check if user can use Snap & Solve based on subscription
+  Future<bool> _checkSnapAccess() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final token = await authService.getIdToken();
+
+    if (token != null) {
+      final subscriptionService = SubscriptionService();
+      final canProceed = await subscriptionService.gatekeepFeature(
+        context,
+        UsageType.snapSolve,
+        'Snap & Solve',
+        token,
+      );
+
+      if (!canProceed) {
+        // Paywall was shown
+        return false;
+      }
+    }
+
+    // Also check local state as fallback
+    final appState = Provider.of<AppStateProvider>(context, listen: false);
+    if (!appState.canTakeSnap) {
+      if (mounted) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const DailyLimitScreen(),
+          ),
+        );
+      }
+      return false;
+    }
+
+    return true;
+  }
+
   Future<void> _pickFromGallery() async {
     if (_isProcessing) return;
 
@@ -503,15 +537,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    final appState = Provider.of<AppStateProvider>(context, listen: false);
-    if (!appState.canTakeSnap) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => const DailyLimitScreen(),
-        ),
-      );
-      return;
-    }
+    // Check subscription-based snap limit
+    final canProceed = await _checkSnapAccess();
+    if (!canProceed) return;
 
     setState(() => _isProcessing = true);
 
