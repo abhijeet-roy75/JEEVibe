@@ -916,7 +916,13 @@ class _SolutionScreenState extends State<SolutionScreen> {
       builder: (context, appState, child) {
         // Check if user has AI Tutor access (Ultra tier)
         final subscriptionService = SubscriptionService();
-        final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
+        final status = subscriptionService.status;
+        final hasAiTutorAccess = status?.limits.aiTutorEnabled ?? false;
+
+        // Debug logging
+        debugPrint('SolutionScreen: Subscription status: ${status?.subscription.tier}');
+        debugPrint('SolutionScreen: aiTutorEnabled: ${status?.limits.aiTutorEnabled}');
+        debugPrint('SolutionScreen: hasAiTutorAccess: $hasAiTutorAccess');
 
         return Column(
           children: [

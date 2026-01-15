@@ -27,6 +27,17 @@ async function buildSolutionContext(solutionId, userId) {
 
     const snap = snapDoc.data();
 
+    // Debug: Log what we found in the snap document
+    logger.info('Building solution context', {
+      solutionId,
+      userId,
+      hasRecognizedQuestion: !!snap.recognizedQuestion,
+      questionLength: (snap.recognizedQuestion || snap.question || '').length,
+      hasApproach: !!snap.solution?.approach,
+      hasSteps: !!(snap.solution?.steps?.length),
+      hasFinalAnswer: !!snap.solution?.finalAnswer
+    });
+
     // Build context object
     const context = {
       type: 'solution',
@@ -41,9 +52,17 @@ async function buildSolutionContext(solutionId, userId) {
         steps: snap.solution?.steps || [],
         finalAnswer: snap.solution?.finalAnswer || '',
         priyaMaamTip: snap.solution?.priyaMaamTip || snap.solution?.priya_maam_tip || '',
-        conceptsTested: snap.conceptsTested || []
+        conceptsTested: snap.conceptsTested || [],
+        // Include image URL for reference
+        imageUrl: snap.imageUrl || null
       }
     };
+
+    logger.info('Solution context built', {
+      solutionId,
+      contextTitle: context.title,
+      questionPreview: context.snapshot.question.substring(0, 100)
+    });
 
     return context;
   } catch (error) {

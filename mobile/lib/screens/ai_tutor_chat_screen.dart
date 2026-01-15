@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../models/ai_tutor_models.dart';
 import '../providers/ai_tutor_provider.dart';
 import '../widgets/app_header.dart';
+import '../widgets/priya_avatar.dart';
 import '../widgets/ai_tutor/chat_bubble.dart';
 import '../widgets/ai_tutor/context_marker_widget.dart';
 import '../widgets/ai_tutor/chat_input_bar.dart';
@@ -156,8 +157,14 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
             Expanded(
               child: Consumer<AiTutorProvider>(
                 builder: (context, provider, _) {
+                  // Show loading state for initial conversation load
                   if (provider.isLoadingConversation && provider.messages.isEmpty) {
-                    return _buildLoadingState();
+                    return _buildLoadingState('Loading conversation...');
+                  }
+
+                  // Show loading state when injecting context (opening from solution/quiz)
+                  if (provider.isInjectingContext && provider.messages.isEmpty) {
+                    return _buildLoadingState('Loading context...');
                   }
 
                   if (provider.hasError && provider.messages.isEmpty) {
@@ -166,6 +173,9 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
 
                   return Column(
                     children: [
+                      // Show a subtle loading banner when injecting context to existing conversation
+                      if (provider.isInjectingContext && provider.messages.isNotEmpty)
+                        _buildContextLoadingBanner(),
                       Expanded(
                         child: _buildMessageList(provider),
                       ),
@@ -173,11 +183,11 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
                         QuickActionsRow(
                           actions: provider.quickActions,
                           onActionTap: _handleQuickAction,
-                          isLoading: provider.isSendingMessage,
+                          isLoading: provider.isSendingMessage || provider.isInjectingContext,
                         ),
                       ChatInputBar(
                         onSend: _handleSendMessage,
-                        isLoading: provider.isSendingMessage,
+                        isLoading: provider.isSendingMessage || provider.isInjectingContext,
                       ),
                     ],
                   );
@@ -239,18 +249,76 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
     );
   }
 
-  Widget _buildLoadingState() {
-    return const Center(
+  Widget _buildLoadingState(String message) {
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: AppColors.primary),
-          SizedBox(height: 16),
+          // Priya avatar with pulsing effect
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: AppColors.ctaGradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: const Center(
+              child: PriyaAvatar(size: 48, showShadow: false),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const CircularProgressIndicator(color: AppColors.primary),
+          const SizedBox(height: 16),
           Text(
-            'Loading conversation...',
-            style: TextStyle(
+            message,
+            style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContextLoadingBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.primary.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.primary.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Loading context...',
+            style: TextStyle(
+              color: AppColors.primary.withValues(alpha: 0.8),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],

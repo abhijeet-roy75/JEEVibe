@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../models/snap_data_model.dart';
 import '../models/solution_model.dart';
+import '../models/ai_tutor_models.dart';
 import '../widgets/latex_widget.dart';
 import '../widgets/chemistry_text.dart';
 import '../widgets/priya_avatar.dart';
@@ -15,7 +16,9 @@ import '../config/content_config.dart';
 import '../utils/text_preprocessor.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'home_screen.dart';
+import 'ai_tutor_chat_screen.dart';
 import '../services/localization_service.dart';
+import '../services/subscription_service.dart';
 
 class SolutionReviewScreen extends StatefulWidget {
   final List<RecentSolution> allSolutions;
@@ -505,8 +508,65 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
   }
 
   Widget _buildNavigationButtons() {
+    final subscriptionService = SubscriptionService();
+    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
+
     return Column(
       children: [
+        // Ask Priya Ma'am button (Ultra tier only)
+        if (hasAiTutorAccess) ...[
+          Container(
+            width: double.infinity,
+            height: 56,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
+              boxShadow: AppShadows.cardShadow,
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  final solution = _currentSolution;
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => AiTutorChatScreen(
+                        injectContext: TutorContext(
+                          type: TutorContextType.solution,
+                          id: solution.id,
+                          title: '${solution.topic} - ${solution.subject}',
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const PriyaAvatar(size: 24, showShadow: false),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Ask Priya Ma\'am',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: AppColors.primary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         // Back to Snap and Solve
         GradientButton(
           text: LocalizationService.getString('back_to_snap', _reconstructSolution(_currentSolution).language ?? 'en'),

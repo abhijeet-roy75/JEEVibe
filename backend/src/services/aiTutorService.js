@@ -166,9 +166,35 @@ async function injectContext(userId, contextType, contextId) {
     // Generate the greeting as an assistant message
     const systemPrompt = buildSystemPrompt(studentProfile, context);
 
-    const greetingPrompt = `The student just opened a chat about: ${context.title}.
+    // Build a context-aware greeting prompt
+    let greetingPrompt;
+    if (contextType === 'solution' && context.snapshot?.question) {
+      // For solutions, acknowledge the specific question
+      const questionPreview = context.snapshot.question.length > 150
+        ? context.snapshot.question.substring(0, 150) + '...'
+        : context.snapshot.question;
+      greetingPrompt = `The student just opened a chat about a ${context.snapshot.topic || 'problem'} in ${context.snapshot.subject || 'their subject'}.
+
+The question they're working on is:
+"${questionPreview}"
+
+Generate a brief, warm greeting (2-3 sentences) that:
+1. Acknowledges you can see the specific problem they're working on
+2. Briefly mentions what the question is about (don't repeat the whole question)
+3. Invites them to ask about any part of the solution they'd like to understand better
+
+Don't solve anything yet - just welcome them and show you understand what they're looking at.`;
+    } else if (contextType === 'quiz' && context.snapshot) {
+      greetingPrompt = `The student just finished a quiz and scored ${context.snapshot.score}/${context.snapshot.total}.
+Generate a brief, warm greeting (2-3 sentences) acknowledging their performance and offering to help review questions they missed.`;
+    } else if (contextType === 'analytics') {
+      greetingPrompt = `The student is looking at their overall progress analytics.
+Generate a brief, warm greeting (2-3 sentences) acknowledging you can see their performance data and offering to discuss study strategies.`;
+    } else {
+      greetingPrompt = `The student just opened a chat about: ${context.title}.
 Generate a brief, warm greeting (2-3 sentences max) acknowledging what they're looking at and inviting them to ask questions.
 Don't solve anything yet - just welcome them and show you understand the context.`;
+    }
 
     const completion = await openai.chat.completions.create({
       model: MODEL,
