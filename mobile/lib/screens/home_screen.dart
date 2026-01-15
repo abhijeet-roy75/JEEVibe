@@ -206,7 +206,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      '${appState.snapsRemaining} remaining',
+                                      appState.snapLimit == -1
+                                          ? '∞ remaining'
+                                          : '${appState.snapsRemaining} remaining',
                                       style: AppTextStyles.bodySmall.copyWith(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w600,

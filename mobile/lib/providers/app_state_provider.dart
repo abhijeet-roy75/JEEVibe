@@ -30,13 +30,35 @@ class AppStateProvider extends ChangeNotifier {
   // Getters
   int get snapsUsed => _snapsUsed;
   int get snapLimit => _snapLimit;
-  int get snapsRemaining => _snapLimit - _snapsUsed;
+  int get snapsRemaining => _snapLimit == -1 ? -1 : (_snapLimit - _snapsUsed);
   bool get hasSeenWelcome => _hasSeenWelcome;
   List<RecentSolution> get recentSolutions => _recentSolutions;
   UserStats get stats => _stats;
   bool get isInitialized => _isInitialized;
   bool get isLoading => _isLoading;
-  bool get canTakeSnap => snapsRemaining > 0;
+  bool get canTakeSnap {
+    // Unlimited users (Ultra with -1 limit) can always take snaps
+    if (_snapLimit == -1) return true;
+    return snapsRemaining > 0;
+  }
+
+  /// Get formatted snap count text for display
+  /// Returns "∞" (infinity symbol) for unlimited users, or "X/Y remaining" for limited users
+  String get snapCountText {
+    if (_snapLimit == -1) {
+      return '∞';
+    }
+    return '${snapsRemaining}/${_snapLimit}';
+  }
+
+  /// Get formatted snap count text with label
+  /// Returns "Unlimited snaps" or "X/Y snaps remaining"
+  String get snapCountTextWithLabel {
+    if (_snapLimit == -1) {
+      return 'Unlimited snaps';
+    }
+    return '${snapsRemaining}/${_snapLimit} snaps remaining';
+  }
 
   /// Initialize the provider (call on app launch)
   Future<void> initialize() async {

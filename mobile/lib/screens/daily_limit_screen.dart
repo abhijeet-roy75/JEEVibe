@@ -107,7 +107,9 @@ class _DailyLimitScreenState extends State<DailyLimitScreen> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '${appState.snapsRemaining}/${appState.snapLimit} snaps remaining',
+                    appState.snapLimit == -1
+                        ? 'Unlimited snaps'
+                        : '${appState.snapsRemaining}/${appState.snapLimit} snaps remaining',
                     style: AppTextStyles.headerSmall.copyWith(
                       color: AppColors.primaryPurple,
                     ),

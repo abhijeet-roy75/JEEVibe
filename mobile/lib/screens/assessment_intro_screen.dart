@@ -561,7 +561,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                             ),
                           ),
                           Text(
-                            '${appState.snapsRemaining} snaps remaining',
+                            appState.snapLimit == -1
+                                ? 'Unlimited snaps'
+                                : '${appState.snapsRemaining} snaps remaining',
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.primaryPurple,
                               fontWeight: FontWeight.w600,
@@ -1040,7 +1042,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    '${appState.snapsRemaining}',
+                    appState.snapLimit == -1 ? '∞' : '${appState.snapsRemaining}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,

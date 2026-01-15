@@ -993,7 +993,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 ),
               const SizedBox(width: 8),
               Text(
-                  '${appState.snapsRemaining}/${appState.snapLimit} snaps remaining today',
+                  appState.snapLimit == -1
+                      ? 'Unlimited snaps'
+                      : '${appState.snapsRemaining}/${appState.snapLimit} snaps remaining today',
                   style: AppTextStyles.labelMedium.copyWith(
                     color: Colors.white,
                   ),

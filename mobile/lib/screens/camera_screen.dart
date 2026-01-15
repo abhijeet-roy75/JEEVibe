@@ -869,7 +869,9 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '$remaining more snap${remaining != 1 ? 's' : ''} available today',
+                  appState.snapLimit == -1
+                      ? 'Unlimited snaps available'
+                      : '$remaining more snap${remaining != 1 ? 's' : ''} available today',
                   style: AppTextStyles.labelMedium.copyWith(
                     color: Colors.white,
                   ),
