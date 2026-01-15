@@ -343,21 +343,22 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       // Verify that user has a valid profile in Firestore
       // If no profile exists, sign out and redirect to welcome screen
       final firestoreService = Provider.of<FirestoreUserService>(context, listen: false);
-      bool hasValidProfile = false;
+      bool? hasValidProfile; // null = couldn't check, true/false = confirmed
 
       try {
         final profile = await firestoreService.getUserProfile(authService.currentUser!.uid);
         hasValidProfile = profile != null;
       } catch (e) {
         print('Error checking profile: $e');
-        hasValidProfile = false;
+        // Don't assume no profile on network error - let user continue
+        hasValidProfile = null;
       }
 
       if (!mounted) return;
 
-      // If authenticated but no profile exists, sign out and show welcome screen
-      // This handles cases where Firestore data was deleted but Auth session persists
-      if (!hasValidProfile) {
+      // Only sign out if we CONFIRMED profile doesn't exist (not on network error)
+      // This prevents unnecessary sign-outs due to temporary network issues
+      if (hasValidProfile == false) {
         print('User authenticated but no profile found. Signing out...');
         await authService.signOut();
         final pinService = PinService();
@@ -371,6 +372,10 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
         }
         return;
       }
+
+      // If profile check failed (network error), continue with auth flow
+      // The user is authenticated, so let them proceed - profile issues
+      // will be caught later if they try to do something requiring profile
 
       // User has valid profile - proceed with normal flow
 
