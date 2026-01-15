@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="JEEVibe pricing plans - Free, Pro, and Ultra tiers for AI-powered JEE preparation. Start free, upgrade anytime.">
+  <title>Pricing - JEEVibe</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/output.css">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="assets/images/logo-240.png">
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100">
+    <div class="container-narrow">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-2">
+          <img src="assets/images/logo-240.png" alt="JEEVibe" class="h-8 w-auto">
+          <span class="font-bold text-xl text-text">JEEVibe</span>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <div class="hidden md:flex items-center gap-8">
+          <a href="index.html#features" class="text-text-muted hover:text-primary transition-colors">Features</a>
+          <a href="approach.html" class="text-text-muted hover:text-primary transition-colors">Our Approach</a>
+          <a href="pricing.html" class="text-primary font-medium">Pricing</a>
+          <a href="index.html#download" class="btn-primary">Download App</a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-button" class="md:hidden p-2" aria-expanded="false" aria-label="Toggle menu">
+          <svg class="w-6 h-6 text-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="hidden md:hidden pb-4">
+        <div class="flex flex-col gap-4">
+          <a href="index.html#features" class="text-text-muted hover:text-primary transition-colors">Features</a>
+          <a href="approach.html" class="text-text-muted hover:text-primary transition-colors">Our Approach</a>
+          <a href="pricing.html" class="text-primary font-medium">Pricing</a>
+          <a href="index.html#download" class="btn-primary text-center">Download App</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="section pt-12 md:pt-20 bg-gradient-to-b from-primary/5 to-background">
+    <div class="container-narrow text-center">
+      <h1 class="text-4xl md:text-5xl font-bold text-text leading-tight">
+        Simple, <span
+          class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Transparent</span> Pricing
+      </h1>
+      <p class="mt-6 text-lg text-text-muted leading-relaxed max-w-2xl mx-auto">
+        Start free and upgrade when you're ready. No hidden fees, cancel anytime.
+      </p>
+
+      <!-- Billing Toggle -->
+      <div class="mt-10 inline-flex items-center bg-white rounded-xl p-2 shadow-md border border-gray-200">
+        <button id="toggle-monthly"
+          class="px-6 py-3 rounded-lg text-sm font-medium bg-primary text-white border border-primary transition-all">Monthly</button>
+        <button id="toggle-quarterly"
+          class="px-6 py-3 rounded-lg text-sm font-medium text-text-muted hover:text-text border border-transparent hover:border-gray-200 transition-all mx-1">Quarterly</button>
+        <button id="toggle-annual"
+          class="px-6 py-3 rounded-lg text-sm font-medium text-text-muted hover:text-text border border-transparent hover:border-gray-200 transition-all">
+          Annual
+          <span class="ml-2 text-xs bg-success/10 text-success px-2 py-1 rounded-full">Save 33%</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Cards -->
+  <section class="section pt-12 pb-16">
+    <div class="container-narrow">
+      <div class="grid md:grid-cols-3 gap-8 lg:gap-10">
+
+        <!-- Free Tier -->
+        <div class="card border-gray-200 flex flex-col p-8">
+          <div class="mb-8">
+            <h3 class="text-2xl font-bold text-text">Free</h3>
+            <p class="text-text-muted text-sm mt-2">Get started with JEE prep</p>
+          </div>
+
+          <div class="mb-8">
+            <div class="flex items-baseline gap-1">
+              <span class="text-5xl font-bold text-text">₹0</span>
+              <span class="text-text-muted text-lg">/forever</span>
+            </div>
+          </div>
+
+          <ul class="space-y-4 mb-10 flex-grow">
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-success flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text">5 Snap & Solve per day</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-success flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text">1 Adaptive Daily Quiz</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-success flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text">Full step-by-step solutions</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-success flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text">Basic analytics</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-success flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text">7-day solution history</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span class="text-text-muted">AI Tutor (Priya Ma'am)</span>
+            </li>
+          </ul>
+
+          <div class="mt-auto pt-6">
+            <a href="index.html#download" class="btn-secondary w-full text-center block py-4">Download Free</a>
+          </div>
+        </div>
+
+        <!-- Pro Tier -->
+        <div class="card border-primary/30 bg-primary/5 flex flex-col relative p-8">
+          <div class="absolute -top-4 left-1/2 -translate-x-1/2">
+            <span
+              class="bg-primary text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md border-2 border-white">MOST
+              POPULAR</span>
+          </div>
+
+          <div class="mb-8 pt-2">
+            <h3 class="text-2xl font-bold text-text">Pro</h3>
+            <p class="text-text-muted text-sm mt-2">For serious JEE aspirants</p>
+          </div>
+
+          <div class="mb-8">
+            <div class="flex items-baseline gap-1">
+              <span class="text-5xl font-bold text-text" id="pro-price">₹299</span>
+              <span class="text-text-muted text-lg" id="pro-period">/month</span>
+            </div>
+            <p class="text-sm text-text-muted mt-2 h-5" id="pro-savings"></p>
+          </div>
+
+          <ul class="space-y-4 mb-10 flex-grow">
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-success flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text"><strong>10</strong> Snap & Solve per day</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-success flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text"><strong>10</strong> Adaptive Daily Quizzes</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-success flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text">Full step-by-step solutions</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-success flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text"><strong>Full</strong> analytics & insights</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-success flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text">30-day solution history</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span class="text-text-muted">AI Tutor (Priya Ma'am)</span>
+            </li>
+          </ul>
+
+          <div class="mt-auto pt-6">
+            <a href="index.html#download" class="btn-primary w-full text-center block py-4">Get Pro</a>
+          </div>
+        </div>
+
+        <!-- Ultra Tier -->
+        <div
+          class="card border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 flex flex-col relative overflow-hidden p-8">
+          <div
+            class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400/20 to-orange-400/20 rounded-bl-full">
+          </div>
+
+          <div class="mb-8 relative">
+            <h3 class="text-2xl font-bold text-text flex items-center gap-2">
+              Ultra
+              <span class="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full">ULTRA</span>
+            </h3>
+            <p class="text-text-muted text-sm mt-2">Maximum JEE preparation</p>
+          </div>
+
+          <div class="mb-8">
+            <div class="flex items-baseline gap-1">
+              <span class="text-5xl font-bold text-text" id="ultra-price">₹499</span>
+              <span class="text-text-muted text-lg" id="ultra-period">/month</span>
+            </div>
+            <p class="text-sm text-text-muted mt-2 h-5" id="ultra-savings"></p>
+          </div>
+
+          <ul class="space-y-4 mb-10 flex-grow">
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text"><strong>Unlimited</strong> Snap & Solve</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text"><strong>Unlimited</strong> Daily Quizzes</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text">Full step-by-step solutions</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text"><strong>Full</strong> analytics & insights</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text"><strong>Unlimited</strong> solution history</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text font-medium">AI Tutor (Priya Ma'am)</span>
+            </li>
+          </ul>
+
+          <div class="mt-auto pt-6">
+            <a href="index.html#download"
+              class="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-4 px-6 rounded-lg transition-colors w-full text-center block">Get
+              Ultra</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Comparison Table -->
+  <section class="section py-16">
+    <div class="container-narrow">
+      <h2 class="text-3xl font-bold text-text text-center mb-12">Compare All Features</h2>
+
+      <div class="overflow-x-auto">
+        <table class="w-full bg-white rounded-xl shadow-sm border border-gray-100">
+          <thead>
+            <tr class="border-b border-gray-100">
+              <th class="text-left py-4 px-6 font-semibold text-text">Feature</th>
+              <th class="text-center py-4 px-4 font-semibold text-text">Free</th>
+              <th class="text-center py-4 px-4 font-semibold text-primary">Pro</th>
+              <th class="text-center py-4 px-4 font-semibold text-amber-600">Ultra</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Core Features -->
+            <tr class="bg-gray-50">
+              <td colspan="4" class="py-3 px-6 font-semibold text-text-muted text-sm uppercase tracking-wide">Core
+                Features</td>
+            </tr>
+            <tr class="border-b border-gray-50">
+              <td class="py-4 px-6 text-text">Snap & Solve</td>
+              <td class="py-4 px-4 text-center text-text-muted">5/day</td>
+              <td class="py-4 px-4 text-center text-text">10/day</td>
+              <td class="py-4 px-4 text-center font-medium text-amber-600">Unlimited</td>
+            </tr>
+            <tr class="border-b border-gray-50">
+              <td class="py-4 px-6 text-text">Adaptive Daily Quiz</td>
+              <td class="py-4 px-4 text-center text-text-muted">1/day</td>
+              <td class="py-4 px-4 text-center text-text">10/day</td>
+              <td class="py-4 px-4 text-center font-medium text-amber-600">Unlimited</td>
+            </tr>
+            <tr class="border-b border-gray-50">
+              <td class="py-4 px-6 text-text">Step-by-Step Solutions</td>
+              <td class="py-4 px-4 text-center">
+                <svg class="w-5 h-5 text-success mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </td>
+              <td class="py-4 px-4 text-center">
+                <svg class="w-5 h-5 text-success mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </td>
+              <td class="py-4 px-4 text-center">
+                <svg class="w-5 h-5 text-success mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </td>
+            </tr>
+            <tr class="border-b border-gray-50">
+              <td class="py-4 px-6 text-text">Solution History</td>
+              <td class="py-4 px-4 text-center text-text-muted">7 days</td>
+              <td class="py-4 px-4 text-center text-text">30 days</td>
+              <td class="py-4 px-4 text-center font-medium text-amber-600">Unlimited</td>
+            </tr>
+
+            <!-- Analytics -->
+            <tr class="bg-gray-50">
+              <td colspan="4" class="py-3 px-6 font-semibold text-text-muted text-sm uppercase tracking-wide">Analytics
+                & Insights</td>
+            </tr>
+            <tr class="border-b border-gray-50">
+              <td class="py-4 px-6 text-text">Performance Analytics</td>
+              <td class="py-4 px-4 text-center text-text-muted">Basic</td>
+              <td class="py-4 px-4 text-center text-text">Full</td>
+              <td class="py-4 px-4 text-center font-medium text-amber-600">Full</td>
+            </tr>
+            <tr class="border-b border-gray-50">
+              <td class="py-4 px-6 text-text">Theta Score Tracking</td>
+              <td class="py-4 px-4 text-center">
+                <svg class="w-5 h-5 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </td>
+              <td class="py-4 px-4 text-center">
+                <svg class="w-5 h-5 text-success mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </td>
+              <td class="py-4 px-4 text-center">
+                <svg class="w-5 h-5 text-success mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </td>
+            </tr>
+            <tr class="border-b border-gray-50">
+              <td class="py-4 px-6 text-text">Focus Area Recommendations</td>
+              <td class="py-4 px-4 text-center">
+                <svg class="w-5 h-5 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </td>
+              <td class="py-4 px-4 text-center">
+                <svg class="w-5 h-5 text-success mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </td>
+              <td class="py-4 px-4 text-center">
+                <svg class="w-5 h-5 text-success mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </td>
+            </tr>
+
+            <!-- AI Features -->
+            <tr class="bg-gray-50">
+              <td colspan="4" class="py-3 px-6 font-semibold text-text-muted text-sm uppercase tracking-wide">AI
+                Features</td>
+            </tr>
+            <tr class="border-b border-gray-50">
+              <td class="py-4 px-6 text-text">
+                <div class="flex items-center gap-2">
+                  AI Tutor (Priya Ma'am)
+                  <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Ultra Only</span>
+                </div>
+              </td>
+              <td class="py-4 px-4 text-center">
+                <svg class="w-5 h-5 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </td>
+              <td class="py-4 px-4 text-center">
+                <svg class="w-5 h-5 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </td>
+              <td class="py-4 px-4 text-center">
+                <svg class="w-5 h-5 text-amber-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </td>
+            </tr>
+
+            <!-- Pricing Row -->
+            <tr class="bg-primary/5">
+              <td class="py-4 px-6 font-semibold text-text">Monthly Price</td>
+              <td class="py-4 px-4 text-center font-semibold text-text">Free</td>
+              <td class="py-4 px-4 text-center font-semibold text-primary">₹299/mo</td>
+              <td class="py-4 px-4 text-center font-semibold text-amber-600">₹499/mo</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="section py-16 bg-white">
+    <div class="container-narrow">
+      <h2 class="text-3xl font-bold text-text text-center mb-12">Frequently Asked Questions</h2>
+
+      <div class="max-w-2xl mx-auto space-y-6">
+        <div class="card">
+          <h3 class="font-semibold text-text mb-2">Can I try before I buy?</h3>
+          <p class="text-text-muted">Yes! The Free tier is completely free forever. Use it to experience JEEVibe's
+            adaptive learning before deciding to upgrade.</p>
+        </div>
+
+        <div class="card">
+          <h3 class="font-semibold text-text mb-2">What payment methods do you accept?</h3>
+          <p class="text-text-muted">We accept UPI, credit/debit cards, net banking, and wallets through Razorpay -
+            India's most trusted payment gateway.</p>
+        </div>
+
+        <div class="card">
+          <h3 class="font-semibold text-text mb-2">Can I cancel anytime?</h3>
+          <p class="text-text-muted">Yes, you can cancel your subscription anytime. You'll continue to have access until
+            the end of your billing period.</p>
+        </div>
+
+        <div class="card">
+          <h3 class="font-semibold text-text mb-2">What's the difference between Pro and Ultra?</h3>
+          <p class="text-text-muted">Pro gives you more daily limits (10 snaps, 10 quizzes) and full analytics. Ultra
+            removes all limits and includes access to Priya Ma'am, your AI tutor who can help you understand concepts
+            deeply.</p>
+        </div>
+
+        <div class="card">
+          <h3 class="font-semibold text-text mb-2">Do solutions quality differ by tier?</h3>
+          <p class="text-text-muted">No! All tiers get the same high-quality, step-by-step solutions. We believe every
+            student deserves complete explanations. The difference is in usage limits and features.</p>
+        </div>
+
+        <div class="card">
+          <h3 class="font-semibold text-text mb-2">Is there a student discount?</h3>
+          <p class="text-text-muted">Our annual plans offer up to 33% savings. We've priced JEEVibe to be accessible to
+            all serious JEE aspirants - much more affordable than traditional coaching.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="section">
+    <div class="container-narrow">
+      <div class="bg-gradient-to-r from-primary to-secondary rounded-xl p-8 md:p-12 text-white text-center">
+        <h2 class="text-3xl md:text-4xl font-bold">Start Your JEE Journey Today</h2>
+        <p class="mt-4 text-white/90 max-w-xl mx-auto">Join thousands of students already improving their JEE scores
+          with AI-powered adaptive learning.</p>
+        <div class="mt-8">
+          <a href="index.html#download"
+            class="inline-flex items-center gap-2 bg-white text-primary font-semibold py-3 px-8 rounded-lg hover:bg-gray-100 transition-colors">
+            Download Free
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-background border-t border-gray-100 py-12">
+    <div class="container-narrow">
+      <div class="grid md:grid-cols-4 gap-8">
+        <!-- Brand -->
+        <div class="md:col-span-2">
+          <a href="/" class="flex items-center gap-2">
+            <img src="assets/images/logo-240.png" alt="JEEVibe" class="h-8 w-auto">
+            <span class="font-bold text-xl text-text">JEEVibe</span>
+          </a>
+          <p class="mt-4 text-text-muted text-sm max-w-xs">AI-powered JEE preparation with adaptive learning and
+            personalized tutoring.</p>
+        </div>
+
+        <!-- Links -->
+        <div>
+          <h4 class="font-semibold text-text mb-4">Product</h4>
+          <ul class="space-y-2">
+            <li><a href="index.html#features"
+                class="text-text-muted hover:text-primary text-sm transition-colors">Features</a></li>
+            <li><a href="approach.html" class="text-text-muted hover:text-primary text-sm transition-colors">Our
+                Approach</a></li>
+            <li><a href="pricing.html" class="text-text-muted hover:text-primary text-sm transition-colors">Pricing</a>
+            </li>
+            <li><a href="index.html#download"
+                class="text-text-muted hover:text-primary text-sm transition-colors">Download</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal -->
+        <div>
+          <h4 class="font-semibold text-text mb-4">Legal</h4>
+          <ul class="space-y-2">
+            <li><a href="terms.html" class="text-text-muted hover:text-primary text-sm transition-colors">Terms &
+                Conditions</a></li>
+            <li><a href="privacy.html" class="text-text-muted hover:text-primary text-sm transition-colors">Privacy
+                Policy</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-12 pt-8 border-t border-gray-100 text-center">
+        <p class="text-text-muted text-sm">&copy; 2026 JEEVibe. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+  <script>
+    // Pricing toggle functionality
+    const toggleMonthly = document.getElementById('toggle-monthly');
+    const toggleQuarterly = document.getElementById('toggle-quarterly');
+    const toggleAnnual = document.getElementById('toggle-annual');
+
+    const proPrice = document.getElementById('pro-price');
+    const proPeriod = document.getElementById('pro-period');
+    const proSavings = document.getElementById('pro-savings');
+
+    const ultraPrice = document.getElementById('ultra-price');
+    const ultraPeriod = document.getElementById('ultra-period');
+    const ultraSavings = document.getElementById('ultra-savings');
+
+    const pricing = {
+      pro: {
+        monthly: { price: '₹299', period: '/month', savings: '' },
+        quarterly: { price: '₹747', period: '/quarter', savings: '₹249/mo · Save 17%' },
+        annual: { price: '₹2,388', period: '/year', savings: '₹199/mo · Save 33%' }
+      },
+      ultra: {
+        monthly: { price: '₹499', period: '/month', savings: '' },
+        quarterly: { price: '₹1,197', period: '/quarter', savings: '₹399/mo · Save 20%' },
+        annual: { price: '₹2,988', period: '/year', savings: '₹249/mo · Save 50%' }
+      }
+    };
+
+    function setActiveToggle(active) {
+      [toggleMonthly, toggleQuarterly, toggleAnnual].forEach(btn => {
+        btn.classList.remove('bg-primary', 'text-white', 'border-primary');
+        btn.classList.add('text-text-muted', 'border-transparent');
+      });
+      active.classList.add('bg-primary', 'text-white', 'border-primary');
+      active.classList.remove('text-text-muted', 'border-transparent');
+    }
+
+    function updatePricing(plan) {
+      proPrice.textContent = pricing.pro[plan].price;
+      proPeriod.textContent = pricing.pro[plan].period;
+      proSavings.textContent = pricing.pro[plan].savings;
+
+      ultraPrice.textContent = pricing.ultra[plan].price;
+      ultraPeriod.textContent = pricing.ultra[plan].period;
+      ultraSavings.textContent = pricing.ultra[plan].savings;
+    }
+
+    toggleMonthly.addEventListener('click', () => {
+      setActiveToggle(toggleMonthly);
+      updatePricing('monthly');
+    });
+
+    toggleQuarterly.addEventListener('click', () => {
+      setActiveToggle(toggleQuarterly);
+      updatePricing('quarterly');
+    });
+
+    toggleAnnual.addEventListener('click', () => {
+      setActiveToggle(toggleAnnual);
+      updatePricing('annual');
+    });
+  </script>
+</body>
+
+</html>
