@@ -6,17 +6,20 @@ import '../../services/subscription_service.dart';
 /// Paywall Screen
 ///
 /// Shows upgrade options when user hits a limit or tries to access pro features.
-/// For Phase 1 (no Razorpay), this shows the upgrade prompt without payment.
+/// Displays both Pro and Ultra tiers with a tab selector.
 class PaywallScreen extends StatefulWidget {
   final String? featureName;
   final UsageType? usageType;
   final String? limitReachedMessage;
+  /// If true, pre-select Ultra tab (e.g., when coming from AI Tutor)
+  final bool suggestUltra;
 
   const PaywallScreen({
     super.key,
     this.featureName,
     this.usageType,
     this.limitReachedMessage,
+    this.suggestUltra = false,
   });
 
   @override
@@ -28,9 +31,16 @@ class _PaywallScreenState extends State<PaywallScreen> {
   List<PurchasablePlan> _plans = [];
   bool _isLoading = true;
 
+  // Selected tier: 0 = Pro, 1 = Ultra
+  int _selectedTierIndex = 0;
+
   @override
   void initState() {
     super.initState();
+    // Pre-select Ultra if suggested (e.g., coming from AI Tutor feature)
+    if (widget.suggestUltra) {
+      _selectedTierIndex = 1;
+    }
     _loadPlans();
   }
 
@@ -41,6 +51,24 @@ class _PaywallScreenState extends State<PaywallScreen> {
       _isLoading = false;
     });
   }
+
+  PurchasablePlan? get _selectedPlan {
+    if (_plans.isEmpty) return null;
+    // Plans are ordered: Pro first, then Ultra
+    if (_selectedTierIndex == 0) {
+      return _plans.firstWhere(
+        (p) => p.tierId == 'pro',
+        orElse: () => _plans.first,
+      );
+    } else {
+      return _plans.firstWhere(
+        (p) => p.tierId == 'ultra',
+        orElse: () => _plans.length > 1 ? _plans[1] : _plans.first,
+      );
+    }
+  }
+
+  bool get _isUltraSelected => _selectedTierIndex == 1;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +95,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     // Hero section
                     _buildHeroSection(),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
+
+                    // Tier selector tabs
+                    _buildTierSelector(),
+
+                    const SizedBox(height: 24),
 
                     // Current tier badge
                     _buildCurrentTierBadge(),
@@ -80,7 +113,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     const SizedBox(height: 32),
 
                     // Pricing cards
-                    if (_plans.isNotEmpty) _buildPricingSection(_plans.first),
+                    if (_selectedPlan != null) _buildPricingSection(_selectedPlan!),
 
                     const SizedBox(height: 24),
 
@@ -133,17 +166,18 @@ class _PaywallScreenState extends State<PaywallScreen> {
           ),
           const SizedBox(height: 24),
         ],
-        // Crown icon
-        Container(
+        // Animated icon based on selected tier
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            gradient: AppColors.ctaGradient,
+            gradient: _isUltraSelected ? _ultraGradient : AppColors.ctaGradient,
             borderRadius: BorderRadius.circular(20),
             boxShadow: AppShadows.button,
           ),
-          child: const Icon(
-            Icons.workspace_premium_rounded,
+          child: Icon(
+            _isUltraSelected ? Icons.diamond_outlined : Icons.workspace_premium_rounded,
             color: Colors.white,
             size: 44,
           ),
@@ -161,7 +195,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
         Text(
           widget.featureName != null
               ? 'Upgrade to get more ${widget.featureName} and unlock your potential'
-              : 'Upgrade to Pro for unlimited access',
+              : _isUltraSelected
+                  ? 'Get unlimited access with AI Tutor support'
+                  : 'Upgrade to Pro for enhanced features',
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 16,
@@ -169,6 +205,98 @@ class _PaywallScreenState extends State<PaywallScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildTierSelector() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundLight,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildTierTab(
+              index: 0,
+              title: 'Pro',
+              icon: Icons.workspace_premium_rounded,
+              gradient: AppColors.ctaGradient,
+            ),
+          ),
+          Expanded(
+            child: _buildTierTab(
+              index: 1,
+              title: 'Ultra',
+              icon: Icons.diamond_outlined,
+              gradient: _ultraGradient,
+              badge: 'Best Value',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTierTab({
+    required int index,
+    required String title,
+    required IconData icon,
+    required Gradient gradient,
+    String? badge,
+  }) {
+    final isSelected = _selectedTierIndex == index;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedTierIndex = index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          gradient: isSelected ? gradient : null,
+          color: isSelected ? null : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: isSelected ? AppShadows.button : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+              ),
+            ),
+            if (badge != null && isSelected) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  badge,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
@@ -199,6 +327,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Widget _buildFeaturesComparison() {
+    final tierName = _isUltraSelected ? 'Ultra' : 'Pro';
+    final tierColor = _isUltraSelected ? _ultraColor : AppColors.success;
+    final tierBgColor = _isUltraSelected ? _ultraLightColor : AppColors.cardLightGreen;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -209,9 +341,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'What you get with Pro',
-            style: TextStyle(
+          Text(
+            'What you get with $tierName',
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
@@ -235,7 +367,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     ),
                   ),
                 ),
-                Expanded(
+                const Expanded(
                   flex: 2,
                   child: Text(
                     'Free',
@@ -250,12 +382,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'Pro',
+                    tierName,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.success,
+                      color: tierColor,
                     ),
                   ),
                 ),
@@ -264,30 +396,95 @@ class _PaywallScreenState extends State<PaywallScreen> {
           ),
           const Divider(height: 1),
           const SizedBox(height: 8),
-          _buildFeatureRow(Icons.camera_alt_outlined, 'Snap & Solve', '5/day', '10/day'),
-          _buildFeatureRow(Icons.quiz_outlined, 'Daily Quizzes', '1/day', '10/day'),
-          _buildFeatureRow(Icons.analytics_outlined, 'Analytics', 'Basic', 'Full'),
-          _buildFeatureRow(Icons.history_outlined, 'Solution History', '7 days', '30 days'),
-          _buildFeatureRow(Icons.offline_bolt_outlined, 'Offline Mode', 'No', 'Yes'),
+
+          // Features - different values for Pro vs Ultra
+          _buildFeatureRow(
+            Icons.camera_alt_outlined,
+            'Snap & Solve',
+            '5/day',
+            _isUltraSelected ? 'Unlimited' : '10/day',
+            tierColor,
+            tierBgColor,
+          ),
+          _buildFeatureRow(
+            Icons.quiz_outlined,
+            'Daily Quizzes',
+            '1/day',
+            _isUltraSelected ? 'Unlimited' : '3/day',
+            tierColor,
+            tierBgColor,
+          ),
+          _buildFeatureRow(
+            Icons.school_outlined,
+            'AI Tutor (Priya Ma\'am)',
+            'No',
+            _isUltraSelected ? 'Yes' : 'No',
+            tierColor,
+            tierBgColor,
+            highlight: _isUltraSelected, // Highlight this for Ultra
+          ),
+          _buildFeatureRow(
+            Icons.analytics_outlined,
+            'Analytics',
+            'Basic',
+            'Full',
+            tierColor,
+            tierBgColor,
+          ),
+          _buildFeatureRow(
+            Icons.history_outlined,
+            'Solution History',
+            '7 days',
+            _isUltraSelected ? '90 days' : '30 days',
+            tierColor,
+            tierBgColor,
+          ),
+          _buildFeatureRow(
+            Icons.offline_bolt_outlined,
+            'Offline Mode',
+            'No',
+            'Yes',
+            tierColor,
+            tierBgColor,
+          ),
+          if (_isUltraSelected) ...[
+            _buildFeatureRow(
+              Icons.support_agent_outlined,
+              'Priority Support',
+              'No',
+              'Yes',
+              tierColor,
+              tierBgColor,
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildFeatureRow(IconData icon, String feature, String free, String pro) {
+  Widget _buildFeatureRow(
+    IconData icon,
+    String feature,
+    String free,
+    String tierValue,
+    Color tierColor,
+    Color tierBgColor, {
+    bool highlight = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Icon(icon, size: 22, color: AppColors.primary),
+          Icon(icon, size: 22, color: highlight ? tierColor : AppColors.primary),
           const SizedBox(width: 12),
           Expanded(
             flex: 3,
             child: Text(
               feature,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 color: AppColors.textPrimary,
+                fontWeight: highlight ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ),
@@ -296,7 +493,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             child: Text(
               free,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.textTertiary,
               ),
@@ -307,16 +504,17 @@ class _PaywallScreenState extends State<PaywallScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.cardLightGreen,
+                color: tierBgColor,
                 borderRadius: BorderRadius.circular(8),
+                border: highlight ? Border.all(color: tierColor, width: 1.5) : null,
               ),
               child: Text(
-                pro,
+                tierValue,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.success,
+                  color: tierColor,
                 ),
               ),
             ),
@@ -327,16 +525,40 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
 
   Widget _buildPricingSection(PurchasablePlan plan) {
+    final tierColor = _isUltraSelected ? _ultraColor : AppColors.primary;
+    final tierLightColor = _isUltraSelected ? _ultraLightColor : AppColors.cardLightPurple;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Choose Your Plan',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
+        Row(
+          children: [
+            Text(
+              'Choose Your ${_isUltraSelected ? "Ultra" : "Pro"} Plan',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (_isUltraSelected)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  gradient: _ultraGradient,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  'RECOMMENDED',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 16),
         _buildPricingCard(
@@ -345,6 +567,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
           '\u20B9${plan.monthly.perMonth}/month',
           plan.monthly.badge,
           false,
+          tierColor,
+          tierLightColor,
         ),
         const SizedBox(height: 12),
         _buildPricingCard(
@@ -353,6 +577,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
           '\u20B9${plan.quarterly.perMonth}/month',
           plan.quarterly.badge,
           true,
+          tierColor,
+          tierLightColor,
         ),
         const SizedBox(height: 12),
         _buildPricingCard(
@@ -361,6 +587,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
           '\u20B9${plan.annual.perMonth}/month',
           plan.annual.badge,
           false,
+          tierColor,
+          tierLightColor,
         ),
       ],
     );
@@ -372,14 +600,16 @@ class _PaywallScreenState extends State<PaywallScreen> {
     String perMonth,
     String? badge,
     bool isPopular,
+    Color tierColor,
+    Color tierLightColor,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isPopular ? AppColors.cardLightPurple : AppColors.surface,
+        color: isPopular ? tierLightColor : AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isPopular ? AppColors.primary : AppColors.borderDefault,
+          color: isPopular ? tierColor : AppColors.borderDefault,
           width: isPopular ? 2 : 1,
         ),
       ),
@@ -396,7 +626,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: isPopular ? AppColors.primary : AppColors.textPrimary,
+                        color: isPopular ? tierColor : AppColors.textPrimary,
                       ),
                     ),
                     if (badge != null) ...[
@@ -404,7 +634,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: isPopular ? AppColors.primary : AppColors.success,
+                          color: isPopular ? tierColor : AppColors.success,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -422,7 +652,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 const SizedBox(height: 4),
                 Text(
                   perMonth,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.textTertiary,
                   ),
@@ -435,7 +665,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: isPopular ? AppColors.primary : AppColors.textPrimary,
+              color: isPopular ? tierColor : AppColors.textPrimary,
             ),
           ),
         ],
@@ -450,14 +680,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
         color: AppColors.cardLightAmber,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const Icon(Icons.construction_rounded, color: AppColors.warning),
-          const SizedBox(width: 12),
+          Icon(Icons.construction_rounded, color: AppColors.warning),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   'Payments Coming Soon',
                   style: TextStyle(
@@ -481,4 +711,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
       ),
     );
   }
+
+  // Ultra tier colors
+  static const _ultraColor = Color(0xFFD4A017); // Gold color
+  static const _ultraLightColor = Color(0xFFFFF8E1); // Light gold background
+  static const _ultraGradient = LinearGradient(
+    colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }

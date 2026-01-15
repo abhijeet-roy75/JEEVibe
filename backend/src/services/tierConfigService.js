@@ -92,7 +92,7 @@ const DEFAULT_TIER_CONFIG = {
       tier_id: 'ultra',
       display_name: 'Ultra',
       is_active: true,
-      is_purchasable: false,
+      is_purchasable: true,
       limits: {
         snap_solve_daily: -1,
         daily_quiz_daily: -1,
@@ -107,6 +107,32 @@ const DEFAULT_TIER_CONFIG = {
       },
       features: {
         analytics_access: 'full'
+      },
+      pricing: {
+        monthly: {
+          price: 49900,
+          display_price: '499',
+          per_month_price: '499',
+          duration_days: 30,
+          savings_percent: 0,
+          badge: null
+        },
+        quarterly: {
+          price: 119700,
+          display_price: '1,197',
+          per_month_price: '399',
+          duration_days: 90,
+          savings_percent: 20,
+          badge: 'MOST POPULAR'
+        },
+        annual: {
+          price: 358800,
+          display_price: '3,588',
+          per_month_price: '299',
+          duration_days: 365,
+          savings_percent: 40,
+          badge: 'BEST VALUE'
+        }
       }
     }
   }
