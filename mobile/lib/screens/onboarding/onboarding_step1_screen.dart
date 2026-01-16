@@ -441,6 +441,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
                         value: _targetYear,
+                        isExpanded: true,
                         decoration: InputDecoration(
                           hintText: 'Select year',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(

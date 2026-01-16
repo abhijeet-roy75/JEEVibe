@@ -105,10 +105,19 @@ router.post(
         rating,
       });
 
+      // Extract user info from context for email
+      const userProfile = context?.userProfile || {};
+      const userName = userProfile.firstName
+        ? `${userProfile.firstName}${userProfile.lastName ? ' ' + userProfile.lastName : ''}`
+        : null;
+      const userEmail = userProfile.email || null;
+
       // Send email notification (non-blocking)
       sendFeedbackEmail({
         feedbackId: feedbackRef.id,
         userId,
+        userName,
+        userEmail,
         rating,
         description,
         context,

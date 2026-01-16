@@ -38,11 +38,12 @@ async function sendFeedbackEmail(feedbackData) {
   }
 
   try {
-    const { feedbackId, userId, rating, description, context } = feedbackData;
+    const { feedbackId, userId, userName, userEmail, rating, description, context } = feedbackData;
 
     // Build email content
     const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
     const timestamp = context?.submittedAt || new Date().toISOString();
+    const displayName = userName || 'Anonymous User';
 
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -50,7 +51,7 @@ async function sendFeedbackEmail(feedbackData) {
 
         <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
           <p style="margin: 0 0 8px 0;"><strong>Rating:</strong> ${stars} (${rating}/5)</p>
-          <p style="margin: 0 0 8px 0;"><strong>Feedback ID:</strong> ${feedbackId}</p>
+          <p style="margin: 0 0 8px 0;"><strong>From:</strong> ${displayName}${userEmail ? ` (${userEmail})` : ''}</p>
           <p style="margin: 0;"><strong>User ID:</strong> ${userId}</p>
         </div>
 
@@ -85,7 +86,7 @@ async function sendFeedbackEmail(feedbackData) {
 New Feedback Received
 
 Rating: ${stars} (${rating}/5)
-Feedback ID: ${feedbackId}
+From: ${displayName}${userEmail ? ` (${userEmail})` : ''}
 User ID: ${userId}
 
 ${description ? `Description:\n${description}\n` : ''}

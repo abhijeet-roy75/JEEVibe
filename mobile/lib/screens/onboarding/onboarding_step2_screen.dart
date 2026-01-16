@@ -189,7 +189,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                   children: [
                     // Description moved here
                     Text(
-                      'Optional - helps us personalize better (you can skip)',
+                      'Optional - helps us personalize',
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.textMedium,
                       ),
@@ -220,6 +220,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
                         value: _state,
+                        isExpanded: true,
                         decoration: InputDecoration(
                           hintText: 'Select state',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
@@ -378,6 +379,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
                         value: _dreamBranch,
+                        isExpanded: true,
                         decoration: InputDecoration(
                           hintText: 'Select branch',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
