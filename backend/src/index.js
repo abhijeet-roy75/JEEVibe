@@ -179,6 +179,9 @@ app.use('/api/subscriptions', subscriptionsRouter);
 const aiTutorRouter = require('./routes/aiTutor');
 app.use('/api/ai-tutor', aiTutorRouter);
 
+const shareRouter = require('./routes/share');
+app.use('/api/share', shareRouter);
+
 // Test endpoints (only in development)
 if (process.env.NODE_ENV !== 'production') {
   const testFirebaseRouter = require('./routes/test-firebase');
@@ -234,6 +237,9 @@ app.get('/', (req, res) => {
         status: 'GET /api/subscriptions/status',
         plans: 'GET /api/subscriptions/plans',
         usage: 'GET /api/subscriptions/usage'
+      },
+      share: {
+        log: 'POST /api/share/log'
       }
     }
   });
