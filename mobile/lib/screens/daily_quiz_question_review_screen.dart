@@ -100,8 +100,9 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
   
   int get _currentQuestionPosition {
     if (_currentQuestion == null) return _currentIndex + 1;
-    // Return the original position in the full quiz
-    return _currentQuestion!['position'] as int? ?? (_currentIndex + 1);
+    // Return the original position in the full quiz (position is 0-indexed, display as 1-indexed)
+    final position = _currentQuestion!['position'] as int?;
+    return position != null ? position + 1 : (_currentIndex + 1);
   }
   
   int get _currentQuestionNumberInFiltered {
@@ -388,10 +389,14 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  '$subject • $chapter',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    '$subject • $chapter',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                   ),
                 ),
               ],
@@ -620,7 +625,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                     ],
                     // Why You Got This Wrong (only for incorrect)
                     if (!isCorrect) ...[
-                      _buildWhyWrongSection(),
+                      _buildWhyWrongSection(question),
                       const SizedBox(height: 16),
                     ],
                     // Key Takeaway
@@ -695,15 +700,23 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                 final index = entry.key;
                 final step = entry.value;
                 String stepText = '';
-                
+                String? formula;
+                String? calculation;
+                String? explanation;
+                String? description;
+
                 if (step is Map<String, dynamic>) {
-                  stepText = step['description'] ?? step['explanation'] ?? step['step'] ?? '';
+                  description = step['description'] as String?;
+                  stepText = description ?? step['explanation'] as String? ?? step['step'] as String? ?? '';
+                  formula = step['formula'] as String?;
+                  calculation = step['calculation'] as String?;
+                  explanation = step['explanation'] as String?;
                 } else if (step is String) {
                   stepText = step;
                 }
-                
+
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: 16),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -726,15 +739,150 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Html(
-                          data: stepText,
-                          style: {
-                            'body': Style(
-                              margin: Margins.zero,
-                              padding: HtmlPaddings.zero,
-                              fontSize: FontSize(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Description
+                            Html(
+                              data: stepText,
+                              style: {
+                                'body': Style(
+                                  margin: Margins.zero,
+                                  padding: HtmlPaddings.zero,
+                                  fontSize: FontSize(16),
+                                  lineHeight: LineHeight(1.5),
+                                  color: AppColors.textMedium,
+                                ),
+                                'strong': Style(fontWeight: FontWeight.w700),
+                                'b': Style(fontWeight: FontWeight.w700),
+                              },
                             ),
-                          },
+                            // Formula (if exists)
+                            if (formula != null && formula.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryPurple.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors.primaryPurple.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.functions,
+                                      size: 16,
+                                      color: AppColors.primaryPurple,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Html(
+                                        data: formula,
+                                        style: {
+                                          'body': Style(
+                                            margin: Margins.zero,
+                                            padding: HtmlPaddings.zero,
+                                            fontSize: FontSize(15),
+                                            lineHeight: LineHeight(1.4),
+                                            color: AppColors.primaryPurple,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            // Calculation (if exists)
+                            if (calculation != null && calculation.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.successGreen.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors.successGreen.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.calculate,
+                                      size: 16,
+                                      color: AppColors.successGreen,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Html(
+                                        data: calculation,
+                                        style: {
+                                          'body': Style(
+                                            margin: Margins.zero,
+                                            padding: HtmlPaddings.zero,
+                                            fontSize: FontSize(15),
+                                            lineHeight: LineHeight(1.4),
+                                            color: AppColors.textMedium,
+                                            fontFamily: 'monospace',
+                                          ),
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            // Explanation (if exists and different from description)
+                            if (explanation != null &&
+                                explanation.isNotEmpty &&
+                                explanation != description) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.warningAmber.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors.warningAmber.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.lightbulb_outline,
+                                      size: 16,
+                                      color: AppColors.warningAmber,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Html(
+                                        data: explanation,
+                                        style: {
+                                          'body': Style(
+                                            margin: Margins.zero,
+                                            padding: HtmlPaddings.zero,
+                                            fontSize: FontSize(15),
+                                            lineHeight: LineHeight(1.4),
+                                            color: AppColors.textMedium,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ],
@@ -748,7 +896,34 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
     );
   }
 
-  Widget _buildWhyWrongSection() {
+  Widget _buildWhyWrongSection(Map<String, dynamic> question) {
+    // Get question type and relevant data
+    final questionType = question['question_type'] as String? ?? 'mcq';
+    final isMcq = questionType == 'mcq' || questionType == 'MCQ';
+    final isNumerical = questionType == 'numerical' || questionType == 'NUMERICAL';
+    final studentAnswer = question['student_answer'] as String? ?? '';
+
+    // For MCQ: get distractor analysis for the student's wrong answer
+    String? distractorExplanation;
+    if (isMcq && question['distractor_analysis'] != null) {
+      final distractorAnalysis = question['distractor_analysis'] as Map<String, dynamic>?;
+      if (distractorAnalysis != null && studentAnswer.isNotEmpty) {
+        // Try exact match first, then case-insensitive
+        distractorExplanation = distractorAnalysis[studentAnswer] as String? ??
+            distractorAnalysis[studentAnswer.toLowerCase()] as String? ??
+            distractorAnalysis[studentAnswer.toUpperCase()] as String?;
+      }
+    }
+
+    // For numerical: check if we have common mistakes
+    List<String>? commonMistakes;
+    if (isNumerical && question['common_mistakes'] != null) {
+      final mistakes = question['common_mistakes'];
+      if (mistakes is List) {
+        commonMistakes = mistakes.map((e) => e.toString()).toList();
+      }
+    }
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -777,10 +952,78 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
-                'Review the explanation carefully. Understanding why you made this mistake helps you avoid it in the future.',
-                style: AppTextStyles.bodySmall,
-              ),
+              if (distractorExplanation != null) ...[
+                // MCQ: Show why the selected wrong option is incorrect
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.errorRed.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Option ${studentAnswer.toUpperCase()}',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.errorRed,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Html(
+                  data: distractorExplanation,
+                  style: {
+                    'body': Style(
+                      margin: Margins.zero,
+                      padding: HtmlPaddings.zero,
+                      fontSize: FontSize(16),
+                      lineHeight: LineHeight(1.5),
+                      color: AppColors.textMedium,
+                    ),
+                  },
+                ),
+              ] else if (commonMistakes != null && commonMistakes.isNotEmpty) ...[
+                // Numerical: Show common mistakes
+                ...commonMistakes.map((mistake) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '• ',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.warningAmber,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Expanded(
+                        child: Html(
+                          data: mistake,
+                          style: {
+                            'body': Style(
+                              margin: Margins.zero,
+                              padding: HtmlPaddings.zero,
+                              fontSize: FontSize(16),
+                              lineHeight: LineHeight(1.5),
+                              color: AppColors.textMedium,
+                            ),
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+              ] else ...[
+                // Fallback to generic message
+                Text(
+                  'Review the explanation carefully. Understanding why you made this mistake helps you avoid it in the future.',
+                  style: AppTextStyles.bodySmall,
+                ),
+              ],
             ],
           ),
         ),

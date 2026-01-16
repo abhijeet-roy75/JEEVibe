@@ -70,10 +70,10 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
           });
         }
 
-        // Load subscription status for quiz gating
+        // Load subscription status for quiz gating (force refresh to get latest usage)
         final token = await authService.getIdToken();
         if (token != null) {
-          await _subscriptionService.fetchStatus(token);
+          await _subscriptionService.fetchStatus(token, forceRefresh: true);
           final quizUsage = _subscriptionService.getUsageInfo(UsageType.dailyQuiz);
           if (mounted && quizUsage != null) {
             setState(() {
@@ -493,7 +493,12 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
                   MaterialPageRoute(
                     builder: (context) => const DailyQuizLoadingScreen(),
                   ),
-                );
+                ).then((_) {
+                  // Refresh data when returning from quiz (e.g., after completion)
+                  if (mounted) {
+                    _loadData();
+                  }
+                });
               }
             } finally {
               if (mounted) {

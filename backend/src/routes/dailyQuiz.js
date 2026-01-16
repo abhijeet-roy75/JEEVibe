@@ -1323,7 +1323,12 @@ router.get('/result/:quiz_id', authenticateUser, async (req, res, next) => {
           solution_steps: questionData.solution_steps || [],
           concepts_tested: questionData.concepts_tested || [],
 
+          // "Why wrong" analysis data
+          distractor_analysis: questionData.distractor_analysis || null,
+          common_mistakes: questionData.metadata?.common_mistakes || questionData.common_mistakes || null,
+
           // Metadata
+          difficulty: questionData.difficulty || null,
           selection_reason: q.selection_reason,
           chapter_key: q.chapter_key
         };
