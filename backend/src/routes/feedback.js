@@ -45,7 +45,7 @@ router.post(
   authenticateUser,
   [
     body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
-    body('description').isString().trim().notEmpty().withMessage('Description is required'),
+    body('description').optional().isString().trim(),
     body('context').isObject().withMessage('Context is required'),
   ],
   async (req, res, next) => {
@@ -83,7 +83,7 @@ router.post(
       const feedbackData = {
         userId,
         rating,
-        description: description.trim(),
+        description: description ? description.trim() : '',
         context: {
           ...context,
           submittedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -121,5 +121,75 @@ router.post(
     }
   }
 );
+
+/**
+ * GET /api/feedback
+ *
+ * Get all feedback items (admin/debug endpoint)
+ *
+ * Query params:
+ *   - limit: number (default 50, max 200)
+ *   - status: string (optional, filter by status: 'new', 'reviewed', 'resolved')
+ *   - rating: number (optional, filter by rating 1-5)
+ *
+ * Authentication: Required
+ */
+router.get('/', authenticateUser, async (req, res, next) => {
+  try {
+    const { limit = 50, status, rating } = req.query;
+    const limitNum = Math.min(parseInt(limit) || 50, 200);
+
+    let query = db.collection('feedback').orderBy('createdAt', 'desc');
+
+    if (status) {
+      query = query.where('status', '==', status);
+    }
+
+    if (rating) {
+      query = query.where('rating', '==', parseInt(rating));
+    }
+
+    query = query.limit(limitNum);
+
+    const snapshot = await retryFirestoreOperation(async () => {
+      return await query.get();
+    });
+
+    const feedbackItems = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      feedbackItems.push({
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || null,
+        context: {
+          ...data.context,
+          submittedAt: data.context?.submittedAt?.toDate?.()?.toISOString() || null,
+        },
+      });
+    });
+
+    logger.info('Feedback items retrieved', {
+      requestId: req.id,
+      count: feedbackItems.length,
+      filters: { status, rating },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        feedback: feedbackItems,
+        count: feedbackItems.length,
+      },
+      requestId: req.id,
+    });
+  } catch (error) {
+    logger.error('Failed to retrieve feedback', {
+      requestId: req.id,
+      error: error.message,
+    });
+    next(error);
+  }
+});
 
 module.exports = router;
