@@ -199,6 +199,24 @@
         { "fieldPath": "student_id", "order": "ASCENDING" },
         { "fieldPath": "week_number", "order": "ASCENDING" }
       ]
+    },
+    {
+      "comment": "AI Tutor: message retrieval by type + timestamp (getRecentMessagesForLLM, getMostRecentContext)",
+      "collectionGroup": "messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "AI Tutor: quiz questions - incorrect answers by position (buildQuizContext)",
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "is_correct", "order": "ASCENDING" },
+        { "fieldPath": "position", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

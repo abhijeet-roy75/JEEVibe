@@ -111,6 +111,9 @@ class SubjectProgress {
   final double theta;
   final MasteryStatus status;
   final int chaptersTested;
+  final int? accuracy; // Assessment accuracy percentage (0-100)
+  final int correct;   // Number of correct answers
+  final int total;     // Total questions attempted
 
   SubjectProgress({
     required this.subject,
@@ -119,6 +122,9 @@ class SubjectProgress {
     required this.theta,
     required this.status,
     required this.chaptersTested,
+    this.accuracy,
+    this.correct = 0,
+    this.total = 0,
   });
 
   factory SubjectProgress.fromJson(String subject, Map<String, dynamic> json) {
@@ -129,6 +135,9 @@ class SubjectProgress {
       theta: (json['theta'] ?? 0).toDouble(),
       status: MasteryStatus.fromString(json['status'] ?? 'FOCUS'),
       chaptersTested: json['chapters_tested'] ?? 0,
+      accuracy: json['accuracy'],
+      correct: json['correct'] ?? 0,
+      total: json['total'] ?? 0,
     );
   }
 

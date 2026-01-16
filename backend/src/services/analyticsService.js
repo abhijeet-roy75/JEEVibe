@@ -491,13 +491,21 @@ async function getAnalyticsOverview(userId) {
     const chaptersMastered = countMasteredChapters(thetaByChapter);
     const focusAreas = await calculateFocusAreas(thetaByChapter, 3, chapterMappings);
 
-    // Build subject progress with status labels
+    // Build subject progress with status labels and accuracy
+    const subjectAccuracy = userData.subject_accuracy || {};
     const subjectProgress = {};
     for (const [subject, data] of Object.entries(thetaBySubject)) {
+      // Map 'maths' to 'mathematics' for subject_accuracy lookup
+      const accuracyKey = subject === 'maths' ? 'mathematics' : subject;
+      const accuracyData = subjectAccuracy[accuracyKey] || {};
+
       subjectProgress[subject] = {
         ...data,
         display_name: getSubjectDisplayName(subject),
-        status: getMasteryStatus(data.percentile || 0)
+        status: getMasteryStatus(data.percentile || 0),
+        accuracy: accuracyData.accuracy ?? null,
+        correct: accuracyData.correct ?? 0,
+        total: accuracyData.total ?? 0
       };
     }
 

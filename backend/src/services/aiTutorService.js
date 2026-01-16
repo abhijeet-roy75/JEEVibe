@@ -22,7 +22,8 @@ const {
   getRecentMessagesForLLM,
   getMostRecentContext,
   clearConversation,
-  getConversationWithMessages
+  getConversationWithMessages,
+  updateTokenUsage
 } = require('./tutorConversationService');
 const { validateAndNormalizeLaTeX } = require('./latex-validator');
 
@@ -31,11 +32,13 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// Model configuration
-const MODEL = 'gpt-4o-mini';
-const MAX_TOKENS = 1500;
-const TEMPERATURE = 0.7;
-const ROLLING_WINDOW_SIZE = 20; // Max messages to send to LLM
+// Model configuration - loaded from environment with defaults
+const MODEL = process.env.AI_TUTOR_MODEL || 'gpt-4o-mini';
+const MAX_TOKENS = parseInt(process.env.AI_TUTOR_MAX_TOKENS, 10) || 1500;
+const TEMPERATURE = parseFloat(process.env.AI_TUTOR_TEMPERATURE) || 0.7;
+const ROLLING_WINDOW_SIZE = parseInt(process.env.AI_TUTOR_ROLLING_WINDOW, 10) || 20;
+const GREETING_MAX_TOKENS = parseInt(process.env.AI_TUTOR_GREETING_MAX_TOKENS, 10) || 300;
+const WELCOME_MAX_TOKENS = parseInt(process.env.AI_TUTOR_WELCOME_MAX_TOKENS, 10) || 200;
 
 /**
  * Build the system prompt with student and context data injected
@@ -65,17 +68,15 @@ function buildSystemPrompt(studentData, contextData) {
  */
 async function sendMessage(userId, message) {
   try {
-    // Ensure conversation exists
+    // Ensure conversation exists first (required before other operations)
     await getOrCreateConversation(userId);
 
-    // Get student profile for personalization
-    const studentProfile = await getStudentProfile(userId);
-
-    // Get most recent context for the system prompt
-    const recentContext = await getMostRecentContext(userId);
-
-    // Get recent messages for conversation history (rolling window)
-    const recentMessages = await getRecentMessagesForLLM(userId, ROLLING_WINDOW_SIZE);
+    // Parallelize independent database reads for better performance
+    const [studentProfile, recentContext, recentMessages] = await Promise.all([
+      getStudentProfile(userId),
+      getMostRecentContext(userId),
+      getRecentMessagesForLLM(userId, ROLLING_WINDOW_SIZE)
+    ]);
 
     // Build system prompt
     const systemPrompt = buildSystemPrompt(
@@ -87,10 +88,9 @@ async function sendMessage(userId, message) {
       } : { type: 'general' }
     );
 
-    // Add user message to conversation
-    await addUserMessage(userId, message);
-
-    // Build messages array for OpenAI
+    // Build messages array for OpenAI (include user message at the end)
+    // Note: We add to DB AFTER building the array to avoid race condition
+    // where recentMessages might not include the just-added message
     const messages = [
       { role: 'system', content: systemPrompt },
       ...recentMessages,
@@ -107,16 +107,27 @@ async function sendMessage(userId, message) {
 
     let responseContent = completion.choices[0]?.message?.content || '';
 
-    // Validate and normalize LaTeX in response
-    try {
-      responseContent = validateAndNormalizeLaTeX(responseContent);
-    } catch (latexError) {
-      logger.warn('LaTeX validation warning', { userId, error: latexError.message });
-      // Continue with original response if validation fails
-    }
+    // Validate and normalize LaTeX in response (run async to not block)
+    // Using setImmediate pattern to yield to event loop for long operations
+    responseContent = await new Promise((resolve) => {
+      setImmediate(() => {
+        try {
+          resolve(validateAndNormalizeLaTeX(responseContent));
+        } catch (latexError) {
+          logger.warn('LaTeX validation warning', { userId, error: latexError.message });
+          resolve(responseContent); // Return original on error
+        }
+      });
+    });
 
-    // Save assistant response to conversation
-    await addAssistantMessage(userId, responseContent);
+    // Save both messages to conversation AFTER successful API call
+    // This ensures we don't save partial data on API failure
+    const tokensUsed = completion.usage?.total_tokens || 0;
+    await Promise.all([
+      addUserMessage(userId, message),
+      addAssistantMessage(userId, responseContent),
+      updateTokenUsage(userId, tokensUsed, MODEL)
+    ]);
 
     // Determine quick actions based on current context
     const contextType = recentContext?.contextType || 'general';
@@ -125,7 +136,7 @@ async function sendMessage(userId, message) {
     return {
       response: responseContent,
       quickActions: quickActions,
-      tokensUsed: completion.usage?.total_tokens || 0
+      tokensUsed: tokensUsed
     };
   } catch (error) {
     logger.error('Error in AI Tutor sendMessage', { userId, error: error.message });
@@ -143,18 +154,18 @@ async function sendMessage(userId, message) {
  */
 async function injectContext(userId, contextType, contextId) {
   try {
-    // Ensure conversation exists
+    // Ensure conversation exists first
     await getOrCreateConversation(userId);
 
-    // Build context from the source
-    const context = await buildContext(contextType, contextId, userId);
+    // Parallelize context building and student profile fetch
+    const [context, studentProfile] = await Promise.all([
+      buildContext(contextType, contextId, userId),
+      getStudentProfile(userId)
+    ]);
 
     if (!context) {
       throw new Error(`Could not build context for ${contextType}:${contextId}`);
     }
-
-    // Get student profile for personalization
-    const studentProfile = await getStudentProfile(userId);
 
     // Add context marker to conversation
     const contextMarker = await addContextMarker(userId, context);
@@ -202,7 +213,7 @@ Don't solve anything yet - just welcome them and show you understand the context
         { role: 'system', content: systemPrompt },
         { role: 'user', content: greetingPrompt }
       ],
-      max_tokens: 300,
+      max_tokens: GREETING_MAX_TOKENS,
       temperature: 0.8
     });
 
@@ -215,8 +226,12 @@ Don't solve anything yet - just welcome them and show you understand the context
       logger.warn('LaTeX validation warning in greeting', { userId, error: latexError.message });
     }
 
-    // Save greeting as assistant message
-    await addAssistantMessage(userId, greetingResponse);
+    // Save greeting and track token usage
+    const tokensUsed = completion.usage?.total_tokens || 0;
+    await Promise.all([
+      addAssistantMessage(userId, greetingResponse),
+      updateTokenUsage(userId, tokensUsed, MODEL)
+    ]);
 
     // Get quick actions for this context type
     const quickActions = getQuickActions(contextType);
@@ -230,7 +245,7 @@ Don't solve anything yet - just welcome them and show you understand the context
         timestamp: contextMarker.timestamp
       },
       quickActions: quickActions,
-      tokensUsed: completion.usage?.total_tokens || 0
+      tokensUsed: tokensUsed
     };
   } catch (error) {
     logger.error('Error in AI Tutor injectContext', { userId, contextType, contextId, error: error.message });
@@ -335,22 +350,26 @@ Be encouraging but concise.`;
         { role: 'system', content: systemPrompt },
         { role: 'user', content: welcomePrompt }
       ],
-      max_tokens: 200,
+      max_tokens: WELCOME_MAX_TOKENS,
       temperature: 0.8
     });
 
     let welcomeMessage = completion.choices[0]?.message?.content ||
       "Hello! I'm Priya Ma'am, your AI tutor for JEE preparation. How can I help you today?";
 
-    // Save welcome as assistant message
-    await addAssistantMessage(userId, welcomeMessage);
+    // Save welcome message and track token usage
+    const tokensUsed = completion.usage?.total_tokens || 0;
+    await Promise.all([
+      addAssistantMessage(userId, welcomeMessage),
+      updateTokenUsage(userId, tokensUsed, MODEL)
+    ]);
 
     const quickActions = getQuickActions('general');
 
     return {
       message: welcomeMessage,
       quickActions: quickActions,
-      tokensUsed: completion.usage?.total_tokens || 0
+      tokensUsed: tokensUsed
     };
   } catch (error) {
     logger.error('Error generating welcome message', { userId, error: error.message });

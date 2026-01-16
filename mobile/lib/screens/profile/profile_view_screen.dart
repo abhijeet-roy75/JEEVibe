@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../services/firebase/auth_service.dart';
 import '../../services/firebase/firestore_user_service.dart';
 import '../../services/subscription_service.dart';
+import '../../providers/app_state_provider.dart';
 import '../../providers/offline_provider.dart';
 import '../../models/user_profile.dart';
 import '../../models/subscription_models.dart';
@@ -711,6 +712,9 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
     if (limits == null || usage == null) return const SizedBox.shrink();
 
+    // Use AppStateProvider for snap usage (real-time updates)
+    final appState = context.watch<AppStateProvider>();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -732,12 +736,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          // Snap & Solve usage
+          // Snap & Solve usage - use AppStateProvider for real-time updates
           _buildUsageBar(
             icon: Icons.camera_alt_outlined,
             label: 'Snap & Solve',
-            used: usage.snapSolve.used,
-            limit: limits.snapSolveDaily,
+            used: appState.snapsUsed,
+            limit: appState.snapLimit,
           ),
           const SizedBox(height: AppSpacing.md),
           // Daily Quiz usage

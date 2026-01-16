@@ -1,5 +1,6 @@
 /// AI Tutor (Priya Ma'am) Chat Screen
 /// Main chat interface for conversing with the AI tutor
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/ai_tutor_models.dart';
@@ -12,6 +13,10 @@ import '../widgets/ai_tutor/chat_input_bar.dart';
 import '../widgets/ai_tutor/quick_actions_row.dart';
 import '../widgets/ai_tutor/typing_indicator.dart';
 import '../theme/app_colors.dart';
+
+/// Animation timing constants
+const Duration kScrollDelayDuration = Duration(milliseconds: 100);
+const Duration kScrollAnimationDuration = Duration(milliseconds: 300);
 
 class AiTutorChatScreen extends StatefulWidget {
   /// Optional context to inject when opening the chat
@@ -29,7 +34,10 @@ class AiTutorChatScreen extends StatefulWidget {
 
 class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
   final ScrollController _scrollController = ScrollController();
-  bool _initialLoadDone = false;
+
+  /// Completer to prevent double-initialization race condition
+  /// Using a Completer is more robust than a simple bool flag
+  Completer<void>? _initCompleter;
 
   @override
   void initState() {
@@ -46,8 +54,13 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
   }
 
   Future<void> _initializeChat() async {
-    if (_initialLoadDone) return;
-    _initialLoadDone = true;
+    // Prevent double-initialization using Completer
+    if (_initCompleter != null) {
+      // Already initializing or completed, wait for it
+      return _initCompleter!.future;
+    }
+
+    _initCompleter = Completer<void>();
 
     final provider = Provider.of<AiTutorProvider>(context, listen: false);
 
@@ -56,26 +69,36 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
       await provider.loadConversation();
 
       // Then, if we have context to inject, do it
-      if (widget.injectContext != null) {
+      if (widget.injectContext != null && mounted) {
         await provider.injectContext(widget.injectContext!);
       }
 
       // Scroll to bottom after loading
-      _scrollToBottom();
+      if (mounted) {
+        _scrollToBottom();
+      }
+
+      _initCompleter!.complete();
     } catch (e) {
+      _initCompleter!.completeError(e);
       if (mounted) {
         _showErrorSnackbar('Failed to load chat: ${e.toString()}');
       }
     }
   }
 
+  /// Reset initialization state (for retry)
+  void _resetInitialization() {
+    _initCompleter = null;
+  }
+
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (_scrollController.hasClients) {
+      Future.delayed(kScrollDelayDuration, () {
+        if (_scrollController.hasClients && mounted) {
           _scrollController.animateTo(
             _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
+            duration: kScrollAnimationDuration,
             curve: Curves.easeOut,
           );
         }
@@ -93,6 +116,23 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
     );
   }
 
+  /// Show error snackbar with retry action for failed messages
+  void _showRetrySnackbar(String message, VoidCallback onRetry) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: 'Retry',
+          textColor: Colors.white,
+          onPressed: onRetry,
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleSendMessage(String message) async {
     final provider = Provider.of<AiTutorProvider>(context, listen: false);
 
@@ -102,7 +142,35 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
       _scrollToBottom();
     } catch (e) {
       if (mounted) {
-        _showErrorSnackbar('Failed to send message');
+        // Show retry snackbar if there's a failed message
+        if (provider.hasFailedMessage) {
+          _showRetrySnackbar(
+            'Failed to send message',
+            () => _handleRetryMessage(),
+          );
+        } else {
+          _showErrorSnackbar('Failed to send message');
+        }
+      }
+    }
+  }
+
+  /// Retry the last failed message
+  Future<void> _handleRetryMessage() async {
+    final provider = Provider.of<AiTutorProvider>(context, listen: false);
+
+    if (!provider.hasFailedMessage) return;
+
+    try {
+      _scrollToBottom();
+      await provider.retryFailedMessage();
+      _scrollToBottom();
+    } catch (e) {
+      if (mounted && provider.hasFailedMessage) {
+        _showRetrySnackbar(
+          'Failed to send message',
+          () => _handleRetryMessage(),
+        );
       }
     }
   }
@@ -176,6 +244,9 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
                       // Show a subtle loading banner when injecting context to existing conversation
                       if (provider.isInjectingContext && provider.messages.isNotEmpty)
                         _buildContextLoadingBanner(),
+                      // Show failed message retry banner
+                      if (provider.hasFailedMessage && !provider.isSendingMessage)
+                        _buildFailedMessageBanner(provider),
                       Expanded(
                         child: _buildMessageList(provider),
                       ),
@@ -326,6 +397,84 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
     );
   }
 
+  Widget _buildFailedMessageBanner(AiTutorProvider provider) {
+    final failedMessage = provider.failedMessage;
+    if (failedMessage == null) return const SizedBox.shrink();
+
+    // Truncate long messages for display
+    final displayContent = failedMessage.content.length > 50
+        ? '${failedMessage.content.substring(0, 50)}...'
+        : failedMessage.content;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.1),
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.error.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 20,
+            color: AppColors.error.withValues(alpha: 0.8),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Message failed to send',
+                  style: TextStyle(
+                    color: AppColors.error,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  displayContent,
+                  style: TextStyle(
+                    color: AppColors.textSecondary.withValues(alpha: 0.8),
+                    fontSize: 12,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: _handleRetryMessage,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.error,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('Retry'),
+          ),
+          IconButton(
+            onPressed: () => provider.clearFailedMessage(),
+            icon: const Icon(Icons.close, size: 18),
+            color: AppColors.textSecondary,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildErrorState(String error) {
     return Center(
       child: Padding(
@@ -359,9 +508,7 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                setState(() {
-                  _initialLoadDone = false;
-                });
+                _resetInitialization();
                 _initializeChat();
               },
               style: ElevatedButton.styleFrom(

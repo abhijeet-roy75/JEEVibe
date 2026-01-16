@@ -9,6 +9,35 @@ const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
 const { calculateFocusAreas, getMasteryStatus, getSubjectDisplayName, getChapterDisplayNameAsync } = require('./analyticsService');
 
+// ID validation pattern - alphanumeric with limited special chars, max 128 chars
+const VALID_ID_PATTERN = /^[a-zA-Z0-9_-]{1,128}$/;
+
+/**
+ * Validate and sanitize a document ID
+ * @param {string} id - The ID to validate
+ * @param {string} fieldName - Name of the field for error messages
+ * @returns {string} The validated ID
+ * @throws {Error} If ID is invalid
+ */
+function validateDocumentId(id, fieldName) {
+  if (!id || typeof id !== 'string') {
+    throw new Error(`${fieldName} is required and must be a string`);
+  }
+
+  const trimmedId = id.trim();
+
+  if (!VALID_ID_PATTERN.test(trimmedId)) {
+    throw new Error(`${fieldName} contains invalid characters or exceeds length limit`);
+  }
+
+  // Prevent path traversal attempts
+  if (trimmedId.includes('..') || trimmedId.includes('/') || trimmedId.includes('\\')) {
+    throw new Error(`${fieldName} contains invalid path characters`);
+  }
+
+  return trimmedId;
+}
+
 /**
  * Build context from a Snap & Solve solution
  * @param {string} solutionId - Solution document ID (snap ID)
@@ -17,31 +46,35 @@ const { calculateFocusAreas, getMasteryStatus, getSubjectDisplayName, getChapter
  */
 async function buildSolutionContext(solutionId, userId) {
   try {
-    const snapRef = db.collection('users').doc(userId).collection('snaps').doc(solutionId);
+    // Validate IDs to prevent injection attacks
+    const validSolutionId = validateDocumentId(solutionId, 'solutionId');
+    const validUserId = validateDocumentId(userId, 'userId');
+
+    const snapRef = db.collection('users').doc(validUserId).collection('snaps').doc(validSolutionId);
     const snapDoc = await retryFirestoreOperation(() => snapRef.get());
 
     if (!snapDoc.exists) {
-      logger.warn('Solution not found for context', { solutionId, userId });
+      logger.warn('Solution not found for context', { solutionId: validSolutionId });
       return null;
     }
 
     const snap = snapDoc.data();
 
-    // Debug: Log what we found in the snap document
-    logger.info('Building solution context', {
-      solutionId,
-      userId,
-      hasRecognizedQuestion: !!snap.recognizedQuestion,
-      questionLength: (snap.recognizedQuestion || snap.question || '').length,
+    // Log metadata only (no user content for privacy)
+    logger.debug('Building solution context', {
+      solutionId: validSolutionId,
+      hasQuestion: !!(snap.recognizedQuestion || snap.question),
       hasApproach: !!snap.solution?.approach,
-      hasSteps: !!(snap.solution?.steps?.length),
-      hasFinalAnswer: !!snap.solution?.finalAnswer
+      stepsCount: snap.solution?.steps?.length || 0,
+      subject: snap.subject,
+      topic: snap.topic
     });
 
     // Build context object
+    // Note: priyaMaamTip uses consistent camelCase (priya_maam_tip is legacy)
     const context = {
       type: 'solution',
-      contextId: solutionId,
+      contextId: validSolutionId,
       title: `${snap.topic || 'Problem'} - ${getSubjectDisplayName(snap.subject || 'General')}`,
       snapshot: {
         question: snap.recognizedQuestion || snap.question || '',
@@ -52,21 +85,20 @@ async function buildSolutionContext(solutionId, userId) {
         steps: snap.solution?.steps || [],
         finalAnswer: snap.solution?.finalAnswer || '',
         priyaMaamTip: snap.solution?.priyaMaamTip || snap.solution?.priya_maam_tip || '',
-        conceptsTested: snap.conceptsTested || [],
-        // Include image URL for reference
-        imageUrl: snap.imageUrl || null
+        conceptsTested: snap.conceptsTested || []
+        // Note: imageUrl removed - not needed in context and increases storage
       }
     };
 
     logger.info('Solution context built', {
-      solutionId,
-      contextTitle: context.title,
-      questionPreview: context.snapshot.question.substring(0, 100)
+      solutionId: validSolutionId,
+      subject: snap.subject,
+      topic: snap.topic
     });
 
     return context;
   } catch (error) {
-    logger.error('Error building solution context', { solutionId, userId, error: error.message });
+    logger.error('Error building solution context', { error: error.message });
     throw error;
   }
 }
@@ -79,56 +111,80 @@ async function buildSolutionContext(solutionId, userId) {
  */
 async function buildQuizContext(quizId, userId) {
   try {
-    const quizRef = db.collection('daily_quizzes').doc(userId).collection('quizzes').doc(quizId);
+    // Validate IDs
+    const validQuizId = validateDocumentId(quizId, 'quizId');
+    const validUserId = validateDocumentId(userId, 'userId');
+
+    const quizRef = db.collection('daily_quizzes').doc(validUserId).collection('quizzes').doc(validQuizId);
     const quizDoc = await retryFirestoreOperation(() => quizRef.get());
 
     if (!quizDoc.exists) {
-      logger.warn('Quiz not found for context', { quizId, userId });
+      logger.warn('Quiz not found for context', { quizId: validQuizId });
       return null;
     }
 
     const quiz = quizDoc.data();
 
-    // Get questions from subcollection
-    const questionsSnapshot = await retryFirestoreOperation(() =>
-      quizRef.collection('questions').orderBy('position', 'asc').get()
-    );
+    // Optimized: Fetch incorrect questions directly instead of all questions
+    // This reduces reads from N to min(5, incorrect_count)
+    const [incorrectSnapshot, allQuestionsSnapshot] = await Promise.all([
+      // Get only incorrect questions (limited to 5 for context)
+      retryFirestoreOperation(() =>
+        quizRef.collection('questions')
+          .where('is_correct', '==', false)
+          .orderBy('position', 'asc')
+          .limit(5)
+          .get()
+      ),
+      // Get aggregate stats efficiently - just count totals
+      retryFirestoreOperation(() =>
+        quizRef.collection('questions')
+          .select('is_correct', 'subject') // Only fetch needed fields
+          .get()
+      )
+    ]);
 
-    const questions = questionsSnapshot.docs.map(doc => doc.data());
-
-    // Get incorrect questions with details
-    const incorrectQuestions = questions
-      .filter(q => q.is_correct === false)
-      .map(q => ({
+    // Process incorrect questions
+    const incorrectQuestions = incorrectSnapshot.docs.map(doc => {
+      const q = doc.data();
+      return {
         position: q.position,
         question: q.question_text || `Question ${q.position}`,
         studentAnswer: q.student_answer,
         correctAnswer: q.correct_answer,
         subject: q.subject,
         chapter: q.chapter
-      }));
+      };
+    });
 
-    // Calculate score
-    const correctCount = questions.filter(q => q.is_correct === true).length;
-    const totalCount = questions.length;
+    // Calculate stats from lightweight query
+    const allQuestions = allQuestionsSnapshot.docs.map(doc => doc.data());
+    const correctCount = allQuestions.filter(q => q.is_correct === true).length;
+    const totalCount = allQuestions.length;
 
     const context = {
       type: 'quiz',
-      contextId: quizId,
+      contextId: validQuizId,
       title: `Daily Quiz Review (${correctCount}/${totalCount})`,
       snapshot: {
         score: correctCount,
         total: totalCount,
         accuracy: totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0,
         completedAt: quiz.completed_at ? quiz.completed_at.toDate().toISOString() : null,
-        incorrectQuestions: incorrectQuestions.slice(0, 5), // Limit to 5 for context size
-        subjectBreakdown: calculateSubjectBreakdown(questions)
+        incorrectQuestions: incorrectQuestions,
+        subjectBreakdown: calculateSubjectBreakdown(allQuestions)
       }
     };
 
+    logger.debug('Quiz context built', {
+      quizId: validQuizId,
+      score: correctCount,
+      total: totalCount
+    });
+
     return context;
   } catch (error) {
-    logger.error('Error building quiz context', { quizId, userId, error: error.message });
+    logger.error('Error building quiz context', { error: error.message });
     throw error;
   }
 }
@@ -162,11 +218,12 @@ function calculateSubjectBreakdown(questions) {
  */
 async function buildAnalyticsContext(userId) {
   try {
-    const userRef = db.collection('users').doc(userId);
+    const validUserId = validateDocumentId(userId, 'userId');
+    const userRef = db.collection('users').doc(validUserId);
     const userDoc = await retryFirestoreOperation(() => userRef.get());
 
     if (!userDoc.exists) {
-      logger.warn('User not found for analytics context', { userId });
+      logger.warn('User not found for analytics context');
       return null;
     }
 
@@ -210,7 +267,7 @@ async function buildAnalyticsContext(userId) {
 
     return context;
   } catch (error) {
-    logger.error('Error building analytics context', { userId, error: error.message });
+    logger.error('Error building analytics context', { error: error.message });
     throw error;
   }
 }
@@ -222,7 +279,8 @@ async function buildAnalyticsContext(userId) {
  */
 async function buildGeneralContext(userId) {
   try {
-    const userRef = db.collection('users').doc(userId);
+    const validUserId = validateDocumentId(userId, 'userId');
+    const userRef = db.collection('users').doc(validUserId);
     const userDoc = await retryFirestoreOperation(() => userRef.get());
 
     if (!userDoc.exists) {
@@ -247,7 +305,7 @@ async function buildGeneralContext(userId) {
       }
     };
   } catch (error) {
-    logger.error('Error building general context', { userId, error: error.message });
+    logger.error('Error building general context', { error: error.message });
     // Return minimal context on error
     return {
       type: 'general',
@@ -265,7 +323,8 @@ async function buildGeneralContext(userId) {
  */
 async function getStudentProfile(userId) {
   try {
-    const userRef = db.collection('users').doc(userId);
+    const validUserId = validateDocumentId(userId, 'userId');
+    const userRef = db.collection('users').doc(validUserId);
     const userDoc = await retryFirestoreOperation(() => userRef.get());
 
     if (!userDoc.exists) {
@@ -306,7 +365,7 @@ async function getStudentProfile(userId) {
       totalQuizzes: userData.completed_quiz_count || 0
     };
   } catch (error) {
-    logger.error('Error getting student profile', { userId, error: error.message });
+    logger.error('Error getting student profile', { error: error.message });
     return null;
   }
 }

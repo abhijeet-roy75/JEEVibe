@@ -65,16 +65,24 @@ router.get('/overview', authenticateUser, async (req, res, next) => {
         last_name: userData.last_name || userData.lastName || ''
       };
 
-      // Basic subject progress - just overall percentile for each subject
+      // Basic subject progress - overall percentile and accuracy for each subject
       const thetaBySubject = userData.theta_by_subject || {};
+      const subjectAccuracy = userData.subject_accuracy || {};
       const basicSubjectProgress = {};
 
       const subjects = ['physics', 'chemistry', 'maths'];
       for (const subject of subjects) {
         const subjectData = thetaBySubject[subject] || {};
+        // Map 'maths' to 'mathematics' for subject_accuracy lookup
+        const accuracyKey = subject === 'maths' ? 'mathematics' : subject;
+        const accuracyData = subjectAccuracy[accuracyKey] || {};
+
         basicSubjectProgress[subject] = {
           display_name: subject.charAt(0).toUpperCase() + subject.slice(1),
           percentile: Math.round(subjectData.percentile || 0),
+          accuracy: accuracyData.accuracy ?? null,
+          correct: accuracyData.correct ?? 0,
+          total: accuracyData.total ?? 0,
           // Don't include detailed chapter data for basic tier
           chapters_tested: 0, // Hidden for basic
           status: 'FOCUS' // Default status, detailed status is PRO feature

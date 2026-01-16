@@ -137,6 +137,10 @@ class OverviewTab extends StatelessWidget {
         ? 'Maths'
         : subject.displayName;
 
+    // Use accuracy if available, otherwise show 0
+    final accuracyValue = subject.accuracy ?? 0;
+    final hasAccuracy = subject.accuracy != null;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -171,7 +175,7 @@ class OverviewTab extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
-                    value: subject.percentile / 100,
+                    value: accuracyValue / 100,
                     backgroundColor: AppColors.borderGray,
                     valueColor: AlwaysStoppedAnimation<Color>(subject.progressColor),
                     minHeight: 8,
@@ -181,11 +185,11 @@ class OverviewTab extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          // Percentage
+          // Accuracy percentage
           Text(
-            '${subject.percentile.toInt()}%',
+            hasAccuracy ? '$accuracyValue%' : '-',
             style: AppTextStyles.labelMedium.copyWith(
-              color: subject.progressColor,
+              color: hasAccuracy ? subject.progressColor : AppColors.textMedium,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -5,6 +5,22 @@ import '../models/ai_tutor_models.dart';
 import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
 
+/// Maximum messages to keep in memory to prevent memory issues
+const int kMaxInMemoryMessages = 100;
+
+/// Represents a message that failed to send and can be retried
+class FailedMessage {
+  final String content;
+  final DateTime timestamp;
+  final String? error;
+
+  FailedMessage({
+    required this.content,
+    required this.timestamp,
+    this.error,
+  });
+}
+
 class AiTutorProvider extends ChangeNotifier {
   final AuthService _authService;
 
@@ -23,6 +39,9 @@ class AiTutorProvider extends ChangeNotifier {
 
   // Error States
   String? _error;
+
+  // Failed message for retry functionality
+  FailedMessage? _failedMessage;
 
   // Disposal State
   bool _disposed = false;
@@ -51,6 +70,10 @@ class AiTutorProvider extends ChangeNotifier {
   String? get error => _error;
   bool get hasError => _error != null;
 
+  // Failed Message Getters (for retry functionality)
+  FailedMessage? get failedMessage => _failedMessage;
+  bool get hasFailedMessage => _failedMessage != null;
+
   // Computed Properties
   bool get hasConversation => _messages.isNotEmpty;
   bool get hasMessages => _messages.where((m) => !m.isContextMarker).isNotEmpty;
@@ -78,7 +101,11 @@ class AiTutorProvider extends ChangeNotifier {
 
       final conversationResponse = ConversationResponse.fromJson(response);
 
-      _messages = conversationResponse.messages;
+      // Limit in-memory messages to prevent memory issues on low-end devices
+      final allMessages = conversationResponse.messages;
+      _messages = allMessages.length > kMaxInMemoryMessages
+          ? allMessages.sublist(allMessages.length - kMaxInMemoryMessages)
+          : allMessages;
       _messageCount = conversationResponse.messageCount;
       _currentContext = conversationResponse.currentContext;
       _quickActions = conversationResponse.quickActions;
@@ -161,19 +188,21 @@ class AiTutorProvider extends ChangeNotifier {
   Future<String> sendMessage(String message) async {
     if (_disposed) throw Exception('Provider has been disposed');
 
-    if (message.trim().isEmpty) {
+    final trimmedMessage = message.trim();
+    if (trimmedMessage.isEmpty) {
       throw Exception('Message cannot be empty');
     }
 
     _isSendingMessage = true;
     _error = null;
+    _failedMessage = null; // Clear any previous failed message
 
     // Optimistically add user message to UI
     final userMessage = ChatMessage(
       id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
       type: ChatMessageType.user,
       timestamp: DateTime.now(),
-      content: message,
+      content: trimmedMessage,
     );
     _messages = [..._messages, userMessage];
     _safeNotifyListeners();
@@ -186,10 +215,13 @@ class AiTutorProvider extends ChangeNotifier {
 
       final response = await ApiService.sendAiTutorMessage(
         authToken: token,
-        message: message,
+        message: trimmedMessage,
       );
 
-      if (_disposed) return '';
+      if (_disposed) {
+        // Even if disposed, don't leave dangling state
+        return '';
+      }
 
       final messageResponse = MessageResponse.fromJson(response);
 
@@ -201,7 +233,14 @@ class AiTutorProvider extends ChangeNotifier {
         content: messageResponse.response,
       );
 
-      _messages = [..._messages, assistantMessage];
+      // Add new message and trim if over limit
+      var updatedMessages = [..._messages, assistantMessage];
+      if (updatedMessages.length > kMaxInMemoryMessages) {
+        updatedMessages = updatedMessages.sublist(
+          updatedMessages.length - kMaxInMemoryMessages,
+        );
+      }
+      _messages = updatedMessages;
       _quickActions = messageResponse.quickActions;
       _messageCount += 2;
       _isNewConversation = false;
@@ -212,16 +251,45 @@ class AiTutorProvider extends ChangeNotifier {
 
       return messageResponse.response;
     } catch (e) {
-      if (_disposed) rethrow;
-
-      // Remove optimistic user message on error
+      // Always clean up optimistic message, even if disposed
       _messages = _messages.where((m) => m.id != userMessage.id).toList();
 
+      if (_disposed) {
+        rethrow;
+      }
+
+      // Store failed message for retry
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _failedMessage = FailedMessage(
+        content: trimmedMessage,
+        timestamp: DateTime.now(),
+        error: errorMessage,
+      );
+
       _isSendingMessage = false;
-      _error = e.toString().replaceFirst('Exception: ', '');
+      _error = errorMessage;
       _safeNotifyListeners();
       rethrow;
     }
+  }
+
+  /// Retry sending the last failed message
+  Future<String> retryFailedMessage() async {
+    if (_failedMessage == null) {
+      throw Exception('No failed message to retry');
+    }
+
+    final messageToRetry = _failedMessage!.content;
+    _failedMessage = null; // Clear before retrying
+
+    return sendMessage(messageToRetry);
+  }
+
+  /// Clear the failed message without retrying
+  void clearFailedMessage() {
+    if (_disposed) return;
+    _failedMessage = null;
+    _safeNotifyListeners();
   }
 
   /// Clear conversation and start fresh
@@ -285,6 +353,7 @@ class AiTutorProvider extends ChangeNotifier {
     _isInjectingContext = false;
     _isClearingConversation = false;
     _error = null;
+    _failedMessage = null;
     _safeNotifyListeners();
   }
 
@@ -302,6 +371,7 @@ class AiTutorProvider extends ChangeNotifier {
     _quickActions = [];
     _currentContext = null;
     _error = null;
+    _failedMessage = null;
     super.dispose();
   }
 }

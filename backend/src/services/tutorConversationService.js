@@ -2,6 +2,24 @@
  * Tutor Conversation Service
  * Manages persistent conversation storage for AI Tutor (Priya Ma'am)
  * Uses Firestore for conversation and message persistence
+ *
+ * REQUIRED FIRESTORE INDEXES:
+ * ===========================
+ * Collection: users/{userId}/tutor_conversation/active/messages
+ *
+ * 1. Composite index for getRecentMessagesForLLM():
+ *    - Fields: type (Ascending), timestamp (Descending)
+ *    - Query scope: Collection
+ *
+ * 2. Single-field index for getMostRecentContext():
+ *    - Fields: type (Ascending), timestamp (Descending)
+ *    - Query scope: Collection
+ *
+ * 3. Single-field index for getConversationWithMessages():
+ *    - Field: timestamp (Descending)
+ *    - Query scope: Collection
+ *
+ * Create these indexes in Firebase Console or via firebase.indexes.json
  */
 
 const { db, admin } = require('../config/firebase');
@@ -11,6 +29,11 @@ const { v4: uuidv4 } = require('uuid');
 
 // Collection paths
 const CONVERSATION_DOC = 'active'; // Single active conversation per user
+
+// Configuration constants
+const MAX_CONVERSATION_MESSAGES = parseInt(process.env.AI_TUTOR_MAX_MESSAGES, 10) || 1000;
+const CLEANUP_BATCH_SIZE = 100; // Number of old messages to delete when limit is reached
+const MAX_SNAPSHOT_SIZE_BYTES = 50000; // ~50KB limit for context snapshots
 
 /**
  * Get conversation reference for a user
@@ -29,6 +52,103 @@ function getConversationRef(userId) {
  */
 function getMessagesRef(userId) {
   return getConversationRef(userId).collection('messages');
+}
+
+/**
+ * Truncate context snapshot to prevent exceeding Firestore document limits
+ * @param {Object} snapshot - The context snapshot object
+ * @returns {Object} Truncated snapshot
+ */
+function truncateSnapshot(snapshot) {
+  if (!snapshot) return null;
+
+  const truncated = { ...snapshot };
+
+  // Truncate question text if too long
+  if (truncated.question && truncated.question.length > 2000) {
+    truncated.question = truncated.question.substring(0, 2000) + '... [truncated]';
+  }
+
+  // Limit steps array
+  if (truncated.steps && Array.isArray(truncated.steps)) {
+    truncated.steps = truncated.steps.slice(0, 10).map(step =>
+      step.length > 500 ? step.substring(0, 500) + '...' : step
+    );
+  }
+
+  // Limit incorrect questions for quiz context
+  if (truncated.incorrectQuestions && Array.isArray(truncated.incorrectQuestions)) {
+    truncated.incorrectQuestions = truncated.incorrectQuestions.slice(0, 5);
+  }
+
+  // Remove large fields that aren't essential for context
+  delete truncated.imageUrl; // Don't store image URLs in context markers
+
+  // Final size check - if still too large, remove detailed content
+  const estimatedSize = JSON.stringify(truncated).length;
+  if (estimatedSize > MAX_SNAPSHOT_SIZE_BYTES) {
+    logger.warn('Context snapshot exceeds size limit, further truncating', {
+      originalSize: estimatedSize,
+      maxSize: MAX_SNAPSHOT_SIZE_BYTES
+    });
+    // Keep only essential metadata
+    return {
+      subject: truncated.subject,
+      topic: truncated.topic,
+      score: truncated.score,
+      total: truncated.total,
+      _truncated: true
+    };
+  }
+
+  return truncated;
+}
+
+/**
+ * Cleanup old messages when conversation exceeds limit
+ * @param {string} userId - User ID
+ * @param {number} currentCount - Current message count
+ */
+async function cleanupOldMessages(userId, currentCount) {
+  if (currentCount < MAX_CONVERSATION_MESSAGES) return;
+
+  const messagesRef = getMessagesRef(userId);
+  const conversationRef = getConversationRef(userId);
+
+  try {
+    // Get oldest messages to delete
+    const oldestMessages = await messagesRef
+      .orderBy('timestamp', 'asc')
+      .limit(CLEANUP_BATCH_SIZE)
+      .get();
+
+    if (oldestMessages.empty) return;
+
+    // Delete in batch
+    const batch = db.batch();
+    let deleteCount = 0;
+
+    oldestMessages.docs.forEach(doc => {
+      batch.delete(doc.ref);
+      deleteCount++;
+    });
+
+    // Update message count
+    batch.update(conversationRef, {
+      messageCount: admin.firestore.FieldValue.increment(-deleteCount)
+    });
+
+    await batch.commit();
+
+    logger.info('Cleaned up old conversation messages', {
+      userId,
+      deletedCount: deleteCount,
+      previousCount: currentCount
+    });
+  } catch (error) {
+    // Log but don't fail the main operation
+    logger.error('Error cleaning up old messages', { userId, error: error.message });
+  }
 }
 
 /**
@@ -194,13 +314,16 @@ async function addContextMarker(userId, context) {
   const conversationRef = getConversationRef(userId);
   const messageId = uuidv4();
 
+  // Truncate snapshot to prevent document size issues
+  const truncatedSnapshot = truncateSnapshot(context.snapshot);
+
   const contextMarker = {
     id: messageId,
     type: 'context_marker',
     contextType: context.type,
     contextId: context.contextId,
     contextTitle: context.title,
-    contextSnapshot: context.snapshot,
+    contextSnapshot: truncatedSnapshot,
     timestamp: admin.firestore.FieldValue.serverTimestamp()
   };
 
@@ -224,6 +347,10 @@ async function addContextMarker(userId, context) {
 
     await batch.commit();
   });
+
+  // Trigger cleanup if needed (non-blocking)
+  const conversation = await getOrCreateConversation(userId);
+  cleanupOldMessages(userId, conversation.messageCount).catch(() => {});
 
   return {
     ...contextMarker,
@@ -356,6 +483,37 @@ async function hasConversation(userId) {
   return count > 0;
 }
 
+/**
+ * Update token usage statistics for a user
+ * Tracks AI token consumption for billing/analytics
+ * @param {string} userId - User ID
+ * @param {number} tokensUsed - Number of tokens consumed
+ * @param {string} model - Model name used
+ * @returns {Promise<void>}
+ */
+async function updateTokenUsage(userId, tokensUsed, model = 'gpt-4o-mini') {
+  if (!tokensUsed || tokensUsed <= 0) return;
+
+  const userRef = db.collection('users').doc(userId);
+
+  try {
+    await retryFirestoreOperation(async () => {
+      await userRef.set({
+        tutor_stats: {
+          total_tokens_used: admin.firestore.FieldValue.increment(tokensUsed),
+          last_interaction: admin.firestore.FieldValue.serverTimestamp(),
+          interaction_count: admin.firestore.FieldValue.increment(1),
+          // Track by model for cost analysis
+          [`tokens_by_model.${model.replace(/[.-]/g, '_')}`]: admin.firestore.FieldValue.increment(tokensUsed)
+        }
+      }, { merge: true });
+    });
+  } catch (error) {
+    // Log but don't fail the main operation - token tracking is non-critical
+    logger.warn('Failed to update token usage', { userId, tokensUsed, error: error.message });
+  }
+}
+
 module.exports = {
   getOrCreateConversation,
   getConversationWithMessages,
@@ -366,5 +524,6 @@ module.exports = {
   getMostRecentContext,
   clearConversation,
   getMessageCount,
-  hasConversation
+  hasConversation,
+  updateTokenUsage
 };
