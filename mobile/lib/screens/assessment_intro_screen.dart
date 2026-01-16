@@ -63,7 +63,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   Future<void> _loadData() async {
     try {
       final storageService = StorageService();
-      final status = await storageService.getAssessmentStatus();
+      var status = await storageService.getAssessmentStatus();
       
       final user = FirebaseAuth.instance.currentUser;
       UserProfile? profile;
@@ -97,31 +97,38 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
       if (user != null) {
         final firestoreService = FirestoreUserService();
         profile = await firestoreService.getUserProfile(user.uid);
-        
-        // If assessment is completed, fetch results
-        if (status == 'completed') {
-          try {
-            final authService = Provider.of<AuthService>(context, listen: false);
-            final token = await authService.getIdToken();
-            
-            if (token != null) {
-              final result = await ApiService.getAssessmentResults(
-                authToken: token,
-                userId: user.uid,
-              );
-              
-              if (result.success && result.data != null) {
-                assessmentData = result.data;
-                // Debug: Print subject accuracy data
-                debugPrint('Assessment Data - subjectAccuracy: ${assessmentData?.subjectAccuracy}');
-                debugPrint('Physics: ${assessmentData?.subjectAccuracy['physics']}');
-                debugPrint('Chemistry: ${assessmentData?.subjectAccuracy['chemistry']}');
-                debugPrint('Mathematics: ${assessmentData?.subjectAccuracy['mathematics']}');
+
+        // Always try to fetch assessment results from backend to sync status
+        // This handles the case where user reinstalled app but has completed assessment
+        try {
+          final authService = Provider.of<AuthService>(context, listen: false);
+          final token = await authService.getIdToken();
+
+          if (token != null) {
+            final result = await ApiService.getAssessmentResults(
+              authToken: token,
+              userId: user.uid,
+            );
+
+            if (result.success && result.data != null) {
+              assessmentData = result.data;
+
+              // Sync local status with backend - if backend has data, mark as completed
+              if (status != 'completed') {
+                debugPrint('Assessment data found in backend, syncing local status to completed');
+                await storageService.setAssessmentStatus('completed');
+                status = 'completed';
               }
+
+              // Debug: Print subject accuracy data
+              debugPrint('Assessment Data - subjectAccuracy: ${assessmentData?.subjectAccuracy}');
+              debugPrint('Physics: ${assessmentData?.subjectAccuracy['physics']}');
+              debugPrint('Chemistry: ${assessmentData?.subjectAccuracy['chemistry']}');
+              debugPrint('Mathematics: ${assessmentData?.subjectAccuracy['mathematics']}');
             }
-          } catch (e) {
-            debugPrint('Error fetching assessment results: $e');
           }
+        } catch (e) {
+          debugPrint('Error fetching assessment results: $e');
         }
       }
 

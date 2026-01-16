@@ -5,9 +5,12 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../models/analytics_data.dart';
+import '../../models/ai_tutor_models.dart';
 import '../../services/analytics_service.dart';
+import '../../services/subscription_service.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../screens/assessment_intro_screen.dart';
+import '../../screens/ai_tutor_chat_screen.dart';
 import '../priya_avatar.dart';
 import 'chapter_mastery_item.dart';
 import 'mastery_chart.dart';
@@ -424,51 +427,110 @@ class _MasteryTabState extends State<MasteryTab> {
   Widget _buildPriyaMaamCard() {
     // Generate simplified message focused on topic recommendations for mastery tab
     final message = _generateMasteryMessage();
+    final subscriptionService = SubscriptionService();
+    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardLightPurple,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return GestureDetector(
+      onTap: hasAiTutorAccess ? () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AiTutorChatScreen(
+              injectContext: TutorContext(
+                type: TutorContextType.analytics,
+                title: 'My Progress',
+              ),
+            ),
           ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const PriyaAvatar(size: 48),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
+        );
+      } : null,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.cardLightPurple,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const PriyaAvatar(size: 48),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Priya Ma\'am',
+                            style: AppTextStyles.priyaHeader.copyWith(
+                              color: AppColors.primaryPurple,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.auto_awesome,
+                            color: AppColors.primaryPurple,
+                            size: 14,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      _buildFormattedMessage(message),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            // "Ask Priya Ma'am" action (Ultra tier only)
+            if (hasAiTutorAccess) ...[
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      color: AppColors.primaryPurple,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
                     Text(
-                      'Priya Ma\'am',
-                      style: AppTextStyles.priyaHeader.copyWith(
+                      'Ask Priya Ma\'am about my progress',
+                      style: AppTextStyles.labelMedium.copyWith(
                         color: AppColors.primaryPurple,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(
-                      Icons.auto_awesome,
+                    Icon(
+                      Icons.arrow_forward_ios,
                       color: AppColors.primaryPurple,
                       size: 14,
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                _buildFormattedMessage(message),
-              ],
-            ),
-          ),
-        ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

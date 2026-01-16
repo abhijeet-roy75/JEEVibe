@@ -440,51 +440,114 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
   Widget _buildPriyaTip(Solution solution) {
     if (solution.solution.priyaMaamTip.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: AppColors.priyaCardGradient,
-        borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-        border: Border.all(color: const Color(0xFFE9D5FF), width: 2),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          PriyaAvatar(size: 48),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
+    final subscriptionService = SubscriptionService();
+    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
+
+    return GestureDetector(
+      onTap: hasAiTutorAccess ? () {
+        final recentSolution = _currentSolution;
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AiTutorChatScreen(
+              injectContext: TutorContext(
+                type: TutorContextType.solution,
+                id: recentSolution.id,
+                title: '${recentSolution.topic} - ${recentSolution.subject}',
+              ),
+            ),
+          ),
+        );
+      } : null,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: AppColors.priyaCardGradient,
+          borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+          border: Border.all(color: const Color(0xFFE9D5FF), width: 2),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      LocalizationService.getString('priya_tip', solution.language ?? 'en'),
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: const Color(0xFF7C3AED),
+                PriyaAvatar(size: 48),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            LocalizationService.getString('priya_tip', solution.language ?? 'en'),
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: const Color(0xFF7C3AED),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.auto_awesome,
+                            color: Color(0xFF9333EA),
+                            size: 16,
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Icon(
-                      Icons.auto_awesome,
-                      color: Color(0xFF9333EA),
-                      size: 16,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                _buildContentWidget(
-                  TextPreprocessor.addSpacesToText(solution.solution.priyaMaamTip),
-                  _currentSolution.subject,
-                  ContentConfig.getPriyaTipTextStyle(
-                    color: const Color(0xFF4C1D95), // Darker purple for better contrast
+                      const SizedBox(height: 8),
+                      _buildContentWidget(
+                        TextPreprocessor.addSpacesToText(solution.solution.priyaMaamTip),
+                        _currentSolution.subject,
+                        ContentConfig.getPriyaTipTextStyle(
+                          color: const Color(0xFF4C1D95),
+                        ),
+                        allowWrapping: true,
+                      ),
+                    ],
                   ),
-                  allowWrapping: true, // Enable wrapping for Priya's Tip
                 ),
               ],
             ),
-          ),
-        ],
+            // "Ask Priya Ma'am" action integrated into the card (Ultra tier only)
+            if (hasAiTutorAccess) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                  border: Border.all(
+                    color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      color: const Color(0xFF7C3AED),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Ask Priya Ma\'am about this',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: const Color(0xFF7C3AED),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: const Color(0xFF7C3AED),
+                      size: 14,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -508,65 +571,8 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
   }
 
   Widget _buildNavigationButtons() {
-    final subscriptionService = SubscriptionService();
-    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
-
     return Column(
       children: [
-        // Ask Priya Ma'am button (Ultra tier only)
-        if (hasAiTutorAccess) ...[
-          Container(
-            width: double.infinity,
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                width: 1.5,
-              ),
-              boxShadow: AppShadows.cardShadow,
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  final solution = _currentSolution;
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => AiTutorChatScreen(
-                        injectContext: TutorContext(
-                          type: TutorContextType.solution,
-                          id: solution.id,
-                          title: '${solution.topic} - ${solution.subject}',
-                        ),
-                      ),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                child: Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const PriyaAvatar(size: 24, showShadow: false),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Ask Priya Ma\'am',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.primary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
         // Back to Snap and Solve
         GradientButton(
           text: LocalizationService.getString('back_to_snap', _reconstructSolution(_currentSolution).language ?? 'en'),

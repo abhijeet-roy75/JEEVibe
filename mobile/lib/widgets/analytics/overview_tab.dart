@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../models/analytics_data.dart';
+import '../../models/ai_tutor_models.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../screens/assessment_intro_screen.dart';
 import '../../screens/subscription/paywall_screen.dart';
+import '../../screens/ai_tutor_chat_screen.dart';
+import '../../services/subscription_service.dart';
 import '../priya_avatar.dart';
 import 'stat_card.dart';
 
@@ -28,7 +31,7 @@ class OverviewTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Priya Ma'am card at top per design
-          _buildPriyaMaamCard(),
+          _buildPriyaMaamCard(context),
           const SizedBox(height: 20),
           // Stats grid (Streak, Qs Done, Mastered) - order per design
           _buildStatsGrid(),
@@ -256,41 +259,101 @@ class OverviewTab extends StatelessWidget {
     );
   }
 
-  Widget _buildPriyaMaamCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardLightPurple,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const PriyaAvatar(size: 48),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Priya Ma\'am',
-                  style: AppTextStyles.priyaHeader.copyWith(
-                    color: AppColors.primaryPurple,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                _buildFormattedMessage(overview.priyaMaamMessage),
-              ],
+  Widget _buildPriyaMaamCard(BuildContext context) {
+    final subscriptionService = SubscriptionService();
+    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
+
+    return GestureDetector(
+      onTap: hasAiTutorAccess ? () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AiTutorChatScreen(
+              injectContext: TutorContext(
+                type: TutorContextType.analytics,
+                title: 'My Progress',
+              ),
             ),
           ),
-        ],
+        );
+      } : null,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.cardLightPurple,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const PriyaAvatar(size: 48),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Priya Ma\'am',
+                        style: AppTextStyles.priyaHeader.copyWith(
+                          color: AppColors.primaryPurple,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      _buildFormattedMessage(overview.priyaMaamMessage),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            // "Ask Priya Ma'am" action (Ultra tier only)
+            if (hasAiTutorAccess) ...[
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      color: AppColors.primaryPurple,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Ask Priya Ma\'am about my progress',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.primaryPurple,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: AppColors.primaryPurple,
+                      size: 14,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

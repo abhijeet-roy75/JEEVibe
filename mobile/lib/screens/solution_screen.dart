@@ -292,7 +292,6 @@ class _SolutionScreenState extends State<SolutionScreen> {
 
   Widget _buildContent(Solution solution) {
     return Scaffold(
-      floatingActionButton: _buildAiTutorFab(solution),
       body: Container(
       decoration: const BoxDecoration(
           gradient: AppColors.backgroundGradient,
@@ -329,39 +328,6 @@ class _SolutionScreenState extends State<SolutionScreen> {
       ),
     );
   }
-
-  /// Build the AI Tutor FAB (Ultra tier only)
-  Widget? _buildAiTutorFab(Solution solution) {
-    final subscriptionService = SubscriptionService();
-    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
-    if (!hasAiTutorAccess) return null;
-
-    return FloatingActionButton.extended(
-      onPressed: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => AiTutorChatScreen(
-              injectContext: TutorContext(
-                type: TutorContextType.solution,
-                id: solution.id ?? 'snap_${DateTime.now().millisecondsSinceEpoch}',
-                title: '${solution.topic} - ${solution.subject}',
-              ),
-            ),
-          ),
-        );
-      },
-      backgroundColor: AppColors.primary,
-      icon: const PriyaAvatar(size: 24, showShadow: false),
-      label: const Text(
-        'Ask Priya Ma\'am',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
 
 
   Widget _buildHeader(Solution solution) {
@@ -699,59 +665,121 @@ class _SolutionScreenState extends State<SolutionScreen> {
     // Pre-process the tip text to add spaces and ensure readability
     final tipText = TextPreprocessor.addSpacesToText(solution.solution.priyaMaamTip);
 
-    return Container(
-      padding: const EdgeInsets.all(28), // Increased padding for more space
-      decoration: BoxDecoration(
-        gradient: AppColors.priyaCardGradient,
-        borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
-        border: Border.all(color: const Color(0xFFE9D5FF), width: 2),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          PriyaAvatar(size: 56), // Larger avatar
-          const SizedBox(width: 20), // More spacing
-          Expanded(
-            child: Column(
+    // Check if user has AI Tutor access (Ultra tier)
+    final subscriptionService = SubscriptionService();
+    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
+
+    return GestureDetector(
+      onTap: hasAiTutorAccess ? () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => AiTutorChatScreen(
+              injectContext: TutorContext(
+                type: TutorContextType.solution,
+                id: solution.id ?? 'snap_${DateTime.now().millisecondsSinceEpoch}',
+                title: '${solution.topic} - ${solution.subject}',
+              ),
+            ),
+          ),
+        );
+      } : null,
+      child: Container(
+        padding: const EdgeInsets.all(28), // Increased padding for more space
+        decoration: BoxDecoration(
+          gradient: AppColors.priyaCardGradient,
+          borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
+          border: Border.all(color: const Color(0xFFE9D5FF), width: 2),
+        ),
+        child: Column(
+          children: [
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      LocalizationService.getString('priya_tip', solution.language ?? 'en'),
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: const Color(0xFF7C3AED),
-                        fontSize: 18, // Larger title
-                        fontWeight: FontWeight.w700,
+                PriyaAvatar(size: 56), // Larger avatar
+                const SizedBox(width: 20), // More spacing
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            LocalizationService.getString('priya_tip', solution.language ?? 'en'),
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: const Color(0xFF7C3AED),
+                              fontSize: 18, // Larger title
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(
+                            Icons.auto_awesome,
+                            color: Color(0xFF9333EA),
+                            size: 20,
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(
-                      Icons.auto_awesome,
-                      color: Color(0xFF9333EA),
-                      size: 20,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16), // More spacing
-                // Use direct Text widget for maximum readability - no LaTeX processing
-                Text(
-                  tipText,
-                  style: TextStyle(
-                    fontSize: ContentConfig.priyaTipTextSize,
-                    color: const Color(0xFF4C1D95), // Darker purple for better contrast
-                    height: ContentConfig.priyaTipLineHeight, // Increased line height for better readability
-                    fontWeight: ContentConfig.priyaTipFontWeight,
-                    letterSpacing: 0.3, // Slight letter spacing for clarity
+                      const SizedBox(height: 16), // More spacing
+                      // Use direct Text widget for maximum readability - no LaTeX processing
+                      Text(
+                        tipText,
+                        style: TextStyle(
+                          fontSize: ContentConfig.priyaTipTextSize,
+                          color: const Color(0xFF4C1D95), // Darker purple for better contrast
+                          height: ContentConfig.priyaTipLineHeight, // Increased line height for better readability
+                          fontWeight: ContentConfig.priyaTipFontWeight,
+                          letterSpacing: 0.3, // Slight letter spacing for clarity
+                        ),
+                        softWrap: true, // Enable text wrapping
+                        overflow: TextOverflow.visible, // Allow wrapping instead of clipping
+                      ),
+                    ],
                   ),
-                  softWrap: true, // Enable text wrapping
-                  overflow: TextOverflow.visible, // Allow wrapping instead of clipping
                 ),
               ],
             ),
-          ),
-        ],
+            // "Ask Priya Ma'am about this" action (Ultra tier only)
+            if (hasAiTutorAccess) ...[
+              const SizedBox(height: 20),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                  border: Border.all(
+                    color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.chat_bubble_outline,
+                      color: Color(0xFF7C3AED),
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Ask Priya Ma\'am about this',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: const Color(0xFF7C3AED),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Color(0xFF7C3AED),
+                      size: 14,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

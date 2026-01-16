@@ -15,9 +15,6 @@ import '../widgets/analytics/mastery_tab.dart';
 import '../widgets/buttons/gradient_button.dart';
 import '../widgets/offline/offline_banner.dart';
 import 'subscription/paywall_screen.dart';
-import 'ai_tutor_chat_screen.dart';
-import '../models/ai_tutor_models.dart';
-import '../widgets/priya_avatar.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -111,7 +108,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      floatingActionButton: _buildAiTutorFab(),
       body: Column(
         children: [
           // Offline banner at top
@@ -425,38 +421,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           ),
         ),
       ],
-    );
-  }
-
-  /// Build the AI Tutor FAB (Ultra tier only)
-  Widget? _buildAiTutorFab() {
-    final subscriptionService = SubscriptionService();
-    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
-    if (!hasAiTutorAccess) return null;
-
-    return FloatingActionButton.extended(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AiTutorChatScreen(
-              injectContext: TutorContext(
-                type: TutorContextType.analytics,
-                title: 'My Progress',
-              ),
-            ),
-          ),
-        );
-      },
-      backgroundColor: AppColors.primary,
-      icon: const PriyaAvatar(size: 24, showShadow: false),
-      label: const Text(
-        'Ask Priya Ma\'am',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
     );
   }
 

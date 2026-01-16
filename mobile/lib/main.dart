@@ -35,7 +35,8 @@ void main() async {
   );
 
   // Initialize connectivity service for offline detection
-  await ConnectivityService().initialize();
+  // Use forceReinit: true to handle hot restart properly
+  await ConnectivityService().initialize(forceReinit: true);
 
   // Initialize offline database and image cache
   await DatabaseService().initialize();

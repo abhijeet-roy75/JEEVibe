@@ -34,8 +34,30 @@ class ConnectivityService extends ChangeNotifier {
 
   ConnectivityService._internal();
 
+  /// Reset the connectivity service state (useful for hot restart)
+  /// This allows re-initialization without creating a new instance
+  void reset() {
+    _subscription?.cancel();
+    _subscription = null;
+    _isInitialized = false;
+    _initCompleter = null;
+    _lastCheck = null;
+    // Keep _isOnline = true as default (optimistic)
+    _isOnline = true;
+
+    if (kDebugMode) {
+      print('ConnectivityService: Reset for re-initialization');
+    }
+  }
+
   /// Initialize the connectivity service (thread-safe)
-  Future<void> initialize() async {
+  /// Set forceReinit to true during hot restart to reset state first
+  Future<void> initialize({bool forceReinit = false}) async {
+    // Force reset if requested (e.g., during hot restart)
+    if (forceReinit) {
+      reset();
+    }
+
     // Already initialized
     if (_isInitialized) return;
 
@@ -49,6 +71,10 @@ class ConnectivityService extends ChangeNotifier {
     _initCompleter = Completer<void>();
 
     try {
+      // Cancel any existing subscription first
+      _subscription?.cancel();
+      _subscription = null;
+
       // Check initial connectivity
       await _checkConnectivity();
 
