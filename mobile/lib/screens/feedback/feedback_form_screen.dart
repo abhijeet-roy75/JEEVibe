@@ -42,15 +42,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
       return;
     }
 
-    if (_descriptionController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please provide your feedback'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
+    // Description is optional - no validation required
 
     setState(() {
       _isSubmitting = true;
