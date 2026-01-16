@@ -58,6 +58,11 @@ jest.mock('../../../src/config/firebase', () => {
   return {
     db: {
       collection: jest.fn(() => mockCollection),
+      runTransaction: jest.fn((fn) => fn({
+        get: jest.fn(() => Promise.resolve(mockDoc)),
+        set: jest.fn(() => {}),
+        update: jest.fn(() => {}),
+      })),
     },
     storage: {
       bucket: jest.fn(() => ({

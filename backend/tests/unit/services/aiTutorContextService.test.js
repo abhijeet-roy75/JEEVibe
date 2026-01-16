@@ -9,14 +9,20 @@ const mockQuestionsGet = jest.fn();
 
 // Mock Firebase before requiring the service
 jest.mock('../../../src/config/firebase', () => {
-  // Create a chainable mock for nested collections
+  // Create a chainable mock for nested collections with all Firestore methods
+  const createChainableMock = (getMock) => ({
+    get: getMock,
+    where: jest.fn(() => createChainableMock(getMock)),
+    orderBy: jest.fn(() => createChainableMock(getMock)),
+    limit: jest.fn(() => createChainableMock(getMock)),
+    select: jest.fn(() => createChainableMock(getMock))
+  });
+
   const createDocMock = (getMock) => ({
     get: getMock,
     collection: jest.fn(() => ({
       doc: jest.fn(() => createDocMock(getMock)),
-      orderBy: jest.fn(() => ({
-        get: mockQuestionsGet
-      }))
+      ...createChainableMock(mockQuestionsGet)
     }))
   });
 
@@ -43,7 +49,8 @@ jest.mock('../../../src/utils/firestoreRetry', () => ({
 jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
+  debug: jest.fn()
 }));
 
 // Mock analyticsService
@@ -103,7 +110,7 @@ describe('AI Tutor Context Service', () => {
       expect(context.snapshot.approach).toBe(mockSnapData.solution.approach);
       expect(context.snapshot.steps).toEqual(mockSnapData.solution.steps);
       expect(context.snapshot.finalAnswer).toBe(mockSnapData.solution.finalAnswer);
-      expect(context.snapshot.imageUrl).toBe(mockSnapData.imageUrl);
+      // Note: imageUrl is intentionally not included in context (removed for storage optimization)
     });
 
     test('should return null if snap document does not exist', async () => {
@@ -138,7 +145,7 @@ describe('AI Tutor Context Service', () => {
       expect(context.snapshot.question).toBe(partialSnapData.recognizedQuestion);
       expect(context.snapshot.approach).toBe('');
       expect(context.snapshot.steps).toEqual([]);
-      expect(context.snapshot.imageUrl).toBeNull();
+      // Note: imageUrl is intentionally not included in context
     });
 
     test('should use question field if recognizedQuestion is missing', async () => {
@@ -177,11 +184,19 @@ describe('AI Tutor Context Service', () => {
         data: () => mockQuizData
       });
 
-      mockQuestionsGet.mockResolvedValue({
-        docs: mockQuestions.map(q => ({
-          data: () => q
-        }))
-      });
+      // Mock returns incorrect questions for first call, all for second
+      const incorrectQuestions = mockQuestions.filter(q => !q.is_correct);
+      mockQuestionsGet
+        .mockResolvedValueOnce({
+          docs: incorrectQuestions.map(q => ({
+            data: () => q
+          }))
+        })
+        .mockResolvedValueOnce({
+          docs: mockQuestions.map(q => ({
+            data: () => q
+          }))
+        });
 
       const context = await buildQuizContext('quiz123', 'user123');
 

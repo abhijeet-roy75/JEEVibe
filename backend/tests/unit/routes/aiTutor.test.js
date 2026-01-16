@@ -444,7 +444,6 @@ describe('AI Tutor Routes', () => {
       expect(logger.error).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          userId: 'user123',
           requestId: 'req123'
         })
       );

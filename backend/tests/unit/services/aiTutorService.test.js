@@ -36,7 +36,8 @@ jest.mock('../../../src/services/tutorConversationService', () => ({
   getRecentMessagesForLLM: jest.fn(),
   getMostRecentContext: jest.fn(),
   clearConversation: jest.fn(),
-  getConversationWithMessages: jest.fn()
+  getConversationWithMessages: jest.fn(),
+  updateTokenUsage: jest.fn()
 }));
 
 jest.mock('../../../src/services/latex-validator', () => ({
