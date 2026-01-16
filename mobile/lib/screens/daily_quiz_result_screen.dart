@@ -12,7 +12,6 @@ import '../widgets/priya_avatar.dart';
 import '../widgets/buttons/gradient_button.dart';
 import 'daily_quiz_review_screen.dart';
 import 'assessment_intro_screen.dart';
-import 'analytics_screen.dart';
 import 'ai_tutor_chat_screen.dart';
 import '../models/ai_tutor_models.dart';
 import '../services/subscription_service.dart';
@@ -833,6 +832,9 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
   }
 
   Widget _buildPriyaMaamFeedback() {
+    final subscriptionService = SubscriptionService();
+    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
@@ -847,32 +849,71 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const PriyaAvatar(size: 48),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Priya Ma\'am\'s Feedback ✨',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.primaryPurple,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const PriyaAvatar(size: 48),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Priya Ma\'am\'s Feedback ✨',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.primaryPurple,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _getPriyaMaamFeedback(),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  _getPriyaMaamFeedback(),
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
+          // Discuss with Priya Ma'am button (Ultra tier only)
+          if (hasAiTutorAccess) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  final quizNumber = _quizResult?['quiz']?['quiz_number'];
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AiTutorChatScreen(
+                        injectContext: TutorContext(
+                          type: TutorContextType.quiz,
+                          id: widget.quizId,
+                          title: 'Daily Quiz ${quizNumber ?? ''}',
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                label: const Text('Discuss with Priya Ma\'am'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primaryPurple,
+                  side: const BorderSide(color: AppColors.primaryPurple),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -902,59 +943,6 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
             },
           ),
           const SizedBox(height: 12),
-          // View Insights button
-          _buildActionButton(
-            icon: Icons.insights,
-            iconColor: AppColors.primaryPurple,
-            label: 'View Insights',
-            backgroundColor: AppColors.primaryPurple.withValues(alpha: 0.1),
-            textColor: AppColors.primaryPurple,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AnalyticsScreen(),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          // Discuss with Priya Ma'am button (Ultra tier only)
-          Builder(
-            builder: (context) {
-              final subscriptionService = SubscriptionService();
-              final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
-              if (!hasAiTutorAccess) return const SizedBox.shrink();
-
-              return Column(
-                children: [
-                  _buildActionButton(
-                    icon: Icons.chat_bubble_outline,
-                    iconColor: AppColors.secondary,
-                    label: 'Discuss with Priya Ma\'am',
-                    backgroundColor: AppColors.secondary.withValues(alpha: 0.1),
-                    textColor: AppColors.secondary,
-                    onTap: () {
-                      final quizNumber = _quizResult?['quiz']?['quiz_number'];
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AiTutorChatScreen(
-                            injectContext: TutorContext(
-                              type: TutorContextType.quiz,
-                              id: widget.quizId,
-                              title: 'Daily Quiz ${quizNumber ?? ''}',
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              );
-            },
-          ),
           // Back to Dashboard button
           GradientButton(
             text: 'Back to Dashboard',

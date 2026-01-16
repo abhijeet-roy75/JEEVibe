@@ -23,11 +23,14 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _firstNameFocusNode = FocusNode();
   final _lastNameFocusNode = FocusNode();
+  final _emailFocusNode = FocusNode();
 
   String? _firstName;
   String? _lastName;
+  String? _email;
   String? _targetYear;
   String? _phoneNumber;
 
@@ -43,8 +46,10 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _emailController.dispose();
     _firstNameFocusNode.dispose();
     _lastNameFocusNode.dispose();
+    _emailFocusNode.dispose();
     super.dispose();
   }
 
@@ -58,6 +63,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
             step1Data: {
               'firstName': _firstName,
               'lastName': _lastName,
+              'email': _email,
               'phoneNumber': _phoneNumber,
               'targetYear': _targetYear,
             },
@@ -232,11 +238,10 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                       TextFormField(
                         controller: _lastNameController,
                         focusNode: _lastNameFocusNode,
-                        textInputAction: TextInputAction.done,
+                        textInputAction: TextInputAction.next,
                         onFieldSubmitted: (_) {
-                          // Unfocus keyboard and trigger form submission
-                          _lastNameFocusNode.unfocus();
-                          _continue();
+                          // Move focus to email field
+                          FocusScope.of(context).requestFocus(_emailFocusNode);
                         },
                         decoration: InputDecoration(
                           hintText: 'Enter your last name',
@@ -289,6 +294,81 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           return null;
                         },
                         onSaved: (value) => _lastName = value?.trim(),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Email (required)
+                      Text(
+                        'Email',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: AppColors.textDark,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _emailController,
+                        focusNode: _emailFocusNode,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) {
+                          _emailFocusNode.unfocus();
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'your.email@example.com',
+                          hintStyle: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textLight,
+                          ),
+                          filled: true,
+                          fillColor: AppColors.cardWhite,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryPurple,
+                              width: 2,
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.errorRed,
+                              width: 1,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                        ),
+                        style: AppTextStyles.bodyMedium,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your email address';
+                          }
+                          final emailRegex = RegExp(
+                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                          );
+                          if (!emailRegex.hasMatch(value.trim())) {
+                            return 'Please enter a valid email address';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) => _email = value?.trim(),
                       ),
 
                       const SizedBox(height: 24),

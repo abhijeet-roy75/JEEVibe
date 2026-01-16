@@ -77,7 +77,6 @@ router.post(
 
       // Prepare share event document
       const shareEvent = {
-        userId,
         solutionId,
         shareType,
         subject: subject || null,
@@ -86,9 +85,9 @@ router.post(
         serverTimestamp: admin.firestore.FieldValue.serverTimestamp(),
       };
 
-      // Save to Firestore
+      // Save to Firestore: share_events/{userId}/items/{auto_id}
       const shareRef = await retryFirestoreOperation(async () => {
-        return await db.collection('share_events').add(shareEvent);
+        return await db.collection('share_events').doc(userId).collection('items').add(shareEvent);
       });
 
       // Update user share stats (non-blocking)

@@ -145,7 +145,9 @@ class AnswerFeedback {
   final int timeTakenSeconds;
   final String? studentAnswer;
   final String? keyInsight; // Key takeaway for this question
-  final List<String>? commonMistakes; // Common mistakes students make
+  final List<String>? commonMistakes; // Common mistakes students make (for numerical)
+  final Map<String, String>? distractorAnalysis; // Why each wrong option is wrong (for MCQ)
+  final String? questionType; // 'mcq_single' or 'numerical'
   final String? hint; // Hint for the question
 
   AnswerFeedback({
@@ -160,10 +162,22 @@ class AnswerFeedback {
     this.studentAnswer,
     this.keyInsight,
     this.commonMistakes,
+    this.distractorAnalysis,
+    this.questionType,
     this.hint,
   });
 
   factory AnswerFeedback.fromJson(Map<String, dynamic> json) {
+    // Parse distractor_analysis map
+    Map<String, String>? distractorAnalysis;
+    if (json['distractor_analysis'] != null && json['distractor_analysis'] is Map) {
+      distractorAnalysis = Map<String, String>.from(
+        (json['distractor_analysis'] as Map).map(
+          (key, value) => MapEntry(key.toString(), value.toString()),
+        ),
+      );
+    }
+
     return AnswerFeedback(
       questionId: json['question_id'] as String? ?? '',
       isCorrect: json['is_correct'] as bool? ?? false,
@@ -182,8 +196,22 @@ class AnswerFeedback {
       commonMistakes: json['common_mistakes'] != null
           ? List<String>.from(json['common_mistakes'] as List)
           : null,
+      distractorAnalysis: distractorAnalysis,
+      questionType: json['question_type'] as String?,
       hint: json['hint'] as String?,
     );
+  }
+
+  /// Check if this is an MCQ question
+  bool get isMcq => questionType == 'mcq_single';
+
+  /// Check if this is a numerical question
+  bool get isNumerical => questionType == 'numerical';
+
+  /// Get the distractor analysis for the student's wrong answer (MCQ only)
+  String? getDistractorForAnswer(String? answer) {
+    if (answer == null || distractorAnalysis == null) return null;
+    return distractorAnalysis![answer.toUpperCase()];
   }
 }
 

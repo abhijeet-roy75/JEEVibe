@@ -188,7 +188,6 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      floatingActionButton: _buildAiTutorFab(question),
       body: Column(
         children: [
           // Header
@@ -209,7 +208,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                   _buildDetailedExplanation(question),
                   const SizedBox(height: 16),
                   // Priya Ma'am message
-                  _buildPriyaMaamMessage(isCorrect),
+                  _buildPriyaMaamMessage(question, isCorrect),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -218,42 +217,6 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
           // Navigation buttons
           _buildNavigationButtons(),
         ],
-      ),
-    );
-  }
-
-  /// Build the AI Tutor FAB (Ultra tier only)
-  Widget? _buildAiTutorFab(Map<String, dynamic> question) {
-    final subscriptionService = SubscriptionService();
-    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
-    if (!hasAiTutorAccess) return null;
-
-    final subject = question['subject'] as String? ?? 'Unknown';
-    final chapter = question['chapter'] as String? ?? 'Unknown';
-    final questionId = question['question_id'] as String? ?? '';
-
-    return FloatingActionButton.extended(
-      onPressed: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => AiTutorChatScreen(
-              injectContext: TutorContext(
-                type: TutorContextType.quiz,
-                id: questionId,
-                title: '$chapter - $subject',
-              ),
-            ),
-          ),
-        );
-      },
-      backgroundColor: AppColors.primaryPurple,
-      icon: const PriyaAvatar(size: 24, showShadow: false),
-      label: const Text(
-        'Ask Priya Ma\'am',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
       ),
     );
   }
@@ -860,7 +823,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
     );
   }
 
-  Widget _buildPriyaMaamMessage(bool isCorrect) {
+  Widget _buildPriyaMaamMessage(Map<String, dynamic> question, bool isCorrect) {
     String message;
     if (isCorrect) {
       // Vary correct answer messages during review
@@ -870,6 +833,12 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
       message = _getIncorrectReviewMessage();
     }
 
+    final subscriptionService = SubscriptionService();
+    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
+    final subject = question['subject'] as String? ?? 'Unknown';
+    final chapter = question['chapter'] as String? ?? 'Unknown';
+    final questionId = question['question_id'] as String? ?? '';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
@@ -878,37 +847,73 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
           color: AppColors.primaryPurple.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const PriyaAvatar(size: 48),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            Row(
+              children: [
+                const PriyaAvatar(size: 48),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Priya Ma\'am',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColors.primaryPurple,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text('✨', style: TextStyle(fontSize: 16)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
                       Text(
-                        'Priya Ma\'am',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.primaryPurple,
-                          fontWeight: FontWeight.bold,
+                        message,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textMedium,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      const Text('✨', style: TextStyle(fontSize: 16)),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    message,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textMedium,
+                ),
+              ],
+            ),
+            if (hasAiTutorAccess) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => AiTutorChatScreen(
+                          injectContext: TutorContext(
+                            type: TutorContextType.quiz,
+                            id: widget.quizId,
+                            title: '$chapter - $subject',
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                  label: const Text('Ask Priya Ma\'am'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primaryPurple,
+                    side: const BorderSide(color: AppColors.primaryPurple),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

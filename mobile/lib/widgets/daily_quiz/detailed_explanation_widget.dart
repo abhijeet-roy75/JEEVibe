@@ -239,6 +239,26 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
   }
 
   Widget _buildWhyWrongSection() {
+    // Determine what content to show based on question type
+    final isMcq = widget.feedback.isMcq;
+    final isNumerical = widget.feedback.isNumerical;
+
+    // For MCQ: get distractor analysis for the student's wrong answer
+    String? distractorExplanation;
+    if (isMcq && widget.feedback.distractorAnalysis != null) {
+      distractorExplanation = widget.feedback.getDistractorForAnswer(
+        widget.feedback.studentAnswer,
+      );
+    }
+
+    // For numerical: check if we have common mistakes
+    final hasCommonMistakes = isNumerical &&
+        widget.feedback.commonMistakes != null &&
+        widget.feedback.commonMistakes!.isNotEmpty;
+
+    // Determine if we have specific content to show
+    final hasSpecificContent = distractorExplanation != null || hasCommonMistakes;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -262,13 +282,81 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
             children: [
               Text(
                 'Why You Got This Wrong',
-                style: AppTextStyles.solutionHeader, // Guideline: 17px for section headers
+                style: AppTextStyles.solutionHeader,
               ),
               const SizedBox(height: 8),
-              Text(
-                'Review the explanation carefully. Understanding why you made this mistake helps you avoid it in the future.',
-                style: AppTextStyles.explanationBody, // Guideline: 16px for body text
-              ),
+              if (distractorExplanation != null) ...[
+                // MCQ: Show why the selected wrong option is incorrect
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.errorRed.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Option ${widget.feedback.studentAnswer?.toUpperCase() ?? ""}',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.errorRed,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Html(
+                  data: distractorExplanation,
+                  style: {
+                    'body': Style(
+                      margin: Margins.zero,
+                      padding: HtmlPaddings.zero,
+                      fontSize: FontSize(16),
+                      lineHeight: LineHeight(1.5),
+                      color: AppColors.textSecondary,
+                    ),
+                  },
+                ),
+              ] else if (hasCommonMistakes) ...[
+                // Numerical: Show common mistakes
+                ...widget.feedback.commonMistakes!.map((mistake) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '• ',
+                        style: AppTextStyles.explanationBody.copyWith(
+                          color: AppColors.warningAmber,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Expanded(
+                        child: Html(
+                          data: mistake,
+                          style: {
+                            'body': Style(
+                              margin: Margins.zero,
+                              padding: HtmlPaddings.zero,
+                              fontSize: FontSize(16),
+                              lineHeight: LineHeight(1.5),
+                              color: AppColors.textSecondary,
+                            ),
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+              ] else ...[
+                // Fallback to generic message
+                Text(
+                  'Review the explanation carefully. Understanding why you made this mistake helps you avoid it in the future.',
+                  style: AppTextStyles.explanationBody,
+                ),
+              ],
             ],
           ),
         ),

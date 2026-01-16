@@ -201,4 +201,74 @@ Solved with JEEVibe - Download from App Store''';
       debugPrint('Failed to log share event: $e');
     });
   }
+
+  /// Share journey progress via native share sheet
+  static Future<bool> shareJourneyProgress({
+    required String studentName,
+    required int questionsPracticed,
+    required int nextMilestone,
+    Rect? sharePositionOrigin,
+  }) async {
+    try {
+      final message = _buildJourneyShareMessage(
+        studentName: studentName,
+        questionsPracticed: questionsPracticed,
+        nextMilestone: nextMilestone,
+      );
+
+      final result = await Share.shareWithResult(
+        message,
+        subject: 'My JEEVibe Journey',
+        sharePositionOrigin: sharePositionOrigin,
+      );
+
+      return result.status == ShareResultStatus.success ||
+             result.status == ShareResultStatus.dismissed;
+    } catch (e) {
+      debugPrint('Error sharing journey: $e');
+      return false;
+    }
+  }
+
+  /// Build the journey share message
+  static String _buildJourneyShareMessage({
+    required String studentName,
+    required int questionsPracticed,
+    required int nextMilestone,
+  }) {
+    String achievementEmoji;
+    String achievementText;
+
+    if (questionsPracticed >= 300) {
+      achievementEmoji = '👑';
+      achievementText = "I'm a JEE Champion!";
+    } else if (questionsPracticed >= 200) {
+      achievementEmoji = '🏆';
+      achievementText = "I've reached 200 questions!";
+    } else if (questionsPracticed >= 100) {
+      achievementEmoji = '🔥';
+      achievementText = "I've hit 100 questions!";
+    } else if (questionsPracticed >= 50) {
+      achievementEmoji = '⭐';
+      achievementText = "Halfway to 100!";
+    } else if (questionsPracticed >= 25) {
+      achievementEmoji = '💪';
+      achievementText = "I'm building momentum!";
+    } else if (questionsPracticed >= 10) {
+      achievementEmoji = '🎯';
+      achievementText = "Just getting started!";
+    } else {
+      achievementEmoji = '🚀';
+      achievementText = "Beginning my JEE journey!";
+    }
+
+    return '''$achievementEmoji *My JEEVibe Journey*
+
+📚 *$questionsPracticed questions* practiced!
+$achievementText
+
+🎯 Next milestone: $nextMilestone questions
+
+Join me on JEEVibe - Download from App Store''';
+  }
 }

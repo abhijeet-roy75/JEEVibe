@@ -13,13 +13,13 @@ import '../welcome_carousel_screen.dart';
 /// Simplified Onboarding - Screen 2
 ///
 /// Collects optional information:
-/// - Email (optional)
 /// - Your State (optional)
 /// - Exam Type (optional) - "JEE Main" or "JEE Main + Advanced"
 /// - Dream Branch (optional)
 /// - Current Study Setup (optional, multi-select)
 ///
 /// All fields are optional, user can skip to continue.
+/// Email is now collected in Step 1 and passed via step1Data.
 class OnboardingStep2Screen extends StatefulWidget {
   final Map<String, dynamic> step1Data;
 
@@ -34,10 +34,7 @@ class OnboardingStep2Screen extends StatefulWidget {
 
 class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _emailFocusNode = FocusNode();
 
-  String? _email;
   String? _state;
   String? _examType;
   String? _dreamBranch;
@@ -45,26 +42,9 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
 
   bool _isLoading = false;
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _emailFocusNode.dispose();
-    super.dispose();
-  }
-
   Future<void> _saveProfile() async {
     // Save form state to capture current values
     _formKey.currentState?.save();
-
-    // Validate email if provided (but don't block save if invalid - just exclude it)
-    String? validEmail;
-    if (_email != null && _email!.isNotEmpty) {
-      final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-      if (emailRegex.hasMatch(_email!)) {
-        validEmail = _email;
-      }
-      // If email is invalid, we'll just exclude it (user can fix later)
-    }
 
     setState(() => _isLoading = true);
 
@@ -85,9 +65,9 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
         // Screen 1 data (required)
         firstName: widget.step1Data['firstName'],
         lastName: widget.step1Data['lastName'],
+        email: widget.step1Data['email'], // Email now comes from Step 1
         targetYear: widget.step1Data['targetYear'],
         // Screen 2 data (all optional)
-        email: validEmail,
         state: _state,
         targetExam: _examType,
         dreamBranch: _dreamBranch,
@@ -216,94 +196,6 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                     ),
 
                     const SizedBox(height: 24),
-
-                      // Email (optional)
-                      Row(
-                        children: [
-                          Text(
-                            'Email',
-                            style: AppTextStyles.labelMedium.copyWith(
-                              color: AppColors.textDark,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '(Optional)',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.textLight,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      TextFormField(
-                        controller: _emailController,
-                        focusNode: _emailFocusNode,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) {
-                          // Unfocus keyboard since next fields are dropdowns/selects
-                          _emailFocusNode.unfocus();
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'your.email@example.com',
-                          hintStyle: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textLight,
-                          ),
-                          filled: true,
-                          fillColor: AppColors.cardWhite,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.borderGray,
-                              width: 1,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.borderGray,
-                              width: 1,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.primaryPurple,
-                              width: 2,
-                            ),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.errorRed,
-                              width: 1,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                        ),
-                        style: AppTextStyles.bodyMedium,
-                        validator: (value) {
-                          // Only validate if email is provided
-                          if (value != null && value.isNotEmpty) {
-                            final emailRegex = RegExp(
-                              r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-                            );
-                            if (!emailRegex.hasMatch(value)) {
-                              return 'Please enter a valid email address';
-                            }
-                          }
-                          return null;
-                        },
-                        onSaved: (value) => _email = value?.trim().isEmpty ?? true ? null : value?.trim(),
-                      ),
-
-                      const SizedBox(height: 20),
 
                       // Your State (optional)
                       Row(

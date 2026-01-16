@@ -139,8 +139,14 @@ function generateFeedback(questionData, isCorrect, studentAnswer) {
     solution_steps: questionData.solution_steps || [],
     // Key insight from metadata (for Key Takeaway section)
     key_insight: questionData.metadata?.key_insight || null,
-    // Common mistakes (for additional context)
-    common_mistakes: questionData.metadata?.common_mistakes || null,
+    // Common mistakes for numerical questions
+    common_mistakes: questionData.metadata?.common_mistakes || questionData.common_mistakes || null,
+    // Distractor analysis for MCQ questions (explains why each wrong option is wrong)
+    distractor_analysis: questionData.distractor_analysis || null,
+    // Question type for frontend to display appropriate "why wrong" content
+    question_type: questionData.question_type || null,
+    // Student's answer for reference
+    student_answer: studentAnswer,
     // Hint (optional)
     hint: questionData.metadata?.hint || null
   };

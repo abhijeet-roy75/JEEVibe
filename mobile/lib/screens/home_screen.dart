@@ -123,7 +123,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: _buildBackToDashboardButton(),
                     ),
-                    const SizedBox(height: 24),
+                    // Add extra padding for Android system navigation bar
+                    SizedBox(height: 24 + MediaQuery.of(context).viewPadding.bottom),
                   ],
                 ),
               ),

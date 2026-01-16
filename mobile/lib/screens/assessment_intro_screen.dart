@@ -14,8 +14,11 @@ import '../services/storage_service.dart';
 import '../services/firebase/firestore_user_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../services/api_service.dart';
+import '../services/priya_message_service.dart';
+import '../services/analytics_service.dart';
 import '../models/user_profile.dart';
 import '../models/assessment_response.dart';
+import '../models/analytics_data.dart';
 import '../providers/app_state_provider.dart';
 import '../providers/offline_provider.dart';
 import 'profile/profile_view_screen.dart';
@@ -28,6 +31,9 @@ import '../widgets/feedback/feedback_fab.dart';
 import '../services/session_tracking_service.dart';
 import 'ai_tutor_chat_screen.dart';
 import '../services/subscription_service.dart';
+import '../models/subscription_models.dart';
+import '../services/journey_service.dart';
+import '../services/share_service.dart';
 
 class AssessmentIntroScreen extends StatefulWidget {
   const AssessmentIntroScreen({super.key});
@@ -42,6 +48,13 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   bool _isLoading = true;
   AssessmentData? _assessmentData;
   int _remainingSnaps = 5;
+
+  // Daily quiz summary data for dynamic Priya messages
+  Map<String, dynamic>? _quizSummary;
+  PriyaMessage? _priyaMessage;
+
+  // Analytics overview for cumulative progress display
+  AnalyticsOverview? _analyticsOverview;
 
   @override
   void initState() {
@@ -130,14 +143,49 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
         } catch (e) {
           debugPrint('Error fetching assessment results: $e');
         }
+
+        // Fetch daily quiz summary for dynamic Priya messages
+        try {
+          final authService = Provider.of<AuthService>(context, listen: false);
+          final token = await authService.getIdToken();
+          if (token != null) {
+            final summary = await ApiService.getDailyQuizSummary(authToken: token);
+            _quizSummary = summary;
+            debugPrint('Quiz summary loaded: streak=${summary['streak']?['current_streak']}, today_accuracy=${summary['today_stats']?['accuracy']}');
+          }
+        } catch (e) {
+          debugPrint('Error fetching quiz summary: $e');
+          // Non-critical - continue with default message
+        }
+
+        // Fetch analytics overview for cumulative progress display
+        try {
+          final authService = Provider.of<AuthService>(context, listen: false);
+          final token = await authService.getIdToken();
+          if (token != null) {
+            final overview = await AnalyticsService.getOverview(authToken: token);
+            _analyticsOverview = overview;
+            debugPrint('Analytics overview loaded: quizzes=${overview.stats.quizzesCompleted}, questions=${overview.stats.questionsSolved}');
+          }
+        } catch (e) {
+          debugPrint('Error fetching analytics overview: $e');
+          // Non-critical - fall back to assessment data
+        }
       }
 
       if (mounted) {
+        // Generate dynamic Priya message based on quiz data
+        PriyaMessage? priyaMessage;
+        if (status == 'completed') {
+          priyaMessage = _generatePriyaMessage(profile);
+        }
+
         setState(() {
           _assessmentStatus = status;
           _userProfile = profile;
           _assessmentData = assessmentData;
           _remainingSnaps = remainingSnaps;
+          _priyaMessage = priyaMessage;
           _isLoading = false;
         });
       }
@@ -161,6 +209,59 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
       return _userProfile!.firstName!;
     }
     return 'Student';
+  }
+
+  /// Generate dynamic Priya message based on quiz summary data
+  PriyaMessage _generatePriyaMessage(UserProfile? profile) {
+    final studentName = profile?.firstName ?? 'Student';
+
+    // Extract data from quiz summary
+    final streak = _quizSummary?['streak'] as Map<String, dynamic>?;
+    final todayStats = _quizSummary?['today_stats'] as Map<String, dynamic>?;
+
+    final currentStreak = streak?['current_streak'] as int?;
+    final longestStreak = streak?['longest_streak'] as int?;
+    final totalQuizzesCompleted = streak?['total_quizzes_completed'] as int?;
+    final totalQuestionsAnswered = streak?['total_questions_answered'] as int?;
+
+    // Get most recent quiz accuracy (0-1 scale)
+    // Use last_quiz_accuracy if available, otherwise fall back to average accuracy
+    double? lastQuizAccuracy;
+    final lastAccuracyValue = todayStats?['last_quiz_accuracy'] ?? todayStats?['accuracy'];
+    if (lastAccuracyValue != null && lastAccuracyValue is num) {
+      lastQuizAccuracy = lastAccuracyValue.toDouble();
+      // Normalize if it's in percentage format (>1)
+      if (lastQuizAccuracy > 1) {
+        lastQuizAccuracy = lastQuizAccuracy / 100;
+      }
+    }
+
+    // Get previous quiz accuracy for improvement detection
+    double? previousQuizAccuracy;
+    final prevAccuracyValue = todayStats?['previous_quiz_accuracy'];
+    if (prevAccuracyValue != null && prevAccuracyValue is num) {
+      previousQuizAccuracy = prevAccuracyValue.toDouble();
+      // Normalize if it's in percentage format (>1)
+      if (previousQuizAccuracy > 1) {
+        previousQuizAccuracy = previousQuizAccuracy / 100;
+      }
+    }
+
+    // Only use accuracy if they completed a quiz today
+    final quizzesCompletedToday = todayStats?['quizzes_completed'] as int? ?? 0;
+    final effectiveLastAccuracy = quizzesCompletedToday > 0 ? lastQuizAccuracy : null;
+    final effectivePrevAccuracy = quizzesCompletedToday > 1 ? previousQuizAccuracy : null;
+
+    // Generate message using the service
+    return PriyaMessageService.generateMessage(
+      studentName: studentName,
+      currentStreak: currentStreak,
+      longestStreak: longestStreak,
+      totalQuizzesCompleted: totalQuizzesCompleted,
+      totalQuestionsAnswered: totalQuestionsAnswered,
+      lastQuizAccuracy: effectiveLastAccuracy,
+      previousQuizAccuracy: effectivePrevAccuracy,
+    );
   }
 
   bool get _isFirstTime => _assessmentStatus == 'not_started';
@@ -208,6 +309,10 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     const SizedBox(height: 24),
                     // Snap & Solve Card
                     _buildSnapSolveCard(),
+                    const SizedBox(height: 24),
+                    // Journey Card (only show when assessment is completed)
+                    if (_isAssessmentCompleted)
+                      _buildJourneyCard(),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -429,7 +534,25 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
 
   Widget _buildDailyPracticeCard() {
     final isUnlocked = _isAssessmentCompleted;
-    
+    final subscriptionService = SubscriptionService();
+    final quizUsage = subscriptionService.getUsageInfo(UsageType.dailyQuiz);
+
+    // Build the subtitle based on unlock status and usage
+    String subtitle;
+    if (!isUnlocked) {
+      subtitle = '🔒 Complete assessment to unlock personalized practice';
+    } else if (quizUsage != null) {
+      if (quizUsage.isUnlimited) {
+        subtitle = 'Unlimited quizzes';
+      } else if (quizUsage.remaining > 0) {
+        subtitle = '${quizUsage.remaining} ${quizUsage.remaining == 1 ? 'quiz' : 'quizzes'} remaining today';
+      } else {
+        subtitle = 'Daily limit reached • Resets tomorrow';
+      }
+    } else {
+      subtitle = 'Personalized practice questions tailored for you';
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
@@ -477,11 +600,14 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                         ),
                       ),
                       Text(
-                        isUnlocked
-                            ? 'Personalized practice questions tailored for you'
-                            : '🔒 Complete assessment to unlock personalized practice',
+                        subtitle,
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textLight,
+                          color: isUnlocked && quizUsage != null
+                              ? AppColors.primaryPurple
+                              : AppColors.textLight,
+                          fontWeight: isUnlocked && quizUsage != null
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                       ),
                     ],
@@ -490,13 +616,19 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+            Row(
               children: [
-                _buildDetailChip('✏️ 10 questions'),
-                _buildDetailChip('⏱️ ~15 min'),
-                _buildDetailChip('📚 Mixed subjects'),
+                Expanded(
+                  child: _buildDetailChip('✏️ 10 questions'),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _buildDetailChip('⏱️ ~15 min'),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: _buildDetailChip('📚 Mixed subjects'),
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -680,9 +812,302 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     );
   }
 
+  Widget _buildJourneyCard() {
+    // Get questions practiced from analytics overview
+    final questionsPracticed = _analyticsOverview?.stats.questionsSolved ?? 0;
+    final studentName = _getUserName();
+
+    // Generate journey message
+    final journeyMessage = JourneyService.generateMessage(
+      studentName: studentName,
+      questionsPracticed: questionsPracticed,
+    );
+
+    // Get visible milestones and next milestone
+    final visibleMilestones = JourneyService.getVisibleMilestones(questionsPracticed);
+    final nextMilestone = JourneyService.getNextMilestone(questionsPracticed);
+    final isNewJourney = JourneyService.isNewJourney(questionsPracticed);
+
+    // GlobalKey for share button positioning (iPad popover)
+    final shareButtonKey = GlobalKey();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with title and share button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Text('🚀', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 8),
+                    Text(
+                      isNewJourney ? 'Your Journey Begins!' : 'Your Journey',
+                      style: AppTextStyles.headerSmall.copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                // Share button
+                GestureDetector(
+                  key: shareButtonKey,
+                  onTap: () {
+                    final RenderBox? box = shareButtonKey.currentContext?.findRenderObject() as RenderBox?;
+                    final Rect? sharePositionOrigin = box != null
+                        ? box.localToGlobal(Offset.zero) & box.size
+                        : null;
+
+                    ShareService.shareJourneyProgress(
+                      studentName: studentName,
+                      questionsPracticed: questionsPracticed,
+                      nextMilestone: nextMilestone,
+                      sharePositionOrigin: sharePositionOrigin,
+                    );
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.share_outlined,
+                        size: 16,
+                        color: AppColors.primaryPurple,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Share',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.primaryPurple,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Progress line with milestones
+            _buildProgressLine(questionsPracticed, visibleMilestones),
+            const SizedBox(height: 8),
+            // Questions practiced label
+            Center(
+              child: Text(
+                questionsPracticed == 0
+                    ? 'questions practiced'
+                    : '$questionsPracticed questions practiced!',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.primaryPurple,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Message card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primaryPurple.withValues(alpha: 0.1),
+                    AppColors.secondaryPink.withValues(alpha: 0.1),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    journeyMessage.title,
+                    style: AppTextStyles.headerSmall.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryPurple,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    journeyMessage.message,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textMedium,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Next milestone (if available)
+            if (journeyMessage.nextMilestoneText != null) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Text('🎯', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Next: ',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textMedium,
+                    ),
+                  ),
+                  Text(
+                    journeyMessage.nextMilestoneText!,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primaryPurple,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressLine(int questionsPracticed, List<int> milestones) {
+    // Horizontal padding to prevent edge dots from being cut off
+    const double edgePadding = 12.0;
+
+    return SizedBox(
+      height: 50,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Account for edge padding in width calculations
+          final availableWidth = constraints.maxWidth - (edgePadding * 2);
+          final segmentWidth = availableWidth / (milestones.length - 1);
+
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Background line
+              Positioned(
+                left: edgePadding,
+                right: edgePadding,
+                top: 15,
+                child: Container(
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Progress line (filled portion)
+              if (questionsPracticed > 0)
+                Positioned(
+                  left: edgePadding,
+                  top: 15,
+                  child: Container(
+                    height: 4,
+                    width: _calculateProgressWidth(questionsPracticed, milestones, availableWidth),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.ctaGradient,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              // Milestone dots and labels
+              ...List.generate(milestones.length, (index) {
+                final milestone = milestones[index];
+                final isCompleted = questionsPracticed >= milestone;
+                final isCurrent = questionsPracticed >= milestone &&
+                    (index == milestones.length - 1 || questionsPracticed < milestones[index + 1]);
+                // Position from edge padding, centered on the dot (dot is 20px wide now)
+                final xPosition = edgePadding + (index * segmentWidth) - 10;
+
+                return Positioned(
+                  left: xPosition,
+                  top: 5,
+                  child: Column(
+                    children: [
+                      // Milestone dot (slightly smaller to fit better)
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: isCompleted ? AppColors.primaryPurple : Colors.grey.shade300,
+                          shape: BoxShape.circle,
+                          border: isCurrent ? Border.all(color: AppColors.secondaryPink, width: 2) : null,
+                        ),
+                        child: isCompleted
+                            ? const Icon(Icons.check, color: Colors.white, size: 12)
+                            : null,
+                      ),
+                      const SizedBox(height: 4),
+                      // Milestone label
+                      Text(
+                        '$milestone',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          fontSize: 10,
+                          color: isCompleted ? AppColors.primaryPurple : AppColors.textLight,
+                          fontWeight: isCompleted ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  double _calculateProgressWidth(int questionsPracticed, List<int> milestones, double totalWidth) {
+    if (questionsPracticed <= milestones.first) {
+      return 0;
+    }
+    if (questionsPracticed >= milestones.last) {
+      return totalWidth;
+    }
+
+    // Find which segment we're in
+    for (int i = 0; i < milestones.length - 1; i++) {
+      if (questionsPracticed >= milestones[i] && questionsPracticed < milestones[i + 1]) {
+        final segmentWidth = totalWidth / (milestones.length - 1);
+        final segmentStart = i * segmentWidth;
+        final progress = (questionsPracticed - milestones[i]) / (milestones[i + 1] - milestones[i]);
+        return segmentStart + (progress * segmentWidth);
+      }
+    }
+
+    return totalWidth;
+  }
+
   Widget _buildPriyaMessageCard() {
     final subscriptionService = SubscriptionService();
     final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
+
+    // Use dynamic message if available, otherwise use default
+    final message = _priyaMessage ?? PriyaMessage(
+      title: 'Great Job, ${_getUserName()}! 🎉',
+      subtitle: 'Assessment Complete',
+      message: "I've analyzed your strengths and areas for improvement. Let's build on this with daily adaptive practice tailored for you!",
+      type: PriyaMessageType.assessmentComplete,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -714,7 +1139,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Great Job, ${_getUserName()}! 🎉',
+                        message.title,
                         style: AppTextStyles.headerSmall.copyWith(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -722,7 +1147,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Assessment Complete',
+                        message.subtitle,
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.textLight,
                           fontSize: 14,
@@ -743,7 +1168,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                "I've analyzed your strengths and areas for improvement. Let's build on this with daily adaptive practice tailored for you!",
+                message.message,
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontStyle: FontStyle.italic,
                   color: AppColors.textMedium,
@@ -777,38 +1202,61 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   }
 
   Widget _buildResultsCard() {
-    // Extract accuracy values with proper type handling
-    final physicsData = _assessmentData!.subjectAccuracy['physics'] as Map<String, dynamic>?;
-    final chemistryData = _assessmentData!.subjectAccuracy['chemistry'] as Map<String, dynamic>?;
-    final mathematicsData = _assessmentData!.subjectAccuracy['mathematics'] as Map<String, dynamic>?;
-    
-    final physicsAccuracy = _extractAccuracy(physicsData);
-    final chemistryAccuracy = _extractAccuracy(chemistryData);
-    final mathematicsAccuracy = _extractAccuracy(mathematicsData);
-    
-    // Debug logging
-    debugPrint('Subject Accuracy Data:');
-    debugPrint('  Physics: $physicsData -> $physicsAccuracy');
-    debugPrint('  Chemistry: $chemistryData -> $chemistryAccuracy');
-    debugPrint('  Mathematics: $mathematicsData -> $mathematicsAccuracy');
-    debugPrint('  Full subjectAccuracy map: ${_assessmentData!.subjectAccuracy}');
-    
-    // Print theta scores per subject
-    debugPrint('\n=== THETA SCORES PER SUBJECT ===');
-    final thetaBySubject = _assessmentData!.thetaBySubject;
-    if (thetaBySubject.isNotEmpty) {
-      final physicsTheta = thetaBySubject['physics'];
-      final chemistryTheta = thetaBySubject['chemistry'];
-      final mathematicsTheta = thetaBySubject['mathematics'];
-      
-      debugPrint('Physics Theta: ${physicsTheta?['theta'] ?? 'N/A'} (Percentile: ${physicsTheta?['percentile'] ?? 'N/A'})');
-      debugPrint('Chemistry Theta: ${chemistryTheta?['theta'] ?? 'N/A'} (Percentile: ${chemistryTheta?['percentile'] ?? 'N/A'})');
-      debugPrint('Mathematics Theta: ${mathematicsTheta?['theta'] ?? 'N/A'} (Percentile: ${mathematicsTheta?['percentile'] ?? 'N/A'})');
-      debugPrint('Overall Theta: ${_assessmentData!.overallTheta} (Percentile: ${_assessmentData!.overallPercentile})');
-      debugPrint('================================\n');
+    // Check if we have analytics data with completed quizzes (cumulative progress)
+    final hasQuizProgress = _analyticsOverview != null &&
+        _analyticsOverview!.stats.quizzesCompleted > 0;
+
+    // Determine header text based on whether they've done daily quizzes
+    final headerText = hasQuizProgress ? 'Your Progress' : 'Assessment';
+
+    // Get subject data - prefer analytics overview for cumulative data
+    final SubjectProgressData physicsProgress;
+    final SubjectProgressData chemistryProgress;
+    final SubjectProgressData mathsProgress;
+
+    if (hasQuizProgress && _analyticsOverview != null) {
+      // Use analytics data for cumulative progress
+      final physics = _analyticsOverview!.subjectProgress['physics'];
+      final chemistry = _analyticsOverview!.subjectProgress['chemistry'];
+      final maths = _analyticsOverview!.subjectProgress['maths'] ??
+                   _analyticsOverview!.subjectProgress['mathematics'];
+
+      physicsProgress = SubjectProgressData(
+        accuracy: physics?.accuracy,
+        correct: physics?.correct ?? 0,
+        total: physics?.total ?? 0,
+      );
+      chemistryProgress = SubjectProgressData(
+        accuracy: chemistry?.accuracy,
+        correct: chemistry?.correct ?? 0,
+        total: chemistry?.total ?? 0,
+      );
+      mathsProgress = SubjectProgressData(
+        accuracy: maths?.accuracy,
+        correct: maths?.correct ?? 0,
+        total: maths?.total ?? 0,
+      );
     } else {
-      debugPrint('No theta data available');
-      debugPrint('================================\n');
+      // Fall back to assessment data
+      final physicsData = _assessmentData!.subjectAccuracy['physics'] as Map<String, dynamic>?;
+      final chemistryData = _assessmentData!.subjectAccuracy['chemistry'] as Map<String, dynamic>?;
+      final mathematicsData = _assessmentData!.subjectAccuracy['mathematics'] as Map<String, dynamic>?;
+
+      physicsProgress = SubjectProgressData(
+        accuracy: _extractAccuracy(physicsData),
+        correct: physicsData?['correct'] as int? ?? 0,
+        total: physicsData?['total'] as int? ?? 0,
+      );
+      chemistryProgress = SubjectProgressData(
+        accuracy: _extractAccuracy(chemistryData),
+        correct: chemistryData?['correct'] as int? ?? 0,
+        total: chemistryData?['total'] as int? ?? 0,
+      );
+      mathsProgress = SubjectProgressData(
+        accuracy: _extractAccuracy(mathematicsData),
+        correct: mathematicsData?['correct'] as int? ?? 0,
+        total: mathematicsData?['total'] as int? ?? 0,
+      );
     }
 
     return Padding(
@@ -837,15 +1285,15 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.bar_chart,
+                      Icon(
+                        hasQuizProgress ? Icons.trending_up : Icons.bar_chart,
                         size: 24,
                         color: AppColors.primaryPurple,
                       ),
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
-                          'Assessment',
+                          headerText,
                           style: AppTextStyles.headerSmall.copyWith(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -914,82 +1362,85 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             // Subject Results
-            _buildSubjectResult('Physics', physicsAccuracy, AppColors.subjectPhysics),
-            const SizedBox(height: 12),
-            _buildSubjectResult('Chemistry', chemistryAccuracy, AppColors.subjectChemistry),
-            const SizedBox(height: 12),
-            _buildSubjectResult('Mathematics', mathematicsAccuracy, AppColors.subjectMathematics),
+            _buildSubjectResult('Physics', physicsProgress, AppColors.subjectPhysics, Icons.bolt),
+            const SizedBox(height: 8),
+            _buildSubjectResult('Chemistry', chemistryProgress, AppColors.subjectChemistry, Icons.science),
+            const SizedBox(height: 8),
+            _buildSubjectResult('Mathematics', mathsProgress, AppColors.subjectMathematics, Icons.functions),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSubjectResult(String subject, int? accuracy, Color color) {
-    final accuracyValue = accuracy ?? 0;
-    final displayAccuracy = accuracy != null ? '$accuracy%' : 'N/A';
-    
-    // Determine feedback text and progress bar color based on thresholds
-    String feedbackText;
+  Widget _buildSubjectResult(String subject, SubjectProgressData progress, Color color, IconData icon) {
+    final accuracyValue = progress.accuracy ?? 0;
+    final displayAccuracy = progress.accuracy != null ? '${progress.accuracy}%' : 'N/A';
+
+    // Determine progress bar color based on accuracy thresholds
     Color progressColor;
-    
-    if (accuracy == null || accuracyValue == 0) {
-      feedbackText = 'Not assessed';
+    if (progress.accuracy == null || accuracyValue == 0) {
       progressColor = Colors.grey;
     } else if (accuracyValue < 70) {
-      feedbackText = 'Needs more practice';
       progressColor = AppColors.performanceOrange;
     } else if (accuracyValue <= 85) {
-      feedbackText = 'Good progress';
       progressColor = AppColors.subjectMathematics;
     } else {
-      feedbackText = 'Strong performance';
       progressColor = AppColors.subjectChemistry;
     }
-    
+
+    // Build the correct/total display string
+    final hasQuestionData = progress.total > 0;
+    final correctTotalText = hasQuestionData
+        ? '${progress.correct}/${progress.total}'
+        : '';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Subject name and percentage row
+        // Subject name with icon, question count, and percentage row
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 6),
+            Text(
+              subject,
+              style: AppTextStyles.headerSmall.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (correctTotalText.isNotEmpty) ...[
+              const SizedBox(width: 6),
               Text(
-                subject,
-                style: AppTextStyles.headerSmall.copyWith(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                correctTotalText,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textLight,
+                  fontSize: 12,
                 ),
               ),
+            ],
+            const Spacer(),
             Text(
               displayAccuracy,
               style: AppTextStyles.headerSmall.copyWith(
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
-          const SizedBox(height: 10),
-          // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: accuracyValue / 100,
-              backgroundColor: Colors.grey.shade200,
-              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-              minHeight: 8,
-            ),
-          ),
-          const SizedBox(height: 6),
-        // Feedback text
-        Text(
-          feedbackText,
-          style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textLight,
-            fontSize: 13,
+        const SizedBox(height: 6),
+        // Progress bar
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: accuracyValue / 100,
+            backgroundColor: Colors.grey.shade200,
+            valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+            minHeight: 6,
           ),
         ),
       ],
@@ -1085,4 +1536,17 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
       },
     );
   }
+}
+
+/// Helper class for subject progress data
+class SubjectProgressData {
+  final int? accuracy;
+  final int correct;
+  final int total;
+
+  const SubjectProgressData({
+    this.accuracy,
+    this.correct = 0,
+    this.total = 0,
+  });
 }
