@@ -186,7 +186,7 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                 final stepText = step.displayText;
 
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: 16),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -208,23 +208,154 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Html(
-                          data: stepText,
-                          style: {
-                            'body': Style(
-                              margin: Margins.zero,
-                              padding: HtmlPaddings.zero,
-                              fontSize: FontSize(16), // Guideline: 16-17px for step text
-                              lineHeight: LineHeight(1.5),
-                              color: AppColors.textSecondary,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Description
+                            Html(
+                              data: stepText,
+                              style: {
+                                'body': Style(
+                                  margin: Margins.zero,
+                                  padding: HtmlPaddings.zero,
+                                  fontSize: FontSize(16), // Guideline: 16-17px for step text
+                                  lineHeight: LineHeight(1.5),
+                                  color: AppColors.textSecondary,
+                                ),
+                                'strong': Style(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                'b': Style(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              },
                             ),
-                            'strong': Style(
-                              fontWeight: FontWeight.w700,
-                            ),
-                            'b': Style(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          },
+                            // Formula (if exists)
+                            if (step.formula != null && step.formula!.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryPurple.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors.primaryPurple.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.functions,
+                                      size: 16,
+                                      color: AppColors.primaryPurple,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Html(
+                                        data: step.formula!,
+                                        style: {
+                                          'body': Style(
+                                            margin: Margins.zero,
+                                            padding: HtmlPaddings.zero,
+                                            fontSize: FontSize(15),
+                                            lineHeight: LineHeight(1.4),
+                                            color: AppColors.primaryPurple,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            // Calculation (if exists)
+                            if (step.calculation != null && step.calculation!.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.successGreen.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors.successGreen.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.calculate,
+                                      size: 16,
+                                      color: AppColors.successGreen,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Html(
+                                        data: step.calculation!,
+                                        style: {
+                                          'body': Style(
+                                            margin: Margins.zero,
+                                            padding: HtmlPaddings.zero,
+                                            fontSize: FontSize(15),
+                                            lineHeight: LineHeight(1.4),
+                                            color: AppColors.textSecondary,
+                                            fontFamily: 'monospace',
+                                          ),
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            // Explanation (if exists and different from description)
+                            if (step.explanation != null &&
+                                step.explanation!.isNotEmpty &&
+                                step.explanation != step.description) ...[
+                              const SizedBox(height: 8),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.warningAmber.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: AppColors.warningAmber.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.lightbulb_outline,
+                                      size: 16,
+                                      color: AppColors.warningAmber,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Html(
+                                        data: step.explanation!,
+                                        style: {
+                                          'body': Style(
+                                            margin: Margins.zero,
+                                            padding: HtmlPaddings.zero,
+                                            fontSize: FontSize(15),
+                                            lineHeight: LineHeight(1.4),
+                                            color: AppColors.textSecondary,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ],
