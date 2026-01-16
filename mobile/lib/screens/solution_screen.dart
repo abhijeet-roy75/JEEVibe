@@ -22,6 +22,8 @@ import '../services/offline/sync_service.dart';
 import '../models/ai_tutor_models.dart';
 import 'ai_tutor_chat_screen.dart';
 import '../services/subscription_service.dart';
+import '../services/share_service.dart';
+import '../services/firebase/auth_service.dart';
 
 class SolutionScreen extends StatefulWidget {
   final Future<Solution> solutionFuture;
@@ -39,6 +41,7 @@ class SolutionScreen extends StatefulWidget {
 
 class _SolutionScreenState extends State<SolutionScreen> {
   bool _hasIncrementedSnap = false;
+  bool _isShareInProgress = false;
 
   @override
   Widget build(BuildContext context) {
@@ -347,7 +350,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
           }
           return route.isFirst;
         });
-        
+
         if (!found) {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -357,9 +360,67 @@ class _SolutionScreenState extends State<SolutionScreen> {
           );
         }
       },
+      trailing: IconButton(
+        icon: Icon(
+          Icons.share,
+          color: _isShareInProgress ? Colors.white.withValues(alpha: 0.5) : Colors.white,
+        ),
+        tooltip: 'Share on WhatsApp',
+        onPressed: _isShareInProgress ? null : () => _handleShare(solution),
+      ),
       bottomPadding: 12, // Further reduced from 16
       gradient: AppColors.ctaGradient,
     );
+  }
+
+  Future<void> _handleShare(Solution solution) async {
+    if (_isShareInProgress) return;
+
+    setState(() => _isShareInProgress = true);
+
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final token = await authService.getIdToken();
+
+      if (token == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please sign in to share')),
+          );
+        }
+        return;
+      }
+
+      // Get share button position for iPad popover (top-right of screen)
+      final screenSize = MediaQuery.of(context).size;
+      final shareButtonRect = Rect.fromLTWH(
+        screenSize.width - 60, // 60px from right edge
+        60, // 60px from top
+        48, // button width
+        48, // button height
+      );
+
+      final success = await ShareService.shareSolution(
+        authToken: token,
+        solutionId: solution.id ?? 'snap_${DateTime.now().millisecondsSinceEpoch}',
+        question: solution.recognizedQuestion,
+        steps: solution.solution.steps,
+        finalAnswer: solution.solution.finalAnswer,
+        subject: solution.subject,
+        topic: solution.topic,
+        sharePositionOrigin: shareButtonRect,
+      );
+
+      if (!success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open share dialog')),
+        );
+      }
+    } finally {
+      // Re-enable after 2 seconds to prevent rapid taps
+      await Future.delayed(const Duration(seconds: 2));
+      if (mounted) setState(() => _isShareInProgress = false);
+    }
   }
 
   Widget _buildQuestionCard(Solution solution) {

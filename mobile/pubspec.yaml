@@ -1,7 +1,7 @@
 name: jeevibe_mobile
 description: JEEVibe Snap & Solve POC - iOS Flutter App
 publish_to: 'none'
-version: 1.0.1+47
+version: 1.0.1+48
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -77,6 +77,9 @@ dependencies:
 
   # Connectivity Detection
   connectivity_plus: ^5.0.2
+
+  # Social Sharing
+  share_plus: ^7.2.1
 
   # Background Sync - workmanager removed (incompatible with Flutter 3.27+, not currently used)
   # Can be re-added when needed: workmanager: ^0.9.0

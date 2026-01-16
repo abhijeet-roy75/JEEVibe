@@ -1061,5 +1061,43 @@ class ApiService {
       }
     });
   }
+
+  // ==========================================================================
+  // SHARING APIs
+  // ==========================================================================
+
+  /// Log a share event to analytics
+  /// Fire-and-forget: failures are logged but don't throw
+  static Future<void> logShareEvent({
+    required String authToken,
+    required String solutionId,
+    required String shareType,
+    required String subject,
+    required String topic,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/share/log'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+        body: json.encode({
+          'solutionId': solutionId,
+          'shareType': shareType,
+          'subject': subject,
+          'topic': topic,
+          'timestamp': DateTime.now().toIso8601String(),
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        print('Share log failed with status: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Share log error: $e');
+      // Don't rethrow - this is a fire-and-forget operation
+    }
+  }
 }
 
