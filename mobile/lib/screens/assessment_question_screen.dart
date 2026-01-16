@@ -313,12 +313,14 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
     final startTime = _questionStartTimes[_currentQuestionIndex] ?? DateTime.now();
     final timeTaken = DateTime.now().difference(startTime).inSeconds;
 
-    // Update response without setState to avoid circular rebuilds
-    _responses[_currentQuestionIndex] = AssessmentResponse(
-      questionId: question.questionId,
-      studentAnswer: answer,
-      timeTakenSeconds: timeTaken,
-    );
+    // Update response and trigger UI rebuild for instant feedback
+    setState(() {
+      _responses[_currentQuestionIndex] = AssessmentResponse(
+        questionId: question.questionId,
+        studentAnswer: answer,
+        timeTakenSeconds: timeTaken,
+      );
+    });
 
     // Save state after recording answer
     _saveState();
