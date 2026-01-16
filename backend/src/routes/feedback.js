@@ -12,6 +12,7 @@ const { db, admin } = require('../config/firebase');
 const { authenticateUser } = require('../middleware/auth');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
+const { sendFeedbackEmail } = require('../services/emailService');
 
 // Feature flag check
 const isFeedbackEnabled = () => {
@@ -102,6 +103,20 @@ router.post(
         feedbackId: feedbackRef.id,
         userId,
         rating,
+      });
+
+      // Send email notification (non-blocking)
+      sendFeedbackEmail({
+        feedbackId: feedbackRef.id,
+        userId,
+        rating,
+        description,
+        context,
+      }).catch((err) => {
+        logger.error('Failed to send feedback email', {
+          feedbackId: feedbackRef.id,
+          error: err.message,
+        });
       });
 
       res.status(201).json({

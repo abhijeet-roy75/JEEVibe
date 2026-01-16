@@ -1527,13 +1527,30 @@ router.get('/summary', authenticateUser, async (req, res, next) => {
       return await todayQuizzesRef.get();
     });
 
-    const todayQuizzes = todayQuizzesSnapshot.docs.map(doc => doc.data());
+    // Sort quizzes by completion time (most recent first) for accurate tracking
+    const todayQuizzes = todayQuizzesSnapshot.docs
+      .map(doc => doc.data())
+      .sort((a, b) => {
+        const aTime = a.completed_at?.toDate?.() || a.completed_at || new Date(0);
+        const bTime = b.completed_at?.toDate?.() || b.completed_at || new Date(0);
+        return bTime - aTime; // Descending (most recent first)
+      });
 
     // Calculate today's stats with proper validation
     const accuracySum = todayQuizzes.reduce((sum, q) => {
       const acc = typeof q.accuracy === 'number' && !isNaN(q.accuracy) ? q.accuracy : 0;
       return sum + acc;
     }, 0);
+
+    // Get most recent quiz accuracy (for personalized messages)
+    const lastQuizAccuracy = todayQuizzes.length > 0 && typeof todayQuizzes[0].accuracy === 'number'
+      ? todayQuizzes[0].accuracy
+      : null;
+
+    // Get previous quiz accuracy (for improvement detection)
+    const previousQuizAccuracy = todayQuizzes.length > 1 && typeof todayQuizzes[1].accuracy === 'number'
+      ? todayQuizzes[1].accuracy
+      : null;
 
     const todayStats = {
       quizzes_completed: todayQuizzes.length,
@@ -1542,6 +1559,8 @@ router.get('/summary', authenticateUser, async (req, res, next) => {
         return sum + count;
       }, 0),
       accuracy: todayQuizzes.length > 0 ? accuracySum / todayQuizzes.length : 0,
+      last_quiz_accuracy: lastQuizAccuracy,
+      previous_quiz_accuracy: previousQuizAccuracy,
       time_spent_minutes: todayQuizzes.reduce((sum, q) => {
         const time = typeof q.total_time_seconds === 'number' && !isNaN(q.total_time_seconds)
           ? q.total_time_seconds
