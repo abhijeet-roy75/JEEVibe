@@ -13,6 +13,7 @@
 const { db, admin } = require('../config/firebase');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
+const { getNowIST, toIST, formatDateIST, getStartOfDayIST, getEndOfDayIST, getDayOfWeekIST } = require('../utils/dateUtils');
 
 // ============================================================================
 // STREAK CALCULATION
@@ -32,11 +33,12 @@ async function updateStreak(userId) {
       return await streakRef.get();
     });
     
-    const today = new Date();
-    const todayStr = formatDate(today);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = formatDate(yesterday);
+    // Use IST for date calculations (for Indian students)
+    const todayIST = getNowIST();
+    const todayStr = formatDateIST(todayIST);
+    const yesterdayIST = new Date(todayIST);
+    yesterdayIST.setDate(yesterdayIST.getDate() - 1);
+    const yesterdayStr = formatDateIST(yesterdayIST);
     
     let streakData = streakDoc.exists ? streakDoc.data() : {
       student_id: userId,
@@ -67,11 +69,9 @@ async function updateStreak(userId) {
       return streakData;
     }
     
-    // Get today's quiz data
-    const todayStart = new Date(today);
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(today);
-    todayEnd.setHours(23, 59, 59, 999);
+    // Get today's quiz data (using IST day boundaries)
+    const todayStart = getStartOfDayIST(new Date());
+    const todayEnd = getEndOfDayIST(new Date());
     
     const todayQuizzesRef = db.collection('daily_quizzes')
       .doc(userId)
@@ -128,8 +128,9 @@ async function updateStreak(userId) {
       }
     });
     
-    // Update day of week pattern
-    const dayOfWeek = getDayOfWeek(today);
+    // Update day of week pattern (using IST)
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayOfWeek = dayNames[getDayOfWeekIST(new Date())];
     const dayPattern = { ...streakData.day_of_week_pattern };
     
     if (!dayPattern[dayOfWeek]) {

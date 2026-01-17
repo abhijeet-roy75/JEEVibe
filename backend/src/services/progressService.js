@@ -14,6 +14,7 @@
 const { db, admin } = require('../config/firebase');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
+const { toIST, formatDateIST } = require('../utils/dateUtils');
 
 // ============================================================================
 // CHAPTER PROGRESS
@@ -189,7 +190,9 @@ async function getAccuracyTrends(userId, days = 30) {
 
       if (!completedAt) return;
 
-      const dateKey = completedAt.toISOString().split('T')[0]; // YYYY-MM-DD
+      // Convert to IST for correct date grouping for Indian students
+      const completedAtIST = toIST(completedAt);
+      const dateKey = formatDateIST(completedAtIST); // YYYY-MM-DD in IST
 
       if (!dailyData[dateKey]) {
         dailyData[dateKey] = {

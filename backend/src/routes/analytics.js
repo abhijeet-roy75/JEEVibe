@@ -20,6 +20,7 @@ const thetaSnapshotService = require('../services/thetaSnapshotService');
 const progressService = require('../services/progressService');
 const { getAnalyticsAccess } = require('../middleware/featureGate');
 const { getEffectiveTier } = require('../services/subscriptionService');
+const { getLastNDaysIST } = require('../utils/dateUtils');
 
 // ============================================================================
 // ANALYTICS OVERVIEW
@@ -398,7 +399,7 @@ router.get('/weekly-activity', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
 
-    // Get activity trends for the last 7 days
+    // Get activity trends for the last 7 days (uses IST for date keys)
     const trends = await progressService.getAccuracyTrends(userId, 7);
 
     // Create a map of existing data
@@ -407,35 +408,26 @@ router.get('/weekly-activity', authenticateUser, async (req, res, next) => {
       dataByDate[day.date] = day;
     });
 
-    // Generate all 7 days (including days with no activity)
-    const weekData = [];
-    const today = new Date();
-
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
-
-      const dayData = dataByDate[dateKey] || {
-        date: dateKey,
-        quizzes: 0,
-        questions: 0,
-        correct: 0,
-        accuracy: 0
+    // Generate all 7 days in IST (including days with no activity)
+    const last7Days = getLastNDaysIST(7);
+    const weekData = last7Days.map(day => {
+      const existing = dataByDate[day.date];
+      return {
+        date: day.date,
+        dayName: day.dayName,
+        isToday: day.isToday,
+        quizzes: existing?.quizzes || 0,
+        questions: existing?.questions || 0,
+        correct: existing?.correct || 0,
+        accuracy: existing?.accuracy || 0
       };
-
-      // Add day name for display
-      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      dayData.dayName = dayNames[date.getDay()];
-      dayData.isToday = i === 0;
-
-      weekData.push(dayData);
-    }
+    });
 
     logger.info('Weekly activity retrieved', {
       requestId: req.id,
       userId,
-      daysWithActivity: trends.length
+      daysWithActivity: trends.length,
+      timezone: 'IST'
     });
 
     res.json({
