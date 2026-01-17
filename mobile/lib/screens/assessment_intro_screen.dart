@@ -635,23 +635,33 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             const SizedBox(height: 20),
             // Check if limit reached (not unlimited and remaining <= 0)
             if (isUnlocked && quizUsage != null && !quizUsage.isUnlimited && quizUsage.remaining <= 0) ...[
-              // Replace button with upgrade CTA when limit reached
-              GradientButton(
-                text: 'Upgrade for More Quizzes',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PaywallScreen(
-                        featureName: 'Daily Quiz',
-                        usageType: UsageType.dailyQuiz,
-                        limitReachedMessage: "You've used your free daily Daily Quiz. Upgrade for more!",
+              // Replace button with upgrade CTA when limit reached (outlined style)
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PaywallScreen(
+                          featureName: 'Daily Quiz',
+                          usageType: UsageType.dailyQuiz,
+                          limitReachedMessage: "You've used your free daily Daily Quiz. Upgrade for more!",
+                        ),
                       ),
+                    );
+                  },
+                  icon: const Icon(Icons.workspace_premium_rounded, size: 20),
+                  label: const Text('Upgrade for More Quizzes'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primaryPurple,
+                    side: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  );
-                },
-                size: GradientButtonSize.large,
-                leadingIcon: Icons.workspace_premium_rounded,
+                  ),
+                ),
               ),
             ] else ...[
               // Normal button
@@ -816,23 +826,33 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     final isLimitReached = appState.snapLimit != -1 && appState.snapsRemaining <= 0;
 
                     if (isLimitReached) {
-                      // Show upgrade button when limit reached
-                      return GradientButton(
-                        text: 'Upgrade for More Snaps',
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const PaywallScreen(
-                                featureName: 'Snap & Solve',
-                                usageType: UsageType.snapSolve,
-                                limitReachedMessage: "You've used all your daily snaps. Upgrade for more!",
+                      // Show upgrade button when limit reached (outlined style)
+                      return SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PaywallScreen(
+                                  featureName: 'Snap & Solve',
+                                  usageType: UsageType.snapSolve,
+                                  limitReachedMessage: "You've used all your daily snaps. Upgrade for more!",
+                                ),
                               ),
+                            );
+                          },
+                          icon: const Icon(Icons.workspace_premium_rounded, size: 20),
+                          label: const Text('Upgrade for More Snaps'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primaryPurple,
+                            side: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          );
-                        },
-                        size: GradientButtonSize.large,
-                        leadingIcon: Icons.workspace_premium_rounded,
+                          ),
+                        ),
                       );
                     }
 

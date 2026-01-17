@@ -164,37 +164,16 @@ class DailyQuizCardWidget extends StatelessWidget {
             width: double.infinity,
             height: 56,
             child: (quizzesRemaining != null && quizzesRemaining == 0 && !hasActiveQuiz)
-                // Show upgrade button when limit reached
-                ? Container(
-                    decoration: BoxDecoration(
-                      gradient: AppColors.ctaGradient,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: onUpgrade,
+                // Show upgrade button when limit reached (outlined style)
+                ? OutlinedButton.icon(
+                    onPressed: onUpgrade,
+                    icon: const Icon(Icons.workspace_premium_rounded, size: 20),
+                    label: const Text('Upgrade for More Quizzes'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primaryPurple,
+                      side: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        child: Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.workspace_premium_rounded,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Upgrade for More Quizzes',
-                                style: AppTextStyles.labelMedium.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
                     ),
                   )
