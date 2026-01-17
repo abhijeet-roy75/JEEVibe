@@ -178,8 +178,9 @@ async function calculateFocusAreas(thetaByChapter, chapterMappings = null) {
     if (accuracy > 0 && accuracy <= 1) {
       accuracy = Math.round(accuracy * 100);
     }
-    const correct = data.correct || 0;
-    const total = data.total || 0;
+    // Derive correct/total from accuracy and attempts (theta_by_chapter doesn't have correct/total fields)
+    const total = attempts;
+    const correct = total > 0 ? Math.round((accuracy / 100) * total) : 0;
 
     const focusArea = {
       chapter_key: chapterKey,
