@@ -202,7 +202,8 @@ async function getAccuracyTrends(userId, days = 30) {
       }
 
       dailyData[dateKey].quizzes += 1;
-      dailyData[dateKey].questions += (quiz.questions?.length || 0);
+      // Use total_questions field, fallback to questions array length
+      dailyData[dateKey].questions += (quiz.total_questions || quiz.questions?.length || 0);
       dailyData[dateKey].correct += (quiz.score || 0);
     });
 
