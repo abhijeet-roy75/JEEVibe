@@ -542,6 +542,80 @@ async function updateSubjectAndOverallTheta(userId) {
 }
 
 // ============================================================================
+// SUBTOPIC ACCURACY TRACKING
+// ============================================================================
+
+/**
+ * Calculate subtopic accuracy updates from quiz responses
+ * Aggregates accuracy per sub-topic within each chapter
+ *
+ * @param {Object} currentSubtopicAccuracy - Current subtopic_accuracy from user doc
+ * @param {Array} responses - Array of response objects with sub_topics field
+ * @returns {Object} Updated subtopic_accuracy map
+ */
+function calculateSubtopicAccuracyUpdate(currentSubtopicAccuracy, responses) {
+  try {
+    const updatedSubtopicAccuracy = { ...currentSubtopicAccuracy };
+
+    // Group responses by chapter_key and sub_topic
+    for (const response of responses) {
+      const { chapter_key, sub_topics, is_correct } = response;
+
+      if (!chapter_key || !sub_topics || !Array.isArray(sub_topics)) {
+        continue;
+      }
+
+      // Initialize chapter entry if needed
+      if (!updatedSubtopicAccuracy[chapter_key]) {
+        updatedSubtopicAccuracy[chapter_key] = {};
+      }
+
+      // Update each sub-topic this question covers
+      for (const subtopic of sub_topics) {
+        if (!subtopic || typeof subtopic !== 'string') {
+          continue;
+        }
+
+        const subtopicKey = subtopic.trim();
+        if (!subtopicKey) {
+          continue;
+        }
+
+        // Initialize subtopic entry if needed
+        if (!updatedSubtopicAccuracy[chapter_key][subtopicKey]) {
+          updatedSubtopicAccuracy[chapter_key][subtopicKey] = {
+            correct: 0,
+            total: 0,
+            accuracy: 0
+          };
+        }
+
+        // Update counts
+        const subtopicData = updatedSubtopicAccuracy[chapter_key][subtopicKey];
+        subtopicData.total += 1;
+        if (is_correct) {
+          subtopicData.correct += 1;
+        }
+
+        // Recalculate accuracy
+        subtopicData.accuracy = subtopicData.total > 0
+          ? Math.round((subtopicData.correct / subtopicData.total) * 100)
+          : 0;
+      }
+    }
+
+    return updatedSubtopicAccuracy;
+  } catch (error) {
+    logger.error('Error calculating subtopic accuracy update', {
+      error: error.message,
+      stack: error.stack
+    });
+    // Return current data unchanged on error
+    return currentSubtopicAccuracy || {};
+  }
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -549,6 +623,7 @@ module.exports = {
   // Pure calculation functions (for atomic transactions)
   calculateChapterThetaUpdate,
   calculateSubjectAndOverallThetaUpdate,
+  calculateSubtopicAccuracyUpdate,
 
   // Legacy functions (with Firestore persistence)
   updateThetaAfterQuestion,

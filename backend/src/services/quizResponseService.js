@@ -387,6 +387,7 @@ async function getQuizResponses(userId, quizId) {
           is_correct: q.is_correct,
           time_taken_seconds: q.time_taken_seconds,
           chapter_key: q.chapter_key,
+          sub_topics: q.sub_topics || [], // Include sub-topics for accuracy tracking
           question_irt_params: {
             a: validatedA,
             b: validatedB,

@@ -27,6 +27,7 @@ const { submitAnswer, getQuizResponses } = require('../services/quizResponseServ
 const {
   calculateChapterThetaUpdate,
   calculateSubjectAndOverallThetaUpdate,
+  calculateSubtopicAccuracyUpdate,
   updateChapterTheta,
   updateSubjectAndOverallTheta
 } = require('../services/thetaUpdateService');
@@ -632,6 +633,17 @@ router.post('/complete', authenticateUser, validateQuizId, async (req, res, next
     }
 
     // ========================================================================
+    // PHASE 3.5: Calculate subtopic accuracy updates
+    // ========================================================================
+    const currentSubtopicAccuracy = currentUserData.subtopic_accuracy || {};
+    const updatedSubtopicAccuracy = calculateSubtopicAccuracyUpdate(currentSubtopicAccuracy, responses);
+
+    logger.info('Pre-calculated subtopic accuracy', {
+      userId,
+      chaptersWithSubtopics: Object.keys(updatedSubtopicAccuracy).length
+    });
+
+    // ========================================================================
     // PHASE 4: Execute SINGLE atomic transaction with ALL updates
     // ========================================================================
     await retryFirestoreOperation(async () => {
@@ -712,6 +724,9 @@ router.post('/complete', authenticateUser, validateQuizId, async (req, res, next
           subject_accuracy: subjectAndOverallUpdate.subject_accuracy,
           overall_theta: subjectAndOverallUpdate.overall_theta,
           overall_percentile: subjectAndOverallUpdate.overall_percentile,
+
+          // Subtopic accuracy tracking
+          subtopic_accuracy: updatedSubtopicAccuracy,
 
           // NEW: Cumulative stats (denormalized for Progress API optimization)
           'cumulative_stats.total_questions_correct': admin.firestore.FieldValue.increment(correctCount),

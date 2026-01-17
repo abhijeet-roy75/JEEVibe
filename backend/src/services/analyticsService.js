@@ -586,6 +586,7 @@ async function getSubjectMasteryDetails(userId, subject) {
     const userData = userDoc.data();
     const thetaByChapter = userData.theta_by_chapter || {};
     const thetaBySubject = userData.theta_by_subject || {};
+    const subtopicAccuracy = userData.subtopic_accuracy || {};
 
     // Normalize subject name
     const normalizedSubject = subject.toLowerCase();
@@ -625,6 +626,15 @@ async function getSubjectMasteryDetails(userId, subject) {
         const mapping = chapterMappings.get(chapterKey);
         const chapterName = mapping?.chapter || formatChapterKeyToDisplayName(chapterKey);
 
+        // Get subtopic data for this chapter
+        const chapterSubtopics = subtopicAccuracy[chapterKey] || {};
+        const subtopics = Object.entries(chapterSubtopics).map(([name, subtopicData]) => ({
+          name,
+          correct: subtopicData.correct || 0,
+          total: subtopicData.total || 0,
+          accuracy: subtopicData.accuracy || 0
+        })).sort((a, b) => a.accuracy - b.accuracy); // Sort by accuracy ascending (weakest first)
+
         chapters.push({
           chapter_key: chapterKey,
           chapter_name: chapterName,
@@ -633,7 +643,8 @@ async function getSubjectMasteryDetails(userId, subject) {
           attempts: data.attempts || 0,
           accuracy: data.accuracy || 0,
           status: getMasteryStatus(data.percentile || 0),
-          last_updated: data.last_updated
+          last_updated: data.last_updated,
+          subtopics: subtopics
         });
       }
     }
