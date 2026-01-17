@@ -76,11 +76,13 @@ jest.mock('../../../src/utils/logger', () => ({
 }));
 
 const { db } = require('../../../src/config/firebase');
-const { getEffectiveTier, getSubscriptionStatus } = require('../../../src/services/subscriptionService');
+const { getEffectiveTier, getSubscriptionStatus, clearTierCache } = require('../../../src/services/subscriptionService');
 
 describe('subscriptionService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Clear tier cache before each test to prevent test interference
+    clearTierCache();
     // Reset mock user data
     mockUserData.subscription = {};
     mockUserData.trial = null;
@@ -116,7 +118,7 @@ describe('subscriptionService', () => {
           },
         };
 
-        const result = await getEffectiveTier('test-user');
+        const result = await getEffectiveTier('test-user', { skipCache: true });
 
         // Should fall through to default free tier
         expect(result.tier).toBe('free');
@@ -133,7 +135,7 @@ describe('subscriptionService', () => {
           },
         };
 
-        const result = await getEffectiveTier('test-user');
+        const result = await getEffectiveTier('test-user', { skipCache: true });
 
         expect(result.tier).toBe('free');
         expect(result.source).toBe('default');
@@ -149,7 +151,7 @@ describe('subscriptionService', () => {
           },
         };
 
-        const result = await getEffectiveTier('test-user');
+        const result = await getEffectiveTier('test-user', { skipCache: true });
 
         expect(result.tier).toBe('free');
         expect(result.source).toBe('default');
@@ -164,7 +166,7 @@ describe('subscriptionService', () => {
           },
         };
 
-        const result = await getEffectiveTier('test-user');
+        const result = await getEffectiveTier('test-user', { skipCache: true });
 
         // Should fall through due to invalid date
         expect(result.tier).toBe('free');
@@ -204,7 +206,7 @@ describe('subscriptionService', () => {
           })),
         });
 
-        const result = await getEffectiveTier('test-user');
+        const result = await getEffectiveTier('test-user', { skipCache: true });
 
         expect(result.tier).toBe('pro');
         expect(result.source).toBe('subscription');
@@ -218,7 +220,7 @@ describe('subscriptionService', () => {
           ends_at: { toDate: () => futureDate },
         };
 
-        const result = await getEffectiveTier('test-user');
+        const result = await getEffectiveTier('test-user', { skipCache: true });
 
         expect(result.tier).toBe('pro');
         expect(result.source).toBe('trial');
@@ -230,7 +232,7 @@ describe('subscriptionService', () => {
           ends_at: { toDate: () => pastDate },
         };
 
-        const result = await getEffectiveTier('test-user');
+        const result = await getEffectiveTier('test-user', { skipCache: true });
 
         expect(result.tier).toBe('free');
         expect(result.source).toBe('default');
@@ -242,7 +244,7 @@ describe('subscriptionService', () => {
         mockUserData.subscription = {};
         mockUserData.trial = null;
 
-        const result = await getEffectiveTier('test-user');
+        const result = await getEffectiveTier('test-user', { skipCache: true });
 
         expect(result.tier).toBe('free');
         expect(result.source).toBe('default');
@@ -258,7 +260,7 @@ describe('subscriptionService', () => {
           })),
         });
 
-        const result = await getEffectiveTier('non-existent-user');
+        const result = await getEffectiveTier('non-existent-user', { skipCache: true });
 
         expect(result.tier).toBe('free');
         expect(result.source).toBe('default');
@@ -271,7 +273,7 @@ describe('subscriptionService', () => {
           throw new Error('Database error');
         });
 
-        const result = await getEffectiveTier('test-user');
+        const result = await getEffectiveTier('test-user', { skipCache: true });
 
         expect(result.tier).toBe('free');
         expect(result.source).toBe('default');
@@ -283,6 +285,8 @@ describe('subscriptionService', () => {
   describe('getSubscriptionStatus', () => {
     test('returns complete subscription status with limits and features', async () => {
       mockUserData.subscription = {};
+      // Clear cache to ensure fresh fetch
+      clearTierCache();
 
       const result = await getSubscriptionStatus('test-user');
 
