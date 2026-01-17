@@ -128,8 +128,37 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             if (result.success && result.data != null) {
               assessmentData = result.data;
 
-              // Sync local status with backend - if backend has data, mark as completed
-              if (status != 'completed') {
+              // Check if assessment status is 'processing'
+              final assessmentStatus = assessmentData?.assessment['status'];
+              
+              // Check if we have actual assessment results (questions were answered)
+              // A completed assessment should have at least some questions answered
+              final hasActualResults = assessmentData != null && 
+                  ((assessmentData.subjectAccuracy['physics']?['total'] ?? 0) > 0 ||
+                   (assessmentData.subjectAccuracy['chemistry']?['total'] ?? 0) > 0 ||
+                   (assessmentData.subjectAccuracy['mathematics']?['total'] ?? 0) > 0);
+
+              // If status is already completed and we have backend data, preserve it
+              // This ensures cards remain visible for users who have completed assessments
+              if (status == 'completed') {
+                // Keep status as completed if we have any backend data
+                // Only reset if backend explicitly says it's processing with no results
+                if (assessmentStatus == 'processing' && !hasActualResults) {
+                  debugPrint('Assessment is still processing, resetting local status to in_progress');
+                  await storageService.setAssessmentStatus('in_progress');
+                  status = 'in_progress';
+                } else {
+                  // Preserve completed status - user has already completed assessment
+                  debugPrint('Preserving completed status - user has completed assessment');
+                }
+              }
+              // Only sync to completed if:
+              // 1. Status is not already completed
+              // 2. Assessment status is not 'processing'
+              // 3. We have actual results (questions were answered)
+              else if (status != 'completed' && 
+                       assessmentStatus != 'processing' && 
+                       hasActualResults) {
                 debugPrint('Assessment data found in backend, syncing local status to completed');
                 await storageService.setAssessmentStatus('completed');
                 status = 'completed';
@@ -140,6 +169,15 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               debugPrint('Physics: ${assessmentData?.subjectAccuracy['physics']}');
               debugPrint('Chemistry: ${assessmentData?.subjectAccuracy['chemistry']}');
               debugPrint('Mathematics: ${assessmentData?.subjectAccuracy['mathematics']}');
+            } else if (result.success == false) {
+              // Only reset if we get a 404 or explicit error AND status is completed
+              // This handles the case where local storage has stale data for a new user
+              // But don't reset if status is already 'not_started' or 'in_progress'
+              if (status == 'completed') {
+                debugPrint('No assessment data in backend, but keeping local status as completed (may be offline or data not yet synced)');
+                // Don't reset - user may have completed assessment but backend hasn't synced yet
+                // Or they may be offline. Only reset if we're absolutely certain.
+              }
             }
           }
         } catch (e) {
@@ -308,18 +346,15 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     const SizedBox(height: 16),
                     // Daily Adaptive Quiz Card (Locked until assessment complete)
                     _buildDailyPracticeCard(),
-                    // Focus Areas card (always show after Daily Practice if analytics loaded)
-                    if (_isAssessmentCompleted && _analyticsOverview != null) ...[
-                      const SizedBox(height: 16),
-                      _buildFocusAreasCard(),
-                    ],
+                    // Focus Areas card (always show)
+                    const SizedBox(height: 16),
+                    _buildFocusAreasCard(),
                     const SizedBox(height: 24),
                     // Snap & Solve Card
                     _buildSnapSolveCard(),
                     const SizedBox(height: 24),
-                    // Journey Card (only show when assessment is completed)
-                    if (_isAssessmentCompleted)
-                      _buildJourneyCard(),
+                    // Journey Card (always visible)
+                    _buildJourneyCard(),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -670,7 +705,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 ),
               ),
             ] else ...[
-              // Normal button
+              // Normal button - disabled if assessment not completed
               GradientButton(
                 text: 'Start Quiz',
                 onPressed: isUnlocked
@@ -683,6 +718,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                         );
                       }
                     : null,
+                isDisabled: !isUnlocked, // Explicitly disable when assessment not completed
                 size: GradientButtonSize.large,
                 trailingIcon: Icons.arrow_forward,
               ),
@@ -941,18 +977,23 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    const Text('🚀', style: TextStyle(fontSize: 20)),
-                    const SizedBox(width: 8),
-                    Text(
-                      isNewJourney ? 'Your Journey Begins!' : 'Your Journey',
-                      style: AppTextStyles.headerSmall.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                Flexible(
+                  child: Row(
+                    children: [
+                      const Text('🚀', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          isNewJourney ? 'Your Journey Begins!' : 'Your Journey',
+                          style: AppTextStyles.headerSmall.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 // Share button - increased tap target
                 GestureDetector(
@@ -1531,9 +1572,21 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   }
 
   Widget _buildFocusAreasCard() {
-    final focusAreas = _analyticsOverview!.focusAreas;
     final subscriptionService = SubscriptionService();
     final hasChapterPractice = subscriptionService.isChapterPracticeEnabled;
+    
+    // Check if user has completed initial assessment and at least 1 daily quiz
+    final hasCompletedAssessment = _isAssessmentCompleted;
+    final quizzesCompleted = _analyticsOverview?.stats.quizzesCompleted ?? 0;
+    final hasCompletedAtLeastOneQuiz = quizzesCompleted > 0;
+    
+    // Show unlock message if analytics not loaded, assessment not completed, OR no quizzes completed
+    final shouldShowUnlockMessage = _analyticsOverview == null || 
+                                     !hasCompletedAssessment || 
+                                     !hasCompletedAtLeastOneQuiz;
+    
+    // Get focus areas (empty list if analytics not loaded)
+    final focusAreas = _analyticsOverview?.focusAreas ?? [];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1571,8 +1624,21 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            // Show upgrade prompt if chapter practice not enabled (FREE tier)
-            if (!hasChapterPractice)
+            // Show unlock message if assessment not completed OR no quizzes completed
+            if (shouldShowUnlockMessage)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  '🔒 Complete Daily Adaptive Quiz to unlock focus area',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              )
+            // Otherwise show tier-based logic (only if assessment completed AND at least 1 quiz)
+            else if (!hasChapterPractice)
               _buildFocusAreasUpgradeContent()
             else if (focusAreas.isNotEmpty)
               // Focus areas list with individual Practise links
