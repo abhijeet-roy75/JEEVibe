@@ -170,6 +170,11 @@ async function calculateFocusAreas(thetaByChapter, limit = 3, chapterMappings = 
     const mapping = chapterMappings.get(chapterKey);
     const chapterName = mapping?.chapter || formatChapterKeyToDisplayName(chapterKey);
 
+    // Get accuracy data from chapter
+    const accuracy = data.accuracy || 0;
+    const correct = data.correct || 0;
+    const total = data.total || 0;
+
     focusAreas.push({
       chapter_key: chapterKey,
       chapter_name: chapterName,
@@ -177,6 +182,9 @@ async function calculateFocusAreas(thetaByChapter, limit = 3, chapterMappings = 
       subject_name: getSubjectDisplayName(subject),
       percentile: percentile,
       attempts: attempts,
+      accuracy: accuracy,
+      correct: correct,
+      total: total,
       reason: reason,
       priority: priority,
       status: getMasteryStatus(percentile)
