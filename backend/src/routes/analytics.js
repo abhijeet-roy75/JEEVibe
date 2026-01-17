@@ -17,6 +17,7 @@ const { db } = require('../config/firebase');
 
 const analyticsService = require('../services/analyticsService');
 const thetaSnapshotService = require('../services/thetaSnapshotService');
+const progressService = require('../services/progressService');
 const { getAnalyticsAccess } = require('../middleware/featureGate');
 const { getEffectiveTier } = require('../services/subscriptionService');
 
@@ -373,6 +374,76 @@ router.get('/all-chapters', authenticateUser, async (req, res, next) => {
             status: maths.status
           }
         }
+      },
+      requestId: req.id
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================================================
+// WEEKLY ACTIVITY
+// ============================================================================
+
+/**
+ * GET /api/analytics/weekly-activity
+ *
+ * Get daily questions answered for the current week (7 days).
+ * Returns data for each day including days with no activity (0 questions).
+ *
+ * Authentication: Required
+ */
+router.get('/weekly-activity', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+
+    // Get activity trends for the last 7 days
+    const trends = await progressService.getAccuracyTrends(userId, 7);
+
+    // Create a map of existing data
+    const dataByDate = {};
+    trends.forEach(day => {
+      dataByDate[day.date] = day;
+    });
+
+    // Generate all 7 days (including days with no activity)
+    const weekData = [];
+    const today = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+      const dayData = dataByDate[dateKey] || {
+        date: dateKey,
+        quizzes: 0,
+        questions: 0,
+        correct: 0,
+        accuracy: 0
+      };
+
+      // Add day name for display
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      dayData.dayName = dayNames[date.getDay()];
+      dayData.isToday = i === 0;
+
+      weekData.push(dayData);
+    }
+
+    logger.info('Weekly activity retrieved', {
+      requestId: req.id,
+      userId,
+      daysWithActivity: trends.length
+    });
+
+    res.json({
+      success: true,
+      data: {
+        week: weekData,
+        total_questions: weekData.reduce((sum, d) => sum + d.questions, 0),
+        total_quizzes: weekData.reduce((sum, d) => sum + d.quizzes, 0)
       },
       requestId: req.id
     });
