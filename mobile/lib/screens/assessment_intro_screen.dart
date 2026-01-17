@@ -1381,7 +1381,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     ],
                   ),
                 ),
-                // Analytics link with PRO badge
+                // Analytics link
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -1394,33 +1394,6 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryPurple.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.star,
-                              color: AppColors.primaryPurple,
-                              size: 10,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              'PRO',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.primaryPurple,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 9,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 6),
                       Text(
                         'Analytics',
                         style: AppTextStyles.labelSmall.copyWith(
