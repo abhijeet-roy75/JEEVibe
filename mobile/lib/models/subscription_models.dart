@@ -31,6 +31,7 @@ class TierLimits {
   final int solutionHistoryDays;
   final bool aiTutorEnabled;
   final int aiTutorMessagesDaily;
+  final bool chapterPracticeEnabled;
   final int chapterPracticePerChapter;
   final int mockTestsMonthly;
   final int pyqYearsAccess;
@@ -43,6 +44,7 @@ class TierLimits {
     required this.solutionHistoryDays,
     required this.aiTutorEnabled,
     required this.aiTutorMessagesDaily,
+    required this.chapterPracticeEnabled,
     required this.chapterPracticePerChapter,
     required this.mockTestsMonthly,
     required this.pyqYearsAccess,
@@ -57,7 +59,8 @@ class TierLimits {
       solutionHistoryDays: json['solution_history_days'] ?? 7,
       aiTutorEnabled: json['ai_tutor_enabled'] ?? false,
       aiTutorMessagesDaily: json['ai_tutor_messages_daily'] ?? 0,
-      chapterPracticePerChapter: json['chapter_practice_per_chapter'] ?? 5,
+      chapterPracticeEnabled: json['chapter_practice_enabled'] ?? false,
+      chapterPracticePerChapter: json['chapter_practice_per_chapter'] ?? 0,
       mockTestsMonthly: json['mock_tests_monthly'] ?? 1,
       pyqYearsAccess: json['pyq_years_access'] ?? 2,
       offlineEnabled: json['offline_enabled'] ?? false,

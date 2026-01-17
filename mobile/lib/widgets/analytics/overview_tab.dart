@@ -12,14 +12,17 @@ import '../../screens/ai_tutor_chat_screen.dart';
 import '../../services/subscription_service.dart';
 import '../priya_avatar.dart';
 import 'stat_card.dart';
+import 'weekly_activity_chart.dart';
 
 class OverviewTab extends StatelessWidget {
   final AnalyticsOverview overview;
+  final WeeklyActivity? weeklyActivity;
   final bool isBasicView; // true for FREE tier, false for PRO/ULTRA
 
   const OverviewTab({
     super.key,
     required this.overview,
+    this.weeklyActivity,
     this.isBasicView = false,
   });
 
@@ -30,25 +33,23 @@ class OverviewTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Priya Ma'am card at top per design
-          _buildPriyaMaamCard(context),
-          const SizedBox(height: 20),
-          // Stats grid (Streak, Qs Done, Mastered) - order per design
+          // Stats grid (Streak, Qs Done, Accuracy)
           _buildStatsGrid(),
           const SizedBox(height: 20),
           // Your Progress section (same as home page)
           _buildYourProgressCard(),
           const SizedBox(height: 20),
-          // Focus Areas section (only for full analytics - PRO/ULTRA)
-          if (!isBasicView && overview.focusAreas.isNotEmpty) ...[
-            _buildFocusAreasCard(),
+          // Weekly Activity chart
+          if (weeklyActivity != null) ...[
+            _buildWeeklyActivityCard(),
             const SizedBox(height: 20),
           ],
-          // Upgrade prompt for basic view
-          if (isBasicView) ...[
-            _buildUpgradePrompt(context),
-            const SizedBox(height: 20),
-          ],
+          // Focus Areas section (show for all tiers, upgrade prompt inside for FREE)
+          _buildFocusAreasCard(context),
+          const SizedBox(height: 20),
+          // Priya Ma'am motivation card (after Focus Areas)
+          _buildPriyaMaamCard(context),
+          const SizedBox(height: 20),
           // Back to Dashboard button
           _buildBackToDashboardButton(context),
           // Bottom padding to account for Android navigation bar
@@ -98,7 +99,7 @@ class OverviewTab extends StatelessWidget {
         // Overall Accuracy - green background
         Expanded(
           child: StatCard(
-            icon: Icons.percent,
+            icon: Icons.track_changes,
             iconColor: AppColors.successGreen,
             iconBackgroundColor: AppColors.successGreen,
             value: '$overallAccuracy%',
@@ -261,7 +262,7 @@ class OverviewTab extends StatelessWidget {
     );
   }
 
-  Widget _buildFocusAreasCard() {
+  Widget _buildWeeklyActivityCard() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -269,9 +270,68 @@ class OverviewTab extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              const Icon(
+                Icons.bar_chart_rounded,
+                size: 24,
+                color: AppColors.primaryPurple,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'This Week',
+                style: AppTextStyles.headerSmall.copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${weeklyActivity!.totalQuestions} Qs',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textTertiary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Bar chart
+          WeeklyActivityChart(
+            activity: weeklyActivity!,
+            height: 140,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFocusAreasCard(BuildContext context) {
+    final subscriptionService = SubscriptionService();
+    final hasChapterPractice = subscriptionService.isChapterPracticeEnabled;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+            spreadRadius: 1,
           ),
         ],
       ),
@@ -280,48 +340,221 @@ class OverviewTab extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.gps_fixed, color: AppColors.primaryPurple, size: 20),
+              const Icon(Icons.gps_fixed, color: AppColors.primaryPurple, size: 24),
               const SizedBox(width: 8),
               Text(
                 'Focus Areas',
                 style: AppTextStyles.headerSmall.copyWith(
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          // Chips/capsules layout per design
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: overview.focusAreas.map((area) => _buildFocusAreaChip(area)).toList(),
-          ),
+          const SizedBox(height: 12),
+          // Show upgrade prompt if chapter practice not enabled (FREE tier)
+          if (!hasChapterPractice)
+            _buildFocusAreasUpgradeContent(context)
+          else if (overview.focusAreas.isNotEmpty)
+            // Compact list of focus chapters
+            ...overview.focusAreas.asMap().entries.map((entry) {
+              final index = entry.key;
+              final area = entry.value;
+              final isLast = index == overview.focusAreas.length - 1;
+              return _buildFocusAreaRow(area, isLast);
+            })
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                'Great job! No weak areas detected yet.',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textTertiary,
+                  fontSize: 13,
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildFocusAreaChip(FocusArea area) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceGrey,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        area.chapterName,
-        style: AppTextStyles.bodySmall.copyWith(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w500,
+  Widget _buildFocusAreasUpgradeContent(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          'Unlock detailed chapter-wise analysis to identify your weak areas and improve faster.',
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 13,
+            height: 1.4,
+          ),
         ),
-      ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PaywallScreen(
+                    featureName: 'Focus Areas',
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.workspace_premium_rounded, size: 18),
+            label: const Text('Upgrade to Pro'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primaryPurple,
+              side: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.5)),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
+  }
+
+  Widget _buildFocusAreaRow(FocusArea area, bool isLast) {
+    // Get subject icon and color
+    IconData subjectIcon;
+    Color subjectColor;
+    switch (area.subject.toLowerCase()) {
+      case 'physics':
+        subjectIcon = Icons.bolt;
+        subjectColor = AppColors.subjectPhysics;
+        break;
+      case 'chemistry':
+        subjectIcon = Icons.science;
+        subjectColor = AppColors.subjectChemistry;
+        break;
+      case 'mathematics':
+      case 'maths':
+        subjectIcon = Icons.functions;
+        subjectColor = AppColors.subjectMathematics;
+        break;
+      default:
+        subjectIcon = Icons.book;
+        subjectColor = AppColors.textMedium;
+    }
+
+    // Format display - show correct/total like mastery tab
+    final correct = area.correct;
+    final total = area.total;
+    final accuracyColor = _getFocusAreaColor(area.accuracy);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              // Subject icon
+              Icon(subjectIcon, size: 16, color: subjectColor),
+              const SizedBox(width: 8),
+              // Chapter name
+              Expanded(
+                child: Text(
+                  area.chapterName,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Score badge (correct/total)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: accuracyColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$correct/$total',
+                  style: AppTextStyles.caption.copyWith(
+                    color: accuracyColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!isLast)
+          const Divider(
+            height: 1,
+            color: AppColors.borderLight,
+          ),
+      ],
+    );
+  }
+
+  Color _getFocusAreaColor(double accuracy) {
+    if (accuracy < 50) {
+      return AppColors.performanceOrange;
+    } else if (accuracy < 70) {
+      return AppColors.warningAmber;
+    } else {
+      return AppColors.subjectMathematics;
+    }
+  }
+
+  String _generateMotivationalMessage() {
+    // Calculate overall accuracy
+    final subjects = overview.orderedSubjectProgress;
+    int totalCorrect = 0;
+    int totalQuestions = 0;
+    for (final subject in subjects) {
+      totalCorrect += subject.correct;
+      totalQuestions += subject.total;
+    }
+    final overallAccuracy = totalQuestions > 0
+        ? ((totalCorrect / totalQuestions) * 100).round()
+        : 0;
+
+    // Get focus area info
+    final focusAreas = overview.focusAreas;
+    final hasFocusAreas = focusAreas.isNotEmpty;
+    final topFocusChapter = hasFocusAreas ? focusAreas.first.chapterName : '';
+
+    // Generate contextual message
+    if (totalQuestions == 0) {
+      return 'Start practicing to see your accuracy! Every question you solve helps you improve.';
+    }
+
+    if (overallAccuracy >= 80) {
+      if (hasFocusAreas) {
+        return 'Great accuracy at $overallAccuracy%! Focus on $topFocusChapter to strengthen your weaker areas.';
+      }
+      return 'Excellent work! Your $overallAccuracy% accuracy shows strong understanding. Keep it up!';
+    } else if (overallAccuracy >= 60) {
+      if (hasFocusAreas) {
+        return 'Good progress at $overallAccuracy%! Practice $topFocusChapter regularly to boost your score.';
+      }
+      return 'You\'re doing well at $overallAccuracy%! Consistent practice will help you reach 80%+.';
+    } else {
+      if (hasFocusAreas) {
+        return 'Your accuracy is $overallAccuracy%. Let\'s work on $topFocusChapter to build a stronger foundation.';
+      }
+      return 'Keep practicing! Every mistake is a learning opportunity. Focus on understanding concepts deeply.';
+    }
   }
 
   Widget _buildPriyaMaamCard(BuildContext context) {
     final subscriptionService = SubscriptionService();
     final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
+
+    // Generate a short motivational message based on accuracy and focus areas
+    final message = _generateMotivationalMessage();
 
     return GestureDetector(
       onTap: hasAiTutorAccess ? () {
@@ -354,7 +587,7 @@ class OverviewTab extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const PriyaAvatar(size: 48),
+                const PriyaAvatar(size: 44),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -364,10 +597,18 @@ class OverviewTab extends StatelessWidget {
                         'Priya Ma\'am',
                         style: AppTextStyles.priyaHeader.copyWith(
                           color: AppColors.primaryPurple,
+                          fontSize: 15,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      _buildFormattedMessage(overview.priyaMaamMessage),
+                      Text(
+                        message,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -375,13 +616,13 @@ class OverviewTab extends StatelessWidget {
             ),
             // "Ask Priya Ma'am" action (Ultra tier only)
             if (hasAiTutorAccess) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: AppColors.primaryPurple.withValues(alpha: 0.3),
                   ),
@@ -392,21 +633,22 @@ class OverviewTab extends StatelessWidget {
                     Icon(
                       Icons.chat_bubble_outline,
                       color: AppColors.primaryPurple,
-                      size: 18,
+                      size: 16,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     Text(
-                      'Ask Priya Ma\'am about my progress',
+                      'Ask Priya Ma\'am',
                       style: AppTextStyles.labelMedium.copyWith(
                         color: AppColors.primaryPurple,
                         fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
                     ),
                     const SizedBox(width: 4),
                     Icon(
                       Icons.arrow_forward_ios,
                       color: AppColors.primaryPurple,
-                      size: 14,
+                      size: 12,
                     ),
                   ],
                 ),
@@ -414,32 +656,6 @@ class OverviewTab extends StatelessWidget {
             ],
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildFormattedMessage(String message) {
-    // Simple formatting for **bold** text
-    final parts = message.split('**');
-    return RichText(
-      text: TextSpan(
-        style: AppTextStyles.priyaMessage,
-        children: parts.asMap().entries.map((entry) {
-          final index = entry.key;
-          final text = entry.value;
-          if (index % 2 == 1) {
-            // Odd indices are bold
-            return TextSpan(
-              text: text,
-              style: AppTextStyles.priyaMessage.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryPurple,
-              ),
-            );
-          } else {
-            return TextSpan(text: text);
-          }
-        }).toList(),
       ),
     );
   }
@@ -457,89 +673,6 @@ class OverviewTab extends StatelessWidget {
           );
         },
         size: GradientButtonSize.large,
-      ),
-    );
-  }
-
-  Widget _buildUpgradePrompt(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const PaywallScreen(
-              featureName: 'Full Analytics',
-            ),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.cardLightPurple,
-              AppColors.cardLightPink,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryPurple.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.workspace_premium_rounded,
-                    color: AppColors.primaryPurple,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Unlock Full Analytics',
-                        style: AppTextStyles.headerSmall.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'See focus areas, mastery trends & more',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  color: AppColors.primaryPurple,
-                  size: 18,
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

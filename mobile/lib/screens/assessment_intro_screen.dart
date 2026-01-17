@@ -1,5 +1,5 @@
 // Assessment Intro Screen - New Home Page/Dashboard
-// Shows Initial Assessment prompt, Daily Practice (locked), and Snap & Solve
+// Shows Initial Assessment prompt, Daily Adaptive Quiz (locked), and Snap & Solve
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -305,8 +305,13 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     ] else
                       _buildAssessmentCard(),
                     const SizedBox(height: 16),
-                    // Daily Practice Card (Locked)
+                    // Daily Adaptive Quiz Card (Locked until assessment complete)
                     _buildDailyPracticeCard(),
+                    // Focus Areas card (always show after Daily Practice if analytics loaded)
+                    if (_isAssessmentCompleted && _analyticsOverview != null) ...[
+                      const SizedBox(height: 16),
+                      _buildFocusAreasCard(),
+                    ],
                     const SizedBox(height: 24),
                     // Snap & Solve Card
                     _buildSnapSolveCard(),
@@ -594,7 +599,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Daily Practice',
+                        'Daily Adaptive Quiz',
                         style: AppTextStyles.headerSmall.copyWith(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -666,7 +671,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             ] else ...[
               // Normal button
               GradientButton(
-                text: 'Start Practice',
+                text: 'Start Quiz',
                 onPressed: isUnlocked
                     ? () {
                         Navigator.push(
@@ -747,8 +752,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                         ],
                       ),
                     ),
-                    // View History link in header
+                    // View History link in header - increased tap target
                     GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -757,23 +763,26 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                           ),
                         ).then((_) => _loadData());
                       },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'History',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.primaryPurple,
-                              fontWeight: FontWeight.w600,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'History',
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: AppColors.primaryPurple,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 12,
-                            color: AppColors.primaryPurple,
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.arrow_forward_ios,
+                              size: 12,
+                              color: AppColors.primaryPurple,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -944,9 +953,10 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     ),
                   ],
                 ),
-                // Share button
+                // Share button - increased tap target
                 GestureDetector(
                   key: shareButtonKey,
+                  behavior: HitTestBehavior.opaque,
                   onTap: () {
                     final RenderBox? box = shareButtonKey.currentContext?.findRenderObject() as RenderBox?;
                     final Rect? sharePositionOrigin = box != null
@@ -960,23 +970,26 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                       sharePositionOrigin: sharePositionOrigin,
                     );
                   },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.share_outlined,
-                        size: 16,
-                        color: AppColors.primaryPurple,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Share',
-                        style: AppTextStyles.labelSmall.copyWith(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.share_outlined,
+                          size: 16,
                           color: AppColors.primaryPurple,
-                          fontWeight: FontWeight.w600,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Text(
+                          'Share',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.primaryPurple,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -1381,8 +1394,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     ],
                   ),
                 ),
-                // Analytics link
+                // Analytics link - increased tap target
                 GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -1391,23 +1405,26 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                       ),
                     );
                   },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Analytics',
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.primaryPurple,
-                          fontWeight: FontWeight.w600,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Analytics',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.primaryPurple,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 12,
-                        color: AppColors.primaryPurple,
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 12,
+                          color: AppColors.primaryPurple,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -1510,6 +1527,202 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     }
     
     return null;
+  }
+
+  Widget _buildFocusAreasCard() {
+    final focusAreas = _analyticsOverview!.focusAreas;
+    final subscriptionService = SubscriptionService();
+    final hasChapterPractice = subscriptionService.isChapterPracticeEnabled;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                const Icon(Icons.gps_fixed, color: AppColors.primaryPurple, size: 20),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Focus Areas',
+                    style: AppTextStyles.headerSmall.copyWith(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Show upgrade prompt if chapter practice not enabled (FREE tier)
+            if (!hasChapterPractice)
+              _buildFocusAreasUpgradeContent()
+            else if (focusAreas.isNotEmpty)
+              // Focus areas list with individual Practise links
+              ...focusAreas.asMap().entries.map((entry) {
+                final index = entry.key;
+                final area = entry.value;
+                final isLast = index == focusAreas.length - 1;
+                return _buildFocusAreaRow(area, isLast);
+              })
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Great job! No weak areas detected yet.',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textTertiary,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFocusAreasUpgradeContent() {
+    return Column(
+      children: [
+        Text(
+          'Unlock detailed chapter-wise analysis to identify your weak areas and improve faster.',
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 13,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PaywallScreen(
+                    featureName: 'Focus Areas',
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.workspace_premium_rounded, size: 18),
+            label: const Text('Upgrade to Pro'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primaryPurple,
+              side: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.5)),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFocusAreaRow(FocusArea area, bool isLast) {
+    // Get subject icon and color
+    IconData subjectIcon;
+    Color subjectColor;
+    switch (area.subject.toLowerCase()) {
+      case 'physics':
+        subjectIcon = Icons.bolt;
+        subjectColor = AppColors.subjectPhysics;
+        break;
+      case 'chemistry':
+        subjectIcon = Icons.science;
+        subjectColor = AppColors.subjectChemistry;
+        break;
+      case 'mathematics':
+      case 'maths':
+        subjectIcon = Icons.functions;
+        subjectColor = AppColors.subjectMathematics;
+        break;
+      default:
+        subjectIcon = Icons.book;
+        subjectColor = AppColors.textMedium;
+    }
+
+    // Get accuracy color for score badge
+    final accuracyColor = _getFocusAreaColor(area.accuracy);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              // Subject icon
+              Icon(subjectIcon, size: 16, color: subjectColor),
+              const SizedBox(width: 8),
+              // Chapter name
+              Expanded(
+                child: Text(
+                  area.chapterName,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Score badge (correct/total) - same as Overview tab
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: accuracyColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${area.correct}/${area.total}',
+                  style: AppTextStyles.caption.copyWith(
+                    color: accuracyColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!isLast)
+          const Divider(
+            height: 1,
+            color: AppColors.borderLight,
+          ),
+      ],
+    );
+  }
+
+  Color _getFocusAreaColor(double accuracy) {
+    if (accuracy < 50) {
+      return AppColors.performanceOrange;
+    } else if (accuracy < 70) {
+      return AppColors.warningAmber;
+    } else {
+      return AppColors.subjectMathematics;
+    }
   }
 
   Widget _buildFloatingSnapButton() {

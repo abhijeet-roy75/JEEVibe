@@ -432,6 +432,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
             tierBgColor,
           ),
           _buildFeatureRow(
+            Icons.gps_fixed_outlined,
+            'Chapter Practice',
+            'No',
+            'Yes',
+            tierColor,
+            tierBgColor,
+          ),
+          _buildFeatureRow(
             Icons.history_outlined,
             'Solution History',
             '7 days',

@@ -220,6 +220,11 @@ class SubscriptionService extends ChangeNotifier {
     return _cachedStatus?.limits.aiTutorEnabled ?? false;
   }
 
+  /// Check if chapter practice is enabled (Pro/Ultra only)
+  bool get isChapterPracticeEnabled {
+    return _cachedStatus?.limits.chapterPracticeEnabled ?? false;
+  }
+
   /// Check if offline mode is enabled
   bool get isOfflineEnabled {
     return _cachedStatus?.limits.offlineEnabled ?? false;
