@@ -230,6 +230,130 @@ async function getAccuracyTrends(userId, days = 30) {
 }
 
 // ============================================================================
+// SUBJECT ACCURACY TRENDS
+// ============================================================================
+
+/**
+ * Get subject-level accuracy trends over time
+ *
+ * @param {string} userId
+ * @param {string} subject - Subject to filter by (physics, chemistry, maths/mathematics)
+ * @param {number} days - Number of days to look back (default: 30)
+ * @returns {Promise<Array>} Array of daily accuracy data for the subject
+ */
+async function getSubjectAccuracyTrends(userId, subject, days = 30) {
+  try {
+    // Normalize subject name
+    const normalizedSubject = subject.toLowerCase();
+    const subjectPrefix = normalizedSubject === 'mathematics' ? 'maths' : normalizedSubject;
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    const cutoffTimestamp = admin.firestore.Timestamp.fromDate(cutoffDate);
+
+    // Get completed quizzes
+    const quizzesRef = db.collection('daily_quizzes')
+      .doc(userId)
+      .collection('quizzes')
+      .where('status', '==', 'completed')
+      .where('completed_at', '>=', cutoffTimestamp)
+      .orderBy('completed_at', 'desc');
+
+    const quizzesSnapshot = await retryFirestoreOperation(async () => {
+      return await quizzesRef.get();
+    });
+
+    const dailyData = {};
+
+    // Process each quiz
+    for (const quizDoc of quizzesSnapshot.docs) {
+      const quiz = quizDoc.data();
+      const completedAt = quiz.completed_at?.toDate();
+
+      if (!completedAt) continue;
+
+      // Convert to IST for correct date grouping for Indian students
+      const completedAtIST = toIST(completedAt);
+      const dateKey = formatDateIST(completedAtIST); // YYYY-MM-DD in IST
+
+      // Get questions from subcollection to get subject-level data
+      const questionsSnapshot = await retryFirestoreOperation(async () => {
+        return await quizDoc.ref.collection('questions').get();
+      });
+
+      // Count subject-specific questions
+      let subjectQuestions = 0;
+      let subjectCorrect = 0;
+
+      questionsSnapshot.docs.forEach(qDoc => {
+        const q = qDoc.data();
+        if (!q.answered || !q.chapter_key) return;
+
+        // Extract subject from chapter_key (format: "physics_mechanics")
+        const chapterSubject = q.chapter_key.split('_')[0]?.toLowerCase();
+
+        // Match against both 'maths' and 'mathematics'
+        const isMatch = chapterSubject === subjectPrefix ||
+          (normalizedSubject === 'mathematics' && chapterSubject === 'maths') ||
+          (normalizedSubject === 'maths' && chapterSubject === 'mathematics');
+
+        if (isMatch) {
+          subjectQuestions++;
+          if (q.is_correct) {
+            subjectCorrect++;
+          }
+        }
+      });
+
+      // Only add to data if this quiz had questions for this subject
+      if (subjectQuestions > 0) {
+        if (!dailyData[dateKey]) {
+          dailyData[dateKey] = {
+            date: dateKey,
+            quizzes: 0,
+            questions: 0,
+            correct: 0,
+            accuracy: 0
+          };
+        }
+
+        dailyData[dateKey].quizzes += 1;
+        dailyData[dateKey].questions += subjectQuestions;
+        dailyData[dateKey].correct += subjectCorrect;
+      }
+    }
+
+    // Calculate accuracy for each day
+    const trends = [];
+    for (const [date, data] of Object.entries(dailyData)) {
+      data.accuracy = data.questions > 0
+        ? Math.round((data.correct / data.questions) * 100)
+        : 0;
+      trends.push(data);
+    }
+
+    // Sort by date (ascending)
+    trends.sort((a, b) => a.date.localeCompare(b.date));
+
+    logger.info('Subject accuracy trends retrieved', {
+      userId,
+      subject: normalizedSubject,
+      days,
+      dataPoints: trends.length
+    });
+
+    return trends;
+  } catch (error) {
+    logger.error('Error getting subject accuracy trends', {
+      userId,
+      subject,
+      error: error.message
+    });
+    return [];
+  }
+}
+
+// ============================================================================
 // CUMULATIVE STATISTICS
 // ============================================================================
 
@@ -325,6 +449,7 @@ module.exports = {
   getChapterProgress,
   getSubjectProgress,
   getAccuracyTrends,
+  getSubjectAccuracyTrends,
   getCumulativeStats,
   getChapterStatus
 };

@@ -6,7 +6,10 @@
  * Endpoints:
  * - GET /api/analytics/overview - Get analytics overview (for Overview tab)
  * - GET /api/analytics/mastery/:subject - Get subject mastery details (for Mastery tab)
- * - GET /api/analytics/mastery-timeline - Get mastery progression over time (for charts)
+ * - GET /api/analytics/mastery-timeline - Get mastery/percentile progression over time (for charts)
+ * - GET /api/analytics/accuracy-timeline - Get accuracy progression over time (for charts)
+ * - GET /api/analytics/all-chapters - Get all chapters mastery status
+ * - GET /api/analytics/weekly-activity - Get weekly activity data
  */
 
 const express = require('express');
@@ -277,6 +280,77 @@ router.get('/mastery-timeline', authenticateUser, async (req, res, next) => {
         },
         data_points: chartData.length,
         timeline: chartData
+      },
+      requestId: req.id
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================================================
+// ACCURACY TIMELINE (FOR CHARTS)
+// ============================================================================
+
+/**
+ * GET /api/analytics/accuracy-timeline
+ *
+ * Get accuracy progression over time for charting.
+ * Returns daily accuracy data (correct/total questions) for a specific subject.
+ *
+ * Authentication: Required
+ *
+ * Query params:
+ * - subject (required): physics, chemistry, maths - filter to specific subject
+ * - days (optional): number of days to look back (default: 30, max: 90)
+ */
+router.get('/accuracy-timeline', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const { subject, days: daysStr } = req.query;
+
+    // Validate subject (required for this endpoint)
+    if (!subject) {
+      return res.status(400).json({
+        success: false,
+        error: 'Subject parameter is required.',
+        requestId: req.id
+      });
+    }
+
+    const validSubjects = ['physics', 'chemistry', 'maths', 'mathematics'];
+    if (!validSubjects.includes(subject.toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid subject. Must be physics, chemistry, or maths.',
+        requestId: req.id
+      });
+    }
+
+    const days = Math.min(parseInt(daysStr) || 30, 90);
+
+    // Get subject-specific accuracy trends
+    const trends = await progressService.getSubjectAccuracyTrends(
+      userId,
+      subject.toLowerCase(),
+      days
+    );
+
+    logger.info('Accuracy timeline retrieved', {
+      requestId: req.id,
+      userId,
+      subject: subject.toLowerCase(),
+      days,
+      dataPoints: trends.length
+    });
+
+    res.json({
+      success: true,
+      data: {
+        subject: subject.toLowerCase(),
+        days,
+        data_points: trends.length,
+        timeline: trends
       },
       requestId: req.id
     });
