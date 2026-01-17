@@ -635,40 +635,23 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             const SizedBox(height: 20),
             // Check if limit reached (not unlimited and remaining <= 0)
             if (isUnlocked && quizUsage != null && !quizUsage.isUnlimited && quizUsage.remaining <= 0) ...[
-              // Show disabled button
+              // Replace button with upgrade CTA when limit reached
               GradientButton(
-                text: 'Daily Limit Reached',
-                onPressed: null,
-                size: GradientButtonSize.large,
-              ),
-              const SizedBox(height: 12),
-              // Upgrade CTA
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PaywallScreen(
-                          featureName: 'Daily Quiz',
-                          usageType: UsageType.dailyQuiz,
-                          limitReachedMessage: "You've used your free daily Daily Quiz. Upgrade for more!",
-                        ),
+                text: 'Upgrade for More Quizzes',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PaywallScreen(
+                        featureName: 'Daily Quiz',
+                        usageType: UsageType.dailyQuiz,
+                        limitReachedMessage: "You've used your free daily Daily Quiz. Upgrade for more!",
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.workspace_premium_rounded, size: 20),
-                  label: const Text('Upgrade for More Quizzes'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primaryPurple,
-                    side: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                ),
+                  );
+                },
+                size: GradientButtonSize.large,
+                leadingIcon: Icons.workspace_premium_rounded,
               ),
             ] else ...[
               // Normal button

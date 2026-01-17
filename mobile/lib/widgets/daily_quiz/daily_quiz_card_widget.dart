@@ -160,96 +160,87 @@ class DailyQuizCardWidget extends StatelessWidget {
           const SizedBox(height: 16),
           // Check if limit is reached (quizzesRemaining == 0 and not unlimited)
           // Allow continuing active quiz even if limit reached
-          if (quizzesRemaining != null && quizzesRemaining == 0 && !hasActiveQuiz) ...[
-            // Show disabled button with limit reached message
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.borderGray,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  disabledBackgroundColor: AppColors.borderGray,
-                ),
-                child: Text(
-                  'Daily Limit Reached',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Upgrade CTA button
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: OutlinedButton.icon(
-                onPressed: onUpgrade,
-                icon: const Icon(Icons.workspace_premium_rounded, size: 20),
-                label: const Text('Upgrade for More Quizzes'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primaryPurple,
-                  side: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-          ] else ...[
-            // Normal button (enabled or disabled based on canStartQuiz)
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: canStartQuiz
-                  ? Container(
-                      decoration: BoxDecoration(
-                        gradient: AppColors.ctaGradient,
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: (quizzesRemaining != null && quizzesRemaining == 0 && !hasActiveQuiz)
+                // Show upgrade button when limit reached
+                ? Container(
+                    decoration: BoxDecoration(
+                      gradient: AppColors.ctaGradient,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: onUpgrade,
                         borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: onStartQuiz,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Center(
-                            child: Text(
-                              hasActiveQuiz ? 'Continue Quiz' : 'Start Today\'s Quiz',
-                              style: AppTextStyles.labelMedium.copyWith(
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.workspace_premium_rounded,
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Upgrade for More Quizzes',
+                                style: AppTextStyles.labelMedium.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                // Normal button (enabled or disabled based on canStartQuiz)
+                : canStartQuiz
+                    ? Container(
+                        decoration: BoxDecoration(
+                          gradient: AppColors.ctaGradient,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: onStartQuiz,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Center(
+                              child: Text(
+                                hasActiveQuiz ? 'Continue Quiz' : 'Start Today\'s Quiz',
+                                style: AppTextStyles.labelMedium.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    )
-                  : ElevatedButton(
-                      onPressed: null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.borderGray,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      )
+                    : ElevatedButton(
+                        onPressed: null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.borderGray,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          disabledBackgroundColor: AppColors.borderGray,
                         ),
-                        disabledBackgroundColor: AppColors.borderGray,
-                      ),
-                      child: Text(
-                        'Completed for Today',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                        child: Text(
+                          'Completed for Today',
+                          style: AppTextStyles.labelMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-            ),
-          ],
+          ),
         ],
       ),
     );
