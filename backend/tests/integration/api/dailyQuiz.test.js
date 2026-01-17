@@ -28,7 +28,12 @@ jest.mock('multer', () => {
 // In real integration tests, you'd use Firebase Emulator or test project
 jest.mock('../../../src/config/firebase', () => {
   const mockDoc = {
-    data: jest.fn(() => ({})),
+    data: jest.fn(() => ({
+      // Required for quiz generation - user must have completed assessment
+      assessment: { completed_at: new Date().toISOString() },
+      theta_by_chapter: {},
+      completed_quiz_count: 0,
+    })),
     exists: true,
     id: 'test-user-id',
   };
@@ -232,10 +237,13 @@ describe('Daily Quiz API Integration Tests', () => {
         .get('/api/daily-quiz/progress')
         .set('Authorization', `Bearer ${testToken}`)
         .expect(200);
-      
-      expect(response.body).toHaveProperty('completed_quiz_count');
-      expect(response.body).toHaveProperty('learning_phase');
-      expect(response.body).toHaveProperty('theta_by_chapter');
+
+      // Progress data is nested under response.body.progress
+      expect(response.body).toHaveProperty('progress');
+      expect(response.body.progress).toHaveProperty('cumulative');
+      expect(response.body.progress.cumulative).toHaveProperty('completed_quiz_count');
+      expect(response.body.progress.cumulative).toHaveProperty('learning_phase');
+      expect(response.body.progress).toHaveProperty('chapters');
     });
   });
 });

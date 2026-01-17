@@ -201,6 +201,52 @@ async function calculateFocusAreas(thetaByChapter, chapterMappings = null) {
     }
   }
 
+  // Ensure we have exactly 1 focus area per subject
+  // For subjects with no data in thetaByChapter, pick from chapterMappings
+  for (const subject of subjects) {
+    if (!subjectFocusAreas[subject]) {
+      // Find all chapters for this subject from mappings
+      const subjectChapters = [];
+      for (const [chapterKey, mapping] of chapterMappings.entries()) {
+        const keySubject = chapterKey.split('_')[0];
+        if (keySubject === subject) {
+          // Check if user has any data for this chapter
+          const userData = thetaByChapter[chapterKey];
+          subjectChapters.push({
+            chapterKey,
+            chapterName: mapping.chapter,
+            attempts: userData?.attempts || 0
+          });
+        }
+      }
+
+      if (subjectChapters.length > 0) {
+        // Sort by attempts (descending), then alphabetically by chapter name
+        subjectChapters.sort((a, b) => {
+          if (b.attempts !== a.attempts) {
+            return b.attempts - a.attempts; // Most attempts first
+          }
+          return a.chapterName.localeCompare(b.chapterName); // Alphabetical
+        });
+
+        const picked = subjectChapters[0];
+        subjectFocusAreas[subject] = {
+          chapter_key: picked.chapterKey,
+          chapter_name: picked.chapterName,
+          subject: subject,
+          subject_name: getSubjectDisplayName(subject),
+          percentile: 0,
+          attempts: picked.attempts,
+          accuracy: 0,
+          correct: 0,
+          total: 0,
+          reason: 'not_started',
+          status: 'focus'
+        };
+      }
+    }
+  }
+
   // Return focus areas in consistent order: physics, chemistry, maths
   const focusAreas = [];
   for (const subject of subjects) {

@@ -77,8 +77,8 @@ describe('Theta Calculation Service - Pure Functions', () => {
       // SE should decrease (more confident)
       expect(result.confidence_SE).toBeLessThan(0.6);
 
-      // Accuracy should be 100%
-      expect(result.accuracy).toBe(1.0);
+      // Accuracy should be 100% (stored as percentage)
+      expect(result.accuracy).toBe(100);
 
       // Attempts should be 3
       expect(result.attempts).toBe(3);
@@ -106,8 +106,8 @@ describe('Theta Calculation Service - Pure Functions', () => {
       // Theta should decrease for incorrect answers
       expect(result.theta).toBeLessThan(0);
 
-      // Accuracy should be 0%
-      expect(result.accuracy).toBe(0.0);
+      // Accuracy should be 0% (stored as percentage)
+      expect(result.accuracy).toBe(0);
 
       // Percentile should be < 50 (below average)
       expect(result.percentile).toBeLessThan(50);
@@ -131,8 +131,8 @@ describe('Theta Calculation Service - Pure Functions', () => {
       // Should have 12 total attempts
       expect(result.attempts).toBe(12);
 
-      // Weighted accuracy: (7 + 2) / 12 = 0.75
-      expect(result.accuracy).toBeCloseTo(0.75, 2);
+      // Weighted accuracy: (7 + 2) / 12 = 0.75 = 75% (stored as percentage)
+      expect(result.accuracy).toBe(75);
 
       // Theta should still be positive (was 1.0, both correct)
       expect(result.theta).toBeGreaterThan(0);
@@ -155,8 +155,8 @@ describe('Theta Calculation Service - Pure Functions', () => {
 
       const result = calculateChapterThetaUpdate(currentChapterData, responses);
 
-      // Accuracy should be 50%
-      expect(result.accuracy).toBe(0.5);
+      // Accuracy should be 50% (stored as percentage)
+      expect(result.accuracy).toBe(50);
 
       // Attempts should be 4
       expect(result.attempts).toBe(4);
@@ -255,7 +255,7 @@ describe('Theta Calculation Service - Pure Functions', () => {
 
       // Should work correctly with no previous attempts
       expect(result.attempts).toBe(1);
-      expect(result.accuracy).toBe(1.0);
+      expect(result.accuracy).toBe(100); // 100% (stored as percentage)
       expect(result.theta).toBeGreaterThan(0);
     });
   });
@@ -425,7 +425,7 @@ describe('Theta Calculation Service - Pure Functions', () => {
       // Verify flow
       expect(chapterUpdate.theta).toBeGreaterThan(0.5); // Improved from 0.5
       expect(chapterUpdate.attempts).toBe(8); // 5 + 3
-      expect(chapterUpdate.accuracy).toBeGreaterThan(0.6); // Improved (3/3 correct)
+      expect(chapterUpdate.accuracy).toBeGreaterThan(60); // Improved (3/3 correct) - stored as percentage
 
       expect(subjectUpdate.theta_by_subject.physics).toBeDefined();
       expect(subjectUpdate.overall_theta).toBeGreaterThan(0); // Positive overall
