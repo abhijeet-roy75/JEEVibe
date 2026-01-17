@@ -125,9 +125,10 @@ function getSubjectDisplayName(subject) {
  *
  * @param {Object} thetaByChapter - Chapter theta data
  * @param {Map} chapterMappings - Pre-loaded chapter mappings (optional)
+ * @param {Object} subtopicAccuracy - Subtopic accuracy data (source of truth for correct/total)
  * @returns {Promise<Array>} Array of focus area objects (1 per subject)
  */
-async function calculateFocusAreas(thetaByChapter, chapterMappings = null) {
+async function calculateFocusAreas(thetaByChapter, chapterMappings = null, subtopicAccuracy = {}) {
   const thresholds = templates.mastery_thresholds;
   const subjects = ['physics', 'chemistry', 'mathematics'];
 
@@ -172,15 +173,28 @@ async function calculateFocusAreas(thetaByChapter, chapterMappings = null) {
     const mapping = chapterMappings.get(chapterKey);
     const chapterName = mapping?.chapter || formatChapterKeyToDisplayName(chapterKey);
 
-    // Get accuracy data from chapter
-    // Normalize accuracy: old data might be fraction (0-1), new data is percentage (0-100)
-    let accuracy = data.accuracy || 0;
-    if (accuracy > 0 && accuracy <= 1) {
-      accuracy = Math.round(accuracy * 100);
+    // Get correct/total from subtopic_accuracy (source of truth) like getMasteryDetails does
+    const chapterSubtopics = subtopicAccuracy[chapterKey] || {};
+    const subtopicEntries = Object.entries(chapterSubtopics);
+
+    let correct = 0;
+    let total = 0;
+    let accuracy = 0;
+
+    if (subtopicEntries.length > 0) {
+      // Derive from subtopic data - this is the authoritative source
+      correct = subtopicEntries.reduce((sum, [, s]) => sum + (s.correct || 0), 0);
+      total = subtopicEntries.reduce((sum, [, s]) => sum + (s.total || 0), 0);
+      accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+    } else {
+      // Fall back to theta_by_chapter data if no subtopics
+      accuracy = data.accuracy || 0;
+      if (accuracy > 0 && accuracy <= 1) {
+        accuracy = Math.round(accuracy * 100);
+      }
+      total = attempts;
+      correct = total > 0 ? Math.round((accuracy / 100) * total) : 0;
     }
-    // Derive correct/total from accuracy and attempts (theta_by_chapter doesn't have correct/total fields)
-    const total = attempts;
-    const correct = total > 0 ? Math.round((accuracy / 100) * total) : 0;
 
     const focusArea = {
       chapter_key: chapterKey,
@@ -549,6 +563,7 @@ async function getAnalyticsOverview(userId) {
     // Calculate derived data
     const thetaByChapter = userData.theta_by_chapter || {};
     const thetaBySubject = userData.theta_by_subject || {};
+    const subtopicAccuracy = userData.subtopic_accuracy || {};
 
     // Pre-load chapter mappings once for efficiency
     let chapterMappings;
@@ -560,7 +575,7 @@ async function getAnalyticsOverview(userId) {
     }
 
     const chaptersMastered = countMasteredChapters(thetaByChapter);
-    const focusAreas = await calculateFocusAreas(thetaByChapter, chapterMappings);
+    const focusAreas = await calculateFocusAreas(thetaByChapter, chapterMappings, subtopicAccuracy);
 
     // Build subject progress with status labels and accuracy
     const subjectAccuracy = userData.subject_accuracy || {};
