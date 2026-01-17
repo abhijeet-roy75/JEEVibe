@@ -747,32 +747,41 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                         ],
                       ),
                     ),
+                    // View History link in header
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AllSolutionsScreen(),
+                          ),
+                        ).then((_) => _loadData());
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'History',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.primaryPurple,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: AppColors.primaryPurple,
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Text(
                   'Stuck on a problem? Just snap a photo and get instant step-by-step solutions!',
                   style: AppTextStyles.bodyMedium,
-                ),
-                const SizedBox(height: 12),
-                // View History link
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AllSolutionsScreen(),
-                      ),
-                    ).then((_) => _loadData());
-                  },
-                  child: Text(
-                    'View History',
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: AppColors.primaryPurple,
-                      decoration: TextDecoration.underline,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 20),
                 Consumer<OfflineProvider>(
