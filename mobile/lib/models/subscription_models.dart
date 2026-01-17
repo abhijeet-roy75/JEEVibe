@@ -7,6 +7,7 @@ enum UsageType {
   snapSolve,
   dailyQuiz,
   aiTutor,
+  chapterPractice,
 }
 
 // Subscription tier enum
@@ -129,11 +130,13 @@ class AllUsage {
   final UsageInfo snapSolve;
   final UsageInfo dailyQuiz;
   final UsageInfo aiTutor;
+  final UsageInfo chapterPractice;
 
   AllUsage({
     required this.snapSolve,
     required this.dailyQuiz,
     required this.aiTutor,
+    required this.chapterPractice,
   });
 
   factory AllUsage.fromJson(Map<String, dynamic> json) {
@@ -141,6 +144,7 @@ class AllUsage {
       snapSolve: UsageInfo.fromJson(json['snap_solve'] ?? {}),
       dailyQuiz: UsageInfo.fromJson(json['daily_quiz'] ?? {}),
       aiTutor: UsageInfo.fromJson(json['ai_tutor'] ?? {}),
+      chapterPractice: UsageInfo.fromJson(json['chapter_practice'] ?? {}),
     );
   }
 
@@ -153,6 +157,8 @@ class AllUsage {
         return dailyQuiz;
       case UsageType.aiTutor:
         return aiTutor;
+      case UsageType.chapterPractice:
+        return chapterPractice;
     }
   }
 }
