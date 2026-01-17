@@ -223,20 +223,26 @@ function calculateChapterThetaUpdate(currentChapterData, responses) {
       batchResponses
     );
 
-    // Calculate new accuracy
+    // Calculate new accuracy as fraction (0-1)
     const correctCount = responses.filter(r => r.isCorrect).length;
     const totalCount = responses.length;
-    const newAccuracy = totalCount > 0 ? correctCount / totalCount : 0;
+    const newAccuracyFraction = totalCount > 0 ? correctCount / totalCount : 0;
 
     // Combine with existing attempts
     const newAttempts = currentChapterData.attempts + totalCount;
 
     // Calculate weighted accuracy (combine old and new)
-    const oldAccuracy = currentChapterData.accuracy || 0;
+    // Note: Old data might be stored as fraction (0-1) or percentage (0-100)
+    // Normalize to fraction for calculation, then convert to percentage for storage
+    let oldAccuracy = currentChapterData.accuracy || 0;
+    // If > 1, it's stored as percentage, convert to fraction
+    if (oldAccuracy > 1) {
+      oldAccuracy = oldAccuracy / 100;
+    }
     const oldAttempts = currentChapterData.attempts || 0;
-    const combinedAccuracy = oldAttempts > 0
-      ? (oldAccuracy * oldAttempts + newAccuracy * totalCount) / newAttempts
-      : newAccuracy;
+    const combinedAccuracyFraction = oldAttempts > 0
+      ? (oldAccuracy * oldAttempts + newAccuracyFraction * totalCount) / newAttempts
+      : newAccuracyFraction;
 
     // Calculate percentile from theta
     const percentile = thetaToPercentile(updateResult.theta);
@@ -247,7 +253,7 @@ function calculateChapterThetaUpdate(currentChapterData, responses) {
       percentile: percentile,
       confidence_SE: boundSE(updateResult.se),
       attempts: newAttempts,
-      accuracy: Math.round(combinedAccuracy * 1000) / 1000, // 3 decimal places
+      accuracy: Math.round(combinedAccuracyFraction * 100), // Store as percentage 0-100 for consistency with subject_accuracy
       last_updated: new Date().toISOString(),
       // Metadata for debugging
       theta_delta: updateResult.theta - currentChapterData.theta,
@@ -288,9 +294,14 @@ function calculateSubjectAndOverallThetaUpdate(thetaByChapter) {
       Object.entries(thetaByChapter).forEach(([key, data]) => {
         if (key.startsWith(`${subject}_`)) {
           // Weighted by attempts to get cumulative accuracy
+          // Note: chapter accuracy should be percentage 0-100, but old data might be fraction 0-1
           const attempts = data.attempts || 0;
-          const accuracy = data.accuracy || 0;
-          correct += Math.round(accuracy * attempts);
+          let accuracy = data.accuracy || 0;
+          // Normalize: if accuracy <= 1, treat as fraction; if > 1, it's percentage
+          if (accuracy > 0 && accuracy <= 1) {
+            accuracy = accuracy * 100; // Convert fraction to percentage
+          }
+          correct += Math.round((accuracy / 100) * attempts);
           total += attempts;
         }
       });
@@ -373,20 +384,26 @@ async function updateChapterTheta(userId, chapterKey, responses) {
       batchResponses
     );
 
-    // Calculate new accuracy
+    // Calculate new accuracy as fraction (0-1)
     const correctCount = responses.filter(r => r.isCorrect).length;
     const totalCount = responses.length;
-    const newAccuracy = totalCount > 0 ? correctCount / totalCount : 0;
+    const newAccuracyFraction = totalCount > 0 ? correctCount / totalCount : 0;
 
     // Combine with existing attempts
     const newAttempts = currentChapterData.attempts + totalCount;
 
     // Calculate weighted accuracy (combine old and new)
-    const oldAccuracy = currentChapterData.accuracy || 0;
+    // Note: Old data might be stored as fraction (0-1) or percentage (0-100)
+    // Normalize to fraction for calculation, then convert to percentage for storage
+    let oldAccuracy = currentChapterData.accuracy || 0;
+    // If > 1, it's stored as percentage, convert to fraction
+    if (oldAccuracy > 1) {
+      oldAccuracy = oldAccuracy / 100;
+    }
     const oldAttempts = currentChapterData.attempts || 0;
-    const combinedAccuracy = oldAttempts > 0
-      ? (oldAccuracy * oldAttempts + newAccuracy * totalCount) / newAttempts
-      : newAccuracy;
+    const combinedAccuracyFraction = oldAttempts > 0
+      ? (oldAccuracy * oldAttempts + newAccuracyFraction * totalCount) / newAttempts
+      : newAccuracyFraction;
 
     // Calculate percentile from theta
     const percentile = thetaToPercentile(updateResult.theta);
@@ -397,7 +414,7 @@ async function updateChapterTheta(userId, chapterKey, responses) {
       percentile: percentile,
       confidence_SE: boundSE(updateResult.se),
       attempts: newAttempts,
-      accuracy: Math.round(combinedAccuracy * 1000) / 1000, // 3 decimal places
+      accuracy: Math.round(combinedAccuracyFraction * 100), // Store as percentage 0-100 for consistency with subject_accuracy
       last_updated: new Date().toISOString()
     };
 
@@ -490,9 +507,14 @@ async function updateSubjectAndOverallTheta(userId) {
       Object.entries(thetaByChapter).forEach(([key, data]) => {
         if (key.startsWith(`${subject}_`)) {
           // Weighted by attempts to get cumulative accuracy
+          // Note: chapter accuracy should be percentage 0-100, but old data might be fraction 0-1
           const attempts = data.attempts || 0;
-          const accuracy = data.accuracy || 0;
-          correct += Math.round(accuracy * attempts);
+          let accuracy = data.accuracy || 0;
+          // Normalize: if accuracy <= 1, treat as fraction; if > 1, it's percentage
+          if (accuracy > 0 && accuracy <= 1) {
+            accuracy = accuracy * 100; // Convert fraction to percentage
+          }
+          correct += Math.round((accuracy / 100) * attempts);
           total += attempts;
         }
       });
@@ -556,6 +578,18 @@ async function updateSubjectAndOverallTheta(userId) {
 function calculateSubtopicAccuracyUpdate(currentSubtopicAccuracy, responses) {
   try {
     const updatedSubtopicAccuracy = { ...currentSubtopicAccuracy };
+
+    // Debug: Log response structure to diagnose subtopic tracking
+    const responsesWithSubtopics = responses.filter(r => r.sub_topics && r.sub_topics.length > 0);
+    logger.info('Calculating subtopic accuracy', {
+      responseCount: responses.length,
+      responsesWithSubtopics: responsesWithSubtopics.length,
+      sampleSubtopics: responsesWithSubtopics.length > 0 ? responsesWithSubtopics[0].sub_topics : 'none found',
+      allResponseSubtopics: responses.map(r => ({
+        chapter: r.chapter_key,
+        subtopics: r.sub_topics || 'undefined'
+      }))
+    });
 
     // Group responses by chapter_key and sub_topic
     for (const response of responses) {

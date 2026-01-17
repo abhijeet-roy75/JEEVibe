@@ -171,7 +171,11 @@ async function calculateFocusAreas(thetaByChapter, limit = 3, chapterMappings = 
     const chapterName = mapping?.chapter || formatChapterKeyToDisplayName(chapterKey);
 
     // Get accuracy data from chapter
-    const accuracy = data.accuracy || 0;
+    // Normalize accuracy: old data might be fraction (0-1), new data is percentage (0-100)
+    let accuracy = data.accuracy || 0;
+    if (accuracy > 0 && accuracy <= 1) {
+      accuracy = Math.round(accuracy * 100);
+    }
     const correct = data.correct || 0;
     const total = data.total || 0;
 
@@ -635,13 +639,19 @@ async function getSubjectMasteryDetails(userId, subject) {
           accuracy: subtopicData.accuracy || 0
         })).sort((a, b) => a.accuracy - b.accuracy); // Sort by accuracy ascending (weakest first)
 
+        // Normalize accuracy: old data might be fraction (0-1), new data is percentage (0-100)
+        let chapterAccuracy = data.accuracy || 0;
+        if (chapterAccuracy > 0 && chapterAccuracy <= 1) {
+          chapterAccuracy = Math.round(chapterAccuracy * 100);
+        }
+
         chapters.push({
           chapter_key: chapterKey,
           chapter_name: chapterName,
           percentile: data.percentile || 0,
           theta: data.theta || 0,
           attempts: data.attempts || 0,
-          accuracy: data.accuracy || 0,
+          accuracy: chapterAccuracy,
           status: getMasteryStatus(data.percentile || 0),
           last_updated: data.last_updated,
           subtopics: subtopics

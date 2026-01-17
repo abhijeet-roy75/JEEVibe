@@ -246,7 +246,8 @@ function normalizeQuestion(id, data) {
     chapter_key: String(data.chapter_key || ''),
     question_type: String(data.question_type || 'mcq_single'),
     question_text: String(data.question_text || data.text || ''),
-    question_text_html: data.question_text_html || null // HTML version for rich text rendering
+    question_text_html: data.question_text_html || null, // HTML version for rich text rendering
+    sub_topics: Array.isArray(data.sub_topics) ? data.sub_topics : [] // Ensure sub_topics is always an array
   };
 
   // 1. Transform options to standardized List format
