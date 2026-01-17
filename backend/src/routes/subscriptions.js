@@ -19,6 +19,7 @@ const { db, admin } = require('../config/firebase');
 const { getSubscriptionStatus, grantOverride, revokeOverride } = require('../services/subscriptionService');
 const { getAllUsage } = require('../services/usageTrackingService');
 const { getPurchasablePlans, getTierConfig } = require('../services/tierConfigService');
+const { getWeeklyUsage } = require('../services/weeklyChapterPracticeService');
 
 // Admin UIDs allowed to grant overrides (should be moved to environment config)
 const ADMIN_UIDS = process.env.ADMIN_UIDS ? process.env.ADMIN_UIDS.split(',') : [];
@@ -70,10 +71,11 @@ router.get('/status', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
 
-    // Get subscription status and usage in parallel
-    const [status, usage] = await Promise.all([
+    // Get subscription status, usage, and weekly chapter practice usage in parallel
+    const [status, usage, chapterPracticeWeekly] = await Promise.all([
       getSubscriptionStatus(userId),
-      getAllUsage(userId)
+      getAllUsage(userId),
+      getWeeklyUsage(userId)
     ]);
 
     logger.info('Subscription status retrieved', {
@@ -126,7 +128,8 @@ router.get('/status', authenticateUser, async (req, res, next) => {
             is_unlimited: usage.ai_tutor.is_unlimited,
             resets_at: usage.ai_tutor.resets_at
           }
-        }
+        },
+        chapter_practice_weekly: chapterPracticeWeekly
       },
       requestId: req.id
     });

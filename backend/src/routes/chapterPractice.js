@@ -25,10 +25,12 @@ const {
   getActiveSession,
   THETA_MULTIPLIER
 } = require('../services/chapterPracticeService');
+const { getDatabaseNames } = require('../services/chapterMappingService');
 
 // Subscription & Tier Services
 const { getEffectiveTier } = require('../services/subscriptionService');
 const { getTierLimits } = require('../services/tierConfigService');
+const { canPracticeSubject, recordCompletion } = require('../services/weeklyChapterPracticeService');
 
 const {
   calculateChapterThetaUpdate,
@@ -158,6 +160,45 @@ router.post('/generate', authenticateUser, validateGenerate, async (req, res, ne
         },
         requestId: req.id
       });
+    }
+
+    // Check weekly limit per subject (for free tier)
+    const weeklyLimit = limits.chapter_practice_weekly_per_subject ?? -1;
+    if (weeklyLimit !== -1) {
+      // Get subject from chapter_key
+      const mapping = await getDatabaseNames(chapter_key);
+      const subject = mapping?.subject || chapter_key.split('_')[0];
+
+      const canPractice = await canPracticeSubject(userId, subject);
+
+      if (!canPractice.allowed) {
+        logger.warn('Chapter practice weekly limit reached', {
+          userId,
+          subject,
+          tier: tierInfo.tier,
+          lastChapter: canPractice.last_chapter_name,
+          unlocksAt: canPractice.unlocks_at
+        });
+
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'WEEKLY_LIMIT_REACHED',
+            message: `You practiced ${canPractice.last_chapter_name} this week. Practice unlocks in ${canPractice.days_remaining} day${canPractice.days_remaining === 1 ? '' : 's'}.`,
+            details: 'Free tier allows 1 chapter practice per subject per week'
+          },
+          subject: subject,
+          last_chapter_name: canPractice.last_chapter_name,
+          unlocks_at: canPractice.unlocks_at,
+          days_remaining: canPractice.days_remaining,
+          tier: tierInfo.tier,
+          upgrade_prompt: {
+            message: 'Upgrade to Pro for unlimited chapter practice',
+            cta: 'Upgrade Now'
+          },
+          requestId: req.id
+        });
+      }
     }
 
     // Check for existing active session for this chapter
@@ -749,6 +790,19 @@ router.post('/complete', authenticateUser, validateSessionId, async (req, res, n
         total_time_spent_minutes: admin.firestore.FieldValue.increment(Math.round(totalTime / 60))
       });
     });
+
+    // Record weekly usage for free tier (if weekly limit applies)
+    const tierInfo = await getEffectiveTier(userId);
+    const limits = await getTierLimits(tierInfo.tier);
+    const weeklyLimit = limits.chapter_practice_weekly_per_subject ?? -1;
+    if (weeklyLimit !== -1) {
+      await recordCompletion(
+        userId,
+        sessionData.subject,
+        sessionData.chapter_key,
+        sessionData.chapter_name
+      );
+    }
 
     logger.info('Chapter practice session completed', {
       userId,
