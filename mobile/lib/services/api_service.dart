@@ -912,6 +912,273 @@ class ApiService {
     });
   }
 
+  // ============================================================================
+  // CHAPTER PRACTICE API METHODS
+  // ============================================================================
+
+  /// Generate a new chapter practice session or get existing active session
+  /// Requires Firebase ID token for authentication
+  Future<Map<String, dynamic>> generateChapterPractice(
+    String chapterKey,
+    String authToken, {
+    int? questionCount,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final body = {
+          'chapter_key': chapterKey,
+          if (questionCount != null) 'question_count': questionCount,
+        };
+
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/chapter-practice/generate'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+          body: json.encode(body),
+        ).timeout(const Duration(seconds: 60));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to generate practice';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to generate practice: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Submit answer for a chapter practice question
+  /// Requires Firebase ID token for authentication
+  Future<Map<String, dynamic>> submitChapterPracticeAnswer(
+    String sessionId,
+    String questionId,
+    String studentAnswer,
+    String authToken, {
+    int timeTakenSeconds = 0,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/chapter-practice/submit-answer'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+          body: json.encode({
+            'session_id': sessionId,
+            'question_id': questionId,
+            'student_answer': studentAnswer,
+            'time_taken_seconds': timeTakenSeconds,
+          }),
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to submit answer';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to submit answer: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Complete a chapter practice session
+  /// Requires Firebase ID token for authentication
+  Future<Map<String, dynamic>> completeChapterPractice(
+    String sessionId,
+    String authToken,
+  ) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/chapter-practice/complete'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+          body: json.encode({
+            'session_id': sessionId,
+          }),
+        ).timeout(const Duration(seconds: 30));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to complete practice';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to complete practice: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Get chapter practice session details
+  /// Requires Firebase ID token for authentication
+  Future<Map<String, dynamic>> getChapterPracticeSession(
+    String sessionId,
+    String authToken,
+  ) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/chapter-practice/session/$sessionId'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get session';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to get session: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Get active chapter practice session (if any)
+  /// Requires Firebase ID token for authentication
+  Future<Map<String, dynamic>> getActiveChapterPractice(
+    String authToken, {
+    String? chapterKey,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        String url = '$baseUrl/api/chapter-practice/active';
+        if (chapterKey != null) {
+          url += '?chapter_key=$chapterKey';
+        }
+
+        final response = await http.get(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get active session';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to get active session: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Get Chapter Practice Stats
+  /// Returns aggregated practice statistics
+  Future<Map<String, dynamic>> getChapterPracticeStats(
+    String authToken, {
+    String? chapterKey,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        String url = '$baseUrl/api/chapter-practice/stats';
+        if (chapterKey != null) {
+          url += '?chapter_key=$chapterKey';
+        }
+
+        final response = await http.get(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get practice stats';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to get practice stats: ${e.toString()}');
+      }
+    });
+  }
+
   // ==========================================================================
   // AI TUTOR (Priya Ma'am) APIs
   // ==========================================================================

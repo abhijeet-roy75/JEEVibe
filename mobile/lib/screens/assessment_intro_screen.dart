@@ -35,6 +35,7 @@ import '../models/subscription_models.dart';
 import '../services/journey_service.dart';
 import '../services/share_service.dart';
 import 'subscription/paywall_screen.dart';
+import 'chapter_practice/chapter_practice_loading_screen.dart';
 
 class AssessmentIntroScreen extends StatefulWidget {
   const AssessmentIntroScreen({super.key});
@@ -1667,43 +1668,66 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            children: [
-              // Subject icon
-              Icon(subjectIcon, size: 16, color: subjectColor),
-              const SizedBox(width: 8),
-              // Chapter name
-              Expanded(
-                child: Text(
-                  area.chapterName,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+        InkWell(
+          onTap: () {
+            // Navigate to Chapter Practice for this focus area
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChapterPracticeLoadingScreen(
+                  chapterKey: area.chapterKey,
+                  chapterName: area.chapterName,
+                  subject: area.subject,
                 ),
               ),
-              const SizedBox(width: 8),
-              // Score badge (correct/total) - same as Overview tab
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: accuracyColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '${area.correct}/${area.total}',
-                  style: AppTextStyles.caption.copyWith(
-                    color: accuracyColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
+            );
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Row(
+              children: [
+                // Subject icon
+                Icon(subjectIcon, size: 16, color: subjectColor),
+                const SizedBox(width: 8),
+                // Chapter name
+                Expanded(
+                  child: Text(
+                    area.chapterName,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                // Score badge (correct/total) - same as Overview tab
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: accuracyColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${area.correct}/${area.total}',
+                    style: AppTextStyles.caption.copyWith(
+                      color: accuracyColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                // Arrow indicating tap action
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.textLight,
+                ),
+              ],
+            ),
           ),
         ),
         if (!isLast)

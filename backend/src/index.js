@@ -179,6 +179,9 @@ app.use('/api/subscriptions', subscriptionsRouter);
 const aiTutorRouter = require('./routes/aiTutor');
 app.use('/api/ai-tutor', aiTutorRouter);
 
+const chapterPracticeRouter = require('./routes/chapterPractice');
+app.use('/api/chapter-practice', chapterPracticeRouter);
+
 const shareRouter = require('./routes/share');
 app.use('/api/share', shareRouter);
 
@@ -240,6 +243,13 @@ app.get('/', (req, res) => {
       },
       share: {
         log: 'POST /api/share/log'
+      },
+      chapterPractice: {
+        generate: 'POST /api/chapter-practice/generate',
+        submitAnswer: 'POST /api/chapter-practice/submit-answer',
+        complete: 'POST /api/chapter-practice/complete',
+        session: 'GET /api/chapter-practice/session/:sessionId',
+        active: 'GET /api/chapter-practice/active'
       }
     }
   });

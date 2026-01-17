@@ -217,6 +217,34 @@
         { "fieldPath": "is_correct", "order": "ASCENDING" },
         { "fieldPath": "position", "order": "ASCENDING" }
       ]
+    },
+    {
+      "comment": "Chapter Practice: active sessions lookup",
+      "collectionGroup": "sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Chapter Practice: active sessions by chapter",
+      "collectionGroup": "sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "chapter_key", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Chapter Practice: response history by chapter",
+      "collectionGroup": "responses",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "chapter_key", "order": "ASCENDING" },
+        { "fieldPath": "answered_at", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

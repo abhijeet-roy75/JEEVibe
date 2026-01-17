@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/daily_quiz_provider.dart';
 import 'providers/ai_tutor_provider.dart';
+import 'providers/chapter_practice_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -137,6 +138,9 @@ void main() async {
           update: (_, authService, previous) =>
             previous ?? AiTutorProvider(authService),
         ),
+
+        // Chapter Practice State
+        ChangeNotifierProvider(create: (_) => ChapterPracticeProvider()),
 
         // Offline Mode Provider
         ChangeNotifierProvider(create: (_) => OfflineProvider()),

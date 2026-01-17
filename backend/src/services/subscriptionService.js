@@ -18,26 +18,100 @@ const logger = require('../utils/logger');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const { getTierLimits, getTierFeatures } = require('./tierConfigService');
 
+// ============================================================================
+// TIER CACHE (Performance optimization)
+// ============================================================================
+
+// Cache for user tier info - { userId: { data, expiresAt } }
+const tierCache = new Map();
+const TIER_CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
+/**
+ * Get cached tier info for a user
+ * @param {string} userId
+ * @returns {Object|null} Cached tier info or null if not cached/expired
+ */
+function getCachedTier(userId) {
+  const cached = tierCache.get(userId);
+  if (!cached) return null;
+
+  if (Date.now() > cached.expiresAt) {
+    tierCache.delete(userId);
+    return null;
+  }
+
+  return cached.data;
+}
+
+/**
+ * Set tier info in cache
+ * @param {string} userId
+ * @param {Object} tierInfo
+ */
+function setCachedTier(userId, tierInfo) {
+  tierCache.set(userId, {
+    data: tierInfo,
+    expiresAt: Date.now() + TIER_CACHE_TTL_MS
+  });
+}
+
+/**
+ * Invalidate cached tier for a user
+ * Call this when subscription changes (grant, revoke, purchase)
+ * @param {string} userId
+ */
+function invalidateTierCache(userId) {
+  tierCache.delete(userId);
+}
+
+/**
+ * Clear all cached tiers (useful for testing)
+ */
+function clearTierCache() {
+  tierCache.clear();
+}
+
+// ============================================================================
+// TIER FUNCTIONS
+// ============================================================================
+
 /**
  * Get the effective tier for a user
  * Checks override, subscription, trial, then defaults to free
+ * Uses in-memory cache with 60s TTL to reduce Firestore reads
  *
  * @param {string} userId - User ID
+ * @param {Object} options - Options
+ * @param {boolean} options.skipCache - Skip cache and fetch fresh (default: false)
  * @returns {Promise<Object>} Effective tier info { tier, source, expires_at, ... }
  */
-async function getEffectiveTier(userId) {
+async function getEffectiveTier(userId, options = {}) {
+  // Check cache first (unless skipCache is true)
+  if (!options.skipCache) {
+    const cached = getCachedTier(userId);
+    if (cached) {
+      return cached;
+    }
+  }
+
   try {
     const userDoc = await retryFirestoreOperation(async () => {
       return await db.collection('users').doc(userId).get();
     });
 
+    // Helper to cache and return result
+    const cacheAndReturn = (result) => {
+      setCachedTier(userId, result);
+      return result;
+    };
+
     if (!userDoc.exists) {
       logger.warn('User not found for getEffectiveTier', { userId });
-      return {
+      return cacheAndReturn({
         tier: 'free',
         source: 'default',
         expires_at: null
-      };
+      });
     }
 
     const userData = userDoc.data();
@@ -87,13 +161,13 @@ async function getEffectiveTier(userId) {
             expires_at: expiresAt.toISOString()
           });
 
-          return {
+          return cacheAndReturn({
             tier: tier,
             source: 'override',
             expires_at: expiresAt.toISOString(),
             override_type: override.type,
             override_reason: override.reason
-          };
+          });
         }
       }
     }
@@ -122,13 +196,13 @@ async function getEffectiveTier(userId) {
             ends_at: endDate.toISOString()
           });
 
-          return {
+          return cacheAndReturn({
             tier: sub.tier_id,
             source: 'subscription',
             expires_at: endDate.toISOString(),
             subscription_id: subId,
             plan_type: sub.plan_type
-          };
+          });
         }
       }
     }
@@ -143,24 +217,24 @@ async function getEffectiveTier(userId) {
           ends_at: trialEnd.toISOString()
         });
 
-        return {
+        return cacheAndReturn({
           tier: 'pro',
           source: 'trial',
           expires_at: trialEnd.toISOString()
-        };
+        });
       }
     }
 
     // 4. Default to free tier
-    return {
+    return cacheAndReturn({
       tier: 'free',
       source: 'default',
       expires_at: null
-    };
+    });
   } catch (error) {
     logger.error('Error in getEffectiveTier', { userId, error: error.message });
 
-    // Safe fallback to free tier
+    // Safe fallback to free tier (don't cache errors)
     return {
       tier: 'free',
       source: 'default',
@@ -229,6 +303,9 @@ async function grantOverride(userId, overrideData) {
     });
   });
 
+  // Invalidate tier cache so next request gets fresh data
+  invalidateTierCache(userId);
+
   logger.info('Override granted', {
     userId,
     type,
@@ -259,7 +336,8 @@ async function revokeOverride(userId) {
     });
   });
 
-  // Recalculate effective tier after revoke
+  // Invalidate cache and recalculate effective tier
+  invalidateTierCache(userId);
   const newTier = await getEffectiveTier(userId);
 
   await retryFirestoreOperation(async () => {
@@ -354,5 +432,8 @@ module.exports = {
   revokeOverride,
   hasFeature,
   getFeatureAccess,
-  syncUserTier
+  syncUserTier,
+  // Cache management (for testing and subscription changes)
+  invalidateTierCache,
+  clearTierCache
 };

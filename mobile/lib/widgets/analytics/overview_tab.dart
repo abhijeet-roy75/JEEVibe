@@ -9,6 +9,7 @@ import '../../widgets/buttons/gradient_button.dart';
 import '../../screens/assessment_intro_screen.dart';
 import '../../screens/subscription/paywall_screen.dart';
 import '../../screens/ai_tutor_chat_screen.dart';
+import '../../screens/chapter_practice/chapter_practice_loading_screen.dart';
 import '../../services/subscription_service.dart';
 import '../priya_avatar.dart';
 import 'stat_card.dart';
@@ -356,12 +357,12 @@ class OverviewTab extends StatelessWidget {
           if (!hasChapterPractice)
             _buildFocusAreasUpgradeContent(context)
           else if (overview.focusAreas.isNotEmpty)
-            // Compact list of focus chapters
+            // Compact list of focus chapters (tap to practice)
             ...overview.focusAreas.asMap().entries.map((entry) {
               final index = entry.key;
               final area = entry.value;
               final isLast = index == overview.focusAreas.length - 1;
-              return _buildFocusAreaRow(area, isLast);
+              return _buildFocusAreaRow(context, area, isLast);
             })
           else
             Padding(
@@ -420,7 +421,7 @@ class OverviewTab extends StatelessWidget {
     );
   }
 
-  Widget _buildFocusAreaRow(FocusArea area, bool isLast) {
+  Widget _buildFocusAreaRow(BuildContext context, FocusArea area, bool isLast) {
     // Get subject icon and color
     IconData subjectIcon;
     Color subjectColor;
@@ -450,43 +451,66 @@ class OverviewTab extends StatelessWidget {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            children: [
-              // Subject icon
-              Icon(subjectIcon, size: 16, color: subjectColor),
-              const SizedBox(width: 8),
-              // Chapter name
-              Expanded(
-                child: Text(
-                  area.chapterName,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+        InkWell(
+          onTap: () {
+            // Navigate to Chapter Practice for this focus area
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChapterPracticeLoadingScreen(
+                  chapterKey: area.chapterKey,
+                  chapterName: area.chapterName,
+                  subject: area.subject,
                 ),
               ),
-              const SizedBox(width: 8),
-              // Score badge (correct/total)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: accuracyColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '$correct/$total',
-                  style: AppTextStyles.caption.copyWith(
-                    color: accuracyColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
+            );
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Row(
+              children: [
+                // Subject icon
+                Icon(subjectIcon, size: 16, color: subjectColor),
+                const SizedBox(width: 8),
+                // Chapter name
+                Expanded(
+                  child: Text(
+                    area.chapterName,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                // Score badge (correct/total)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: accuracyColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$correct/$total',
+                    style: AppTextStyles.caption.copyWith(
+                      color: accuracyColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                // Arrow indicating tap action
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppColors.textLight,
+                ),
+              ],
+            ),
           ),
         ),
         if (!isLast)
