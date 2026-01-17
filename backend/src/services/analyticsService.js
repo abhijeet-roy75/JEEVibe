@@ -120,15 +120,16 @@ function getSubjectDisplayName(subject) {
 
 /**
  * Calculate top focus areas for a student
+ * Returns exactly 1 focus chapter per subject (physics, chemistry, maths)
+ * for consistent display across Overview and Mastery tabs.
  *
  * @param {Object} thetaByChapter - Chapter theta data
- * @param {number} limit - Number of focus areas to return (default: 3)
  * @param {Map} chapterMappings - Pre-loaded chapter mappings (optional)
- * @returns {Promise<Array>} Array of focus area objects
+ * @returns {Promise<Array>} Array of focus area objects (1 per subject)
  */
-async function calculateFocusAreas(thetaByChapter, limit = 3, chapterMappings = null) {
-  const focusAreas = [];
+async function calculateFocusAreas(thetaByChapter, chapterMappings = null) {
   const thresholds = templates.mastery_thresholds;
+  const subjects = ['physics', 'chemistry', 'maths'];
 
   // Pre-load chapter mappings if not provided
   if (!chapterMappings) {
@@ -140,31 +141,32 @@ async function calculateFocusAreas(thetaByChapter, limit = 3, chapterMappings = 
     }
   }
 
+  // Group chapters by subject and find the weakest (lowest percentile) for each
+  const subjectFocusAreas = {};
+
   for (const [chapterKey, data] of Object.entries(thetaByChapter)) {
     const percentile = data.percentile || 0;
     const attempts = data.attempts || 0;
 
-    // Skip if already mastered
-    if (percentile >= thresholds.mastered_min_percentile) {
+    // Extract subject from chapter key
+    const subject = chapterKey.split('_')[0];
+
+    // Only process known subjects
+    if (!subjects.includes(subject)) {
       continue;
     }
 
-    // Determine reason and priority
+    // Determine reason based on percentile
     let reason = 'low_percentile';
-    let priority = 100 - percentile; // Higher priority for lower percentile
-
-    if (attempts < 5 && percentile < 50) {
+    if (percentile >= thresholds.mastered_min_percentile) {
+      reason = 'mastered';
+    } else if (attempts < 5 && percentile < 50) {
       reason = 'low_attempts';
-      priority += 20; // Boost priority for low attempts
     } else if (percentile >= 35 && percentile < thresholds.growing_min_percentile) {
       reason = 'close_to_breakthrough';
-      priority += 10; // Boost priority for near-breakthrough
     } else if (percentile < 30) {
       reason = 'needs_attention';
     }
-
-    // Extract subject from chapter key
-    const subject = chapterKey.split('_')[0];
 
     // Get display name from mappings or fallback
     const mapping = chapterMappings.get(chapterKey);
@@ -179,7 +181,7 @@ async function calculateFocusAreas(thetaByChapter, limit = 3, chapterMappings = 
     const correct = data.correct || 0;
     const total = data.total || 0;
 
-    focusAreas.push({
+    const focusArea = {
       chapter_key: chapterKey,
       chapter_name: chapterName,
       subject: subject,
@@ -190,14 +192,24 @@ async function calculateFocusAreas(thetaByChapter, limit = 3, chapterMappings = 
       correct: correct,
       total: total,
       reason: reason,
-      priority: priority,
       status: getMasteryStatus(percentile)
-    });
+    };
+
+    // Keep the chapter with lowest percentile for each subject
+    if (!subjectFocusAreas[subject] || percentile < subjectFocusAreas[subject].percentile) {
+      subjectFocusAreas[subject] = focusArea;
+    }
   }
 
-  // Sort by priority (descending) and return top N
-  focusAreas.sort((a, b) => b.priority - a.priority);
-  return focusAreas.slice(0, limit);
+  // Return focus areas in consistent order: physics, chemistry, maths
+  const focusAreas = [];
+  for (const subject of subjects) {
+    if (subjectFocusAreas[subject]) {
+      focusAreas.push(subjectFocusAreas[subject]);
+    }
+  }
+
+  return focusAreas;
 }
 
 // ============================================================================
@@ -501,7 +513,7 @@ async function getAnalyticsOverview(userId) {
     }
 
     const chaptersMastered = countMasteredChapters(thetaByChapter);
-    const focusAreas = await calculateFocusAreas(thetaByChapter, 3, chapterMappings);
+    const focusAreas = await calculateFocusAreas(thetaByChapter, chapterMappings);
 
     // Build subject progress with status labels and accuracy
     const subjectAccuracy = userData.subject_accuracy || {};

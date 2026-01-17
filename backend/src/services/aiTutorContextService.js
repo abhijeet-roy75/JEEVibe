@@ -232,7 +232,7 @@ async function buildAnalyticsContext(userId) {
     const thetaBySubject = userData.theta_by_subject || {};
 
     // Calculate focus areas
-    const focusAreas = await calculateFocusAreas(thetaByChapter, 5);
+    const focusAreas = await calculateFocusAreas(thetaByChapter);
 
     // Get subject strengths
     const subjects = Object.entries(thetaBySubject)
