@@ -27,6 +27,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   AnalyticsOverview? _overview;
+  WeeklyActivity? _weeklyActivity;
   UserProfile? _userProfile;
   bool _isLoading = true;
   String? _error;
@@ -82,11 +83,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       final analyticsAccess = _subscriptionService.status?.features.analyticsAccess ?? 'basic';
       _hasFullAnalytics = analyticsAccess == 'full';
 
-      final overview = await AnalyticsService.getOverview(authToken: token);
+      // Fetch overview and weekly activity in parallel
+      final results = await Future.wait([
+        AnalyticsService.getOverview(authToken: token),
+        AnalyticsService.getWeeklyActivity(authToken: token),
+      ]);
 
       if (mounted) {
         setState(() {
-          _overview = overview;
+          _overview = results[0] as AnalyticsOverview;
+          _weeklyActivity = results[1] as WeeklyActivity;
           _isLoading = false;
         });
       }
@@ -160,18 +166,28 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       constraints: const BoxConstraints(),
                     ),
                   ),
-                  // Centered greeting
+                  // Centered greeting - show loading state while data is loading
                   Expanded(
                     child: Column(
                       children: [
-                        Text(
-                          'Hi ${_getUserName()}! 👋',
-                          style: AppTextStyles.headerWhite.copyWith(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
+                        if (_isLoading)
+                          Container(
+                            height: 26,
+                            width: 140,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          )
+                        else
+                          Text(
+                            'Hi ${_getUserName()}! 👋',
+                            style: AppTextStyles.headerWhite.copyWith(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
-                        ),
                         const SizedBox(height: 2),
                         Text(
                           'Historical Analytics',
@@ -184,49 +200,59 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       ],
                     ),
                   ),
-                  // Tier badge
-                  GestureDetector(
-                    onTap: _hasFullAnalytics
-                        ? null
-                        : () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const PaywallScreen(
-                                  featureName: 'Full Analytics',
-                                ),
-                              ),
-                            );
-                          },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  // Tier badge - show loading state while data is loading
+                  if (_isLoading)
+                    Container(
+                      width: 60,
+                      height: 24,
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _hasFullAnalytics ? Icons.auto_awesome : Icons.lock_outline,
-                            color: Colors.white,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _hasFullAnalytics
-                                ? (_subscriptionService.currentTier.name.toUpperCase())
-                                : 'FREE',
-                            style: AppTextStyles.labelSmall.copyWith(
+                    )
+                  else
+                    GestureDetector(
+                      onTap: _hasFullAnalytics
+                          ? null
+                          : () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PaywallScreen(
+                                    featureName: 'Full Analytics',
+                                  ),
+                                ),
+                              );
+                            },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _hasFullAnalytics ? Icons.auto_awesome : Icons.lock_outline,
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11,
+                              size: 14,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Text(
+                              _hasFullAnalytics
+                                  ? (_subscriptionService.currentTier.name.toUpperCase())
+                                  : 'FREE',
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ],
@@ -326,6 +352,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       children: [
         OverviewTab(
           overview: _overview!,
+          weeklyActivity: _weeklyActivity,
           isBasicView: !_hasFullAnalytics,
         ),
         _hasFullAnalytics

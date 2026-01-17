@@ -64,7 +64,7 @@ class StatCard extends StatelessWidget {
                   value,
                   style: AppTextStyles.numericMedium.copyWith(
                     color: valueColor ?? AppColors.textPrimary,
-                    fontSize: 22,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

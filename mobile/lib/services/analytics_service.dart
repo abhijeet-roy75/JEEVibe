@@ -118,4 +118,78 @@ class AnalyticsService {
       rethrow;
     }
   }
+
+  /// Get accuracy timeline for charts (subject-level accuracy over time)
+  static Future<AccuracyTimeline> getAccuracyTimeline({
+    required String authToken,
+    required String subject,
+    int days = 30,
+  }) async {
+    try {
+      final queryParams = <String, String>{
+        'subject': subject,
+        'days': days.toString(),
+      };
+
+      final uri = Uri.parse('$baseUrl/api/analytics/accuracy-timeline')
+          .replace(queryParameters: queryParams);
+
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(timeout);
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json['success'] == true && json['data'] != null) {
+          return AccuracyTimeline.fromJson(json['data']);
+        }
+        throw Exception(json['error'] ?? 'Failed to load accuracy timeline');
+      } else if (response.statusCode == 401) {
+        throw Exception('Authentication required');
+      } else if (response.statusCode == 400) {
+        throw Exception('Invalid subject parameter');
+      } else {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(errorBody['error'] ?? 'Failed to load accuracy timeline (${response.statusCode})');
+      }
+    } catch (e) {
+      debugPrint('Error fetching accuracy timeline: $e');
+      rethrow;
+    }
+  }
+
+  /// Get weekly activity (questions answered per day for 7 days)
+  static Future<WeeklyActivity> getWeeklyActivity({
+    required String authToken,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/analytics/weekly-activity'),
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(timeout);
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json['success'] == true && json['data'] != null) {
+          return WeeklyActivity.fromJson(json['data']);
+        }
+        throw Exception(json['error'] ?? 'Failed to load weekly activity');
+      } else if (response.statusCode == 401) {
+        throw Exception('Authentication required');
+      } else {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(errorBody['error'] ?? 'Failed to load weekly activity (${response.statusCode})');
+      }
+    } catch (e) {
+      debugPrint('Error fetching weekly activity: $e');
+      rethrow;
+    }
+  }
 }

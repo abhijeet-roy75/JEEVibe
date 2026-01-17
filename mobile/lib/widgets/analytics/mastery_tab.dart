@@ -13,7 +13,7 @@ import '../../screens/assessment_intro_screen.dart';
 import '../../screens/ai_tutor_chat_screen.dart';
 import '../priya_avatar.dart';
 import 'chapter_mastery_item.dart';
-import 'mastery_chart.dart';
+import 'accuracy_chart.dart';
 
 class MasteryTab extends StatefulWidget {
   final String authToken;
@@ -32,9 +32,13 @@ class MasteryTab extends StatefulWidget {
 class _MasteryTabState extends State<MasteryTab> {
   String _selectedSubject = 'physics';
   SubjectMasteryDetails? _masteryDetails;
-  MasteryTimeline? _timeline;
+  AccuracyTimeline? _accuracyTimeline;
   bool _isLoading = true;
   String? _error;
+
+  // Cache for subject data to avoid re-fetching when switching tabs
+  final Map<String, SubjectMasteryDetails> _masteryCache = {};
+  final Map<String, AccuracyTimeline> _timelineCache = {};
 
   @override
   void initState() {
@@ -43,6 +47,18 @@ class _MasteryTabState extends State<MasteryTab> {
   }
 
   Future<void> _loadSubjectData() async {
+    // Check cache first
+    if (_masteryCache.containsKey(_selectedSubject) &&
+        _timelineCache.containsKey(_selectedSubject)) {
+      setState(() {
+        _masteryDetails = _masteryCache[_selectedSubject];
+        _accuracyTimeline = _timelineCache[_selectedSubject];
+        _isLoading = false;
+        _error = null;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -54,25 +70,39 @@ class _MasteryTabState extends State<MasteryTab> {
           authToken: widget.authToken,
           subject: _selectedSubject,
         ),
-        AnalyticsService.getMasteryTimeline(
+        AnalyticsService.getAccuracyTimeline(
           authToken: widget.authToken,
           subject: _selectedSubject,
-          limit: 30,
+          days: 30,
         ),
       ]);
 
       if (mounted) {
         final masteryDetails = results[0] as SubjectMasteryDetails;
-        debugPrint('[MasteryTab] Loaded mastery details for ${_selectedSubject}:');
+        final accuracyTimeline = results[1] as AccuracyTimeline;
+
+        // Store in cache
+        _masteryCache[_selectedSubject] = masteryDetails;
+        _timelineCache[_selectedSubject] = accuracyTimeline;
+
+        debugPrint('[MasteryTab] Loaded mastery details for $_selectedSubject:');
         debugPrint('  - Overall percentile: ${masteryDetails.overallPercentile}');
         debugPrint('  - Chapters tested: ${masteryDetails.chaptersTested}');
         debugPrint('  - Chapters count: ${masteryDetails.chapters.length}');
+        debugPrint('  - Accuracy timeline points: ${accuracyTimeline.dataPoints}');
         if (masteryDetails.chapters.isNotEmpty) {
           debugPrint('  - First chapter: ${masteryDetails.chapters.first.chapterName} (${masteryDetails.chapters.first.percentile}%)');
+          // Debug subtopics
+          for (final chapter in masteryDetails.chapters) {
+            debugPrint('  - ${chapter.chapterName}: ${chapter.subtopics.length} subtopics');
+            for (final st in chapter.subtopics) {
+              debugPrint('      - ${st.name}: ${st.correct}/${st.total} (${st.accuracy}%)');
+            }
+          }
         }
         setState(() {
           _masteryDetails = masteryDetails;
-          _timeline = results[1] as MasteryTimeline;
+          _accuracyTimeline = accuracyTimeline;
           _isLoading = false;
         });
       }
@@ -266,8 +296,15 @@ class _MasteryTabState extends State<MasteryTab> {
   Widget _buildOverallMasteryCard() {
     final details = _masteryDetails!;
 
+    // Get accuracy from overview subject progress
+    final subjectKey = _selectedSubject == 'maths' ? 'maths' : _selectedSubject;
+    final subjectProgress = widget.overview.subjectProgress[subjectKey];
+    final accuracy = subjectProgress?.accuracy ?? 0;
+    final correctCount = subjectProgress?.correct ?? 0;
+    final totalCount = subjectProgress?.total ?? 0;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -282,51 +319,48 @@ class _MasteryTabState extends State<MasteryTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Subject name and percentage
+          // Subject name and accuracy percentage
           Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                '${details.subjectName} Mastery',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                '${details.subjectName} Accuracy',
+                style: AppTextStyles.headerSmall.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
                 ),
               ),
-              const SizedBox(width: 8),
+              const Spacer(),
               Text(
-                '${details.overallPercentile.toInt()}%',
-                style: AppTextStyles.displaySmall.copyWith(
+                totalCount > 0 ? '$accuracy%' : '--',
+                style: AppTextStyles.headerSmall.copyWith(
                   fontWeight: FontWeight.bold,
                   color: _subjectColor,
-                  fontSize: 32,
+                  fontSize: 18,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          // Status badge and chapters tested
+          const SizedBox(height: 6),
+          // Questions count and chapters tested
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: details.status.backgroundColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  details.status.displayName,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: details.status.color,
+              if (totalCount > 0) ...[
+                Text(
+                  '$correctCount/$totalCount correct',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
                     fontWeight: FontWeight.w600,
+                    fontSize: 13,
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
+                const SizedBox(width: 16),
+              ],
               Text(
                 '${details.chaptersTested} chapters tested',
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textTertiary,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
                 ),
               ),
             ],
@@ -337,7 +371,7 @@ class _MasteryTabState extends State<MasteryTab> {
   }
 
   Widget _buildChartCard() {
-    if (_timeline == null || _timeline!.timeline.isEmpty) {
+    if (_accuracyTimeline == null || _accuracyTimeline!.timeline.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -362,7 +396,7 @@ class _MasteryTabState extends State<MasteryTab> {
               Icon(Icons.trending_up, color: _subjectColor, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Mastery over time',
+                'Accuracy over time',
                 style: AppTextStyles.headerSmall.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -370,8 +404,8 @@ class _MasteryTabState extends State<MasteryTab> {
             ],
           ),
           const SizedBox(height: 20),
-          MasteryChart(
-            timeline: _timeline!,
+          AccuracyChart(
+            timeline: _accuracyTimeline!,
             lineColor: _subjectColor,
             height: 180,
           ),
@@ -536,44 +570,33 @@ class _MasteryTabState extends State<MasteryTab> {
   }
 
   String _generateMasteryMessage() {
+    // Use backend-provided focus areas (1 per subject) for consistency with Overview tab
+    final subjectFocusArea = widget.overview.focusAreas
+        .where((fa) => fa.subject == _selectedSubject)
+        .firstOrNull;
+
+    if (subjectFocusArea != null) {
+      final chapterName = subjectFocusArea.chapterName;
+      final percentile = subjectFocusArea.percentile;
+
+      // Determine message based on percentile
+      if (percentile < 50) {
+        return 'Focus on **$chapterName** next — it\'s high-weight and you\'re close to breakthrough.';
+      } else if (percentile < 60) {
+        return 'Focus on **$chapterName** next — you\'re close to a breakthrough.';
+      } else if (percentile < 70) {
+        return 'Keep pushing **$chapterName** — you\'re making great progress!';
+      } else {
+        return 'Great work on **$chapterName**! Keep up the momentum.';
+      }
+    }
+
+    // Fallback if no focus area for this subject
     if (_masteryDetails == null || _masteryDetails!.chapters.isEmpty) {
       return 'Keep practicing to see your mastery improve!';
     }
 
-    // Find the top focus area (lowest percentile chapter)
-    final focusChapters = _masteryDetails!.chapters
-        .where((ch) => ch.status == MasteryStatus.focus)
-        .toList();
-    
-    if (focusChapters.isEmpty) {
-      // If no focus chapters, find the lowest percentile chapter
-      final sortedChapters = List<ChapterMastery>.from(_masteryDetails!.chapters)
-        ..sort((a, b) => a.percentile.compareTo(b.percentile));
-      
-      if (sortedChapters.isNotEmpty) {
-        final topFocus = sortedChapters.first;
-        if (topFocus.percentile < 60) {
-          return 'Focus on **${topFocus.chapterName}** next — it\'s high-weight and you\'re close to breakthrough.';
-        } else {
-          return 'Keep pushing **${topFocus.chapterName}** — you\'re making great progress!';
-        }
-      }
-    } else {
-      // Sort focus chapters by percentile (lowest first)
-      focusChapters.sort((a, b) => a.percentile.compareTo(b.percentile));
-      final topFocus = focusChapters.first;
-      
-      // Determine message based on percentile
-      if (topFocus.percentile < 50) {
-        return 'Focus on **${topFocus.chapterName}** next — it\'s high-weight and you\'re close to breakthrough.';
-      } else if (topFocus.percentile < 60) {
-        return 'Focus on **${topFocus.chapterName}** next — you\'re close to a breakthrough.';
-      } else {
-        return 'Keep pushing **${topFocus.chapterName}** — you\'re making great progress!';
-      }
-    }
-
-    return 'Keep practicing to see your mastery improve!';
+    return 'Keep practicing to build your ${_selectedSubject} skills!';
   }
 
   Widget _buildFormattedMessage(String message) {

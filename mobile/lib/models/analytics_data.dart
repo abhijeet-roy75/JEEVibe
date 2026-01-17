@@ -192,6 +192,9 @@ class FocusArea {
   final String subjectName;
   final double percentile;
   final int attempts;
+  final double accuracy;
+  final int correct;
+  final int total;
   final String reason;
   final MasteryStatus status;
 
@@ -202,6 +205,9 @@ class FocusArea {
     required this.subjectName,
     required this.percentile,
     required this.attempts,
+    required this.accuracy,
+    required this.correct,
+    required this.total,
     required this.reason,
     required this.status,
   });
@@ -214,6 +220,9 @@ class FocusArea {
       subjectName: json['subject_name'] ?? '',
       percentile: (json['percentile'] ?? 0).toDouble(),
       attempts: json['attempts'] ?? 0,
+      accuracy: (json['accuracy'] ?? 0).toDouble(),
+      correct: json['correct'] ?? 0,
+      total: json['total'] ?? 0,
       reason: json['reason'] ?? '',
       status: MasteryStatus.fromString(json['status'] ?? 'FOCUS'),
     );
@@ -278,6 +287,30 @@ class AnalyticsOverview {
   }
 }
 
+/// Subtopic accuracy data
+class SubtopicAccuracy {
+  final String name;
+  final int correct;
+  final int total;
+  final int accuracy;
+
+  SubtopicAccuracy({
+    required this.name,
+    required this.correct,
+    required this.total,
+    required this.accuracy,
+  });
+
+  factory SubtopicAccuracy.fromJson(Map<String, dynamic> json) {
+    return SubtopicAccuracy(
+      name: json['name'] ?? '',
+      correct: json['correct'] ?? 0,
+      total: json['total'] ?? 0,
+      accuracy: json['accuracy'] ?? 0,
+    );
+  }
+}
+
 /// Chapter mastery data
 class ChapterMastery {
   final String chapterKey;
@@ -286,8 +319,11 @@ class ChapterMastery {
   final double theta;
   final int attempts;
   final double accuracy;
+  final int correct; // Number of correct answers
+  final int total; // Total questions attempted
   final MasteryStatus status;
   final DateTime? lastUpdated;
+  final List<SubtopicAccuracy> subtopics;
 
   ChapterMastery({
     required this.chapterKey,
@@ -296,11 +332,20 @@ class ChapterMastery {
     required this.theta,
     required this.attempts,
     required this.accuracy,
+    required this.correct,
+    required this.total,
     required this.status,
     this.lastUpdated,
+    this.subtopics = const [],
   });
 
   factory ChapterMastery.fromJson(Map<String, dynamic> json) {
+    final subtopicsJson = json['subtopics'] as List<dynamic>? ?? [];
+    final subtopics = subtopicsJson
+        .whereType<Map<String, dynamic>>()
+        .map((e) => SubtopicAccuracy.fromJson(e))
+        .toList();
+
     return ChapterMastery(
       chapterKey: json['chapter_key'] ?? '',
       chapterName: json['chapter_name'] ?? '',
@@ -308,10 +353,13 @@ class ChapterMastery {
       theta: (json['theta'] ?? 0).toDouble(),
       attempts: json['attempts'] ?? 0,
       accuracy: (json['accuracy'] ?? 0).toDouble(),
+      correct: json['correct'] ?? 0,
+      total: json['total'] ?? 0,
       status: MasteryStatus.fromString(json['status'] ?? 'FOCUS'),
       lastUpdated: json['last_updated'] != null
           ? DateTime.tryParse(json['last_updated'].toString())
           : null,
+      subtopics: subtopics,
     );
   }
 }
@@ -430,6 +478,123 @@ class MasteryTimeline {
     return MasteryTimeline(
       subject: filter['subject'],
       chapter: filter['chapter'],
+      dataPoints: json['data_points'] ?? 0,
+      timeline: timeline,
+    );
+  }
+}
+
+/// Daily activity data point
+class DailyActivity {
+  final String date;
+  final String dayName;
+  final int quizzes;
+  final int questions;
+  final int correct;
+  final double accuracy;
+  final bool isToday;
+
+  DailyActivity({
+    required this.date,
+    required this.dayName,
+    required this.quizzes,
+    required this.questions,
+    required this.correct,
+    required this.accuracy,
+    required this.isToday,
+  });
+
+  factory DailyActivity.fromJson(Map<String, dynamic> json) {
+    return DailyActivity(
+      date: json['date'] ?? '',
+      dayName: json['dayName'] ?? '',
+      quizzes: json['quizzes'] ?? 0,
+      questions: json['questions'] ?? 0,
+      correct: json['correct'] ?? 0,
+      accuracy: (json['accuracy'] ?? 0).toDouble(),
+      isToday: json['isToday'] ?? false,
+    );
+  }
+}
+
+/// Weekly activity response
+class WeeklyActivity {
+  final List<DailyActivity> week;
+  final int totalQuestions;
+  final int totalQuizzes;
+
+  WeeklyActivity({
+    required this.week,
+    required this.totalQuestions,
+    required this.totalQuizzes,
+  });
+
+  factory WeeklyActivity.fromJson(Map<String, dynamic> json) {
+    final weekJson = json['week'] as List<dynamic>? ?? [];
+    final week = weekJson
+        .whereType<Map<String, dynamic>>()
+        .map((e) => DailyActivity.fromJson(e))
+        .toList();
+
+    return WeeklyActivity(
+      week: week,
+      totalQuestions: json['total_questions'] ?? 0,
+      totalQuizzes: json['total_quizzes'] ?? 0,
+    );
+  }
+}
+
+/// Accuracy timeline data point for charts
+class AccuracyTimelinePoint {
+  final DateTime date;
+  final int accuracy; // Percentage 0-100
+  final int questions;
+  final int correct;
+  final int quizzes;
+
+  AccuracyTimelinePoint({
+    required this.date,
+    required this.accuracy,
+    required this.questions,
+    required this.correct,
+    required this.quizzes,
+  });
+
+  factory AccuracyTimelinePoint.fromJson(Map<String, dynamic> json) {
+    return AccuracyTimelinePoint(
+      date: DateTime.tryParse(json['date'] ?? '') ?? DateTime.now(),
+      accuracy: json['accuracy'] ?? 0,
+      questions: json['questions'] ?? 0,
+      correct: json['correct'] ?? 0,
+      quizzes: json['quizzes'] ?? 0,
+    );
+  }
+}
+
+/// Accuracy timeline response
+class AccuracyTimeline {
+  final String subject;
+  final int days;
+  final int dataPoints;
+  final List<AccuracyTimelinePoint> timeline;
+
+  AccuracyTimeline({
+    required this.subject,
+    required this.days,
+    required this.dataPoints,
+    required this.timeline,
+  });
+
+  factory AccuracyTimeline.fromJson(Map<String, dynamic> json) {
+    final timelineJson = json['timeline'] as List<dynamic>? ?? [];
+    final timeline = timelineJson
+        .whereType<Map<String, dynamic>>()
+        .map((e) => AccuracyTimelinePoint.fromJson(e))
+        .toList();
+
+    return AccuracyTimeline(
+      subject: json['subject'] ?? '',
+      days: json['days'] ?? 30,
       dataPoints: json['data_points'] ?? 0,
       timeline: timeline,
     );
