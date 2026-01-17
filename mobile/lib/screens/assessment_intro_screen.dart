@@ -812,6 +812,30 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                       );
                     }
 
+                    // Check if snap limit reached (not unlimited and no snaps remaining)
+                    final isLimitReached = appState.snapLimit != -1 && appState.snapsRemaining <= 0;
+
+                    if (isLimitReached) {
+                      // Show upgrade button when limit reached
+                      return GradientButton(
+                        text: 'Upgrade for More Snaps',
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PaywallScreen(
+                                featureName: 'Snap & Solve',
+                                usageType: UsageType.snapSolve,
+                                limitReachedMessage: "You've used all your daily snaps. Upgrade for more!",
+                              ),
+                            ),
+                          );
+                        },
+                        size: GradientButtonSize.large,
+                        leadingIcon: Icons.workspace_premium_rounded,
+                      );
+                    }
+
                     return GradientButton(
                       text: 'Take a Photo',
                       onPressed: () {
