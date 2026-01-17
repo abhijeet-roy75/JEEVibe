@@ -639,10 +639,25 @@ async function getSubjectMasteryDetails(userId, subject) {
           accuracy: subtopicData.accuracy || 0
         })).sort((a, b) => a.accuracy - b.accuracy); // Sort by accuracy ascending (weakest first)
 
-        // Normalize accuracy: old data might be fraction (0-1), new data is percentage (0-100)
-        let chapterAccuracy = data.accuracy || 0;
-        if (chapterAccuracy > 0 && chapterAccuracy <= 1) {
-          chapterAccuracy = Math.round(chapterAccuracy * 100);
+        // Calculate chapter-level correct/total from subtopics (single source of truth)
+        let chapterCorrect = 0;
+        let chapterTotal = 0;
+        let chapterAccuracy = 0;
+
+        if (subtopics.length > 0) {
+          // Derive from subtopic data - this is the authoritative source
+          chapterCorrect = subtopics.reduce((sum, s) => sum + s.correct, 0);
+          chapterTotal = subtopics.reduce((sum, s) => sum + s.total, 0);
+          chapterAccuracy = chapterTotal > 0 ? Math.round((chapterCorrect / chapterTotal) * 100) : 0;
+        } else {
+          // Fall back to theta_by_chapter data if no subtopics
+          // Normalize: old data might be fraction (0-1), new data is percentage (0-100)
+          chapterAccuracy = data.accuracy || 0;
+          if (chapterAccuracy > 0 && chapterAccuracy <= 1) {
+            chapterAccuracy = Math.round(chapterAccuracy * 100);
+          }
+          chapterTotal = data.attempts || 0;
+          chapterCorrect = chapterTotal > 0 ? Math.round((chapterAccuracy / 100) * chapterTotal) : 0;
         }
 
         chapters.push({
@@ -650,8 +665,10 @@ async function getSubjectMasteryDetails(userId, subject) {
           chapter_name: chapterName,
           percentile: data.percentile || 0,
           theta: data.theta || 0,
-          attempts: data.attempts || 0,
-          accuracy: chapterAccuracy,
+          attempts: chapterTotal, // Use subtopic-derived total
+          accuracy: chapterAccuracy, // Use subtopic-derived accuracy
+          correct: chapterCorrect, // Add correct count for frontend
+          total: chapterTotal, // Add total count for frontend
           status: getMasteryStatus(data.percentile || 0),
           last_updated: data.last_updated,
           subtopics: subtopics
