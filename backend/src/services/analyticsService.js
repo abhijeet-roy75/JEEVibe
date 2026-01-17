@@ -503,11 +503,13 @@ async function getAnalyticsOverview(userId) {
     const subjectAccuracy = userData.subject_accuracy || {};
     const subjectProgress = {};
     for (const [subject, data] of Object.entries(thetaBySubject)) {
-      // Map 'maths' to 'mathematics' for subject_accuracy lookup
+      // Map 'mathematics' to 'maths' for consistent frontend key
+      const outputKey = subject === 'mathematics' ? 'maths' : subject;
+      // subject_accuracy uses 'mathematics' key internally
       const accuracyKey = subject === 'maths' ? 'mathematics' : subject;
       const accuracyData = subjectAccuracy[accuracyKey] || {};
 
-      subjectProgress[subject] = {
+      subjectProgress[outputKey] = {
         ...data,
         display_name: getSubjectDisplayName(subject),
         status: getMasteryStatus(data.percentile || 0),
