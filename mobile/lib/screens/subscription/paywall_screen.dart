@@ -410,7 +410,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             Icons.quiz_outlined,
             'Daily Quizzes',
             '1/day',
-            _isUltraSelected ? 'Unlimited' : '3/day',
+            _isUltraSelected ? 'Unlimited' : '10/day',
             tierColor,
             tierBgColor,
           ),

@@ -8,6 +8,7 @@ class DailyQuizCardWidget extends StatelessWidget {
   final bool hasActiveQuiz;
   final bool canStartQuiz;
   final VoidCallback? onStartQuiz;
+  final VoidCallback? onUpgrade; // Callback when upgrade button is tapped
   final int? questionCount; // C8: Dynamic quiz size
   final int? estimatedTimeMinutes; // C8: Dynamic time estimate
   final int? quizzesRemaining; // null = unlimited, otherwise shows remaining
@@ -17,6 +18,7 @@ class DailyQuizCardWidget extends StatelessWidget {
     this.hasActiveQuiz = false,
     this.canStartQuiz = true,
     this.onStartQuiz,
+    this.onUpgrade,
     this.questionCount,
     this.estimatedTimeMinutes,
     this.quizzesRemaining,
@@ -156,53 +158,98 @@ class DailyQuizCardWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: canStartQuiz
-                ? Container(
-                    decoration: BoxDecoration(
-                      gradient: AppColors.ctaGradient,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: onStartQuiz,
+          // Check if limit is reached (quizzesRemaining == 0 and not unlimited)
+          // Allow continuing active quiz even if limit reached
+          if (quizzesRemaining != null && quizzesRemaining == 0 && !hasActiveQuiz) ...[
+            // Show disabled button with limit reached message
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.borderGray,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  disabledBackgroundColor: AppColors.borderGray,
+                ),
+                child: Text(
+                  'Daily Limit Reached',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Upgrade CTA button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: onUpgrade,
+                icon: const Icon(Icons.workspace_premium_rounded, size: 20),
+                label: const Text('Upgrade for More Quizzes'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primaryPurple,
+                  side: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ] else ...[
+            // Normal button (enabled or disabled based on canStartQuiz)
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: canStartQuiz
+                  ? Container(
+                      decoration: BoxDecoration(
+                        gradient: AppColors.ctaGradient,
                         borderRadius: BorderRadius.circular(12),
-                        child: Center(
-                          child: Text(
-                            hasActiveQuiz ? 'Continue Quiz' : 'Start Today\'s Quiz',
-                            style: AppTextStyles.labelMedium.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: onStartQuiz,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Center(
+                            child: Text(
+                              hasActiveQuiz ? 'Continue Quiz' : 'Start Today\'s Quiz',
+                              style: AppTextStyles.labelMedium.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  )
-                : ElevatedButton(
-                    onPressed: null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.borderGray,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    )
+                  : ElevatedButton(
+                      onPressed: null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.borderGray,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        disabledBackgroundColor: AppColors.borderGray,
                       ),
-                      disabledBackgroundColor: AppColors.borderGray,
-                    ),
-                    child: Text(
-                      quizzesRemaining != null && quizzesRemaining! <= 0
-                          ? 'Daily Limit Reached'
-                          : 'Completed for Today',
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                      child: Text(
+                        'Completed for Today',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-          ),
+            ),
+          ],
         ],
       ),
     );

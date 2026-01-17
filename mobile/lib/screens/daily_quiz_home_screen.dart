@@ -459,6 +459,19 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
           questionCount: questionCount,
           estimatedTimeMinutes: estimatedTimeMinutes,
           quizzesRemaining: _isQuizUnlimited ? -1 : _quizzesRemaining,
+          onUpgrade: () {
+            // Navigate to paywall with daily quiz context
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PaywallScreen(
+                  featureName: 'Daily Quiz',
+                  usageType: UsageType.dailyQuiz,
+                  limitReachedMessage: "You've used your free daily Daily Quiz. Upgrade for more!",
+                ),
+              ),
+            );
+          },
           onStartQuiz: _isCheckingQuizAccess ? null : () async {
             // Prevent double-tap by showing loading state
             if (_isCheckingQuizAccess) return;
