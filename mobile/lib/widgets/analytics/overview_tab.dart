@@ -59,9 +59,21 @@ class OverviewTab extends StatelessWidget {
   }
 
   Widget _buildStatsGrid() {
+    // Calculate overall accuracy from subjects
+    final subjects = overview.orderedSubjectProgress;
+    int totalCorrect = 0;
+    int totalQuestions = 0;
+    for (final subject in subjects) {
+      totalCorrect += subject.correct;
+      totalQuestions += subject.total;
+    }
+    final overallAccuracy = totalQuestions > 0
+        ? ((totalCorrect / totalQuestions) * 100).round()
+        : 0;
+
     return Row(
       children: [
-        // Streak - purple background per design
+        // Streak - purple background
         Expanded(
           child: StatCard(
             icon: Icons.local_fire_department,
@@ -71,8 +83,8 @@ class OverviewTab extends StatelessWidget {
             label: 'Streak',
           ),
         ),
-        const SizedBox(width: 12),
-        // Qs Done - orange/amber background per design
+        const SizedBox(width: 8),
+        // Qs Done - orange/amber background
         Expanded(
           child: StatCard(
             icon: Icons.check_circle,
@@ -82,15 +94,15 @@ class OverviewTab extends StatelessWidget {
             label: 'Qs Done',
           ),
         ),
-        const SizedBox(width: 12),
-        // Mastered - green background per design
+        const SizedBox(width: 8),
+        // Overall Accuracy - green background
         Expanded(
           child: StatCard(
-            icon: Icons.emoji_events,
+            icon: Icons.percent,
             iconColor: AppColors.successGreen,
             iconBackgroundColor: AppColors.successGreen,
-            value: '${overview.stats.chaptersMastered}',
-            label: 'Mastered',
+            value: '$overallAccuracy%',
+            label: 'Accuracy',
           ),
         ),
       ],
