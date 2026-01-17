@@ -34,6 +34,7 @@ import '../services/subscription_service.dart';
 import '../models/subscription_models.dart';
 import '../services/journey_service.dart';
 import '../services/share_service.dart';
+import 'subscription/paywall_screen.dart';
 
 class AssessmentIntroScreen extends StatefulWidget {
   const AssessmentIntroScreen({super.key});
@@ -632,21 +633,61 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            GradientButton(
-              text: 'Start Practice',
-              onPressed: isUnlocked
-                  ? () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const DailyQuizLoadingScreen(),
+            // Check if limit reached (not unlimited and remaining <= 0)
+            if (isUnlocked && quizUsage != null && !quizUsage.isUnlimited && quizUsage.remaining <= 0) ...[
+              // Show disabled button
+              GradientButton(
+                text: 'Daily Limit Reached',
+                onPressed: null,
+                size: GradientButtonSize.large,
+              ),
+              const SizedBox(height: 12),
+              // Upgrade CTA
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PaywallScreen(
+                          featureName: 'Daily Quiz',
+                          usageType: UsageType.dailyQuiz,
+                          limitReachedMessage: "You've used your free daily Daily Quiz. Upgrade for more!",
                         ),
-                      );
-                    }
-                  : null,
-              size: GradientButtonSize.large,
-              trailingIcon: Icons.arrow_forward,
-            ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.workspace_premium_rounded, size: 20),
+                  label: const Text('Upgrade for More Quizzes'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primaryPurple,
+                    side: const BorderSide(color: AppColors.primaryPurple, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ] else ...[
+              // Normal button
+              GradientButton(
+                text: 'Start Practice',
+                onPressed: isUnlocked
+                    ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DailyQuizLoadingScreen(),
+                          ),
+                        );
+                      }
+                    : null,
+                size: GradientButtonSize.large,
+                trailingIcon: Icons.arrow_forward,
+              ),
+            ],
           ],
         ),
       ),
