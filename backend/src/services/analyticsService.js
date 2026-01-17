@@ -129,7 +129,7 @@ function getSubjectDisplayName(subject) {
  */
 async function calculateFocusAreas(thetaByChapter, chapterMappings = null) {
   const thresholds = templates.mastery_thresholds;
-  const subjects = ['physics', 'chemistry', 'maths'];
+  const subjects = ['physics', 'chemistry', 'mathematics'];
 
   // Pre-load chapter mappings if not provided
   if (!chapterMappings) {
