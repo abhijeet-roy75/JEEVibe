@@ -36,8 +36,8 @@ class OverviewTab extends StatelessWidget {
           // Stats grid (Streak, Qs Done, Mastered) - order per design
           _buildStatsGrid(),
           const SizedBox(height: 20),
-          // Subject progress section
-          _buildSubjectMasteryCard(),
+          // Your Progress section (same as home page)
+          _buildYourProgressCard(),
           const SizedBox(height: 20),
           // Focus Areas section (only for full analytics - PRO/ULTRA)
           if (!isBasicView && overview.focusAreas.isNotEmpty) ...[
@@ -97,7 +97,7 @@ class OverviewTab extends StatelessWidget {
     );
   }
 
-  Widget _buildSubjectMasteryCard() {
+  Widget _buildYourProgressCard() {
     final subjects = overview.orderedSubjectProgress;
 
     return Container(
@@ -107,97 +107,145 @@ class OverviewTab extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+            spreadRadius: 1,
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header with icon and title
           Row(
             children: [
-              const Icon(Icons.menu_book, color: AppColors.successGreen, size: 20),
+              const Icon(
+                Icons.trending_up,
+                size: 24,
+                color: AppColors.primaryPurple,
+              ),
               const SizedBox(width: 8),
               Text(
-                'Subject Mastery',
+                'Your Progress',
                 style: AppTextStyles.headerSmall.copyWith(
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          ...subjects.map((subject) => _buildSubjectRow(subject)),
+          const SizedBox(height: 16),
+          // Subject Results
+          _buildSubjectResult(
+            'Physics',
+            subjects.firstWhere((s) => s.subject.toLowerCase() == 'physics',
+                orElse: () => _emptySubject('physics')),
+            AppColors.subjectPhysics,
+            Icons.bolt,
+          ),
+          const SizedBox(height: 8),
+          _buildSubjectResult(
+            'Chemistry',
+            subjects.firstWhere((s) => s.subject.toLowerCase() == 'chemistry',
+                orElse: () => _emptySubject('chemistry')),
+            AppColors.subjectChemistry,
+            Icons.science,
+          ),
+          const SizedBox(height: 8),
+          _buildSubjectResult(
+            'Mathematics',
+            subjects.firstWhere(
+                (s) => s.subject.toLowerCase() == 'mathematics' || s.subject.toLowerCase() == 'maths',
+                orElse: () => _emptySubject('mathematics')),
+            AppColors.subjectMathematics,
+            Icons.functions,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSubjectRow(SubjectProgress subject) {
-    final displayName = subject.subject.toLowerCase() == 'mathematics'
-        ? 'Maths'
-        : subject.displayName;
+  SubjectProgress _emptySubject(String subject) {
+    return SubjectProgress(
+      subject: subject,
+      displayName: subject,
+      percentile: 0,
+      theta: 0,
+      status: MasteryStatus.focus,
+      chaptersTested: 0,
+    );
+  }
 
-    // Use accuracy if available, otherwise show 0
+  Widget _buildSubjectResult(String subjectName, SubjectProgress subject, Color color, IconData icon) {
     final accuracyValue = subject.accuracy ?? 0;
-    final hasAccuracy = subject.accuracy != null;
+    final displayAccuracy = subject.accuracy != null ? '${subject.accuracy}%' : 'N/A';
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          // Subject icon
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: subject.iconColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+    // Determine progress bar color based on accuracy thresholds
+    Color progressColor;
+    if (subject.accuracy == null || accuracyValue == 0) {
+      progressColor = Colors.grey;
+    } else if (accuracyValue < 70) {
+      progressColor = AppColors.performanceOrange;
+    } else if (accuracyValue <= 85) {
+      progressColor = AppColors.subjectMathematics;
+    } else {
+      progressColor = AppColors.subjectChemistry;
+    }
+
+    // Build the correct/total display string
+    final hasQuestionData = subject.total > 0;
+    final correctTotalText = hasQuestionData
+        ? '${subject.correct}/${subject.total}'
+        : '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Subject name with icon, question count, and percentage row
+        Row(
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 6),
+            Text(
+              subjectName,
+              style: AppTextStyles.headerSmall.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            child: Icon(
-              subject.icon,
-              color: subject.iconColor,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Progress bar and label
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  displayName,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+            if (correctTotalText.isNotEmpty) ...[
+              const SizedBox(width: 6),
+              Text(
+                correctTotalText,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textLight,
+                  fontSize: 12,
                 ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: accuracyValue / 100,
-                    backgroundColor: AppColors.borderGray,
-                    valueColor: AlwaysStoppedAnimation<Color>(subject.progressColor),
-                    minHeight: 8,
-                  ),
-                ),
-              ],
+              ),
+            ],
+            const Spacer(),
+            Text(
+              displayAccuracy,
+              style: AppTextStyles.headerSmall.copyWith(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
             ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Progress bar
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: accuracyValue / 100,
+            backgroundColor: Colors.grey.shade200,
+            valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+            minHeight: 6,
           ),
-          const SizedBox(width: 12),
-          // Accuracy percentage
-          Text(
-            hasAccuracy ? '$accuracyValue%' : '-',
-            style: AppTextStyles.labelMedium.copyWith(
-              color: hasAccuracy ? subject.progressColor : AppColors.textMedium,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
