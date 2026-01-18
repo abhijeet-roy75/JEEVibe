@@ -13,6 +13,20 @@
  * 8. Practice streaks (practice_streaks/{userId})
  * 9. Theta history/Weekly snapshots (theta_history/{userId}/snapshots)
  * 10. Snap Images in Storage (snaps/{userId}/*)
+ * 11. AI Tutor conversations (users/{userId}/tutor_conversation/active/messages)
+ * 12. Theta snapshots (theta_snapshots/{userId}/daily)
+ * 13. Chapter practice sessions (chapter_practice_sessions/{userId}/sessions)
+ * 14. Chapter practice responses (chapter_practice_responses/{userId}/responses)
+ * 15. Chapter practice weekly limits (users/{userId}/chapter_practice_weekly)
+ * 16. Subscriptions (users/{userId}/subscriptions)
+ * 17. Share events (share_events/{userId}/items)
+ * 18. Feedback entries (feedback collection, queried by userId)
+ * 19. User quizzes subcollection (users/{userId}/quizzes)
+ *
+ * LEGACY COLLECTIONS (typos - kept for cleanup):
+ * 20. thetha_snapshots/{userId}/daily (typo: thetha -> theta)
+ * 21. thetha_history/{userId}/snapshots (typo: thetha -> theta)
+ * 22. chapter_practise_sessions/{userId}/sessions (typo: practise -> practice)
  *
  * Usage:
  *   node scripts/cleanup-user.js <userId|phoneNumber> [--preview] [--force]
@@ -151,6 +165,90 @@ async function deleteStorageFolder(prefix, isPreview = false) {
     }
 }
 
+/**
+ * Delete chapter practice sessions with their nested question subcollections
+ * @param {string} userId
+ * @param {boolean} isPreview
+ * @param {string} collectionName - Collection name (supports legacy typo versions)
+ */
+async function deleteChapterPracticeSessions(userId, isPreview = false, collectionName = 'chapter_practice_sessions') {
+    const sessionsRef = db.collection(collectionName).doc(userId).collection('sessions');
+    const sessionsSnapshot = await sessionsRef.get();
+
+    if (sessionsSnapshot.empty) {
+        return;
+    }
+
+    if (isPreview) {
+        console.log(`     [DRY RUN] Would delete ${sessionsSnapshot.size} chapter practice session documents...`);
+
+        // Count total question documents across all sessions
+        let totalQuestions = 0;
+        for (const sessionDoc of sessionsSnapshot.docs) {
+            const questionsSnapshot = await sessionDoc.ref.collection('questions').get();
+            totalQuestions += questionsSnapshot.size;
+        }
+
+        if (totalQuestions > 0) {
+            console.log(`     [DRY RUN] Would delete ${totalQuestions} question documents from session subcollections...`);
+        }
+        return;
+    }
+
+    // Delete each session and its questions subcollection
+    let deletedSessions = 0;
+    let deletedQuestions = 0;
+
+    for (const sessionDoc of sessionsSnapshot.docs) {
+        // Delete questions subcollection first
+        const questionsRef = sessionDoc.ref.collection('questions');
+        const questionsSnapshot = await questionsRef.get();
+
+        if (!questionsSnapshot.empty) {
+            const batch = db.batch();
+            questionsSnapshot.docs.forEach(questionDoc => {
+                batch.delete(questionDoc.ref);
+            });
+            await batch.commit();
+            deletedQuestions += questionsSnapshot.size;
+        }
+
+        // Then delete the session document itself
+        await sessionDoc.ref.delete();
+        deletedSessions++;
+    }
+
+    console.log(`     ✓ Deleted ${deletedSessions} chapter practice sessions and ${deletedQuestions} question documents`);
+}
+
+/**
+ * Delete feedback entries by userId
+ * Queries the feedback collection for entries belonging to this user
+ * @param {string} userId
+ * @param {boolean} isPreview
+ */
+async function deleteFeedbackByUser(userId, isPreview = false) {
+    const feedbackQuery = db.collection('feedback').where('userId', '==', userId);
+    const feedbackSnapshot = await feedbackQuery.get();
+
+    if (feedbackSnapshot.empty) {
+        return;
+    }
+
+    if (isPreview) {
+        console.log(`     [DRY RUN] Would delete ${feedbackSnapshot.size} feedback entries...`);
+        return;
+    }
+
+    const batch = db.batch();
+    feedbackSnapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+    await batch.commit();
+
+    console.log(`     ✓ Deleted ${feedbackSnapshot.size} feedback entries`);
+}
+
 async function cleanupUser(identifier, options = {}) {
     const { isPreview = false, isForce = false } = options;
 
@@ -222,12 +320,15 @@ async function cleanupUser(identifier, options = {}) {
         console.log('   - Checking Firebase Storage for snap images...');
         await deleteStorageFolder(`snaps/${userId}/`, isPreview);
 
-        // --- SUBCOLLECTIONS ---
+        // --- USER SUBCOLLECTIONS ---
         console.log('   - Processing snap history documents...');
         await deleteCollection(userRef.collection('snaps'), isPreview);
 
         console.log('   - Processing daily snap usage records...');
         await deleteCollection(userRef.collection('daily_usage'), isPreview);
+
+        console.log('   - Processing user quizzes subcollection...');
+        await deleteCollection(userRef.collection('quizzes'), isPreview);
 
         console.log('   - Processing assessment responses...');
         await deleteCollection(db.collection('assessment_responses').doc(userId).collection('responses'), isPreview);
@@ -244,6 +345,59 @@ async function cleanupUser(identifier, options = {}) {
         console.log('   - Processing theta history snapshots...');
         await deleteCollection(db.collection('theta_history').doc(userId).collection('snapshots'), isPreview);
         if (!isPreview) await db.collection('theta_history').doc(userId).delete();
+
+        // --- LEGACY: thetha_history (typo version) ---
+        console.log('   - Processing legacy thetha_history (typo)...');
+        await deleteCollection(db.collection('thetha_history').doc(userId).collection('snapshots'), isPreview);
+        if (!isPreview) await db.collection('thetha_history').doc(userId).delete().catch(() => {});
+
+        // --- AI TUTOR CONVERSATIONS ---
+        console.log('   - Processing AI tutor conversation messages...');
+        const tutorConversationRef = userRef.collection('tutor_conversation').doc('active');
+        await deleteCollection(tutorConversationRef.collection('messages'), isPreview);
+        if (!isPreview) {
+            await tutorConversationRef.delete();
+        }
+
+        // --- THETA SNAPSHOTS (Daily) ---
+        console.log('   - Processing theta snapshots (daily)...');
+        await deleteCollection(db.collection('theta_snapshots').doc(userId).collection('daily'), isPreview);
+        if (!isPreview) await db.collection('theta_snapshots').doc(userId).delete();
+
+        // --- LEGACY: thetha_snapshots (typo version) ---
+        console.log('   - Processing legacy thetha_snapshots (typo)...');
+        await deleteCollection(db.collection('thetha_snapshots').doc(userId).collection('daily'), isPreview);
+        if (!isPreview) await db.collection('thetha_snapshots').doc(userId).delete().catch(() => {});
+
+        // --- CHAPTER PRACTICE ---
+        console.log('   - Processing chapter practice sessions...');
+        await deleteChapterPracticeSessions(userId, isPreview);
+        if (!isPreview) await db.collection('chapter_practice_sessions').doc(userId).delete();
+
+        // --- LEGACY: chapter_practise_sessions (typo version) ---
+        console.log('   - Processing legacy chapter_practise_sessions (typo)...');
+        await deleteChapterPracticeSessions(userId, isPreview, 'chapter_practise_sessions');
+        if (!isPreview) await db.collection('chapter_practise_sessions').doc(userId).delete().catch(() => {});
+
+        console.log('   - Processing chapter practice responses...');
+        await deleteCollection(db.collection('chapter_practice_responses').doc(userId).collection('responses'), isPreview);
+        if (!isPreview) await db.collection('chapter_practice_responses').doc(userId).delete();
+
+        console.log('   - Processing chapter practice weekly limits...');
+        await deleteCollection(userRef.collection('chapter_practice_weekly'), isPreview);
+
+        // --- SUBSCRIPTIONS ---
+        console.log('   - Processing subscription records...');
+        await deleteCollection(userRef.collection('subscriptions'), isPreview);
+
+        // --- SHARE EVENTS ---
+        console.log('   - Processing share events...');
+        await deleteCollection(db.collection('share_events').doc(userId).collection('items'), isPreview);
+        if (!isPreview) await db.collection('share_events').doc(userId).delete();
+
+        // --- FEEDBACK ---
+        console.log('   - Processing feedback entries...');
+        await deleteFeedbackByUser(userId, isPreview);
 
         // --- TOP-LEVEL ---
         console.log('   - Processing practice streak document...');

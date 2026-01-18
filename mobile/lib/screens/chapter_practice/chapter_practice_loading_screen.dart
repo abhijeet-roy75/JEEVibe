@@ -125,9 +125,16 @@ class _ChapterPracticeLoadingScreenState
         }
       } else {
         if (mounted) {
-          // Check if error is quota-related
           final errorMessage =
               (provider.errorMessage ?? '').toLowerCase();
+
+          // Check if daily quiz is required first
+          if (_isDailyQuizRequired(errorMessage)) {
+            _showDailyQuizRequiredDialog();
+            return;
+          }
+
+          // Check if error is quota-related
           if (_isQuotaError(errorMessage)) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -148,8 +155,17 @@ class _ChapterPracticeLoadingScreenState
         }
       }
     } catch (e) {
-      // Check if error is quota-related
       final errorMessage = e.toString().toLowerCase();
+
+      // Check if daily quiz is required first
+      if (_isDailyQuizRequired(errorMessage)) {
+        if (mounted) {
+          _showDailyQuizRequiredDialog();
+        }
+        return;
+      }
+
+      // Check if error is quota-related
       if (_isQuotaError(errorMessage)) {
         if (mounted) {
           Navigator.of(context).pushReplacement(
@@ -166,12 +182,11 @@ class _ChapterPracticeLoadingScreenState
       }
 
       if (mounted) {
-        final errorMsg = e.toString().toLowerCase();
-        final isNetworkError = errorMsg.contains('socketexception') ||
-            errorMsg.contains('connection') ||
-            errorMsg.contains('network') ||
-            errorMsg.contains('timeout') ||
-            errorMsg.contains('host');
+        final isNetworkError = errorMessage.contains('socketexception') ||
+            errorMessage.contains('connection') ||
+            errorMessage.contains('network') ||
+            errorMessage.contains('timeout') ||
+            errorMessage.contains('host');
 
         setState(() {
           _isOffline = isNetworkError;
@@ -190,6 +205,88 @@ class _ChapterPracticeLoadingScreenState
         errorMessage.contains('pro') ||
         errorMessage.contains('ultra') ||
         errorMessage.contains('not enabled');
+  }
+
+  /// Check if error is DAILY_QUIZ_REQUIRED
+  bool _isDailyQuizRequired(String errorMessage) {
+    return errorMessage.contains('daily_quiz_required') ||
+        errorMessage.contains('daily quiz') ||
+        errorMessage.contains('complete at least one');
+  }
+
+  /// Show dialog prompting user to complete daily quiz first
+  void _showDailyQuizRequiredDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.quiz_outlined,
+                color: AppColors.primaryPurple,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Daily Quiz Required',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Complete at least one Daily Quiz first to unlock Chapter Practice. '
+          'This helps calibrate your skill level for better practice questions.',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppColors.textMedium,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              Navigator.of(context).pop();
+            },
+            child: const Text(
+              'Go Back',
+              style: TextStyle(color: AppColors.textMedium),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              Navigator.of(context).pop();
+              // Navigate to daily quiz - using named route
+              Navigator.of(context).pushNamed('/daily-quiz');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPurple,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Start Daily Quiz'),
+          ),
+        ],
+      ),
+    );
   }
 
   Color _getSubjectColor() {

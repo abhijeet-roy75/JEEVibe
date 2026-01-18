@@ -29,6 +29,13 @@ const THETA_MULTIPLIER = 0.5; // Half the impact of daily quiz
 const SESSION_EXPIRY_HOURS = 24;
 const HISTORY_QUERY_LIMIT = 50; // Limit per collection for performance
 
+// Difficulty bands for progressive question selection (easy → hard)
+const DIFFICULTY_BANDS = {
+  easy: { max: 0.7, target: 5 },      // b <= 0.7
+  medium: { min: 0.7, max: 1.2, target: 5 },  // 0.7 < b <= 1.2
+  hard: { min: 1.2, target: 5 }       // b > 1.2
+};
+
 // ============================================================================
 // QUESTION PRIORITIZATION
 // ============================================================================
@@ -148,6 +155,131 @@ function prioritizeQuestions(questions, history) {
     // Secondary: randomize within same priority
     return Math.random() - 0.5;
   });
+}
+
+/**
+ * Get the difficulty band for a question based on its IRT difficulty parameter
+ * @param {Object} question - Question object with irt_parameters or difficulty_irt
+ * @returns {string} 'easy', 'medium', or 'hard'
+ */
+function getDifficultyBand(question) {
+  const b = question.irt_parameters?.difficulty_b ??
+            question.difficulty_irt ?? 0;
+
+  if (b <= DIFFICULTY_BANDS.easy.max) return 'easy';
+  if (b <= DIFFICULTY_BANDS.medium.max) return 'medium';
+  return 'hard';
+}
+
+/**
+ * Select questions with difficulty progression (easy → medium → hard)
+ * This helps weak students "ease into" the chapter by starting with easier questions
+ *
+ * @param {Array} questions - All available questions for the chapter
+ * @param {Map} history - Question history map from getQuestionHistory
+ * @param {number} totalCount - Total questions to select (default: 15)
+ * @returns {Array} Questions ordered by difficulty band (easy first, hard last)
+ */
+function selectDifficultyProgressiveQuestions(questions, history, totalCount = DEFAULT_QUESTION_COUNT) {
+  if (!questions || questions.length === 0) {
+    return [];
+  }
+
+  // Step 1: Add priority scores and difficulty info to each question
+  const scoredQuestions = questions.map(q => {
+    const questionId = q.question_id;
+    const historyEntry = history.get(questionId);
+
+    // Priority: 3 = unseen, 2 = wrong, 1 = correct
+    let priority = 0;
+    if (!historyEntry) {
+      priority = 3; // Never seen - highest priority
+    } else if (!historyEntry.lastCorrect) {
+      priority = 2; // Seen but got wrong - medium priority
+    } else {
+      priority = 1; // Seen and got correct - lowest priority
+    }
+
+    const b = q.irt_parameters?.difficulty_b ?? q.difficulty_irt ?? 0;
+    const band = getDifficultyBand(q);
+
+    return { ...q, _priority: priority, _difficulty: b, _band: band };
+  });
+
+  // Step 2: Group by difficulty band
+  const bands = {
+    easy: scoredQuestions.filter(q => q._band === 'easy'),
+    medium: scoredQuestions.filter(q => q._band === 'medium'),
+    hard: scoredQuestions.filter(q => q._band === 'hard')
+  };
+
+  // Step 3: Sort each band by priority (desc), then difficulty (asc within band)
+  Object.keys(bands).forEach(band => {
+    bands[band].sort((a, b) => {
+      // Primary: priority descending (unseen first)
+      if (b._priority !== a._priority) {
+        return b._priority - a._priority;
+      }
+      // Secondary: difficulty ascending (easier first within same priority)
+      return a._difficulty - b._difficulty;
+    });
+  });
+
+  // Step 4: Select questions with target per band, with fallback
+  const selected = [];
+  const targetPerBand = Math.floor(totalCount / 3);
+  let remaining = totalCount;
+
+  // Select from easy band first
+  const easyCount = Math.min(targetPerBand, bands.easy.length, remaining);
+  selected.push(...bands.easy.slice(0, easyCount));
+  remaining -= easyCount;
+
+  // Select from medium band
+  const mediumCount = Math.min(targetPerBand, bands.medium.length, remaining);
+  selected.push(...bands.medium.slice(0, mediumCount));
+  remaining -= mediumCount;
+
+  // Select from hard band (gets any remainder from division)
+  const hardCount = Math.min(remaining, bands.hard.length);
+  selected.push(...bands.hard.slice(0, hardCount));
+  remaining -= hardCount;
+
+  // Step 5: Fill remaining slots if we don't have enough
+  if (remaining > 0) {
+    // Get all questions not yet selected, sorted by difficulty ascending
+    const selectedIds = new Set(selected.map(q => q.question_id));
+    const availableQuestions = scoredQuestions
+      .filter(q => !selectedIds.has(q.question_id))
+      .sort((a, b) => a._difficulty - b._difficulty);
+
+    while (remaining > 0 && availableQuestions.length > 0) {
+      selected.push(availableQuestions.shift());
+      remaining--;
+    }
+  }
+
+  // Step 6: Final sort to ensure easy → medium → hard order
+  // We maintain stability within bands (priority order preserved)
+  const bandOrder = { easy: 0, medium: 1, hard: 2 };
+  selected.sort((a, b) => {
+    const bandDiff = bandOrder[a._band] - bandOrder[b._band];
+    if (bandDiff !== 0) return bandDiff;
+    // Within same band, maintain priority order
+    return b._priority - a._priority;
+  });
+
+  logger.info('Difficulty-progressive question selection complete', {
+    totalAvailable: questions.length,
+    selected: selected.length,
+    byBand: {
+      easy: selected.filter(q => q._band === 'easy').length,
+      medium: selected.filter(q => q._band === 'medium').length,
+      hard: selected.filter(q => q._band === 'hard').length
+    }
+  });
+
+  return selected;
 }
 
 // ============================================================================
@@ -337,11 +469,13 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
       });
     }
 
-    // Prioritize questions (unseen > wrong > correct)
-    questions = prioritizeQuestions(questions, questionHistory);
-
-    // Select top N questions
-    const selectedQuestions = questions.slice(0, questionCount);
+    // Select questions with difficulty progression (easy → medium → hard)
+    // This helps weak students ease into the chapter
+    const selectedQuestions = selectDifficultyProgressiveQuestions(
+      questions,
+      questionHistory,
+      questionCount
+    );
 
     if (selectedQuestions.length === 0) {
       throw new Error(`No questions available for chapter: ${chapterKey}`);
@@ -349,8 +483,8 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
 
     // Assign positions and add chapter_key
     const formattedQuestions = selectedQuestions.map((q, index) => {
-      // Remove priority field and add position
-      const { _priority, ...questionData } = q;
+      // Remove internal fields and add position
+      const { _priority, _difficulty, _band, ...questionData } = q;
       return {
         ...questionData,
         position: index,
@@ -599,7 +733,10 @@ module.exports = {
   getActiveSession,
   getQuestionHistory,
   prioritizeQuestions,
+  selectDifficultyProgressiveQuestions,
+  getDifficultyBand,
   THETA_MULTIPLIER,
   DEFAULT_QUESTION_COUNT,
-  MAX_QUESTION_COUNT
+  MAX_QUESTION_COUNT,
+  DIFFICULTY_BANDS
 };

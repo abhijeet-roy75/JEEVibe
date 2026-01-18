@@ -201,6 +201,43 @@ router.post('/generate', authenticateUser, validateGenerate, async (req, res, ne
       }
     }
 
+    // Check if user has completed at least 1 daily quiz (prerequisite for chapter practice)
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await retryFirestoreOperation(async () => {
+      return await userRef.get();
+    });
+
+    if (!userDoc.exists) {
+      throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
+    }
+
+    const userData = userDoc.data();
+    const completedQuizCount = userData.completed_quiz_count || 0;
+
+    if (completedQuizCount < 1) {
+      logger.warn('Chapter practice blocked - no daily quiz completed', {
+        userId,
+        completedQuizCount,
+        chapterKey: chapter_key
+      });
+
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'DAILY_QUIZ_REQUIRED',
+          message: 'Complete at least one Daily Quiz to unlock Chapter Practice.',
+          details: 'Daily Quiz helps calibrate your skill level for better practice questions.'
+        },
+        completed_quiz_count: completedQuizCount,
+        upgrade_prompt: {
+          message: 'Complete your first Daily Quiz',
+          cta: 'Start Daily Quiz',
+          action: 'navigate_to_daily_quiz'
+        },
+        requestId: req.id
+      });
+    }
+
     // Check for existing active session for this chapter
     const activeSession = await getActiveSession(userId, chapter_key);
 

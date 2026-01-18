@@ -10,6 +10,9 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/priya_avatar.dart';
 import '../../utils/error_handler.dart';
+import '../../utils/question_adapters.dart';
+import '../../widgets/daily_quiz/feedback_banner_widget.dart';
+import '../../widgets/daily_quiz/detailed_explanation_widget.dart';
 import 'chapter_practice_review_screen.dart';
 
 class ChapterPracticeQuestionScreen extends StatefulWidget {
@@ -298,17 +301,33 @@ class _ChapterPracticeQuestionScreenState
                     child: Column(
                       children: [
                         const SizedBox(height: 16),
-                        // Feedback banner (if answered)
+                        // Feedback banner (if answered) - using shared widget
                         if (isAnswered) ...[
-                          _buildFeedbackBanner(provider.lastAnswerResult!),
+                          FeedbackBannerWidget(
+                            feedback: practiceResultToFeedback(
+                              provider.lastAnswerResult!,
+                              questionId: question.questionId,
+                              timeTakenSeconds: _elapsedSeconds,
+                              questionType: question.questionType,
+                            ),
+                            timeTakenSeconds: _elapsedSeconds,
+                          ),
                           const SizedBox(height: 16),
                         ],
                         // Question card
                         _buildQuestionCard(question, isAnswered),
                         const SizedBox(height: 16),
-                        // Solution (if answered)
+                        // Solution (if answered) - using shared widget
                         if (isAnswered) ...[
-                          _buildSolutionCard(provider.lastAnswerResult!),
+                          DetailedExplanationWidget(
+                            feedback: practiceResultToFeedback(
+                              provider.lastAnswerResult!,
+                              questionId: question.questionId,
+                              timeTakenSeconds: _elapsedSeconds,
+                              questionType: question.questionType,
+                            ),
+                            isCorrect: provider.lastAnswerResult!.isCorrect,
+                          ),
                           const SizedBox(height: 16),
                         ],
                         // Teacher message
@@ -469,71 +488,7 @@ class _ChapterPracticeQuestionScreenState
     );
   }
 
-  Widget _buildFeedbackBanner(PracticeAnswerResult result) {
-    final isCorrect = result.isCorrect;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isCorrect
-              ? AppColors.successGreen.withValues(alpha: 0.1)
-              : AppColors.errorRed.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isCorrect
-                ? AppColors.successGreen.withValues(alpha: 0.3)
-                : AppColors.errorRed.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                isCorrect ? Icons.check : Icons.close,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isCorrect ? 'Correct!' : 'Not Quite',
-                    style: AppTextStyles.headerMedium.copyWith(
-                      color: isCorrect
-                          ? AppColors.successGreen
-                          : AppColors.errorRed,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isCorrect
-                        ? 'Great job! You understood this concept well.'
-                        : 'The correct answer is ${result.correctAnswer.toUpperCase()}',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textMedium,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // _buildFeedbackBanner removed - using shared FeedbackBannerWidget via adapter
 
   Widget _buildQuestionCard(PracticeQuestion question, bool isAnswered) {
     final provider = Provider.of<ChapterPracticeProvider>(context, listen: false);
@@ -823,99 +778,7 @@ class _ChapterPracticeQuestionScreenState
     );
   }
 
-  Widget _buildSolutionCard(PracticeAnswerResult result) {
-    if (result.solutionText == null && result.solutionSteps.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: AppColors.primaryPurple.withValues(alpha: 0.2),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.lightbulb_outline,
-                  color: AppColors.primaryPurple,
-                  size: 24,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Solution',
-                  style: AppTextStyles.headerMedium.copyWith(
-                    color: AppColors.primaryPurple,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            if (result.solutionText != null)
-              Text(
-                result.solutionText!,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textDark,
-                  height: 1.6,
-                ),
-              ),
-            if (result.solutionSteps.isNotEmpty) ...[
-              if (result.solutionText != null) const SizedBox(height: 16),
-              ...result.solutionSteps.asMap().entries.map((entry) {
-                final index = entry.key;
-                final step = entry.value;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryPurple.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${index + 1}',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.primaryPurple,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          step,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textDark,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+  // _buildSolutionCard removed - using shared DetailedExplanationWidget via adapter
 
   Widget _buildTeacherMessage(PracticeAnswerResult? result) {
     String message;

@@ -20,6 +20,9 @@
     "populate:assessment": "node scripts/populate-assessment-questions.js",
     "update:images": "node scripts/update-question-images.js",
     "cleanup:user": "node scripts/cleanup-user.js",
+    "cleanup:orphaned": "node scripts/cleanup-orphaned-data.js",
+    "diagnose:collections": "node scripts/diagnose-collections.js",
+    "wipe:collection": "node scripts/wipe-collection.js",
     "migrate:cumulative-stats": "node scripts/migrate-cumulative-stats.js",
     "migrate:cumulative-stats:dry-run": "node scripts/migrate-cumulative-stats.js --dry-run"
   },

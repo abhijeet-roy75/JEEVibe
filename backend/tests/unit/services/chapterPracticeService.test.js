@@ -156,10 +156,13 @@ jest.mock('../../../src/utils/logger', () => ({
 // Now require the service
 const {
   prioritizeQuestions,
+  selectDifficultyProgressiveQuestions,
+  getDifficultyBand,
   getQuestionHistory,
   THETA_MULTIPLIER,
   DEFAULT_QUESTION_COUNT,
   MAX_QUESTION_COUNT,
+  DIFFICULTY_BANDS,
 } = require('../../../src/services/chapterPracticeService');
 
 describe('Chapter Practice Service', () => {
@@ -308,5 +311,305 @@ describe('Session ownership validation', () => {
     const isOwner = sessionData.student_id === requestingUserId;
 
     expect(isOwner).toBe(true);
+  });
+});
+
+describe('DIFFICULTY_BANDS constant', () => {
+  test('should have correct thresholds for easy band', () => {
+    expect(DIFFICULTY_BANDS.easy.max).toBe(0.7);
+    expect(DIFFICULTY_BANDS.easy.target).toBe(5);
+  });
+
+  test('should have correct thresholds for medium band', () => {
+    expect(DIFFICULTY_BANDS.medium.min).toBe(0.7);
+    expect(DIFFICULTY_BANDS.medium.max).toBe(1.2);
+    expect(DIFFICULTY_BANDS.medium.target).toBe(5);
+  });
+
+  test('should have correct thresholds for hard band', () => {
+    expect(DIFFICULTY_BANDS.hard.min).toBe(1.2);
+    expect(DIFFICULTY_BANDS.hard.target).toBe(5);
+  });
+});
+
+describe('getDifficultyBand', () => {
+  test('should classify questions with b <= 0.7 as easy', () => {
+    expect(getDifficultyBand({ irt_parameters: { difficulty_b: 0.0 } })).toBe('easy');
+    expect(getDifficultyBand({ irt_parameters: { difficulty_b: 0.5 } })).toBe('easy');
+    expect(getDifficultyBand({ irt_parameters: { difficulty_b: 0.7 } })).toBe('easy');
+  });
+
+  test('should classify questions with 0.7 < b <= 1.2 as medium', () => {
+    expect(getDifficultyBand({ irt_parameters: { difficulty_b: 0.71 } })).toBe('medium');
+    expect(getDifficultyBand({ irt_parameters: { difficulty_b: 1.0 } })).toBe('medium');
+    expect(getDifficultyBand({ irt_parameters: { difficulty_b: 1.2 } })).toBe('medium');
+  });
+
+  test('should classify questions with b > 1.2 as hard', () => {
+    expect(getDifficultyBand({ irt_parameters: { difficulty_b: 1.21 } })).toBe('hard');
+    expect(getDifficultyBand({ irt_parameters: { difficulty_b: 2.0 } })).toBe('hard');
+    expect(getDifficultyBand({ irt_parameters: { difficulty_b: 3.0 } })).toBe('hard');
+  });
+
+  test('should use difficulty_irt as fallback when irt_parameters not present', () => {
+    expect(getDifficultyBand({ difficulty_irt: 0.5 })).toBe('easy');
+    expect(getDifficultyBand({ difficulty_irt: 1.0 })).toBe('medium');
+    expect(getDifficultyBand({ difficulty_irt: 1.5 })).toBe('hard');
+  });
+
+  test('should default to 0 (easy) when no difficulty field present', () => {
+    expect(getDifficultyBand({})).toBe('easy');
+    expect(getDifficultyBand({ question_id: 'q1' })).toBe('easy');
+  });
+});
+
+describe('selectDifficultyProgressiveQuestions', () => {
+  describe('difficulty ordering', () => {
+    test('should return questions in easy → medium → hard order', () => {
+      const questions = [
+        { question_id: 'hard1', irt_parameters: { difficulty_b: 1.5 } },
+        { question_id: 'easy1', irt_parameters: { difficulty_b: 0.3 } },
+        { question_id: 'medium1', irt_parameters: { difficulty_b: 1.0 } },
+      ];
+      const history = new Map();
+
+      const result = selectDifficultyProgressiveQuestions(questions, history, 3);
+
+      expect(result[0]._band).toBe('easy');
+      expect(result[1]._band).toBe('medium');
+      expect(result[2]._band).toBe('hard');
+    });
+
+    test('should classify questions correctly by difficulty_b thresholds', () => {
+      const questions = [
+        { question_id: 'q1', irt_parameters: { difficulty_b: 0.7 } },  // easy
+        { question_id: 'q2', irt_parameters: { difficulty_b: 0.71 } }, // medium
+        { question_id: 'q3', irt_parameters: { difficulty_b: 1.2 } },  // medium
+        { question_id: 'q4', irt_parameters: { difficulty_b: 1.21 } }, // hard
+      ];
+      const history = new Map();
+
+      const result = selectDifficultyProgressiveQuestions(questions, history, 4);
+
+      expect(result.filter(q => q._band === 'easy').length).toBe(1);
+      expect(result.filter(q => q._band === 'medium').length).toBe(2);
+      expect(result.filter(q => q._band === 'hard').length).toBe(1);
+    });
+
+    test('should maintain band order even with mixed input', () => {
+      const questions = [
+        { question_id: 'h1', irt_parameters: { difficulty_b: 2.0 } },
+        { question_id: 'e1', irt_parameters: { difficulty_b: 0.1 } },
+        { question_id: 'm1', irt_parameters: { difficulty_b: 0.9 } },
+        { question_id: 'h2', irt_parameters: { difficulty_b: 1.8 } },
+        { question_id: 'e2', irt_parameters: { difficulty_b: 0.3 } },
+        { question_id: 'm2', irt_parameters: { difficulty_b: 1.1 } },
+      ];
+      const history = new Map();
+
+      const result = selectDifficultyProgressiveQuestions(questions, history, 6);
+
+      // First two should be easy
+      expect(result[0]._band).toBe('easy');
+      expect(result[1]._band).toBe('easy');
+      // Next two should be medium
+      expect(result[2]._band).toBe('medium');
+      expect(result[3]._band).toBe('medium');
+      // Last two should be hard
+      expect(result[4]._band).toBe('hard');
+      expect(result[5]._band).toBe('hard');
+    });
+  });
+
+  describe('priority within bands', () => {
+    test('should prioritize unseen questions over previously wrong within same band', () => {
+      const questions = [
+        { question_id: 'seen_wrong', irt_parameters: { difficulty_b: 0.5 } },
+        { question_id: 'unseen', irt_parameters: { difficulty_b: 0.5 } },
+      ];
+      const history = new Map([
+        ['seen_wrong', { seen: true, lastCorrect: false }]
+      ]);
+
+      const result = selectDifficultyProgressiveQuestions(questions, history, 2);
+
+      // Both are easy, but unseen should come first due to priority
+      expect(result[0].question_id).toBe('unseen');
+      expect(result[0]._priority).toBe(3);
+      expect(result[1].question_id).toBe('seen_wrong');
+      expect(result[1]._priority).toBe(2);
+    });
+
+    test('should prioritize previously wrong over previously correct within same band', () => {
+      const questions = [
+        { question_id: 'correct', irt_parameters: { difficulty_b: 0.5 } },
+        { question_id: 'wrong', irt_parameters: { difficulty_b: 0.5 } },
+      ];
+      const history = new Map([
+        ['correct', { seen: true, lastCorrect: true }],
+        ['wrong', { seen: true, lastCorrect: false }]
+      ]);
+
+      const result = selectDifficultyProgressiveQuestions(questions, history, 2);
+
+      expect(result[0].question_id).toBe('wrong');
+      expect(result[0]._priority).toBe(2);
+      expect(result[1].question_id).toBe('correct');
+      expect(result[1]._priority).toBe(1);
+    });
+
+    test('should use priority ordering across all bands', () => {
+      const questions = [
+        { question_id: 'easy_correct', irt_parameters: { difficulty_b: 0.3 } },
+        { question_id: 'easy_unseen', irt_parameters: { difficulty_b: 0.4 } },
+        { question_id: 'medium_correct', irt_parameters: { difficulty_b: 1.0 } },
+        { question_id: 'medium_unseen', irt_parameters: { difficulty_b: 1.1 } },
+      ];
+      const history = new Map([
+        ['easy_correct', { seen: true, lastCorrect: true }],
+        ['medium_correct', { seen: true, lastCorrect: true }]
+      ]);
+
+      const result = selectDifficultyProgressiveQuestions(questions, history, 4);
+
+      // Easy band: unseen before correct
+      const easyQuestions = result.filter(q => q._band === 'easy');
+      expect(easyQuestions[0].question_id).toBe('easy_unseen');
+
+      // Medium band: unseen before correct
+      const mediumQuestions = result.filter(q => q._band === 'medium');
+      expect(mediumQuestions[0].question_id).toBe('medium_unseen');
+    });
+  });
+
+  describe('fallback behavior', () => {
+    test('should fill from other bands when a band has insufficient questions', () => {
+      // Only easy questions available
+      const questions = Array(15).fill(null).map((_, i) => ({
+        question_id: `easy_${i}`,
+        irt_parameters: { difficulty_b: 0.3 }
+      }));
+      const history = new Map();
+
+      const result = selectDifficultyProgressiveQuestions(questions, history, 15);
+
+      expect(result.length).toBe(15);
+      // All should be easy since that's all we have
+      expect(result.every(q => q._band === 'easy')).toBe(true);
+    });
+
+    test('should handle missing bands gracefully', () => {
+      // Only medium and hard questions
+      const questions = [
+        { question_id: 'm1', irt_parameters: { difficulty_b: 0.9 } },
+        { question_id: 'm2', irt_parameters: { difficulty_b: 1.0 } },
+        { question_id: 'h1', irt_parameters: { difficulty_b: 1.5 } },
+        { question_id: 'h2', irt_parameters: { difficulty_b: 2.0 } },
+      ];
+      const history = new Map();
+
+      const result = selectDifficultyProgressiveQuestions(questions, history, 4);
+
+      expect(result.length).toBe(4);
+      // Should still order medium before hard
+      expect(result[0]._band).toBe('medium');
+      expect(result[1]._band).toBe('medium');
+      expect(result[2]._band).toBe('hard');
+      expect(result[3]._band).toBe('hard');
+    });
+
+    test('should handle empty question pool gracefully', () => {
+      const result = selectDifficultyProgressiveQuestions([], new Map(), 15);
+      expect(result.length).toBe(0);
+    });
+
+    test('should handle null/undefined questions gracefully', () => {
+      const result = selectDifficultyProgressiveQuestions(null, new Map(), 15);
+      expect(result.length).toBe(0);
+    });
+
+    test('should respect totalCount parameter', () => {
+      const questions = Array(20).fill(null).map((_, i) => ({
+        question_id: `q_${i}`,
+        irt_parameters: { difficulty_b: i * 0.1 }
+      }));
+
+      const result = selectDifficultyProgressiveQuestions(questions, new Map(), 10);
+      expect(result.length).toBe(10);
+    });
+
+    test('should return all questions if pool is smaller than requested', () => {
+      const questions = [
+        { question_id: 'q1', irt_parameters: { difficulty_b: 0.5 } },
+        { question_id: 'q2', irt_parameters: { difficulty_b: 1.0 } },
+      ];
+
+      const result = selectDifficultyProgressiveQuestions(questions, new Map(), 15);
+      expect(result.length).toBe(2);
+    });
+  });
+
+  describe('legacy difficulty field support', () => {
+    test('should use difficulty_irt when irt_parameters not present', () => {
+      const questions = [
+        { question_id: 'q1', difficulty_irt: 0.5 },
+        { question_id: 'q2', irt_parameters: { difficulty_b: 1.5 } },
+      ];
+
+      const result = selectDifficultyProgressiveQuestions(questions, new Map(), 2);
+
+      expect(result[0]._band).toBe('easy');  // 0.5 is easy
+      expect(result[1]._band).toBe('hard');  // 1.5 is hard
+    });
+
+    test('should handle mixed difficulty field formats', () => {
+      const questions = [
+        { question_id: 'q1', difficulty_irt: 0.3 },
+        { question_id: 'q2', irt_parameters: { difficulty_b: 0.9 } },
+        { question_id: 'q3', difficulty_irt: 1.5 },
+        { question_id: 'q4', irt_parameters: { difficulty_b: 1.8 } },
+      ];
+
+      const result = selectDifficultyProgressiveQuestions(questions, new Map(), 4);
+
+      // Should still order correctly
+      expect(result[0]._band).toBe('easy');
+      expect(result[1]._band).toBe('medium');
+      expect(result[2]._band).toBe('hard');
+      expect(result[3]._band).toBe('hard');
+    });
+  });
+
+  describe('target distribution', () => {
+    test('should aim for balanced distribution across bands when possible', () => {
+      // Create 6 questions of each difficulty
+      const questions = [
+        ...Array(6).fill(null).map((_, i) => ({
+          question_id: `easy_${i}`,
+          irt_parameters: { difficulty_b: 0.3 + i * 0.05 }
+        })),
+        ...Array(6).fill(null).map((_, i) => ({
+          question_id: `medium_${i}`,
+          irt_parameters: { difficulty_b: 0.8 + i * 0.05 }
+        })),
+        ...Array(6).fill(null).map((_, i) => ({
+          question_id: `hard_${i}`,
+          irt_parameters: { difficulty_b: 1.3 + i * 0.1 }
+        })),
+      ];
+
+      const result = selectDifficultyProgressiveQuestions(questions, new Map(), 15);
+
+      expect(result.length).toBe(15);
+
+      const easyCnt = result.filter(q => q._band === 'easy').length;
+      const mediumCnt = result.filter(q => q._band === 'medium').length;
+      const hardCnt = result.filter(q => q._band === 'hard').length;
+
+      // Should have 5 from each band
+      expect(easyCnt).toBe(5);
+      expect(mediumCnt).toBe(5);
+      expect(hardCnt).toBe(5);
+    });
   });
 });

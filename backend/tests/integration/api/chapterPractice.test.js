@@ -61,15 +61,22 @@ const mockSessionData = {
   expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
 };
 
+// Configurable mock user data - tests can modify this before making requests
+const mockUserDataConfig = {
+  assessment: { completed_at: new Date().toISOString() },
+  theta_by_chapter: { 'physics_kinematics': { theta: 0.5 } },
+  chapter_practice_stats: null,
+  subtopic_accuracy: {},
+  completed_quiz_count: 5, // Default: user has completed quizzes
+};
+
+// Export for tests to modify
+global.mockUserDataConfig = mockUserDataConfig;
+
 jest.mock('../../../src/config/firebase', () => {
   const mockUserDoc = {
     exists: true,
-    data: () => ({
-      assessment: { completed_at: new Date().toISOString() },
-      theta_by_chapter: { 'physics_kinematics': { theta: 0.5 } },
-      chapter_practice_stats: null,
-      subtopic_accuracy: {},
-    }),
+    data: () => ({ ...global.mockUserDataConfig }),
   };
 
   const createMockCollection = () => ({
@@ -228,6 +235,14 @@ app.use((err, req, res, next) => {
 describe('Chapter Practice API Endpoints', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset mock user data to defaults
+    global.mockUserDataConfig = {
+      assessment: { completed_at: new Date().toISOString() },
+      theta_by_chapter: { 'physics_kinematics': { theta: 0.5 } },
+      chapter_practice_stats: null,
+      subtopic_accuracy: {},
+      completed_quiz_count: 5, // Default: user has completed quizzes
+    };
   });
 
   describe('POST /api/chapter-practice/generate', () => {
@@ -414,6 +429,130 @@ describe('Chapter Practice API Endpoints', () => {
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('FEATURE_NOT_ENABLED');
       expect(response.body.upgrade_prompt).toBeDefined();
+    });
+  });
+
+  describe('Daily Quiz Prerequisite (DAILY_QUIZ_REQUIRED)', () => {
+    test('should return 403 DAILY_QUIZ_REQUIRED when completed_quiz_count is 0', async () => {
+      // Setup: User has never completed a daily quiz
+      global.mockUserDataConfig = {
+        ...global.mockUserDataConfig,
+        completed_quiz_count: 0,
+      };
+
+      const response = await request(app)
+        .post('/api/chapter-practice/generate')
+        .send({ chapter_key: 'physics_kinematics' })
+        .expect(403);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('DAILY_QUIZ_REQUIRED');
+      expect(response.body.error.message).toContain('Complete at least one Daily Quiz');
+      expect(response.body.upgrade_prompt).toBeDefined();
+      expect(response.body.upgrade_prompt.action).toBe('navigate_to_daily_quiz');
+      expect(response.body.completed_quiz_count).toBe(0);
+    });
+
+    test('should return 403 DAILY_QUIZ_REQUIRED when completed_quiz_count is undefined', async () => {
+      // Setup: User document missing completed_quiz_count field
+      global.mockUserDataConfig = {
+        assessment: { completed_at: new Date().toISOString() },
+        theta_by_chapter: { 'physics_kinematics': { theta: 0.5 } },
+        // completed_quiz_count intentionally omitted
+      };
+
+      const response = await request(app)
+        .post('/api/chapter-practice/generate')
+        .send({ chapter_key: 'physics_kinematics' })
+        .expect(403);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('DAILY_QUIZ_REQUIRED');
+      expect(response.body.completed_quiz_count).toBe(0);
+    });
+
+    test('should allow access when completed_quiz_count is 1', async () => {
+      // Setup: User has completed exactly 1 daily quiz (minimum requirement)
+      global.mockUserDataConfig = {
+        ...global.mockUserDataConfig,
+        completed_quiz_count: 1,
+      };
+
+      const response = await request(app)
+        .post('/api/chapter-practice/generate')
+        .send({ chapter_key: 'physics_kinematics' })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.session).toBeDefined();
+    });
+
+    test('should allow access when completed_quiz_count is greater than 1', async () => {
+      // Setup: User has completed many daily quizzes
+      global.mockUserDataConfig = {
+        ...global.mockUserDataConfig,
+        completed_quiz_count: 10,
+      };
+
+      const response = await request(app)
+        .post('/api/chapter-practice/generate')
+        .send({ chapter_key: 'physics_kinematics' })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.session).toBeDefined();
+    });
+
+    test('should check daily quiz completion before tier limits (pro user with no quiz)', async () => {
+      // Setup: Pro user who hasn't completed any daily quizzes
+      // Even with pro tier, daily quiz is still required
+      global.mockUserDataConfig = {
+        ...global.mockUserDataConfig,
+        completed_quiz_count: 0,
+        subscription: { tier: 'pro' },
+      };
+
+      const response = await request(app)
+        .post('/api/chapter-practice/generate')
+        .send({ chapter_key: 'physics_kinematics' })
+        .expect(403);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe('DAILY_QUIZ_REQUIRED');
+      // Should not be FEATURE_NOT_ENABLED or WEEKLY_LIMIT_REACHED
+    });
+
+    test('should include proper upgrade_prompt structure', async () => {
+      global.mockUserDataConfig = {
+        ...global.mockUserDataConfig,
+        completed_quiz_count: 0,
+      };
+
+      const response = await request(app)
+        .post('/api/chapter-practice/generate')
+        .send({ chapter_key: 'physics_kinematics' })
+        .expect(403);
+
+      expect(response.body.upgrade_prompt).toEqual({
+        message: 'Complete your first Daily Quiz',
+        cta: 'Start Daily Quiz',
+        action: 'navigate_to_daily_quiz',
+      });
+    });
+
+    test('should include error details explaining why daily quiz is required', async () => {
+      global.mockUserDataConfig = {
+        ...global.mockUserDataConfig,
+        completed_quiz_count: 0,
+      };
+
+      const response = await request(app)
+        .post('/api/chapter-practice/generate')
+        .send({ chapter_key: 'physics_kinematics' })
+        .expect(403);
+
+      expect(response.body.error.details).toBeDefined();
+      expect(response.body.error.details).toContain('calibrate');
     });
   });
 });
