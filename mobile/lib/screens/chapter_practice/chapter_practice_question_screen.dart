@@ -513,6 +513,9 @@ class _ChapterPracticeQuestionScreenState
   }
 
   Widget _buildQuestionCard(PracticeQuestion question, bool isAnswered) {
+    final provider = Provider.of<ChapterPracticeProvider>(context, listen: false);
+    final currentIndex = provider.currentQuestionIndex;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
@@ -532,7 +535,7 @@ class _ChapterPracticeQuestionScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Subject and chapter tags
+            // Subject, chapter, and question number tags
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -553,6 +556,21 @@ class _ChapterPracticeQuestionScreenState
                     ),
                   ),
                 ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Question ${currentIndex + 1}',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.primaryPurple,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -566,8 +584,47 @@ class _ChapterPracticeQuestionScreenState
               ),
             ),
             const SizedBox(height: 20),
-            // Options
-            ...question.options.asMap().entries.map((entry) {
+            // Check if options are available
+            if (question.options.isEmpty) ...[
+              // Error state: no options available
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.errorRed.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.errorRed.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppColors.errorRed,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Unable to load answer options',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.errorRed,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Please go back and try again',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textMedium,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              // Options
+              ...question.options.asMap().entries.map((entry) {
               final index = entry.key;
               final option = entry.value;
               final isSelected = _selectedOption == option.optionId;
@@ -710,6 +767,7 @@ class _ChapterPracticeQuestionScreenState
                 ),
               ),
             ],
+            ], // end of else block (options available)
           ],
         ),
       ),

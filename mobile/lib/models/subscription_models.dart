@@ -229,18 +229,89 @@ class SubscriptionInfo {
   bool get isBetaTester => source == SubscriptionSource.override;
 }
 
+/// Weekly chapter practice usage for a single subject
+class SubjectPracticeUsage {
+  final bool isLocked;
+  final String? lastChapterKey;
+  final String? lastChapterName;
+  final String? lastCompletedAt;
+  final String? unlocksAt;
+  final int daysRemaining;
+
+  SubjectPracticeUsage({
+    required this.isLocked,
+    this.lastChapterKey,
+    this.lastChapterName,
+    this.lastCompletedAt,
+    this.unlocksAt,
+    this.daysRemaining = 0,
+  });
+
+  factory SubjectPracticeUsage.fromJson(Map<String, dynamic> json) {
+    return SubjectPracticeUsage(
+      isLocked: json['is_locked'] ?? false,
+      lastChapterKey: json['last_chapter_key'],
+      lastChapterName: json['last_chapter_name'],
+      lastCompletedAt: json['last_completed_at'],
+      unlocksAt: json['unlocks_at'],
+      daysRemaining: json['days_remaining'] ?? 0,
+    );
+  }
+}
+
+/// Weekly chapter practice usage for all subjects
+class ChapterPracticeWeeklyUsage {
+  final SubjectPracticeUsage physics;
+  final SubjectPracticeUsage chemistry;
+  final SubjectPracticeUsage mathematics;
+  final bool anyLocked;
+
+  ChapterPracticeWeeklyUsage({
+    required this.physics,
+    required this.chemistry,
+    required this.mathematics,
+    required this.anyLocked,
+  });
+
+  factory ChapterPracticeWeeklyUsage.fromJson(Map<String, dynamic> json) {
+    return ChapterPracticeWeeklyUsage(
+      physics: SubjectPracticeUsage.fromJson(json['physics'] ?? {}),
+      chemistry: SubjectPracticeUsage.fromJson(json['chemistry'] ?? {}),
+      mathematics: SubjectPracticeUsage.fromJson(json['mathematics'] ?? {}),
+      anyLocked: json['any_locked'] ?? false,
+    );
+  }
+
+  /// Get usage for a specific subject
+  SubjectPracticeUsage getBySubject(String subject) {
+    switch (subject.toLowerCase()) {
+      case 'physics':
+        return physics;
+      case 'chemistry':
+        return chemistry;
+      case 'mathematics':
+      case 'maths':
+        return mathematics;
+      default:
+        return physics;
+    }
+  }
+}
+
 /// Full subscription status model
 class SubscriptionStatus {
   final SubscriptionInfo subscription;
   final TierLimits limits;
   final TierFeatures features;
   final AllUsage usage;
+  final ChapterPracticeWeeklyUsage? chapterPracticeWeekly;
 
   SubscriptionStatus({
     required this.subscription,
     required this.limits,
     required this.features,
     required this.usage,
+    this.chapterPracticeWeekly,
   });
 
   factory SubscriptionStatus.fromJson(Map<String, dynamic> json) {
@@ -249,11 +320,19 @@ class SubscriptionStatus {
       limits: TierLimits.fromJson(json['limits'] ?? {}),
       features: TierFeatures.fromJson(json['features'] ?? {}),
       usage: AllUsage.fromJson(json['usage'] ?? {}),
+      chapterPracticeWeekly: json['chapter_practice_weekly'] != null
+          ? ChapterPracticeWeeklyUsage.fromJson(json['chapter_practice_weekly'])
+          : null,
     );
   }
 
   /// Check if user can use a feature
   bool canUse(UsageType type) {
+    // Chapter practice uses limits.chapterPracticeEnabled, not usage tracking
+    // (weekly per-subject limits are handled separately via chapterPracticeWeekly)
+    if (type == UsageType.chapterPractice) {
+      return limits.chapterPracticeEnabled;
+    }
     return !usage.getUsage(type).isLimitReached;
   }
 

@@ -211,6 +211,20 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           debugPrint('Error fetching analytics overview: $e');
           // Non-critical - fall back to assessment data
         }
+
+        // Refresh subscription status to get fresh usage data (quiz/snap counts)
+        // This ensures the Daily Quiz card shows accurate remaining count
+        try {
+          final authService = Provider.of<AuthService>(context, listen: false);
+          final token = await authService.getIdToken();
+          if (token != null) {
+            await SubscriptionService().fetchStatus(token, forceRefresh: true);
+            debugPrint('Subscription status refreshed');
+          }
+        } catch (e) {
+          debugPrint('Error refreshing subscription status: $e');
+          // Non-critical - will use cached data
+        }
       }
 
       if (mounted) {
@@ -624,7 +638,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
-                    Icons.gps_fixed,
+                    Icons.trending_up,
                     color: Colors.white,
                     size: 24,
                   ),
@@ -715,7 +729,10 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                           MaterialPageRoute(
                             builder: (context) => const DailyQuizLoadingScreen(),
                           ),
-                        );
+                        ).then((_) {
+                          // Refresh data when returning from quiz
+                          _loadData();
+                        });
                       }
                     : null,
                 isDisabled: !isUnlocked, // Explicitly disable when assessment not completed
@@ -1574,17 +1591,19 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   Widget _buildFocusAreasCard() {
     final subscriptionService = SubscriptionService();
     final hasChapterPractice = subscriptionService.isChapterPracticeEnabled;
-    
+    final isFree = subscriptionService.isFree;
+    final hasAnySubjectLocked = subscriptionService.hasAnySubjectLocked;
+
     // Check if user has completed initial assessment and at least 1 daily quiz
     final hasCompletedAssessment = _isAssessmentCompleted;
     final quizzesCompleted = _analyticsOverview?.stats.quizzesCompleted ?? 0;
     final hasCompletedAtLeastOneQuiz = quizzesCompleted > 0;
-    
+
     // Show unlock message if analytics not loaded, assessment not completed, OR no quizzes completed
-    final shouldShowUnlockMessage = _analyticsOverview == null || 
-                                     !hasCompletedAssessment || 
+    final shouldShowUnlockMessage = _analyticsOverview == null ||
+                                     !hasCompletedAssessment ||
                                      !hasCompletedAtLeastOneQuiz;
-    
+
     // Get focus areas (empty list if analytics not loaded)
     final focusAreas = _analyticsOverview?.focusAreas ?? [];
 
@@ -1610,15 +1629,40 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             // Header
             Row(
               children: [
-                const Icon(Icons.gps_fixed, color: AppColors.primaryPurple, size: 20),
-                const SizedBox(width: 6),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.ctaGradient,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.gps_fixed,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    'Focus Areas',
-                    style: AppTextStyles.headerSmall.copyWith(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Focus Areas',
+                        style: AppTextStyles.headerSmall.copyWith(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (isFree)
+                        Text(
+                          '1 chapter/week per subject',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textTertiary,
+                            fontSize: 11,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ],
@@ -1637,18 +1681,28 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                   ),
                 ),
               )
-            // Otherwise show tier-based logic (only if assessment completed AND at least 1 quiz)
-            else if (!hasChapterPractice)
-              _buildFocusAreasUpgradeContent()
-            else if (focusAreas.isNotEmpty)
-              // Focus areas list with individual Practise links
-              ...focusAreas.asMap().entries.map((entry) {
-                final index = entry.key;
-                final area = entry.value;
-                final isLast = index == focusAreas.length - 1;
-                return _buildFocusAreaRow(area, isLast);
-              })
-            else
+            // Show focus areas for all users (free tier with weekly limits, paid with unlimited)
+            else if (hasChapterPractice && focusAreas.isNotEmpty)
+              // Focus areas list with individual Practise links (with lock status for free users)
+              Column(
+                children: [
+                  ...focusAreas.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final area = entry.value;
+                    final isLast = index == focusAreas.length - 1;
+                    // Check if this subject is locked (only applies to free tier)
+                    final isSubjectLocked = isFree && subscriptionService.isSubjectLocked(area.subject);
+                    final unlockInfo = isFree ? subscriptionService.getSubjectUnlockInfo(area.subject) : null;
+                    return _buildFocusAreaRow(area, isLast, isSubjectLocked, unlockInfo);
+                  }),
+                  // Show upgrade button at bottom if any subject is locked (free tier only)
+                  if (isFree && hasAnySubjectLocked) ...[
+                    const SizedBox(height: 12),
+                    _buildFocusAreasUpgradeButton(),
+                  ],
+                ],
+              )
+            else if (focusAreas.isEmpty && hasChapterPractice)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
@@ -1658,7 +1712,10 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     fontSize: 13,
                   ),
                 ),
-              ),
+              )
+            // Fallback for users without chapter practice enabled (shouldn't happen with new config)
+            else
+              _buildFocusAreasUpgradeContent(),
           ],
         ),
       ),
@@ -1706,7 +1763,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     );
   }
 
-  Widget _buildFocusAreaRow(FocusArea area, bool isLast) {
+  Widget _buildFocusAreaRow(FocusArea area, bool isLast, bool isLocked, SubjectPracticeUsage? unlockInfo) {
     // Get subject icon and color
     IconData subjectIcon;
     Color subjectColor;
@@ -1729,13 +1786,10 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
         subjectColor = AppColors.textMedium;
     }
 
-    // Get accuracy color for score badge
-    final accuracyColor = _getFocusAreaColor(area.accuracy);
-
     return Column(
       children: [
         InkWell(
-          onTap: () {
+          onTap: isLocked ? null : () {
             // Navigate to Chapter Practice for this focus area
             Navigator.push(
               context,
@@ -1746,53 +1800,59 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                   subject: area.subject,
                 ),
               ),
-            );
+            ).then((_) {
+              // Refresh data when returning from chapter practice
+              _loadData();
+            });
           },
           borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-            child: Row(
-              children: [
-                // Subject icon
-                Icon(subjectIcon, size: 16, color: subjectColor),
-                const SizedBox(width: 8),
-                // Chapter name
-                Expanded(
-                  child: Text(
-                    area.chapterName,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
+          child: Opacity(
+            opacity: isLocked ? 0.5 : 1.0,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+              child: Row(
+                children: [
+                  // Subject icon
+                  Icon(
+                    subjectIcon,
+                    size: 16,
+                    color: isLocked ? AppColors.textLight : subjectColor,
+                  ),
+                  const SizedBox(width: 8),
+                  // Chapter name and unlock info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          area.chapterName,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: isLocked ? AppColors.textSecondary : null,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (isLocked && unlockInfo != null)
+                          Text(
+                            'Unlocks in ${unlockInfo.daysRemaining} day${unlockInfo.daysRemaining == 1 ? '' : 's'}',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textTertiary,
+                              fontSize: 10,
+                            ),
+                          ),
+                      ],
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const SizedBox(width: 8),
-                // Score badge (correct/total) - same as Overview tab
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: accuracyColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                  // Lock icon or chevron (no score badge on home page)
+                  Icon(
+                    isLocked ? Icons.lock : Icons.chevron_right,
+                    size: 18,
+                    color: isLocked ? AppColors.textLight : AppColors.textLight,
                   ),
-                  child: Text(
-                    '${area.correct}/${area.total}',
-                    style: AppTextStyles.caption.copyWith(
-                      color: accuracyColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 11,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                // Arrow indicating tap action
-                Icon(
-                  Icons.chevron_right,
-                  size: 18,
-                  color: AppColors.textLight,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -1802,6 +1862,35 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             color: AppColors.borderLight,
           ),
       ],
+    );
+  }
+
+  Widget _buildFocusAreasUpgradeButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PaywallScreen(
+                limitReachedMessage: 'Practice more chapters with Pro!',
+                featureName: 'Chapter Practice',
+              ),
+            ),
+          );
+        },
+        icon: const Icon(Icons.workspace_premium_rounded, size: 18),
+        label: const Text('Upgrade to Pro'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primaryPurple,
+          side: BorderSide(color: AppColors.primaryPurple.withValues(alpha: 0.5)),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      ),
     );
   }
 

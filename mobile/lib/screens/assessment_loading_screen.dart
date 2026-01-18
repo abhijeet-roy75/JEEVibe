@@ -276,11 +276,14 @@ class _AssessmentLoadingScreenState extends State<AssessmentLoadingScreen>
         children: [
           const Icon(Icons.timer, color: Colors.white, size: 18),
           const SizedBox(width: 8),
-          Text(
-            timeString,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              timeString,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

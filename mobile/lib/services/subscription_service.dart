@@ -229,4 +229,37 @@ class SubscriptionService extends ChangeNotifier {
   bool get isOfflineEnabled {
     return _cachedStatus?.limits.offlineEnabled ?? false;
   }
+
+  // ============================================================================
+  // Weekly Chapter Practice Limits (for free tier)
+  // ============================================================================
+
+  /// Check if a subject is locked for chapter practice (free tier weekly limit)
+  bool isSubjectLocked(String subject) {
+    if (_cachedStatus == null) return false;
+    // Pro/Ultra have no weekly limits
+    if (isPaid) return false;
+
+    final weeklyUsage = _cachedStatus!.chapterPracticeWeekly;
+    if (weeklyUsage == null) return false;
+
+    return weeklyUsage.getBySubject(subject).isLocked;
+  }
+
+  /// Get unlock info for a subject (for UI display)
+  SubjectPracticeUsage? getSubjectUnlockInfo(String subject) {
+    return _cachedStatus?.chapterPracticeWeekly?.getBySubject(subject);
+  }
+
+  /// Check if any subject has a weekly limit lock (for showing upgrade button)
+  bool get hasAnySubjectLocked {
+    if (_cachedStatus == null) return false;
+    if (isPaid) return false;
+    return _cachedStatus!.chapterPracticeWeekly?.anyLocked ?? false;
+  }
+
+  /// Get weekly chapter practice usage data
+  ChapterPracticeWeeklyUsage? get chapterPracticeWeeklyUsage {
+    return _cachedStatus?.chapterPracticeWeekly;
+  }
 }

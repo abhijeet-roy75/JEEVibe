@@ -242,6 +242,22 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
       .map(doc => normalizeQuestion(doc.id, doc.data()))
       .filter(q => q !== null);
 
+    // Debug: Log options status for first few questions
+    if (questions.length > 0) {
+      const optionsDebug = questions.slice(0, 3).map(q => ({
+        question_id: q.question_id,
+        has_options: !!(q.options && q.options.length > 0),
+        options_count: q.options?.length || 0,
+        question_type: q.question_type
+      }));
+      logger.info('Chapter practice questions options debug', {
+        userId,
+        chapterKey,
+        total_questions: questions.length,
+        sample_questions: optionsDebug
+      });
+    }
+
     // Prioritize questions (unseen > wrong > correct)
     questions = prioritizeQuestions(questions, questionHistory);
 
