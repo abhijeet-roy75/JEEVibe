@@ -13,6 +13,7 @@ import '../../theme/app_text_styles.dart';
 import '../../widgets/buttons/icon_button.dart';
 import '../auth/welcome_screen.dart';
 import '../subscription/paywall_screen.dart';
+import 'profile_edit_screen.dart';
 
 class ProfileViewScreen extends StatefulWidget {
   const ProfileViewScreen({super.key});
@@ -148,6 +149,22 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _navigateToEditProfile() async {
+    if (_profile == null) return;
+
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => ProfileEditScreen(profile: _profile!),
+      ),
+    );
+
+    // If profile was updated, reload the profile data
+    if (result == true) {
+      setState(() => _isLoading = true);
+      await _loadProfile();
+    }
   }
 
   Future<void> _signOut() async {
@@ -339,6 +356,22 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                                       ],
                                     ),
                                   ],
+                                ),
+                              ),
+                              // Edit Profile Button
+                              IconButton(
+                                onPressed: () => _navigateToEditProfile(),
+                                icon: Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.edit_outlined,
+                                    size: 20,
+                                    color: AppColors.primaryPurple,
+                                  ),
                                 ),
                               ),
                             ],

@@ -438,7 +438,10 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const ProfileViewScreen()),
-          );
+          ).then((_) {
+            // Refresh data when returning from profile (user may have edited their profile)
+            _loadData();
+          });
         },
         child: Container(
           padding: const EdgeInsets.all(8),
