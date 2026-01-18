@@ -209,23 +209,36 @@ router.post('/generate', authenticateUser, validateGenerate, async (req, res, ne
       const expiresAt = activeSession.expires_at ? new Date(activeSession.expires_at) : null;
       const isExpired = expiresAt && new Date() > expiresAt;
 
-      if (isExpired) {
-        // Mark expired session as expired and generate new one
-        logger.info('Active session expired, marking and generating new one', {
+      // Validate that session questions have proper options (for sessions created before fixes)
+      const hasValidQuestions = activeSession.questions && activeSession.questions.every(q => {
+        // Numerical questions don't need options
+        if (q.question_type === 'numerical') return true;
+        // MCQ questions must have at least 2 valid options
+        return q.options && Array.isArray(q.options) && q.options.length >= 2 &&
+          q.options.every(opt => opt && opt.option_id && opt.text && opt.text.trim() !== '');
+      });
+
+      if (isExpired || !hasValidQuestions) {
+        // Mark corrupted/expired session as invalidated and generate new one
+        const reason = isExpired ? 'expired' : 'invalid_questions';
+        logger.info('Active session invalidated, marking and generating new one', {
           userId,
           sessionId: activeSession.session_id,
-          expiresAt: activeSession.expires_at
+          reason,
+          expiresAt: activeSession.expires_at,
+          questionCount: activeSession.questions?.length || 0
         });
 
-        const expiredSessionRef = db.collection('chapter_practice_sessions')
+        const invalidSessionRef = db.collection('chapter_practice_sessions')
           .doc(userId)
           .collection('sessions')
           .doc(activeSession.session_id);
 
         await retryFirestoreOperation(async () => {
-          return await expiredSessionRef.update({
-            status: 'expired',
-            expired_at: admin.firestore.FieldValue.serverTimestamp()
+          return await invalidSessionRef.update({
+            status: reason === 'expired' ? 'expired' : 'invalidated',
+            invalidated_at: admin.firestore.FieldValue.serverTimestamp(),
+            invalidation_reason: reason
           });
         });
       } else {
