@@ -195,46 +195,96 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
     if (mapping) {
       subject = mapping.subject;
       chapterName = mapping.chapter;
+      logger.info('Chapter mapping found', { chapterKey, subject, chapterName });
     } else {
       const parts = chapterKey.split('_');
       subject = parts[0]?.charAt(0).toUpperCase() + parts[0]?.slice(1).toLowerCase();
       chapterName = parts.slice(1).join(' ').replace(/_/g, ' ');
+      logger.warn('No chapter mapping found, using parsed values', { chapterKey, subject, chapterName });
     }
 
     // Get question history for prioritization
     const questionHistory = await getQuestionHistory(userId, chapterKey);
 
     // Query all questions for this chapter (more than needed for prioritization)
-    const questionsRef = db.collection('questions')
-      .where('subject', '==', subject)
-      .where('chapter', '==', chapterName)
-      .limit(100);
-
-    const snapshot = await retryFirestoreOperation(async () => {
-      return await questionsRef.get();
+    let snapshot = await retryFirestoreOperation(async () => {
+      return await db.collection('questions')
+        .where('subject', '==', subject)
+        .where('chapter', '==', chapterName)
+        .limit(100)
+        .get();
     });
 
+    logger.info('Initial question query result', {
+      chapterKey,
+      subject,
+      chapterName,
+      found: snapshot.size
+    });
+
+    // Fallback 1: Try title case chapter name
     if (snapshot.empty) {
-      // Try title case fallback
       const titleCaseChapter = chapterName
         .split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
 
-      const fallbackRef = db.collection('questions')
-        .where('subject', '==', subject)
-        .where('chapter', '==', titleCaseChapter)
-        .limit(100);
+      logger.info('Trying title case fallback', { titleCaseChapter });
 
-      const fallbackSnapshot = await retryFirestoreOperation(async () => {
-        return await fallbackRef.get();
+      snapshot = await retryFirestoreOperation(async () => {
+        return await db.collection('questions')
+          .where('subject', '==', subject)
+          .where('chapter', '==', titleCaseChapter)
+          .limit(100)
+          .get();
       });
+    }
 
-      if (fallbackSnapshot.empty) {
-        throw new Error(`No questions found for chapter: ${chapterKey}`);
+    // Fallback 2: Try lowercase chapter name
+    if (snapshot.empty) {
+      const lowerCaseChapter = chapterName.toLowerCase();
+      logger.info('Trying lowercase fallback', { lowerCaseChapter });
+
+      snapshot = await retryFirestoreOperation(async () => {
+        return await db.collection('questions')
+          .where('subject', '==', subject)
+          .where('chapter', '==', lowerCaseChapter)
+          .limit(100)
+          .get();
+      });
+    }
+
+    // Fallback 3: Try different subject case variations
+    if (snapshot.empty) {
+      const subjectVariations = [
+        subject.toLowerCase(),
+        subject.toUpperCase(),
+        subject
+      ];
+
+      for (const subjectVar of subjectVariations) {
+        logger.info('Trying subject variation', { subject: subjectVar, chapterName });
+
+        snapshot = await retryFirestoreOperation(async () => {
+          return await db.collection('questions')
+            .where('subject', '==', subjectVar)
+            .where('chapter', '==', chapterName)
+            .limit(100)
+            .get();
+        });
+
+        if (!snapshot.empty) break;
       }
+    }
 
-      snapshot.docs.push(...fallbackSnapshot.docs);
+    if (snapshot.empty) {
+      logger.error('No questions found after all fallbacks', {
+        chapterKey,
+        subject,
+        chapterName,
+        userId
+      });
+      throw new Error(`No questions found for chapter: ${chapterKey}. Please try a different chapter.`);
     }
 
     // Normalize and filter questions
@@ -242,12 +292,41 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
       .map(doc => normalizeQuestion(doc.id, doc.data()))
       .filter(q => q !== null);
 
+    // Filter out MCQ questions without options (data quality issue)
+    const questionsWithOptions = questions.filter(q => {
+      // Numerical questions don't need options
+      if (q.question_type === 'numerical') return true;
+      // MCQ questions must have options
+      const hasOptions = q.options && Array.isArray(q.options) && q.options.length > 0;
+      if (!hasOptions) {
+        logger.warn('Skipping MCQ question without options', {
+          question_id: q.question_id,
+          question_type: q.question_type,
+          chapterKey
+        });
+      }
+      return hasOptions;
+    });
+
+    // Debug: Log options status
+    logger.info('Chapter practice questions filtered', {
+      userId,
+      chapterKey,
+      total_raw: snapshot.size,
+      total_normalized: questions.length,
+      total_with_options: questionsWithOptions.length,
+      filtered_out: questions.length - questionsWithOptions.length
+    });
+
+    questions = questionsWithOptions;
+
     // Debug: Log options status for first few questions
     if (questions.length > 0) {
       const optionsDebug = questions.slice(0, 3).map(q => ({
         question_id: q.question_id,
         has_options: !!(q.options && q.options.length > 0),
         options_count: q.options?.length || 0,
+        options_sample: q.options?.slice(0, 2)?.map(o => ({ id: o.option_id, text: o.text?.substring(0, 30) })),
         question_type: q.question_type
       }));
       logger.info('Chapter practice questions options debug', {
@@ -317,6 +396,11 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
     formattedQuestions.forEach((q, index) => {
       const { correct_answer, correct_answer_text, solution_text, solution_steps, ...questionToStore } = q;
 
+      // Ensure options is always an array (defensive)
+      if (!questionToStore.options) {
+        questionToStore.options = [];
+      }
+
       const questionRef = sessionRef.collection('questions').doc(String(index));
       batch.set(questionRef, {
         ...questionToStore,
@@ -330,11 +414,18 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
 
     await batch.commit();
 
+    // Log what we stored (for debugging)
+    const storedOptionsDebug = formattedQuestions.slice(0, 2).map(q => ({
+      question_id: q.question_id,
+      options_count: q.options?.length || 0
+    }));
+
     logger.info('Chapter practice session created', {
       userId,
       sessionId,
       chapterKey,
-      questionCount: formattedQuestions.length
+      questionCount: formattedQuestions.length,
+      stored_options_debug: storedOptionsDebug
     });
 
     // Return session with sanitized questions (no answers)
@@ -418,6 +509,18 @@ async function getSession(userId, sessionId) {
         return sanitized;
       }
       return data;
+    });
+
+    // Log options status for debugging existing sessions
+    const optionsDebug = questions.slice(0, 2).map(q => ({
+      question_id: q.question_id,
+      has_options: !!(q.options && q.options.length > 0),
+      options_count: q.options?.length || 0
+    }));
+    logger.info('GetSession returning questions', {
+      sessionId,
+      total_questions: questions.length,
+      options_debug: optionsDebug
     });
 
     return {

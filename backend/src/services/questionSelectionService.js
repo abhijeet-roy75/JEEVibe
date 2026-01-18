@@ -251,51 +251,55 @@ function normalizeQuestion(id, data) {
   };
 
   // 1. Transform options to standardized List format
-  if (q.options) {
-    if (typeof q.options === 'object' && !Array.isArray(q.options)) {
-      // Map format: {"A": "Text"} or {"A": {"text": "Text"}}
-      q.options = Object.entries(q.options)
-        .filter(([key, value]) => key !== null && key !== undefined)
-        .sort(([a], [b]) => String(a).localeCompare(String(b)))
-        .map(([key, value], index) => {
-          const isObj = typeof value === 'object' && value !== null;
-          // Ensure option_id is not empty string
-          const optionId = String(key || '').trim() || String.fromCharCode(65 + index);
-          return {
-            option_id: optionId,
-            text: String(isObj ? (value.text || value.description || '') : (value !== undefined && value !== null ? value : '')),
-            html: isObj ? (value.html || value.rich_text || null) : null
-          };
-        });
-    } else if (Array.isArray(q.options)) {
-      // Array format: check for missing option_id or nulls
-      q.options = q.options
-        .filter(opt => opt !== null && opt !== undefined)
-        .map((opt, index) => {
-          if (typeof opt === 'string' || typeof opt === 'number') {
-            return {
-              option_id: String.fromCharCode(65 + index),
-              text: String(opt)
-            };
-          }
-          if (typeof opt === 'object') {
-            // Get option_id and fallback to A, B, C, D if missing or empty
-            const optionId = opt.option_id || opt.id || opt.key || '';
-            return {
-              ...opt,
-              option_id: String(optionId).trim() || String.fromCharCode(65 + index),
-              text: String(opt.text || opt.description || opt.value || ''),
-              html: opt.html || opt.rich_text || null
-            };
-          }
-          // Fallback for weird types
+  // Handle various edge cases for options
+  const rawOptions = q.options;
+
+  if (rawOptions && typeof rawOptions === 'object' && !Array.isArray(rawOptions) && Object.keys(rawOptions).length > 0) {
+    // Map format: {"A": "Text"} or {"A": {"text": "Text"}}
+    q.options = Object.entries(rawOptions)
+      .filter(([key, value]) => key !== null && key !== undefined && value !== null && value !== undefined)
+      .sort(([a], [b]) => String(a).localeCompare(String(b)))
+      .map(([key, value], index) => {
+        const isObj = typeof value === 'object' && value !== null;
+        // Ensure option_id is not empty string
+        const optionId = String(key || '').trim() || String.fromCharCode(65 + index);
+        return {
+          option_id: optionId,
+          text: String(isObj ? (value.text || value.description || '') : (value !== undefined && value !== null ? value : '')),
+          html: isObj ? (value.html || value.rich_text || null) : null
+        };
+      })
+      .filter(opt => opt.text && opt.text.trim().length > 0); // Filter out empty text options
+  } else if (Array.isArray(rawOptions) && rawOptions.length > 0) {
+    // Array format: check for missing option_id or nulls
+    q.options = rawOptions
+      .filter(opt => opt !== null && opt !== undefined && opt !== '')
+      .map((opt, index) => {
+        if (typeof opt === 'string' || typeof opt === 'number') {
           return {
             option_id: String.fromCharCode(65 + index),
-            text: String(opt || '')
+            text: String(opt)
           };
-        });
-    }
+        }
+        if (typeof opt === 'object') {
+          // Get option_id and fallback to A, B, C, D if missing or empty
+          const optionId = opt.option_id || opt.id || opt.key || '';
+          return {
+            ...opt,
+            option_id: String(optionId).trim() || String.fromCharCode(65 + index),
+            text: String(opt.text || opt.description || opt.value || ''),
+            html: opt.html || opt.rich_text || null
+          };
+        }
+        // Fallback for weird types
+        return {
+          option_id: String.fromCharCode(65 + index),
+          text: String(opt || '')
+        };
+      })
+      .filter(opt => opt.text && opt.text.trim().length > 0); // Filter out empty text options
   } else if (q.question_type !== 'numerical') {
+    // MCQ without options - set empty array
     q.options = [];
   }
 
