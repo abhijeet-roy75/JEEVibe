@@ -1,7 +1,9 @@
 /// Share Service
 /// Handles sharing JEEVibe content via WhatsApp and other platforms
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'api_service.dart';
 
@@ -51,6 +53,62 @@ class ShareService {
              result.status == ShareResultStatus.dismissed;
     } catch (e) {
       debugPrint('Error sharing solution: $e');
+      return false;
+    }
+  }
+
+  /// Share solution as an image via native share sheet
+  /// Returns true if share was initiated successfully
+  ///
+  /// [imageBytes] is the PNG image data captured from the screenshot
+  /// [sharePositionOrigin] is required on iPad to position the share popover.
+  static Future<bool> shareSolutionAsImage({
+    required String authToken,
+    required String solutionId,
+    required Uint8List imageBytes,
+    required String subject,
+    required String topic,
+    Rect? sharePositionOrigin,
+  }) async {
+    try {
+      // Save image to temporary file
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final imagePath = '${tempDir.path}/jeevibe_solution_$timestamp.png';
+      final imageFile = File(imagePath);
+      await imageFile.writeAsBytes(imageBytes);
+
+      // Log share event to backend (fire-and-forget, don't block UI)
+      _logShareEvent(
+        authToken: authToken,
+        solutionId: solutionId,
+        subject: subject,
+        topic: topic,
+      );
+
+      // Share via native share sheet with image
+      final result = await Share.shareXFiles(
+        [XFile(imagePath)],
+        text: 'Solved with JEEVibe - Download from App Store',
+        subject: 'JEEVibe - $subject Solution',
+        sharePositionOrigin: sharePositionOrigin,
+      );
+
+      // Clean up temp file after a delay (let share complete)
+      Future.delayed(const Duration(seconds: 30), () {
+        try {
+          if (imageFile.existsSync()) {
+            imageFile.deleteSync();
+          }
+        } catch (e) {
+          debugPrint('Error cleaning up temp file: $e');
+        }
+      });
+
+      return result.status == ShareResultStatus.success ||
+             result.status == ShareResultStatus.dismissed;
+    } catch (e) {
+      debugPrint('Error sharing solution as image: $e');
       return false;
     }
   }
@@ -202,7 +260,7 @@ Solved with JEEVibe - Download from App Store''';
     });
   }
 
-  /// Share journey progress via native share sheet
+  /// Share journey progress via native share sheet (text - deprecated)
   static Future<bool> shareJourneyProgress({
     required String studentName,
     required int questionsPracticed,
@@ -226,6 +284,50 @@ Solved with JEEVibe - Download from App Store''';
              result.status == ShareResultStatus.dismissed;
     } catch (e) {
       debugPrint('Error sharing journey: $e');
+      return false;
+    }
+  }
+
+  /// Share journey progress as an image via native share sheet
+  /// Returns true if share was initiated successfully
+  ///
+  /// [imageBytes] is the PNG image data captured from the screenshot
+  /// [sharePositionOrigin] is required on iPad to position the share popover.
+  static Future<bool> shareJourneyProgressAsImage({
+    required Uint8List imageBytes,
+    Rect? sharePositionOrigin,
+  }) async {
+    try {
+      // Save image to temporary file
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final imagePath = '${tempDir.path}/jeevibe_journey_$timestamp.png';
+      final imageFile = File(imagePath);
+      await imageFile.writeAsBytes(imageBytes);
+
+      // Share via native share sheet with image
+      final result = await Share.shareXFiles(
+        [XFile(imagePath)],
+        text: 'Join me on JEEVibe - Download from App Store',
+        subject: 'My JEEVibe Journey',
+        sharePositionOrigin: sharePositionOrigin,
+      );
+
+      // Clean up temp file after a delay (let share complete)
+      Future.delayed(const Duration(seconds: 30), () {
+        try {
+          if (imageFile.existsSync()) {
+            imageFile.deleteSync();
+          }
+        } catch (e) {
+          debugPrint('Error cleaning up temp file: $e');
+        }
+      });
+
+      return result.status == ShareResultStatus.success ||
+             result.status == ShareResultStatus.dismissed;
+    } catch (e) {
+      debugPrint('Error sharing journey as image: $e');
       return false;
     }
   }

@@ -445,40 +445,24 @@ class PracticeResultsScreen extends StatelessWidget {
   }
 
   Widget _buildBackButton(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: 56,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-        border: Border.all(color: AppColors.borderGray, width: 2),
-      ),
-      child: Material(
-        color: Colors.transparent,
-          child: InkWell(
-          onTap: () {
-            // Navigate to main home screen (AssessmentIntroScreen) where snap-and-solve card is
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
-              (route) => false,
-            );
-          },
-          borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-          child: Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.home, color: AppColors.textDark),
-                const SizedBox(width: 12),
-                Text(
-                  'Back to Dashboard',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.textDark,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
+      child: ElevatedButton.icon(
+        onPressed: () {
+          // Navigate to main home screen (AssessmentIntroScreen) where snap-and-solve card is
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
+            (route) => false,
+          );
+        },
+        icon: const Icon(Icons.home_outlined),
+        label: const Text('Back to Dashboard'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primaryPurple,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),

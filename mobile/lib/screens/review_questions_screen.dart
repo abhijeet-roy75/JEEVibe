@@ -228,11 +228,12 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
                           color: isCorrect || isUserAnswer
                               ? Colors.white
                               : AppColors.textMedium,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Expanded(
                     // Note: Options text is not currently stored in QuestionResult
                     // This is a placeholder. When option text is available, it will be rendered with LaTeXWidget

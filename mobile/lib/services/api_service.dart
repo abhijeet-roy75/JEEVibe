@@ -904,6 +904,11 @@ class ApiService {
             throw Exception(errorMsg);
           }
         } else {
+          // Check if response is HTML (server error page) vs JSON
+          if (response.body.trimLeft().startsWith('<!DOCTYPE') ||
+              response.body.trimLeft().startsWith('<html')) {
+            throw Exception('Server temporarily unavailable (${response.statusCode}). Please try again.');
+          }
           final errorData = json.decode(response.body);
           final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get summary';
           throw Exception(errorMsg);
@@ -912,6 +917,8 @@ class ApiService {
         throw Exception('No internet connection. Please check your network and try again.');
       } on http.ClientException {
         throw Exception('Network error. Please try again.');
+      } on FormatException {
+        throw Exception('Server returned invalid response. Please try again.');
       } catch (e) {
         throw Exception('Failed to get summary: ${e.toString()}');
       }
@@ -942,6 +949,11 @@ class ApiService {
             throw Exception(errorMsg);
           }
         } else {
+          // Check if response is HTML (server error page) vs JSON
+          if (response.body.trimLeft().startsWith('<!DOCTYPE') ||
+              response.body.trimLeft().startsWith('<html')) {
+            throw Exception('Server temporarily unavailable (${response.statusCode}). Please try again.');
+          }
           final errorData = json.decode(response.body);
           final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get progress';
           throw Exception(errorMsg);
@@ -950,6 +962,8 @@ class ApiService {
         throw Exception('No internet connection. Please check your network and try again.');
       } on http.ClientException {
         throw Exception('Network error. Please try again.');
+      } on FormatException {
+        throw Exception('Server returned invalid response. Please try again.');
       } catch (e) {
         throw Exception('Failed to get progress: ${e.toString()}');
       }

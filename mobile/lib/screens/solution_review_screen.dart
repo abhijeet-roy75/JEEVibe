@@ -1,5 +1,6 @@
 /// Solution Review Screen - Displays stored solutions from history
 import 'package:flutter/material.dart';
+import 'package:screenshot/screenshot.dart';
 import '../models/snap_data_model.dart';
 import '../models/solution_model.dart';
 import '../models/ai_tutor_models.dart';
@@ -21,6 +22,7 @@ import '../services/localization_service.dart';
 import '../services/subscription_service.dart';
 import '../services/share_service.dart';
 import '../services/firebase/auth_service.dart';
+import '../widgets/shareable_solution_card.dart';
 import 'package:provider/provider.dart';
 
 class SolutionReviewScreen extends StatefulWidget {
@@ -40,6 +42,7 @@ class SolutionReviewScreen extends StatefulWidget {
 class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
   late int _currentIndex;
   bool _isShareInProgress = false;
+  final _screenshotController = ScreenshotController();
 
   @override
   void initState() {
@@ -208,6 +211,36 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
         return;
       }
 
+      final solution = _reconstructSolution(_currentSolution);
+
+      // Capture screenshot of the shareable card widget
+      final imageBytes = await _screenshotController.captureFromWidget(
+        MediaQuery(
+          data: const MediaQueryData(),
+          child: Material(
+            color: Colors.transparent,
+            child: ShareableSolutionCard(
+              question: solution.recognizedQuestion,
+              steps: solution.solution.steps,
+              finalAnswer: solution.solution.finalAnswer,
+              subject: solution.subject,
+              topic: solution.topic,
+            ),
+          ),
+        ),
+        pixelRatio: 3.0, // High quality image
+        delay: const Duration(milliseconds: 100),
+      );
+
+      if (imageBytes == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not capture solution image')),
+          );
+        }
+        return;
+      }
+
       // Get share button position for iPad popover (top-right of screen)
       final screenSize = MediaQuery.of(context).size;
       final shareButtonRect = Rect.fromLTWH(
@@ -217,13 +250,10 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
         48, // button height
       );
 
-      final solution = _reconstructSolution(_currentSolution);
-      final success = await ShareService.shareSolution(
+      final success = await ShareService.shareSolutionAsImage(
         authToken: token,
         solutionId: _currentSolution.id,
-        question: solution.recognizedQuestion,
-        steps: solution.solution.steps,
-        finalAnswer: solution.solution.finalAnswer,
+        imageBytes: imageBytes,
         subject: solution.subject,
         topic: solution.topic,
         sharePositionOrigin: shareButtonRect,

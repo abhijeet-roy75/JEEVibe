@@ -593,58 +593,77 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
         final optionValue = entry.value;
         final isSelected = selectedAnswer == optionKey;
         final isCorrectOption = optionKey == question.correctAnswer;
-        
-        Color? backgroundColor = Colors.white;
+        final isWrongAnswer = showFeedback && isSelected && !isCorrect;
+
+        Color backgroundColor = Colors.white;
         Color borderColor = AppColors.borderGray;
-        
+        Color circleColor = AppColors.borderGray.withValues(alpha: 0.2);
+
         if (showFeedback) {
           if (isCorrectOption) {
-            backgroundColor = AppColors.successBackground;
+            backgroundColor = AppColors.successGreen.withValues(alpha: 0.1);
             borderColor = AppColors.successGreen;
-          } else if (isSelected && !isCorrect) {
-            backgroundColor = AppColors.errorBackground;
+            circleColor = AppColors.successGreen;
+          } else if (isWrongAnswer) {
+            backgroundColor = AppColors.errorRed.withValues(alpha: 0.1);
             borderColor = AppColors.errorRed;
+            circleColor = AppColors.errorRed;
           }
         } else if (isSelected) {
+          backgroundColor = AppColors.primaryPurple.withValues(alpha: 0.1);
           borderColor = AppColors.primaryPurple;
+          circleColor = AppColors.primaryPurple;
         }
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(20), // Increased from 16 for better readability
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-            border: Border.all(color: borderColor, width: 2),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _selectAnswer(optionKey),
-              borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+        final showIcon = showFeedback && (isCorrectOption || isWrongAnswer);
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: InkWell(
+            onTap: showFeedback ? null : () => _selectAnswer(optionKey),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: borderColor,
+                  width: (showFeedback && (isCorrectOption || isWrongAnswer)) || isSelected ? 2 : 1.5,
+                ),
+              ),
               child: Row(
                 children: [
                   Container(
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: isSelected || showFeedback && isCorrectOption 
-                          ? borderColor 
-                          : AppColors.borderLight,
+                      color: circleColor,
                       shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        optionKey,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: isSelected || showFeedback && isCorrectOption
-                              ? Colors.white
-                              : AppColors.textMedium,
-                        ),
+                      border: Border.all(
+                        color: showIcon || isSelected ? borderColor : AppColors.borderGray,
+                        width: 2,
                       ),
                     ),
+                    child: Center(
+                      child: showIcon
+                          ? Icon(
+                              isCorrectOption ? Icons.check : Icons.close,
+                              color: Colors.white,
+                              size: 18,
+                            )
+                          : Text(
+                              optionKey,
+                              style: AppTextStyles.labelMedium.copyWith(
+                                color: isSelected
+                                    ? Colors.white
+                                    : AppColors.textMedium,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: _buildContentWidget(
                       TextPreprocessor.addSpacesToText(optionValue),

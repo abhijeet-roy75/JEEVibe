@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:screenshot/screenshot.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/app_header.dart';
@@ -34,6 +35,7 @@ import '../services/subscription_service.dart';
 import '../models/subscription_models.dart';
 import '../services/journey_service.dart';
 import '../services/share_service.dart';
+import '../widgets/shareable_journey_card.dart';
 import 'subscription/paywall_screen.dart';
 import 'chapter_practice/chapter_practice_loading_screen.dart';
 
@@ -57,6 +59,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
 
   // Analytics overview for cumulative progress display
   AnalyticsOverview? _analyticsOverview;
+
+  // Screenshot controller for image sharing
+  final _screenshotController = ScreenshotController();
 
   @override
   void initState() {
@@ -1019,16 +1024,33 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 GestureDetector(
                   key: shareButtonKey,
                   behavior: HitTestBehavior.opaque,
-                  onTap: () {
+                  onTap: () async {
+                    // Capture screenshot of the shareable journey card
+                    final imageBytes = await _screenshotController.captureFromWidget(
+                      MediaQuery(
+                        data: const MediaQueryData(),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: ShareableJourneyCard(
+                            studentName: studentName,
+                            questionsPracticed: questionsPracticed,
+                            nextMilestone: nextMilestone,
+                          ),
+                        ),
+                      ),
+                      pixelRatio: 3.0,
+                      delay: const Duration(milliseconds: 100),
+                    );
+
+                    if (imageBytes == null) return;
+
                     final RenderBox? box = shareButtonKey.currentContext?.findRenderObject() as RenderBox?;
                     final Rect? sharePositionOrigin = box != null
                         ? box.localToGlobal(Offset.zero) & box.size
                         : null;
 
-                    ShareService.shareJourneyProgress(
-                      studentName: studentName,
-                      questionsPracticed: questionsPracticed,
-                      nextMilestone: nextMilestone,
+                    ShareService.shareJourneyProgressAsImage(
+                      imageBytes: imageBytes,
                       sharePositionOrigin: sharePositionOrigin,
                     );
                   },
