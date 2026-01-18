@@ -75,6 +75,8 @@ class FollowUpQuestion {
   final String correctAnswer;
   final QuestionExplanation explanation;
   final String? priyaMaamNote;
+  final String? source; // "database" or "ai" - indicates where the question came from
+  final String? questionId; // Database question ID for tracking
 
   FollowUpQuestion({
     required this.question,
@@ -82,6 +84,8 @@ class FollowUpQuestion {
     required this.correctAnswer,
     required this.explanation,
     this.priyaMaamNote,
+    this.source,
+    this.questionId,
   });
 
   factory FollowUpQuestion.fromJson(Map<String, dynamic> json) {
@@ -117,6 +121,8 @@ class FollowUpQuestion {
         correctAnswer: json['correctAnswer']?.toString() ?? 'A',
         explanation: parsedExplanation,
         priyaMaamNote: json['priyaMaamNote']?.toString(),
+        source: json['source']?.toString(),
+        questionId: json['questionId']?.toString(),
       );
     } catch (e) {
       // Return a safe default if parsing completely fails
@@ -130,6 +136,8 @@ class FollowUpQuestion {
           finalAnswer: '',
         ),
         priyaMaamNote: null,
+        source: null,
+        questionId: null,
       );
     }
   }

@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:screenshot/screenshot.dart';
 import '../models/solution_model.dart';
 import '../models/snap_data_model.dart';
 import 'followup_quiz_screen.dart';
@@ -24,6 +25,7 @@ import 'ai_tutor_chat_screen.dart';
 import '../services/subscription_service.dart';
 import '../services/share_service.dart';
 import '../services/firebase/auth_service.dart';
+import '../widgets/shareable_solution_card.dart';
 
 class SolutionScreen extends StatefulWidget {
   final Future<Solution> solutionFuture;
@@ -42,6 +44,7 @@ class SolutionScreen extends StatefulWidget {
 class _SolutionScreenState extends State<SolutionScreen> {
   bool _hasIncrementedSnap = false;
   bool _isShareInProgress = false;
+  final _screenshotController = ScreenshotController();
 
   @override
   Widget build(BuildContext context) {
@@ -316,9 +319,11 @@ class _SolutionScreenState extends State<SolutionScreen> {
                     const SizedBox(height: AppSpacing.space24),
                     _buildPriyaTip(solution),
                     const SizedBox(height: AppSpacing.space32),
-                    // Practice section hidden as per request
-                    // _buildPracticeSection(solution),
-                    // const SizedBox(height: AppSpacing.space32),
+                    // Practice section for Pro/Ultra users only
+                    if (SubscriptionService().isPro || SubscriptionService().isUltra) ...[
+                      _buildPracticeSection(solution),
+                      const SizedBox(height: AppSpacing.space32),
+                    ],
                     _buildActionButtons(solution),
                     const SizedBox(height: AppSpacing.space32),
                   ],
@@ -391,6 +396,34 @@ class _SolutionScreenState extends State<SolutionScreen> {
         return;
       }
 
+      // Capture screenshot of the shareable card widget
+      final imageBytes = await _screenshotController.captureFromWidget(
+        MediaQuery(
+          data: const MediaQueryData(),
+          child: Material(
+            color: Colors.transparent,
+            child: ShareableSolutionCard(
+              question: solution.recognizedQuestion,
+              steps: solution.solution.steps,
+              finalAnswer: solution.solution.finalAnswer,
+              subject: solution.subject,
+              topic: solution.topic,
+            ),
+          ),
+        ),
+        pixelRatio: 3.0, // High quality image
+        delay: const Duration(milliseconds: 100),
+      );
+
+      if (imageBytes == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not capture solution image')),
+          );
+        }
+        return;
+      }
+
       // Get share button position for iPad popover (top-right of screen)
       final screenSize = MediaQuery.of(context).size;
       final shareButtonRect = Rect.fromLTWH(
@@ -400,12 +433,10 @@ class _SolutionScreenState extends State<SolutionScreen> {
         48, // button height
       );
 
-      final success = await ShareService.shareSolution(
+      final success = await ShareService.shareSolutionAsImage(
         authToken: token,
         solutionId: solution.id ?? 'snap_${DateTime.now().millisecondsSinceEpoch}',
-        question: solution.recognizedQuestion,
-        steps: solution.solution.steps,
-        finalAnswer: solution.solution.finalAnswer,
+        imageBytes: imageBytes,
         subject: solution.subject,
         topic: solution.topic,
         sharePositionOrigin: shareButtonRect,
@@ -1005,6 +1036,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
                                     topic: solution.topic,
                                     difficulty: solution.difficulty,
                                     subject: solution.subject,
+                                    language: solution.language ?? 'en',
                                   ),
                                 ),
                               );

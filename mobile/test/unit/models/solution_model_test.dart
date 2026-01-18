@@ -106,11 +106,53 @@ void main() {
         'options': {'A': 'Option A'},
         'correctAnswer': 'A',
       };
-      
+
       final question = FollowUpQuestion.fromJson(json);
-      
+
       expect(question.explanation, isNotNull);
       expect(question.explanation.approach, '');
+    });
+
+    test('fromJson - with source field (database)', () {
+      final json = {
+        'question': 'Test question from DB',
+        'options': {'A': 'Option A', 'B': 'Option B'},
+        'correctAnswer': 'A',
+        'source': 'database',
+        'questionId': 'q_123',
+      };
+
+      final question = FollowUpQuestion.fromJson(json);
+
+      expect(question.source, 'database');
+      expect(question.questionId, 'q_123');
+    });
+
+    test('fromJson - with source field (ai)', () {
+      final json = {
+        'question': 'AI generated question',
+        'options': {'A': 'Option A', 'B': 'Option B'},
+        'correctAnswer': 'B',
+        'source': 'ai',
+      };
+
+      final question = FollowUpQuestion.fromJson(json);
+
+      expect(question.source, 'ai');
+      expect(question.questionId, isNull);
+    });
+
+    test('fromJson - without source field (backwards compatibility)', () {
+      final json = {
+        'question': 'Legacy question',
+        'options': {'A': 'Option A'},
+        'correctAnswer': 'A',
+      };
+
+      final question = FollowUpQuestion.fromJson(json);
+
+      expect(question.source, isNull);
+      expect(question.questionId, isNull);
     });
   });
 }

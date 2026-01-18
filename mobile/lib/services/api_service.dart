@@ -298,6 +298,90 @@ class ApiService {
     }
   }
 
+  /// Get snap practice questions from database with AI fallback
+  /// Prioritizes database questions for faster response and consistency
+  /// Falls back to AI generation if no matching questions in database
+  ///
+  /// Returns a map containing:
+  /// - questions: List<FollowUpQuestion>
+  /// - source: "database" | "ai" | "mixed"
+  static Future<Map<String, dynamic>> getSnapPracticeQuestions({
+    required String authToken,
+    required String subject,
+    required String topic,
+    required String difficulty,
+    int count = 3,
+    String language = 'en',
+    String? recognizedQuestion,
+    Map<String, dynamic>? solution,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/snap-practice/questions'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+          body: json.encode({
+            'subject': subject,
+            'topic': topic,
+            'difficulty': difficulty,
+            'count': count,
+            'language': language,
+            if (recognizedQuestion != null) 'recognizedQuestion': recognizedQuestion,
+            if (solution != null) 'solution': solution,
+          }),
+        ).timeout(const Duration(seconds: 30));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true && jsonData['data'] != null) {
+            final data = jsonData['data'];
+            final questions = (data['questions'] as List<dynamic>)
+                .map((q) => FollowUpQuestion.fromJson(q as Map<String, dynamic>))
+                .toList();
+            return {
+              'questions': questions,
+              'source': data['source'] ?? 'unknown',
+              'dbCount': data['dbCount'],
+              'aiCount': data['aiCount'],
+            };
+          } else {
+            final errorMsg = jsonData['error'] ?? 'Invalid response format';
+            final requestId = jsonData['requestId'];
+            throw Exception('$errorMsg${requestId != null ? ' (Request ID: $requestId)' : ''}');
+          }
+        } else if (response.statusCode == 404) {
+          // No questions available - return empty list
+          return {
+            'questions': <FollowUpQuestion>[],
+            'source': 'none',
+          };
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error'] ?? 'Failed to get practice questions';
+          final requestId = errorData['requestId'];
+
+          if (response.statusCode == 429) {
+            throw Exception('Too many requests. Please wait a moment and try again.');
+          }
+
+          throw Exception('$errorMsg${requestId != null ? ' (Request ID: $requestId)' : ''}');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        if (e.toString().contains('Exception:')) {
+          rethrow;
+        }
+        throw Exception('Failed to get practice questions: ${e.toString()}');
+      }
+    });
+  }
+
   /// Health check
   static Future<bool> checkHealth() async {
     try {

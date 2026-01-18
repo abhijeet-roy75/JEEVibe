@@ -22,6 +22,7 @@ class FollowUpQuizScreen extends StatefulWidget {
   final String topic;
   final String difficulty;
   final String subject; // Mathematics, Physics, or Chemistry
+  final String language; // "en" or "hi"
 
   const FollowUpQuizScreen({
     super.key,
@@ -30,6 +31,7 @@ class FollowUpQuizScreen extends StatefulWidget {
     required this.topic,
     required this.difficulty,
     required this.subject,
+    this.language = 'en',
   });
 
   @override
@@ -50,14 +52,96 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
   DateTime? _sessionStartTime;
   DateTime? _questionStartTime;
   List<QuestionResult> _questionResults = [];
+  bool _dbQuestionsLoaded = false; // Track if we've tried DB loading
+  String _questionSource = 'unknown'; // Track source: "database", "ai", "mixed"
 
   @override
   void initState() {
     super.initState();
     _sessionStartTime = DateTime.now();
-    _loadQuestion(0);
+    _loadQuestionsFromDatabase(); // Try DB first, then fallback to AI
   }
 
+  /// Try to load all questions from database first
+  /// Falls back to AI generation if DB has no matching questions
+  Future<void> _loadQuestionsFromDatabase() async {
+    if (_dbQuestionsLoaded) return;
+    _dbQuestionsLoaded = true;
+
+    setState(() {
+      _questionLoading = [true, true, true];
+    });
+
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      String? token = await authService.getIdToken();
+      if (token == null && authService.currentUser != null) {
+        token = await authService.currentUser!.getIdToken(true);
+      }
+
+      if (token == null) {
+        throw Exception('Authentication required. Please sign in again.');
+      }
+
+      // Try to get questions from database
+      final result = await ApiService.getSnapPracticeQuestions(
+        authToken: token,
+        subject: widget.subject,
+        topic: widget.topic,
+        difficulty: widget.difficulty,
+        count: 3,
+        language: widget.language,
+        recognizedQuestion: widget.recognizedQuestion,
+        solution: {
+          'approach': widget.solution.approach,
+          'steps': widget.solution.steps,
+          'finalAnswer': widget.solution.finalAnswer,
+          'priyaMaamTip': widget.solution.priyaMaamTip,
+        },
+      );
+
+      // Safely extract questions list from result
+      final questionsList = result['questions'];
+      final List<FollowUpQuestion> questions = questionsList is List
+          ? questionsList.whereType<FollowUpQuestion>().toList()
+          : <FollowUpQuestion>[];
+      _questionSource = result['source'] as String? ?? 'unknown';
+
+      if (mounted && questions.isNotEmpty) {
+        setState(() {
+          for (int i = 0; i < questions.length && i < 3; i++) {
+            _questions[i] = questions[i];
+            _questionLoading[i] = false;
+          }
+          // Mark any remaining slots as not loading
+          for (int i = questions.length; i < 3; i++) {
+            _questionLoading[i] = false;
+          }
+        });
+
+        // Start timer for first question
+        if (_questions[0] != null && _timer == null) {
+          _startTimer();
+        }
+        return;
+      }
+    } catch (e) {
+      // Database loading failed, will fallback to AI
+    }
+
+    // Fallback: Load questions via AI (original lazy-loading approach)
+    if (mounted) {
+      setState(() {
+        // Reset loading states - _loadQuestion will set the appropriate one
+        _questionLoading = [false, false, false];
+      });
+      _questionSource = 'ai';
+      _loadQuestion(0); // This will set _questionLoading[0] = true and start AI generation
+    }
+  }
+
+  /// Load a single question via AI (fallback method)
+  /// Used when database doesn't have questions for the current slot
   Future<void> _loadQuestion(int index) async {
     if (index < 0 || index >= 3) return;
     if (_questions[index] != null || _questionLoading[index]) return;
@@ -70,7 +154,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
     try {
       // Get authentication token with refresh capability
       final authService = Provider.of<AuthService>(context, listen: false);
-      
+
       // Get token right before use to avoid race conditions
       String? token;
       try {
@@ -82,7 +166,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
       } catch (e) {
         throw Exception('Authentication required. Please sign in again.');
       }
-      
+
       if (token == null) {
         throw Exception('Authentication required. Please sign in again.');
       }
@@ -106,7 +190,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
           _questions[index] = question;
           _questionLoading[index] = false;
         });
-        
+
         if (index == 0 && _timer == null) {
           _startTimer();
         }
@@ -120,7 +204,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
         } else if (errorMessage.contains('Authentication')) {
           errorMessage = 'Authentication required. Please sign in again.';
         }
-        
+
         setState(() {
           _questionErrors[index] = errorMessage;
           _questionLoading[index] = false;
@@ -254,12 +338,14 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
     final isLoading = _questionLoading[currentQuestionIndex];
     final error = _questionErrors[currentQuestionIndex];
 
-    if (isLoading || question == null) {
-      return _buildLoadingState();
+    // Check error first - if loading failed, show error state
+    if (error != null && !isLoading) {
+      return _buildErrorState(error);
     }
 
-    if (error != null) {
-      return _buildErrorState(error);
+    // Show loading if still loading or no question loaded yet
+    if (isLoading || question == null) {
+      return _buildLoadingState();
     }
 
     return Scaffold(
@@ -659,7 +745,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
               CircularProgressIndicator(color: Colors.white),
               SizedBox(height: 24),
               Text(
-                'Generating question...',
+                'Loading question...',
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ],
