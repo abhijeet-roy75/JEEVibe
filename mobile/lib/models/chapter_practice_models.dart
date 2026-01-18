@@ -228,8 +228,12 @@ class PracticeAnswerResult {
   final String studentAnswer;
   final String correctAnswer;
   final String? correctAnswerText;
+  final String? explanation;
   final String? solutionText;
   final List<String> solutionSteps;
+  final String? keyInsight;
+  final Map<String, String>? distractorAnalysis;
+  final List<String>? commonMistakes;
   final double thetaDelta;
   final double thetaMultiplier;
 
@@ -238,23 +242,49 @@ class PracticeAnswerResult {
     required this.studentAnswer,
     required this.correctAnswer,
     this.correctAnswerText,
+    this.explanation,
     this.solutionText,
     this.solutionSteps = const [],
+    this.keyInsight,
+    this.distractorAnalysis,
+    this.commonMistakes,
     required this.thetaDelta,
     required this.thetaMultiplier,
   });
 
   factory PracticeAnswerResult.fromJson(Map<String, dynamic> json, {String? submittedAnswer}) {
+    // Parse distractor_analysis map
+    Map<String, String>? distractorAnalysis;
+    if (json['distractor_analysis'] != null && json['distractor_analysis'] is Map) {
+      distractorAnalysis = Map<String, String>.from(
+        (json['distractor_analysis'] as Map).map(
+          (key, value) => MapEntry(key.toString(), value.toString()),
+        ),
+      );
+    }
+
+    // Parse common_mistakes list
+    List<String>? commonMistakes;
+    if (json['common_mistakes'] != null && json['common_mistakes'] is List) {
+      commonMistakes = (json['common_mistakes'] as List)
+          .map((m) => m.toString())
+          .toList();
+    }
+
     return PracticeAnswerResult(
       isCorrect: json['is_correct'] ?? false,
       studentAnswer: submittedAnswer ?? json['student_answer'] ?? '',
       correctAnswer: json['correct_answer'] ?? '',
       correctAnswerText: json['correct_answer_text'],
+      explanation: json['explanation'],
       solutionText: json['solution_text'],
       solutionSteps: (json['solution_steps'] as List<dynamic>?)
               ?.map((s) => s.toString())
               .toList() ??
           [],
+      keyInsight: json['key_insight'],
+      distractorAnalysis: distractorAnalysis,
+      commonMistakes: commonMistakes,
       thetaDelta: (json['theta_delta'] ?? 0.0).toDouble(),
       thetaMultiplier: (json['theta_multiplier'] ?? 0.5).toDouble(),
     );

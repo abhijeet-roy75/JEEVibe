@@ -67,20 +67,6 @@ class _ChapterPracticeReviewScreenState
     }
   }
 
-  Color _getSubjectColor(String? subject) {
-    switch (subject?.toLowerCase()) {
-      case 'physics':
-        return AppColors.infoBlue;
-      case 'chemistry':
-        return AppColors.successGreen;
-      case 'mathematics':
-      case 'math':
-        return AppColors.primaryPurple;
-      default:
-        return AppColors.primaryPurple;
-    }
-  }
-
   String _getEncouragingMessage() {
     final percentage = _accuracy * 100;
     if (percentage >= 80) {

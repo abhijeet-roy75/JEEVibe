@@ -12,6 +12,7 @@ import '../../theme/app_text_styles.dart';
 import '../../widgets/priya_avatar.dart';
 import '../../utils/error_handler.dart';
 import '../subscription/paywall_screen.dart';
+import '../daily_quiz_loading_screen.dart';
 import 'chapter_practice_question_screen.dart';
 
 class ChapterPracticeLoadingScreen extends StatefulWidget {
@@ -35,7 +36,6 @@ class _ChapterPracticeLoadingScreenState
     extends State<ChapterPracticeLoadingScreen>
     with SingleTickerProviderStateMixin {
   String? _error;
-  bool _isLoading = true;
   bool _isOffline = false;
   late AnimationController _avatarAnimationController;
 
@@ -69,7 +69,6 @@ class _ChapterPracticeLoadingScreenState
           setState(() {
             _isOffline = true;
             _error = 'No internet connection';
-            _isLoading = false;
           });
         }
         return;
@@ -83,7 +82,6 @@ class _ChapterPracticeLoadingScreenState
         if (mounted) {
           setState(() {
             _error = 'Authentication required';
-            _isLoading = false;
           });
         }
         return;
@@ -150,7 +148,6 @@ class _ChapterPracticeLoadingScreenState
 
           setState(() {
             _error = provider.errorMessage ?? 'Failed to start practice';
-            _isLoading = false;
           });
         }
       }
@@ -191,7 +188,6 @@ class _ChapterPracticeLoadingScreenState
         setState(() {
           _isOffline = isNetworkError;
           _error = ErrorHandler.getErrorMessage(e);
-          _isLoading = false;
         });
       }
     }
@@ -272,8 +268,12 @@ class _ChapterPracticeLoadingScreenState
             onPressed: () {
               Navigator.of(dialogContext).pop();
               Navigator.of(context).pop();
-              // Navigate to daily quiz - using named route
-              Navigator.of(context).pushNamed('/daily-quiz');
+              // Navigate to daily quiz loading screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const DailyQuizLoadingScreen(),
+                ),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryPurple,
@@ -287,20 +287,6 @@ class _ChapterPracticeLoadingScreenState
         ],
       ),
     );
-  }
-
-  Color _getSubjectColor() {
-    switch (widget.subject.toLowerCase()) {
-      case 'physics':
-        return AppColors.infoBlue;
-      case 'chemistry':
-        return AppColors.successGreen;
-      case 'mathematics':
-      case 'math':
-        return AppColors.primaryPurple;
-      default:
-        return AppColors.primaryPurple;
-    }
   }
 
   @override
@@ -373,7 +359,6 @@ class _ChapterPracticeLoadingScreenState
                       setState(() {
                         _error = null;
                         _isOffline = false;
-                        _isLoading = true;
                       });
                       _startPractice();
                     },

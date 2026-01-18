@@ -58,10 +58,14 @@ AnswerFeedback practiceResultToFeedback(
     isCorrect: result.isCorrect,
     correctAnswer: result.correctAnswer,
     correctAnswerText: result.correctAnswerText,
+    explanation: result.explanation,
     solutionText: result.solutionText,
     solutionSteps: result.solutionSteps
         .map((step) => SolutionStep(description: step))
         .toList(),
+    keyInsight: result.keyInsight,
+    distractorAnalysis: result.distractorAnalysis,
+    commonMistakes: result.commonMistakes,
     timeTakenSeconds: timeTakenSeconds,
     studentAnswer: result.studentAnswer,
     questionType: questionType,

@@ -564,14 +564,18 @@ router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req
       newTheta: roundToDecimals(boundedTheta, 4)
     });
 
-    // Return feedback
+    // Return feedback with rich explanation data
     res.json({
       success: true,
       is_correct: isCorrect,
       correct_answer: correctAnswer,
       correct_answer_text: fullQuestionData.correct_answer_text || null,
+      explanation: fullQuestionData.explanation || fullQuestionData.solution_text || null,
       solution_text: fullQuestionData.solution_text || null,
       solution_steps: fullQuestionData.solution_steps || [],
+      key_insight: fullQuestionData.metadata?.key_insight || fullQuestionData.key_insight || null,
+      distractor_analysis: fullQuestionData.distractor_analysis || null,
+      common_mistakes: fullQuestionData.metadata?.common_mistakes || fullQuestionData.common_mistakes || null,
       theta_delta: adjustedThetaDelta,
       theta_multiplier: THETA_MULTIPLIER,
       requestId: req.id
