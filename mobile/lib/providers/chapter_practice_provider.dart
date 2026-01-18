@@ -123,7 +123,15 @@ class ChapterPracticeProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
-      _errorMessage = e.toString();
+      // Make error messages more user-friendly
+      final errorStr = e.toString().toLowerCase();
+      if (errorStr.contains('no questions found')) {
+        _errorMessage = 'No practice questions available for this chapter yet. Please try another chapter.';
+      } else if (errorStr.contains('socketexception') || errorStr.contains('connection')) {
+        _errorMessage = 'Network error. Please check your connection and try again.';
+      } else {
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      }
       _isLoading = false;
       notifyListeners();
       return false;
@@ -152,7 +160,7 @@ class ChapterPracticeProvider extends ChangeNotifier {
       );
 
       if (response['success'] == true) {
-        _lastAnswerResult = PracticeAnswerResult.fromJson(response);
+        _lastAnswerResult = PracticeAnswerResult.fromJson(response, submittedAnswer: selectedOption);
 
         // Update question state
         currentQuestion!.answered = true;

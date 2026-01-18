@@ -26,10 +26,20 @@ class _ChapterPracticeQuestionScreenState
   DateTime? _questionStartTime;
   bool _isCompletingSession = false;
 
+  // Numerical input controller
+  late TextEditingController _numericalController;
+
   @override
   void initState() {
     super.initState();
     _questionStartTime = DateTime.now();
+    _numericalController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _numericalController.dispose();
+    super.dispose();
   }
 
   int get _elapsedSeconds {
@@ -38,10 +48,22 @@ class _ChapterPracticeQuestionScreenState
   }
 
   Future<void> _handleAnswerSubmission() async {
-    if (_selectedOption == null) return;
-
     final provider =
         Provider.of<ChapterPracticeProvider>(context, listen: false);
+    final question = provider.currentQuestion;
+    if (question == null) return;
+
+    // Get the answer based on question type
+    final String? answer;
+    if (question.isNumerical) {
+      final numericalAnswer = _numericalController.text.trim();
+      if (numericalAnswer.isEmpty) return;
+      answer = numericalAnswer;
+    } else {
+      if (_selectedOption == null) return;
+      answer = _selectedOption;
+    }
+
     if (provider.isSubmitting) return;
 
     final authService = Provider.of<AuthService>(context, listen: false);
@@ -61,7 +83,7 @@ class _ChapterPracticeQuestionScreenState
       await ErrorHandler.handleApiError(
         context,
         () => provider.submitAnswer(
-          _selectedOption!,
+          answer!,
           token,
           timeTakenSeconds: _elapsedSeconds,
         ),
@@ -92,6 +114,7 @@ class _ChapterPracticeQuestionScreenState
       provider.nextQuestion();
       setState(() {
         _selectedOption = null;
+        _numericalController.clear();
         _questionStartTime = DateTime.now();
       });
     }
@@ -584,39 +607,64 @@ class _ChapterPracticeQuestionScreenState
               ),
             ),
             const SizedBox(height: 20),
-            // Check if options are available
-            if (question.options.isEmpty) ...[
-              // Error state: no options available
+            // Show numerical input or MCQ options based on question type
+            if (question.isNumerical) ...[
+              // Numerical input field
+              _buildNumericalInput(isAnswered),
+            ] else if (question.options.isEmpty) ...[
+              // Error state: MCQ without options - allow skipping
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.errorRed.withValues(alpha: 0.1),
+                  color: AppColors.warningAmber.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppColors.errorRed.withValues(alpha: 0.3),
+                    color: AppColors.warningAmber.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Column(
                   children: [
                     Icon(
                       Icons.warning_amber_rounded,
-                      color: AppColors.errorRed,
+                      color: AppColors.warningAmber,
                       size: 32,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Unable to load answer options',
+                      'Question options unavailable',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.errorRed,
+                        color: AppColors.warningAmber,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Please go back and try again',
+                      'This question has a data issue. You can skip it.',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textMedium,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _handleNextQuestion,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.warningAmber,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          provider.hasMoreQuestions ? 'Skip to Next Question' : 'Complete Practice',
+                          style: AppTextStyles.labelMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -728,7 +776,8 @@ class _ChapterPracticeQuestionScreenState
                 ),
               );
             }),
-            // Submit button (if not answered)
+            // Submit button (if not answered) - for MCQ options only
+            // Numerical questions have their own submit button in _buildNumericalInput
             if (!isAnswered && _selectedOption != null) ...[
               const SizedBox(height: 8),
               SizedBox(
@@ -767,7 +816,7 @@ class _ChapterPracticeQuestionScreenState
                 ),
               ),
             ],
-            ], // end of else block (options available)
+            ], // end of else block (MCQ options available)
           ],
         ),
       ),
@@ -957,6 +1006,149 @@ class _ChapterPracticeQuestionScreenState
                 ),
               ),
       ),
+    );
+  }
+
+  Widget _buildNumericalInput(bool isAnswered) {
+    final provider = Provider.of<ChapterPracticeProvider>(context, listen: false);
+    final answerResult = provider.lastAnswerResult;
+
+    if (isAnswered && answerResult != null) {
+      // Show submitted answer with feedback
+      final isCorrect = answerResult.isCorrect;
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isCorrect
+              ? AppColors.successGreen.withValues(alpha: 0.1)
+              : AppColors.errorRed.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
+            width: 2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  isCorrect ? Icons.check_circle : Icons.cancel,
+                  color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isCorrect ? 'Correct!' : 'Incorrect',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your answer: ${answerResult.studentAnswer}',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textDark,
+              ),
+            ),
+            if (!isCorrect) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Correct answer: ${answerResult.correctAnswer}',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.successGreen,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    // Show input field for answering
+    final hasAnswer = _numericalController.text.trim().isNotEmpty;
+    final isSubmitting = provider.isSubmitting;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Enter your numerical answer:',
+          style: AppTextStyles.labelMedium.copyWith(
+            color: AppColors.textMedium,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _numericalController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+          decoration: InputDecoration(
+            hintText: 'Enter your answer',
+            hintStyle: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textLight,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.borderGray),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.borderGray),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primaryPurple, width: 2),
+            ),
+            contentPadding: const EdgeInsets.all(16),
+          ),
+          style: AppTextStyles.bodyMedium,
+          onChanged: (value) {
+            // Trigger rebuild to update submit button state
+            setState(() {});
+          },
+          onSubmitted: hasAnswer ? (_) => _handleAnswerSubmission() : null,
+        ),
+        const SizedBox(height: 16),
+        // Submit button for numerical questions
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: ElevatedButton(
+            onPressed: hasAnswer && !isSubmitting ? _handleAnswerSubmission : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: hasAnswer ? AppColors.primaryPurple : AppColors.borderGray,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: isSubmitting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Text(
+                    'Submit Answer',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+        ),
+      ],
     );
   }
 

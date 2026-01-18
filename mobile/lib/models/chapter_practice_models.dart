@@ -105,6 +105,17 @@ class PracticeQuestion {
   });
 
   factory PracticeQuestion.fromJson(Map<String, dynamic> json) {
+    // Robustly parse options
+    List<PracticeOption> parsedOptions = [];
+    final rawOptions = json['options'];
+    if (rawOptions != null && rawOptions is List) {
+      parsedOptions = rawOptions
+          .where((o) => o != null && o is Map<String, dynamic>)
+          .map((o) => PracticeOption.fromJson(o as Map<String, dynamic>))
+          .where((o) => o.text.isNotEmpty) // Filter out empty options
+          .toList();
+    }
+
     return PracticeQuestion(
       questionId: json['question_id'] ?? '',
       position: json['position'] ?? 0,
@@ -114,10 +125,7 @@ class PracticeQuestion {
       questionType: json['question_type'] ?? 'mcq_single',
       questionText: json['question_text'] ?? '',
       questionTextHtml: json['question_text_html'],
-      options: (json['options'] as List<dynamic>?)
-              ?.map((o) => PracticeOption.fromJson(o))
-              .toList() ??
-          [],
+      options: parsedOptions,
       imageUrl: json['image_url'],
       subTopics: (json['sub_topics'] as List<dynamic>?)
               ?.map((s) => s.toString())
@@ -133,6 +141,12 @@ class PracticeQuestion {
       timeTakenSeconds: json['time_taken_seconds'],
     );
   }
+
+  /// Check if this is a numerical question
+  bool get isNumerical => questionType.toLowerCase() == 'numerical';
+
+  /// Check if question has an image
+  bool get hasImage => imageUrl != null && imageUrl!.isNotEmpty;
 
   Map<String, dynamic> toJson() => {
         'question_id': questionId,
@@ -211,6 +225,7 @@ class PracticeIrtParameters {
 /// Answer Result from submit-answer API
 class PracticeAnswerResult {
   final bool isCorrect;
+  final String studentAnswer;
   final String correctAnswer;
   final String? correctAnswerText;
   final String? solutionText;
@@ -220,6 +235,7 @@ class PracticeAnswerResult {
 
   PracticeAnswerResult({
     required this.isCorrect,
+    required this.studentAnswer,
     required this.correctAnswer,
     this.correctAnswerText,
     this.solutionText,
@@ -228,9 +244,10 @@ class PracticeAnswerResult {
     required this.thetaMultiplier,
   });
 
-  factory PracticeAnswerResult.fromJson(Map<String, dynamic> json) {
+  factory PracticeAnswerResult.fromJson(Map<String, dynamic> json, {String? submittedAnswer}) {
     return PracticeAnswerResult(
       isCorrect: json['is_correct'] ?? false,
+      studentAnswer: submittedAnswer ?? json['student_answer'] ?? '',
       correctAnswer: json['correct_answer'] ?? '',
       correctAnswerText: json['correct_answer_text'],
       solutionText: json['solution_text'],
