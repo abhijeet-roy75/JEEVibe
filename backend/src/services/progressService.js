@@ -158,7 +158,9 @@ async function getSubjectProgress(userId) {
 
 /**
  * Get accuracy trends over time
- * 
+ *
+ * Includes both daily quizzes AND initial assessment responses.
+ *
  * @param {string} userId
  * @param {number} days - Number of days to look back (default: 30)
  * @returns {Promise<Array>} Array of daily accuracy data
@@ -169,7 +171,9 @@ async function getAccuracyTrends(userId, days = 30) {
     cutoffDate.setDate(cutoffDate.getDate() - days);
     const cutoffTimestamp = admin.firestore.Timestamp.fromDate(cutoffDate);
 
-    // Get completed quizzes
+    const dailyData = {};
+
+    // 1. Get completed daily quizzes
     const quizzesRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
@@ -180,9 +184,6 @@ async function getAccuracyTrends(userId, days = 30) {
     const quizzesSnapshot = await retryFirestoreOperation(async () => {
       return await quizzesRef.get();
     });
-
-    const trends = [];
-    const dailyData = {};
 
     quizzesSnapshot.docs.forEach(doc => {
       const quiz = doc.data();
@@ -210,7 +211,67 @@ async function getAccuracyTrends(userId, days = 30) {
       dailyData[dateKey].correct += (quiz.score || 0);
     });
 
+    // 2. Get initial assessment responses (30 questions answered during onboarding)
+    const assessmentRef = db.collection('assessment_responses')
+      .doc(userId)
+      .collection('responses')
+      .where('answered_at', '>=', cutoffTimestamp);
+
+    const assessmentSnapshot = await retryFirestoreOperation(async () => {
+      return await assessmentRef.get();
+    });
+
+    if (!assessmentSnapshot.empty) {
+      // Group assessment responses by date
+      assessmentSnapshot.docs.forEach(doc => {
+        const response = doc.data();
+        const answeredAt = response.answered_at?.toDate();
+
+        if (!answeredAt) return;
+
+        // Convert to IST for correct date grouping
+        const answeredAtIST = toIST(answeredAt);
+        const dateKey = formatDateIST(answeredAtIST);
+
+        if (!dailyData[dateKey]) {
+          dailyData[dateKey] = {
+            date: dateKey,
+            quizzes: 0,
+            questions: 0,
+            correct: 0,
+            accuracy: 0
+          };
+        }
+
+        dailyData[dateKey].questions += 1;
+        if (response.is_correct) {
+          dailyData[dateKey].correct += 1;
+        }
+      });
+
+      // Count assessment as 1 "quiz" for the day it was completed (if any responses exist)
+      // Find the date with assessment responses and mark it
+      const assessmentDates = new Set();
+      assessmentSnapshot.docs.forEach(doc => {
+        const response = doc.data();
+        const answeredAt = response.answered_at?.toDate();
+        if (answeredAt) {
+          const answeredAtIST = toIST(answeredAt);
+          const dateKey = formatDateIST(answeredAtIST);
+          assessmentDates.add(dateKey);
+        }
+      });
+
+      // Add 1 quiz count for each date that had assessment responses
+      assessmentDates.forEach(dateKey => {
+        if (dailyData[dateKey]) {
+          dailyData[dateKey].quizzes += 1;
+        }
+      });
+    }
+
     // Calculate accuracy for each day
+    const trends = [];
     for (const [date, data] of Object.entries(dailyData)) {
       data.accuracy = data.questions > 0 ? data.correct / data.questions : 0;
       trends.push(data);
