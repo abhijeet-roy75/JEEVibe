@@ -290,6 +290,34 @@ function invalidateCache() {
 }
 
 /**
+ * Force update tier config in Firestore with current defaults
+ * Use this when DEFAULT_TIER_CONFIG has been updated and needs to be synced
+ */
+async function forceUpdateTierConfig() {
+  try {
+    const configRef = db.collection('tier_config').doc('active');
+    await configRef.set({
+      ...DEFAULT_TIER_CONFIG,
+      updated_at: new Date().toISOString(),
+      updated_by: 'system_migration'
+    }, { merge: true });
+
+    // Invalidate cache so next request uses fresh data
+    invalidateCache();
+
+    logger.info('Tier config force updated in Firestore', {
+      version: DEFAULT_TIER_CONFIG.version,
+      freeTierChapterPracticeEnabled: DEFAULT_TIER_CONFIG.tiers.free.limits.chapter_practice_enabled
+    });
+
+    return { success: true, message: 'Tier config updated' };
+  } catch (error) {
+    logger.error('Failed to force update tier config', { error: error.message });
+    throw error;
+  }
+}
+
+/**
  * Check if a limit value represents "unlimited"
  * @param {number} limitValue - The limit value
  * @returns {boolean} True if unlimited
@@ -306,6 +334,7 @@ module.exports = {
   getPurchasablePlans,
   initializeDefaultConfig,
   invalidateCache,
+  forceUpdateTierConfig,
   isUnlimited,
   DEFAULT_TIER_CONFIG
 };

@@ -18,7 +18,7 @@ const { db, admin } = require('../config/firebase');
 
 const { getSubscriptionStatus, grantOverride, revokeOverride } = require('../services/subscriptionService');
 const { getAllUsage } = require('../services/usageTrackingService');
-const { getPurchasablePlans, getTierConfig } = require('../services/tierConfigService');
+const { getPurchasablePlans, getTierConfig, forceUpdateTierConfig } = require('../services/tierConfigService');
 const { getWeeklyUsage } = require('../services/weeklyChapterPracticeService');
 
 // Admin UIDs allowed to grant overrides (should be moved to environment config)
@@ -375,6 +375,51 @@ router.post('/admin/revoke-override', adminLimiter, authenticateUser, async (req
       requestId: req.id,
       adminUserId,
       targetUserId: user_id
+    });
+
+    res.json({
+      success: true,
+      data: result,
+      requestId: req.id
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================================================
+// ADMIN: TIER CONFIG UPDATE
+// ============================================================================
+
+/**
+ * POST /api/subscriptions/admin/update-tier-config
+ *
+ * Force update the Firestore tier_config document with current defaults.
+ * Use this after updating DEFAULT_TIER_CONFIG in code to sync Firestore.
+ *
+ * Authentication: Required (Admin only)
+ */
+router.post('/admin/update-tier-config', authenticateUser, adminLimiter, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+
+    // Check admin permission
+    const adminStatus = await isAdmin(userId);
+    if (!adminStatus) {
+      logger.warn('Unauthorized tier config update attempt', { userId });
+      return res.status(403).json({
+        success: false,
+        error: 'Admin access required',
+        requestId: req.id
+      });
+    }
+
+    // Force update tier config
+    const result = await forceUpdateTierConfig();
+
+    logger.info('Tier config updated by admin', {
+      userId,
+      requestId: req.id
     });
 
     res.json({

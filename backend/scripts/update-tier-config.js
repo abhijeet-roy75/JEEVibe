@@ -43,9 +43,9 @@ function initFirebase() {
   return admin.app();
 }
 
-// The updated tier configuration with chapter_practice_enabled
+// The updated tier configuration with chapter_practice_enabled for FREE tier
 const UPDATED_TIER_CONFIG = {
-  version: '1.1.0',
+  version: '1.2.0',
   tiers: {
     free: {
       tier_id: 'free',
@@ -58,8 +58,9 @@ const UPDATED_TIER_CONFIG = {
         solution_history_days: 7,
         ai_tutor_enabled: false,
         ai_tutor_messages_daily: 0,
-        chapter_practice_enabled: false,
-        chapter_practice_per_chapter: 0,
+        chapter_practice_enabled: true,           // ENABLED for free tier
+        chapter_practice_per_chapter: 15,         // 15 questions per chapter
+        chapter_practice_weekly_per_subject: 1,   // 1 chapter per subject per week
         mock_tests_monthly: 1,
         pyq_years_access: 2,
         offline_enabled: false,
@@ -82,6 +83,7 @@ const UPDATED_TIER_CONFIG = {
         ai_tutor_messages_daily: 0,
         chapter_practice_enabled: true,
         chapter_practice_per_chapter: 20,
+        chapter_practice_weekly_per_subject: -1,  // Unlimited
         mock_tests_monthly: 5,
         pyq_years_access: 5,
         offline_enabled: true,
@@ -130,6 +132,7 @@ const UPDATED_TIER_CONFIG = {
         ai_tutor_messages_daily: -1,
         chapter_practice_enabled: true,
         chapter_practice_per_chapter: -1,
+        chapter_practice_weekly_per_subject: -1,  // Unlimited
         mock_tests_monthly: -1,
         pyq_years_access: -1,
         offline_enabled: true,
