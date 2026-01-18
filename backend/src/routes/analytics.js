@@ -94,6 +94,16 @@ router.get('/overview', authenticateUser, async (req, res, next) => {
         };
       }
 
+      // Calculate focus areas for free tier (needed for chapter practice feature)
+      // This enables the Focus Areas card to show chapters to practice
+      const thetaByChapter = userData.theta_by_chapter || {};
+      const subtopicAccuracy = userData.subtopic_accuracy || {};
+      const focusAreas = await analyticsService.calculateFocusAreas(
+        thetaByChapter,
+        null, // chapterMappings - will be fetched internally
+        subtopicAccuracy
+      );
+
       logger.info('Basic analytics overview retrieved', {
         requestId: req.id,
         userId,
@@ -101,7 +111,8 @@ router.get('/overview', authenticateUser, async (req, res, next) => {
         access: 'basic',
         questionsSolved: stats.questions_solved,
         quizzesCompleted: stats.quizzes_completed,
-        currentStreak: stats.current_streak
+        currentStreak: stats.current_streak,
+        focusAreasCount: focusAreas.length
       });
 
       return res.json({
@@ -111,7 +122,7 @@ router.get('/overview', authenticateUser, async (req, res, next) => {
           user: user,
           stats: stats,
           subject_progress: basicSubjectProgress,
-          focus_areas: [], // Empty for basic tier - detailed focus areas are PRO
+          focus_areas: focusAreas, // Now included for free tier chapter practice
           priya_maam_message: 'Keep learning! Upgrade to Pro for detailed insights.',
           generated_at: new Date().toISOString(),
           upgrade_prompt: {
