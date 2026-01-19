@@ -116,7 +116,7 @@ jest.mock('../../../src/utils/firestoreRetry', () => ({
   retryFirestoreOperation: jest.fn((fn) => fn()),
 }));
 
-const app = require('../../../src/app');
+const app = require('../../../src/index');
 
 describe('Analytics API - Chapters By Subject', () => {
   beforeEach(() => {
