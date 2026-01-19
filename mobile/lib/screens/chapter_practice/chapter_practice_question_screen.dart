@@ -204,37 +204,6 @@ class _ChapterPracticeQuestionScreenState
     }
   }
 
-  Future<void> _confirmExit() async {
-    final shouldPop = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('End Practice?', style: AppTextStyles.headerMedium),
-        content: Text(
-          'Your progress has been saved. You can return to practice this chapter later.',
-          style: AppTextStyles.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Continue', style: AppTextStyles.labelMedium),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.errorRed,
-              foregroundColor: Colors.white,
-            ),
-            child: Text('End Practice', style: AppTextStyles.labelMedium),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldPop == true && mounted) {
-      Navigator.of(context).pop();
-    }
-  }
-
   Color _getSubjectColor(String? subject) {
     switch (subject?.toLowerCase()) {
       case 'physics':
@@ -282,11 +251,25 @@ class _ChapterPracticeQuestionScreenState
             totalQuestions > 0 ? (currentIndex + 1) / totalQuestions : 0.0;
         final isAnswered = provider.lastAnswerResult != null;
 
+        // Completely prevent back navigation during active practice session
+        // Students MUST complete the session - progress is auto-saved
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (bool didPop, dynamic result) async {
-            if (didPop) return;
-            _confirmExit();
+            // Completely block back navigation - session must be completed
+            // Progress is auto-saved, so if app is killed, it will resume on restart
+            if (!didPop && mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Please complete the practice. Your progress is auto-saved.',
+                    style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
+                  ),
+                  backgroundColor: AppColors.primaryPurple,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
           },
           child: Scaffold(
             backgroundColor: AppColors.backgroundLight,
@@ -372,13 +355,11 @@ class _ChapterPracticeQuestionScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top line with back button and title
+              // Top line with centered title (no back button - session must be completed)
               Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: _confirmExit,
-                  ),
+                  // Spacer to balance the layout (no back button during practice)
+                  const SizedBox(width: 48),
                   Expanded(
                     child: Column(
                       children: [

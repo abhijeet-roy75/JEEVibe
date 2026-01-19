@@ -60,7 +60,42 @@ class _ChapterPracticeLoadingScreenState
 
   Future<void> _startPractice() async {
     try {
-      // Check connectivity first
+      // Get auth token first (needed for both resume check and new session)
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final token = await authService.getIdToken();
+
+      if (token == null) {
+        if (mounted) {
+          setState(() {
+            _error = 'Authentication required';
+          });
+        }
+        return;
+      }
+
+      final provider =
+          Provider.of<ChapterPracticeProvider>(context, listen: false);
+
+      // CRITICAL: Check for existing session to resume first
+      // This ensures students don't lose progress if app was killed mid-session
+      final hasActiveSession = await provider.tryResumeSession(token);
+      if (hasActiveSession && provider.session != null) {
+        // Check if the active session is for the same chapter
+        if (provider.session!.chapterKey == widget.chapterKey) {
+          // Resume existing session - critical for ensuring completion
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => const ChapterPracticeQuestionScreen(),
+              ),
+            );
+          }
+          return;
+        }
+        // Different chapter - will start new session (backend handles this)
+      }
+
+      // Check connectivity before starting new session
       final connectivityService = ConnectivityService();
       final isOnline = await connectivityService.checkRealConnectivity();
 
@@ -69,19 +104,6 @@ class _ChapterPracticeLoadingScreenState
           setState(() {
             _isOffline = true;
             _error = 'No internet connection';
-          });
-        }
-        return;
-      }
-
-      // Get auth token
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final token = await authService.getIdToken();
-
-      if (token == null) {
-        if (mounted) {
-          setState(() {
-            _error = 'Authentication required';
           });
         }
         return;
@@ -104,10 +126,7 @@ class _ChapterPracticeLoadingScreenState
         return;
       }
 
-      // Start practice session
-      final provider =
-          Provider.of<ChapterPracticeProvider>(context, listen: false);
-
+      // Start practice session (backend will return existing session if one exists)
       final success = await ErrorHandler.withRetry(
         operation: () => provider.startPractice(widget.chapterKey, token),
         maxRetries: 3,

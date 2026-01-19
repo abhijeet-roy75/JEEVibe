@@ -8,6 +8,7 @@ import '../providers/daily_quiz_provider.dart';
 import '../services/firebase/auth_service.dart';
 import '../services/subscription_service.dart';
 import '../services/offline/connectivity_service.dart';
+import '../services/quiz_storage_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/priya_avatar.dart';
@@ -50,7 +51,50 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
 
   Future<void> _generateQuiz() async {
     try {
-      // Check connectivity first
+      final provider = Provider.of<DailyQuizProvider>(context, listen: false);
+
+      // CRITICAL: Wait for provider to finish restoring any saved state
+      // This ensures we don't miss an interrupted quiz that needs to be resumed
+      int attempts = 0;
+      const maxAttempts = 20; // 10 seconds max wait
+      while (provider.isRestoringState && attempts < maxAttempts) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        attempts++;
+        if (!mounted) return;
+      }
+
+      // Check if there's a saved quiz state first (MUST check after restoration completes)
+      final hasSavedState = await provider.hasSavedState();
+      if (hasSavedState) {
+        DailyQuiz? quizToResume = provider.currentQuiz;
+
+        // Fallback: If provider doesn't have the quiz but storage does, load directly
+        // This handles edge cases where provider restoration failed
+        if (quizToResume == null) {
+          final storageService = QuizStorageService();
+          await storageService.initialize();
+          final savedState = await storageService.loadQuizState();
+          if (savedState != null) {
+            quizToResume = savedState.quiz;
+            // Also set it in provider for consistency
+            provider.setQuiz(quizToResume);
+          }
+        }
+
+        if (quizToResume != null) {
+          // Resume existing quiz - this is critical for free plan users!
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => DailyQuizQuestionScreen(quiz: quizToResume!),
+              ),
+            );
+          }
+          return;
+        }
+      }
+
+      // Check connectivity before generating new quiz
       final connectivityService = ConnectivityService();
       final isOnline = await connectivityService.checkRealConnectivity();
 
@@ -61,22 +105,6 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
             _error = 'No internet connection';
             _isLoading = false;
           });
-        }
-        return;
-      }
-
-      final provider = Provider.of<DailyQuizProvider>(context, listen: false);
-
-      // Check if there's a saved quiz state first
-      final hasSavedState = await provider.hasSavedState();
-      if (hasSavedState && provider.currentQuiz != null) {
-        // Restore existing quiz
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => DailyQuizQuestionScreen(quiz: provider.currentQuiz!),
-          ),
-          );
         }
         return;
       }

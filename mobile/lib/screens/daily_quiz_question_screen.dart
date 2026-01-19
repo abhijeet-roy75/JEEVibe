@@ -399,40 +399,25 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         final progress = quiz.totalQuestions > 0 ? (currentIndex + 1) / quiz.totalQuestions : 0.0;
         final elapsedTime = questionState?.elapsedSeconds ?? 0;
 
-        // C2: Prevent back navigation during active quiz
+        // C2: Completely prevent back navigation during active quiz
+        // Students MUST complete the quiz - this is critical for free plan users
+        // who only get 1 quiz per day. No back button, no exit option.
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (bool didPop, dynamic result) async {
-            if (didPop) return;
-            
-            // Show confirmation dialog
-            final shouldPop = await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text('Exit Quiz?', style: AppTextStyles.headerMedium),
-                content: Text(
-                  'Your progress will be saved, but you\'ll need to resume later. Are you sure you want to exit?',
-                  style: AppTextStyles.bodyMedium,
+            // Completely block back navigation - quiz must be completed
+            // Progress is auto-saved, so if app is killed, it will resume on restart
+            if (!didPop && mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Please complete the quiz. Your progress is auto-saved.',
+                    style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
+                  ),
+                  backgroundColor: AppColors.primaryPurple,
+                  duration: const Duration(seconds: 2),
                 ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: Text('Cancel', style: AppTextStyles.labelMedium),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.errorRed,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text('Exit', style: AppTextStyles.labelMedium),
-                  ),
-                ],
-              ),
-            );
-            
-            if (shouldPop == true && mounted) {
-              Navigator.of(context).pop();
+              );
             }
           },
           child: Scaffold(
@@ -622,13 +607,11 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top line with back button and centered title/subtitle
+              // Top line with centered title/subtitle (no back button - quiz must be completed)
               Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
+                  // Spacer to balance the layout (no back button during quiz)
+                  const SizedBox(width: 48),
                   Expanded(
                     child: Column(
                       children: [
@@ -652,7 +635,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                       ],
                     ),
                   ),
-                  // Spacer to balance the back button
+                  // Spacer to balance the layout (symmetric with left spacer)
                   const SizedBox(width: 48),
                 ],
               ),
