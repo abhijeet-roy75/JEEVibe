@@ -403,6 +403,7 @@ router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req
     // Use transaction to atomically check if answered and reserve the question
     // This prevents race conditions where the same question could be answered twice
     let questionData;
+    let alreadyAnswered = false;
     try {
       questionData = await db.runTransaction(async (transaction) => {
         const qDoc = await transaction.get(questionDocRef);
@@ -414,7 +415,8 @@ router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req
         const data = qDoc.data();
 
         if (data.answered) {
-          throw new ApiError(400, `Question ${question_id} already answered`, 'QUESTION_ALREADY_ANSWERED');
+          // Question already answered - we'll return the existing response
+          return { ...data, _alreadyAnswered: true };
         }
 
         // Mark as being answered to prevent concurrent submissions
@@ -422,11 +424,65 @@ router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req
 
         return data;
       });
+
+      alreadyAnswered = questionData._alreadyAnswered === true;
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
       }
       throw new ApiError(500, 'Failed to submit answer', 'TRANSACTION_FAILED');
+    }
+
+    // If question was already answered, return the existing response
+    if (alreadyAnswered) {
+      logger.info('Question already answered, returning existing response', {
+        userId,
+        sessionId: session_id,
+        questionId: question_id
+      });
+
+      // Fetch the existing response
+      const existingResponseRef = db.collection('chapter_practice_responses')
+        .doc(userId)
+        .collection('responses')
+        .doc(`${session_id}_${question_id}`);
+
+      const existingResponseDoc = await retryFirestoreOperation(async () => {
+        return await existingResponseRef.get();
+      });
+
+      if (existingResponseDoc.exists) {
+        const existingResponse = existingResponseDoc.data();
+
+        // Return the existing response in the expected format
+        return res.json({
+          success: true,
+          data: {
+            is_correct: existingResponse.is_correct,
+            student_answer: existingResponse.student_answer,
+            correct_answer: existingResponse.correct_answer,
+            correct_answer_text: existingResponse.correct_answer_text,
+            explanation: existingResponse.explanation,
+            solution_text: existingResponse.solution_text,
+            solution_steps: existingResponse.solution_steps || [],
+            key_insight: existingResponse.key_insight,
+            distractor_analysis: existingResponse.distractor_analysis,
+            common_mistakes: existingResponse.common_mistakes,
+            theta_delta: existingResponse.theta_delta || 0,
+            theta_multiplier: existingResponse.theta_multiplier || 0.5,
+            question_position: questionData.position,
+            session_progress: {
+              answered: sessionData.answered_count || 0,
+              total: sessionData.total_questions,
+              correct: sessionData.correct_count || 0
+            },
+            _already_answered: true
+          }
+        });
+      }
+
+      // If no existing response found (shouldn't happen), throw error
+      throw new ApiError(400, `Question ${question_id} marked as answered but no response found`, 'RESPONSE_NOT_FOUND');
     }
 
     // Get full question from questions collection for correct answer
