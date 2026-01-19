@@ -182,10 +182,15 @@ async function calculateFocusAreas(thetaByChapter, chapterMappings = null, subto
     let accuracy = 0;
 
     if (subtopicEntries.length > 0) {
-      // Derive from subtopic data - this is the authoritative source
-      correct = subtopicEntries.reduce((sum, [, s]) => sum + (s.correct || 0), 0);
-      total = subtopicEntries.reduce((sum, [, s]) => sum + (s.total || 0), 0);
-      accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+      // Calculate accuracy from subtopic data (weighted average)
+      const subtopicCorrect = subtopicEntries.reduce((sum, [, s]) => sum + (s.correct || 0), 0);
+      const subtopicTotal = subtopicEntries.reduce((sum, [, s]) => sum + (s.total || 0), 0);
+      accuracy = subtopicTotal > 0 ? Math.round((subtopicCorrect / subtopicTotal) * 100) : 0;
+
+      // Use theta_by_chapter.attempts for actual question count (avoids double-counting
+      // when questions cover multiple subtopics)
+      total = attempts;
+      correct = total > 0 ? Math.round((accuracy / 100) * total) : 0;
     } else {
       // Fall back to theta_by_chapter data if no subtopics
       accuracy = data.accuracy || 0;
@@ -719,10 +724,15 @@ async function getSubjectMasteryDetails(userId, subject) {
         let chapterAccuracy = 0;
 
         if (subtopics.length > 0) {
-          // Derive from subtopic data - this is the authoritative source
-          chapterCorrect = subtopics.reduce((sum, s) => sum + s.correct, 0);
-          chapterTotal = subtopics.reduce((sum, s) => sum + s.total, 0);
-          chapterAccuracy = chapterTotal > 0 ? Math.round((chapterCorrect / chapterTotal) * 100) : 0;
+          // Calculate accuracy from subtopic data (weighted average)
+          const subtopicCorrect = subtopics.reduce((sum, s) => sum + s.correct, 0);
+          const subtopicTotal = subtopics.reduce((sum, s) => sum + s.total, 0);
+          chapterAccuracy = subtopicTotal > 0 ? Math.round((subtopicCorrect / subtopicTotal) * 100) : 0;
+
+          // Use theta_by_chapter.attempts for actual question count (avoids double-counting
+          // when questions cover multiple subtopics)
+          chapterTotal = data.attempts || 0;
+          chapterCorrect = chapterTotal > 0 ? Math.round((chapterAccuracy / 100) * chapterTotal) : 0;
         } else {
           // Fall back to theta_by_chapter data if no subtopics
           // Normalize: old data might be fraction (0-1), new data is percentage (0-100)
