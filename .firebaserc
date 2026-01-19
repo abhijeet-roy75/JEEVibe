@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "jeevibe"
+  },
+  "targets": {
+    "jeevibe": {
+      "hosting": {
+        "website": [
+          "jeevibe"
+        ],
+        "admin": [
+          "jeevibe-admin"
+        ]
+      }
+    }
   }
 }
