@@ -973,7 +973,10 @@ router.post('/complete', authenticateUser, validateSessionId, async (req, res, n
         subtopic_accuracy: updatedSubtopicAccuracy,
         chapter_practice_stats: updatedChapterPracticeStats,
         total_questions_solved: admin.firestore.FieldValue.increment(totalAnswered),
-        total_time_spent_minutes: admin.firestore.FieldValue.increment(Math.round(totalTime / 60))
+        total_time_spent_minutes: admin.firestore.FieldValue.increment(Math.round(totalTime / 60)),
+        // Cumulative stats - consistent with daily quiz and initial assessment
+        'cumulative_stats.total_questions_correct': admin.firestore.FieldValue.increment(correctCount),
+        'cumulative_stats.total_questions_attempted': admin.firestore.FieldValue.increment(totalAnswered)
       });
     });
 

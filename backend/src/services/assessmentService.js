@@ -209,7 +209,7 @@ async function processInitialAssessment(userId, enrichedResponses) {
         percentile: thetaToPercentile(initialTheta),
         confidence_SE: standardError,
         attempts: totalCount,
-        accuracy: Math.round(accuracy * 1000) / 1000, // 3 decimal places
+        accuracy: Math.round(accuracy * 100), // Percentage (0-100) - consistent with daily quiz and chapter practice
         last_updated: new Date().toISOString()
       };
       
@@ -241,6 +241,10 @@ async function processInitialAssessment(userId, enrichedResponses) {
     // Step 3.6: Calculate subtopic accuracy (for detailed analytics)
     // This tracks accuracy per sub-topic within each chapter
     const subtopicAccuracy = calculateSubtopicAccuracyUpdate({}, enrichedResponses);
+
+    // Step 3.7: Calculate cumulative stats (total correct/attempted)
+    const totalCorrect = enrichedResponses.filter(r => r.is_correct === true).length;
+    const totalAttempted = enrichedResponses.length;
 
     // Step 4: Calculate weighted overall theta (by JEE chapter importance)
     const overallTheta = calculateWeightedOverallTheta(finalThetaEstimates);
@@ -308,7 +312,12 @@ async function processInitialAssessment(userId, enrichedResponses) {
       chapter_attempt_counts: chapterAttemptCounts,
       chapters_explored: chaptersExplored,
       chapters_confident: chaptersConfident,
-      subject_balance: subjectBalance
+      subject_balance: subjectBalance,
+      // Cumulative stats - consistent with daily quiz and chapter practice
+      cumulative_stats: {
+        total_questions_correct: totalCorrect,
+        total_questions_attempted: totalAttempted
+      }
     };
     
     // Step 8 & 9: Update user profile and save responses atomically in transaction
@@ -440,6 +449,7 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
         chapters_explored: assessmentResults.chapters_explored,
         chapters_confident: assessmentResults.chapters_confident,
         subject_balance: assessmentResults.subject_balance,
+        cumulative_stats: assessmentResults.cumulative_stats, // Add cumulative stats
         assessment_baseline: baselineSnapshot  // Add baseline snapshot
       }, { merge: true });
 
