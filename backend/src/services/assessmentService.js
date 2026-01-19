@@ -316,7 +316,8 @@ async function processInitialAssessment(userId, enrichedResponses) {
       // Cumulative stats - consistent with daily quiz and chapter practice
       cumulative_stats: {
         total_questions_correct: totalCorrect,
-        total_questions_attempted: totalAttempted
+        total_questions_attempted: totalAttempted,
+        last_updated: new Date().toISOString()
       }
     };
     

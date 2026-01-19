@@ -509,7 +509,7 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
       questions_answered: 0,
       correct_count: 0,
       created_at: admin.firestore.FieldValue.serverTimestamp(),
-      started_at: null,
+      started_at: admin.firestore.FieldValue.serverTimestamp(), // Set when session is generated (no separate start endpoint)
       completed_at: null,
       expires_at: new Date(Date.now() + SESSION_EXPIRY_HOURS * 60 * 60 * 1000).toISOString()
     };

@@ -976,7 +976,8 @@ router.post('/complete', authenticateUser, validateSessionId, async (req, res, n
         total_time_spent_minutes: admin.firestore.FieldValue.increment(Math.round(totalTime / 60)),
         // Cumulative stats - consistent with daily quiz and initial assessment
         'cumulative_stats.total_questions_correct': admin.firestore.FieldValue.increment(correctCount),
-        'cumulative_stats.total_questions_attempted': admin.firestore.FieldValue.increment(totalAnswered)
+        'cumulative_stats.total_questions_attempted': admin.firestore.FieldValue.increment(totalAnswered),
+        'cumulative_stats.last_updated': admin.firestore.FieldValue.serverTimestamp()
       });
     });
 
