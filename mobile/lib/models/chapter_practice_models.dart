@@ -403,7 +403,7 @@ class PracticeQuestionResult {
   final bool isCorrect;
   final int timeTakenSeconds;
   final String? solutionText;
-  final List<String> solutionSteps;
+  final List<PracticeSolutionStep> solutionSteps;
 
   PracticeQuestionResult({
     required this.questionId,
