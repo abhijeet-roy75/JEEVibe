@@ -173,33 +173,18 @@ async function calculateFocusAreas(thetaByChapter, chapterMappings = null, subto
     const mapping = chapterMappings.get(chapterKey);
     const chapterName = mapping?.chapter || formatChapterKeyToDisplayName(chapterKey);
 
-    // Get correct/total from subtopic_accuracy (source of truth) like getMasteryDetails does
-    const chapterSubtopics = subtopicAccuracy[chapterKey] || {};
-    const subtopicEntries = Object.entries(chapterSubtopics);
+    // Get correct/total from theta_by_chapter (authoritative source)
+    // This ensures focus area totals match subject_accuracy which also uses theta_by_chapter
+    let total = attempts;
+    let accuracy = data.accuracy || 0;
 
-    let correct = 0;
-    let total = 0;
-    let accuracy = 0;
-
-    if (subtopicEntries.length > 0) {
-      // Calculate accuracy from subtopic data (weighted average)
-      const subtopicCorrect = subtopicEntries.reduce((sum, [, s]) => sum + (s.correct || 0), 0);
-      const subtopicTotal = subtopicEntries.reduce((sum, [, s]) => sum + (s.total || 0), 0);
-      accuracy = subtopicTotal > 0 ? Math.round((subtopicCorrect / subtopicTotal) * 100) : 0;
-
-      // Use theta_by_chapter.attempts for actual question count (avoids double-counting
-      // when questions cover multiple subtopics)
-      total = attempts;
-      correct = total > 0 ? Math.round((accuracy / 100) * total) : 0;
-    } else {
-      // Fall back to theta_by_chapter data if no subtopics
-      accuracy = data.accuracy || 0;
-      if (accuracy > 0 && accuracy <= 1) {
-        accuracy = Math.round(accuracy * 100);
-      }
-      total = attempts;
-      correct = total > 0 ? Math.round((accuracy / 100) * total) : 0;
+    // Normalize: old data might be fraction (0-1), new data is percentage (0-100)
+    if (accuracy > 0 && accuracy <= 1) {
+      accuracy = Math.round(accuracy * 100);
     }
+
+    // Derive correct from accuracy * total (same formula as subject_accuracy uses)
+    let correct = total > 0 ? Math.round((accuracy / 100) * total) : 0;
 
     const focusArea = {
       chapter_key: chapterKey,
@@ -718,31 +703,18 @@ async function getSubjectMasteryDetails(userId, subject) {
           accuracy: subtopicData.accuracy || 0
         })).sort((a, b) => a.accuracy - b.accuracy); // Sort by accuracy ascending (weakest first)
 
-        // Calculate chapter-level correct/total from subtopics (single source of truth)
-        let chapterCorrect = 0;
-        let chapterTotal = 0;
-        let chapterAccuracy = 0;
+        // Calculate chapter-level correct/total from theta_by_chapter (authoritative source)
+        // This ensures chapter totals match subject_accuracy which also uses theta_by_chapter
+        let chapterTotal = data.attempts || 0;
+        let chapterAccuracy = data.accuracy || 0;
 
-        if (subtopics.length > 0) {
-          // Calculate accuracy from subtopic data (weighted average)
-          const subtopicCorrect = subtopics.reduce((sum, s) => sum + s.correct, 0);
-          const subtopicTotal = subtopics.reduce((sum, s) => sum + s.total, 0);
-          chapterAccuracy = subtopicTotal > 0 ? Math.round((subtopicCorrect / subtopicTotal) * 100) : 0;
-
-          // Use theta_by_chapter.attempts for actual question count (avoids double-counting
-          // when questions cover multiple subtopics)
-          chapterTotal = data.attempts || 0;
-          chapterCorrect = chapterTotal > 0 ? Math.round((chapterAccuracy / 100) * chapterTotal) : 0;
-        } else {
-          // Fall back to theta_by_chapter data if no subtopics
-          // Normalize: old data might be fraction (0-1), new data is percentage (0-100)
-          chapterAccuracy = data.accuracy || 0;
-          if (chapterAccuracy > 0 && chapterAccuracy <= 1) {
-            chapterAccuracy = Math.round(chapterAccuracy * 100);
-          }
-          chapterTotal = data.attempts || 0;
-          chapterCorrect = chapterTotal > 0 ? Math.round((chapterAccuracy / 100) * chapterTotal) : 0;
+        // Normalize: old data might be fraction (0-1), new data is percentage (0-100)
+        if (chapterAccuracy > 0 && chapterAccuracy <= 1) {
+          chapterAccuracy = Math.round(chapterAccuracy * 100);
         }
+
+        // Derive correct from accuracy * total (same formula as subject_accuracy uses)
+        let chapterCorrect = chapterTotal > 0 ? Math.round((chapterAccuracy / 100) * chapterTotal) : 0;
 
         chapters.push({
           chapter_key: chapterKey,

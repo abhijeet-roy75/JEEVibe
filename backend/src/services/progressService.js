@@ -361,6 +361,11 @@ async function getAccuracyTrends(userId, days = 30) {
 /**
  * Get subject-level accuracy trends over time
  *
+ * Includes data from:
+ * - Daily quizzes
+ * - Chapter practice sessions
+ * - Initial assessment
+ *
  * @param {string} userId
  * @param {string} subject - Subject to filter by (physics, chemistry, maths/mathematics)
  * @param {number} days - Number of days to look back (default: 30)
@@ -372,11 +377,36 @@ async function getSubjectAccuracyTrends(userId, subject, days = 30) {
     const normalizedSubject = subject.toLowerCase();
     const subjectPrefix = normalizedSubject === 'mathematics' ? 'maths' : normalizedSubject;
 
+    // Helper to check if chapter matches subject
+    const isSubjectMatch = (chapterKey) => {
+      if (!chapterKey) return false;
+      const chapterSubject = chapterKey.split('_')[0]?.toLowerCase();
+      return chapterSubject === subjectPrefix ||
+        (normalizedSubject === 'mathematics' && chapterSubject === 'maths') ||
+        (normalizedSubject === 'maths' && chapterSubject === 'mathematics') ||
+        chapterSubject === normalizedSubject;
+    };
+
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
     const cutoffTimestamp = admin.firestore.Timestamp.fromDate(cutoffDate);
 
-    // Get completed quizzes
+    const dailyData = {};
+
+    // Helper to initialize daily data entry
+    const ensureDailyEntry = (dateKey) => {
+      if (!dailyData[dateKey]) {
+        dailyData[dateKey] = {
+          date: dateKey,
+          quizzes: 0,
+          questions: 0,
+          correct: 0,
+          accuracy: 0
+        };
+      }
+    };
+
+    // 1. Get completed daily quizzes
     const quizzesRef = db.collection('daily_quizzes')
       .doc(userId)
       .collection('quizzes')
@@ -388,64 +418,124 @@ async function getSubjectAccuracyTrends(userId, subject, days = 30) {
       return await quizzesRef.get();
     });
 
-    const dailyData = {};
-
-    // Process each quiz
+    // Process each daily quiz
     for (const quizDoc of quizzesSnapshot.docs) {
       const quiz = quizDoc.data();
       const completedAt = quiz.completed_at?.toDate();
 
       if (!completedAt) continue;
 
-      // Convert to IST for correct date grouping for Indian students
       const completedAtIST = toIST(completedAt);
-      const dateKey = formatDateIST(completedAtIST); // YYYY-MM-DD in IST
+      const dateKey = formatDateIST(completedAtIST);
 
-      // Get questions from subcollection to get subject-level data
+      // Get questions from subcollection
       const questionsSnapshot = await retryFirestoreOperation(async () => {
         return await quizDoc.ref.collection('questions').get();
       });
 
-      // Count subject-specific questions
       let subjectQuestions = 0;
       let subjectCorrect = 0;
 
       questionsSnapshot.docs.forEach(qDoc => {
         const q = qDoc.data();
-        if (!q.answered || !q.chapter_key) return;
+        if (!q.answered || !isSubjectMatch(q.chapter_key)) return;
 
-        // Extract subject from chapter_key (format: "physics_mechanics")
-        const chapterSubject = q.chapter_key.split('_')[0]?.toLowerCase();
-
-        // Match against both 'maths' and 'mathematics'
-        const isMatch = chapterSubject === subjectPrefix ||
-          (normalizedSubject === 'mathematics' && chapterSubject === 'maths') ||
-          (normalizedSubject === 'maths' && chapterSubject === 'mathematics');
-
-        if (isMatch) {
-          subjectQuestions++;
-          if (q.is_correct) {
-            subjectCorrect++;
-          }
+        subjectQuestions++;
+        if (q.is_correct) {
+          subjectCorrect++;
         }
       });
 
-      // Only add to data if this quiz had questions for this subject
       if (subjectQuestions > 0) {
-        if (!dailyData[dateKey]) {
-          dailyData[dateKey] = {
-            date: dateKey,
-            quizzes: 0,
-            questions: 0,
-            correct: 0,
-            accuracy: 0
-          };
-        }
-
+        ensureDailyEntry(dateKey);
         dailyData[dateKey].quizzes += 1;
         dailyData[dateKey].questions += subjectQuestions;
         dailyData[dateKey].correct += subjectCorrect;
       }
+    }
+
+    // 2. Get chapter practice responses
+    const chapterPracticeRef = db.collection('chapter_practice_responses')
+      .doc(userId)
+      .collection('responses')
+      .where('answered_at', '>=', cutoffTimestamp);
+
+    const chapterPracticeSnapshot = await retryFirestoreOperation(async () => {
+      return await chapterPracticeRef.get();
+    });
+
+    if (!chapterPracticeSnapshot.empty) {
+      const sessionsByDate = {};
+
+      chapterPracticeSnapshot.docs.forEach(doc => {
+        const response = doc.data();
+        const answeredAt = response.answered_at?.toDate();
+
+        if (!answeredAt || !isSubjectMatch(response.chapter_key)) return;
+
+        const answeredAtIST = toIST(answeredAt);
+        const dateKey = formatDateIST(answeredAtIST);
+
+        ensureDailyEntry(dateKey);
+        dailyData[dateKey].questions += 1;
+        if (response.is_correct) {
+          dailyData[dateKey].correct += 1;
+        }
+
+        // Track unique sessions per date
+        if (response.session_id) {
+          if (!sessionsByDate[dateKey]) {
+            sessionsByDate[dateKey] = new Set();
+          }
+          sessionsByDate[dateKey].add(response.session_id);
+        }
+      });
+
+      // Add session counts to quiz totals
+      Object.entries(sessionsByDate).forEach(([dateKey, sessions]) => {
+        if (dailyData[dateKey]) {
+          dailyData[dateKey].quizzes += sessions.size;
+        }
+      });
+    }
+
+    // 3. Get initial assessment responses
+    const assessmentRef = db.collection('assessment_responses')
+      .doc(userId)
+      .collection('responses')
+      .where('answered_at', '>=', cutoffTimestamp);
+
+    const assessmentSnapshot = await retryFirestoreOperation(async () => {
+      return await assessmentRef.get();
+    });
+
+    if (!assessmentSnapshot.empty) {
+      const assessmentDates = new Set();
+
+      assessmentSnapshot.docs.forEach(doc => {
+        const response = doc.data();
+        const answeredAt = response.answered_at?.toDate();
+
+        if (!answeredAt || !isSubjectMatch(response.chapter_key)) return;
+
+        const answeredAtIST = toIST(answeredAt);
+        const dateKey = formatDateIST(answeredAtIST);
+
+        ensureDailyEntry(dateKey);
+        dailyData[dateKey].questions += 1;
+        if (response.is_correct) {
+          dailyData[dateKey].correct += 1;
+        }
+
+        assessmentDates.add(dateKey);
+      });
+
+      // Count assessment as 1 quiz per date
+      assessmentDates.forEach(dateKey => {
+        if (dailyData[dateKey]) {
+          dailyData[dateKey].quizzes += 1;
+        }
+      });
     }
 
     // Calculate accuracy for each day
