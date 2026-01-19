@@ -209,6 +209,54 @@ router.get('/mastery/:subject', authenticateUser, async (req, res, next) => {
 });
 
 // ============================================================================
+// CHAPTERS BY SUBJECT (FOR CHAPTER PICKER)
+// ============================================================================
+
+/**
+ * GET /api/analytics/chapters-by-subject/:subject
+ *
+ * Get ALL chapters for a subject, including ones the user hasn't practiced yet.
+ * Used by the Chapter Picker feature for Pro/Ultra users.
+ *
+ * Authentication: Required
+ *
+ * @param {string} subject - physics, chemistry, or maths/mathematics
+ */
+router.get('/chapters-by-subject/:subject', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const { subject } = req.params;
+
+    // Validate subject
+    const validSubjects = ['physics', 'chemistry', 'maths', 'mathematics'];
+    if (!validSubjects.includes(subject.toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid subject. Must be physics, chemistry, or maths.',
+        requestId: req.id
+      });
+    }
+
+    const chapters = await analyticsService.getAllChaptersForSubject(userId, subject);
+
+    logger.info('All chapters by subject retrieved', {
+      requestId: req.id,
+      userId,
+      subject,
+      totalChapters: chapters.length
+    });
+
+    res.json({
+      success: true,
+      data: { chapters },
+      requestId: req.id
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============================================================================
 // MASTERY TIMELINE (FOR CHARTS)
 // ============================================================================
 

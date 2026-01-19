@@ -760,12 +760,111 @@ async function getSubjectMasteryDetails(userId, subject) {
 }
 
 // ============================================================================
+// GET ALL CHAPTERS FOR SUBJECT (INCLUDING UNPRACTICED)
+// ============================================================================
+
+/**
+ * Get ALL chapters for a subject, including ones the user hasn't practiced yet.
+ * Used by the Chapter Picker feature for Pro/Ultra users.
+ *
+ * @param {string} userId - User ID
+ * @param {string} subject - Subject name (physics, chemistry, maths/mathematics)
+ * @returns {Promise<Array>} Array of chapter objects with user stats (or defaults for unpracticed)
+ */
+async function getAllChaptersForSubject(userId, subject) {
+  try {
+    // 1. Get ALL chapters from chapterMappingService
+    const allChapterMappings = await initializeMappings();
+
+    // 2. Get user's theta_by_chapter data
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await retryFirestoreOperation(async () => {
+      return await userRef.get();
+    });
+
+    const userData = userDoc.exists ? userDoc.data() : {};
+    const thetaByChapter = userData.theta_by_chapter || {};
+
+    // 3. Filter chapters by subject
+    const normalizedSubject = subject.toLowerCase();
+    const prefixes = (normalizedSubject === 'maths' || normalizedSubject === 'mathematics')
+      ? ['maths_', 'mathematics_']
+      : [normalizedSubject + '_'];
+
+    const chapters = [];
+
+    for (const [chapterKey, mapping] of allChapterMappings) {
+      const matches = prefixes.some(p => chapterKey.startsWith(p));
+      if (!matches) continue;
+
+      // Get user data if practiced, otherwise use defaults
+      const chapterData = thetaByChapter[chapterKey] || {};
+      const attempts = chapterData.attempts || 0;
+      let accuracy = chapterData.accuracy || 0;
+
+      // Normalize: old data might be fraction (0-1), new data is percentage (0-100)
+      if (accuracy > 0 && accuracy <= 1) {
+        accuracy = Math.round(accuracy * 100);
+      }
+
+      const total = attempts;
+      const correct = total > 0 ? Math.round((accuracy / 100) * total) : 0;
+
+      chapters.push({
+        chapter_key: chapterKey,
+        chapter_name: mapping.chapter,
+        subject: normalizedSubject,
+        attempts,
+        accuracy,
+        correct,
+        total,
+        percentile: chapterData.percentile || 0,
+        status: getMasteryStatus(chapterData.percentile || 0)
+      });
+    }
+
+    // Sort: practiced chapters first (weakest accuracy first), then unpracticed (alphabetically)
+    // This helps users focus on improving their weak areas before exploring new chapters
+    chapters.sort((a, b) => {
+      // Practiced chapters come first
+      if (a.attempts > 0 && b.attempts === 0) return -1;
+      if (a.attempts === 0 && b.attempts > 0) return 1;
+
+      // Both practiced: sort by accuracy (weakest first)
+      if (a.attempts > 0 && b.attempts > 0) {
+        return a.accuracy - b.accuracy;
+      }
+
+      // Both unpracticed: sort alphabetically
+      return a.chapter_name.localeCompare(b.chapter_name);
+    });
+
+    logger.info('Retrieved all chapters for subject', {
+      userId,
+      subject: normalizedSubject,
+      totalChapters: chapters.length,
+      practicedChapters: chapters.filter(c => c.attempts > 0).length
+    });
+
+    return chapters;
+  } catch (error) {
+    logger.error('Error getting all chapters for subject', {
+      userId,
+      subject,
+      error: error.message
+    });
+    throw error;
+  }
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
 module.exports = {
   getAnalyticsOverview,
   getSubjectMasteryDetails,
+  getAllChaptersForSubject,
   calculateFocusAreas,
   getMasteryStatus,
   getChapterDisplayName,
