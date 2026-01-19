@@ -476,6 +476,24 @@ router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req
       isCorrect: isCorrect
     };
 
+    // ========================================================================
+    // THETA UPDATE LOGGING - BEFORE
+    // ========================================================================
+    logger.info('🔵 [CHAPTER PRACTICE] THETA UPDATE - BEFORE', {
+      userId,
+      sessionId: session_id,
+      questionId: question_id,
+      chapterKey,
+      isCorrect,
+      questionDifficulty: irtParams.difficulty_b,
+      BEFORE: {
+        chapter_theta: currentChapterData.theta,
+        chapter_attempts: currentChapterData.attempts,
+        chapter_accuracy: currentChapterData.accuracy,
+        chapter_percentile: currentChapterData.percentile
+      }
+    });
+
     const chapterUpdate = calculateChapterThetaUpdate(currentChapterData, [response]);
 
     // Apply 0.5x multiplier to theta delta
@@ -492,6 +510,25 @@ router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req
       theta: boundedTheta,
       theta_delta: adjustedThetaDelta
     };
+
+    // ========================================================================
+    // THETA UPDATE LOGGING - AFTER (calculated, before write)
+    // ========================================================================
+    logger.info('🟢 [CHAPTER PRACTICE] THETA UPDATE - AFTER (calculated)', {
+      userId,
+      sessionId: session_id,
+      questionId: question_id,
+      chapterKey,
+      AFTER: {
+        chapter_theta: boundedTheta,
+        chapter_attempts: updatedChapterData.attempts,
+        chapter_accuracy: updatedChapterData.accuracy,
+        chapter_percentile: updatedChapterData.percentile,
+        raw_theta_delta: roundToDecimals(rawThetaDelta, 4),
+        adjusted_theta_delta: roundToDecimals(adjustedThetaDelta, 4),
+        multiplier: THETA_MULTIPLIER
+      }
+    });
 
     // Response document reference
     const responseRef = db.collection('chapter_practice_responses')
@@ -794,8 +831,47 @@ router.post('/complete', authenticateUser, validateSessionId, async (req, res, n
     const userData = userDoc.data();
     const updatedThetaByChapter = userData.theta_by_chapter || {};
 
+    // ========================================================================
+    // SESSION COMPLETE LOGGING - BEFORE
+    // ========================================================================
+    logger.info('🔵 [CHAPTER PRACTICE COMPLETE] THETA UPDATE - BEFORE', {
+      userId,
+      sessionId: session_id,
+      chapterKey: sessionData.chapter_key,
+      subject: sessionData.subject,
+      sessionStats: {
+        totalAnswered,
+        correctCount,
+        accuracy: roundToDecimals(accuracy, 3),
+        thetaImprovement: roundToDecimals(thetaImprovement, 4)
+      },
+      BEFORE: {
+        chapter_theta: updatedThetaByChapter[sessionData.chapter_key]?.theta,
+        chapter_attempts: updatedThetaByChapter[sessionData.chapter_key]?.attempts,
+        subject_theta: userData.theta_by_subject?.[sessionData.subject]?.theta,
+        overall_theta: userData.overall_theta,
+        overall_percentile: userData.overall_percentile,
+        total_questions_solved: userData.total_questions_solved
+      }
+    });
+
     // Calculate subject and overall theta
     const subjectAndOverallUpdate = calculateSubjectAndOverallThetaUpdate(updatedThetaByChapter);
+
+    // ========================================================================
+    // SESSION COMPLETE LOGGING - AFTER (calculated, before write)
+    // ========================================================================
+    logger.info('🟢 [CHAPTER PRACTICE COMPLETE] THETA UPDATE - AFTER (calculated)', {
+      userId,
+      sessionId: session_id,
+      chapterKey: sessionData.chapter_key,
+      AFTER: {
+        subject_theta: subjectAndOverallUpdate.theta_by_subject?.[sessionData.subject]?.theta,
+        subject_percentile: subjectAndOverallUpdate.theta_by_subject?.[sessionData.subject]?.percentile,
+        overall_theta: subjectAndOverallUpdate.overall_theta,
+        overall_percentile: subjectAndOverallUpdate.overall_percentile
+      }
+    });
 
     // Get responses for subtopic accuracy update
     const responsesSnapshot = await retryFirestoreOperation(async () => {

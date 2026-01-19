@@ -558,6 +558,27 @@ router.post('/complete', authenticateUser, validateQuizId, async (req, res, next
     const currentThetaByChapter = currentUserData.theta_by_chapter || {};
 
     // ========================================================================
+    // DAILY QUIZ LOGGING - BEFORE
+    // ========================================================================
+    logger.info('🔵 [DAILY QUIZ] THETA UPDATE - BEFORE', {
+      userId,
+      quizId: quiz_id,
+      chaptersInQuiz: Object.keys(responsesByChapter),
+      totalResponses: responses.length,
+      correctCount,
+      BEFORE: {
+        overall_theta: currentUserData.overall_theta,
+        overall_percentile: currentUserData.overall_percentile,
+        total_questions_solved: currentUserData.total_questions_solved,
+        theta_by_subject: {
+          physics: currentUserData.theta_by_subject?.physics?.theta,
+          chemistry: currentUserData.theta_by_subject?.chemistry?.theta,
+          mathematics: currentUserData.theta_by_subject?.mathematics?.theta
+        }
+      }
+    });
+
+    // ========================================================================
     // PHASE 2: Pre-calculate all theta updates BEFORE transaction
     // ========================================================================
     const updatedThetaByChapter = { ...currentThetaByChapter };
@@ -618,10 +639,22 @@ router.post('/complete', authenticateUser, validateQuizId, async (req, res, next
     try {
       subjectAndOverallUpdate = calculateSubjectAndOverallThetaUpdate(updatedThetaByChapter);
 
-      logger.info('Pre-calculated subject and overall theta', {
+      // ========================================================================
+      // DAILY QUIZ LOGGING - AFTER (calculated, before write)
+      // ========================================================================
+      logger.info('🟢 [DAILY QUIZ] THETA UPDATE - AFTER (calculated)', {
         userId,
-        overall_theta: subjectAndOverallUpdate.overall_theta,
-        overall_percentile: subjectAndOverallUpdate.overall_percentile
+        quizId: quiz_id,
+        chapterUpdates: chapterUpdateResults,
+        AFTER: {
+          overall_theta: subjectAndOverallUpdate.overall_theta,
+          overall_percentile: subjectAndOverallUpdate.overall_percentile,
+          theta_by_subject: {
+            physics: subjectAndOverallUpdate.theta_by_subject?.physics?.theta,
+            chemistry: subjectAndOverallUpdate.theta_by_subject?.chemistry?.theta,
+            mathematics: subjectAndOverallUpdate.theta_by_subject?.mathematics?.theta
+          }
+        }
       });
     } catch (error) {
       logger.error('Error pre-calculating subject/overall theta', {
