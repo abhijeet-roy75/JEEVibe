@@ -60,8 +60,16 @@ AnswerFeedback practiceResultToFeedback(
     correctAnswerText: result.correctAnswerText,
     explanation: result.explanation,
     solutionText: result.solutionText,
+    // Convert PracticeSolutionStep to SolutionStep with full structure
+    // This preserves description, explanation, formula, and calculation fields
     solutionSteps: result.solutionSteps
-        .map((step) => SolutionStep(description: step))
+        .map((step) => SolutionStep(
+              stepNumber: step.stepNumber,
+              description: step.description,
+              explanation: step.explanation,
+              formula: step.formula,
+              calculation: step.calculation,
+            ))
         .toList(),
     keyInsight: result.keyInsight,
     distractorAnalysis: result.distractorAnalysis,

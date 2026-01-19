@@ -222,6 +222,50 @@ class PracticeIrtParameters {
       };
 }
 
+/// Solution Step for Practice (structured format from backend)
+class PracticeSolutionStep {
+  final int? stepNumber;
+  final String? description;
+  final String? explanation;
+  final String? formula;
+  final String? calculation;
+  final String? result;
+
+  PracticeSolutionStep({
+    this.stepNumber,
+    this.description,
+    this.explanation,
+    this.formula,
+    this.calculation,
+    this.result,
+  });
+
+  factory PracticeSolutionStep.fromJson(dynamic json) {
+    // Handle string format (simple text)
+    if (json is String) {
+      return PracticeSolutionStep(description: json);
+    }
+
+    // Handle map format (structured step)
+    if (json is Map<String, dynamic>) {
+      return PracticeSolutionStep(
+        stepNumber: json['step_number'] as int?,
+        description: json['description'] as String?,
+        explanation: json['explanation'] as String?,
+        formula: json['formula'] as String?,
+        calculation: json['calculation'] as String?,
+        result: json['result'] as String?,
+      );
+    }
+
+    // Fallback for any other format
+    return PracticeSolutionStep(description: json.toString());
+  }
+
+  /// Get display text (prioritize description, fallback to explanation)
+  String get displayText => description ?? explanation ?? '';
+}
+
 /// Answer Result from submit-answer API
 class PracticeAnswerResult {
   final bool isCorrect;
@@ -230,7 +274,7 @@ class PracticeAnswerResult {
   final String? correctAnswerText;
   final String? explanation;
   final String? solutionText;
-  final List<String> solutionSteps;
+  final List<PracticeSolutionStep> solutionSteps;
   final String? keyInsight;
   final Map<String, String>? distractorAnalysis;
   final List<String>? commonMistakes;
@@ -271,6 +315,14 @@ class PracticeAnswerResult {
           .toList();
     }
 
+    // Parse solution_steps as structured objects (not strings!)
+    List<PracticeSolutionStep> solutionSteps = [];
+    if (json['solution_steps'] != null && json['solution_steps'] is List) {
+      solutionSteps = (json['solution_steps'] as List)
+          .map((step) => PracticeSolutionStep.fromJson(step))
+          .toList();
+    }
+
     return PracticeAnswerResult(
       isCorrect: json['is_correct'] ?? false,
       studentAnswer: submittedAnswer ?? json['student_answer'] ?? '',
@@ -278,10 +330,7 @@ class PracticeAnswerResult {
       correctAnswerText: json['correct_answer_text'],
       explanation: json['explanation'],
       solutionText: json['solution_text'],
-      solutionSteps: (json['solution_steps'] as List<dynamic>?)
-              ?.map((s) => s.toString())
-              .toList() ??
-          [],
+      solutionSteps: solutionSteps,
       keyInsight: json['key_insight'],
       distractorAnalysis: distractorAnalysis,
       commonMistakes: commonMistakes,
