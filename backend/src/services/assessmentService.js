@@ -23,6 +23,7 @@ const {
   expandBroadChaptersToSpecific,
   isBroadChapter
 } = require('./thetaCalculationService');
+const { calculateSubtopicAccuracyUpdate } = require('./thetaUpdateService');
 
 // ============================================================================
 // ASSESSMENT PROCESSING
@@ -237,6 +238,10 @@ async function processInitialAssessment(userId, enrichedResponses) {
     // Step 3.5: Calculate subject-level accuracy (percentage of correct answers)
     const subjectAccuracy = calculateSubjectAccuracy(enrichedResponses);
 
+    // Step 3.6: Calculate subtopic accuracy (for detailed analytics)
+    // This tracks accuracy per sub-topic within each chapter
+    const subtopicAccuracy = calculateSubtopicAccuracyUpdate({}, enrichedResponses);
+
     // Step 4: Calculate weighted overall theta (by JEE chapter importance)
     const overallTheta = calculateWeightedOverallTheta(finalThetaEstimates);
     const overallPercentile = thetaToPercentile(overallTheta);
@@ -279,6 +284,8 @@ async function processInitialAssessment(userId, enrichedResponses) {
       theta_by_subject: thetaBySubject,
       // Subject-level accuracy (percentage of correct answers per subject)
       subject_accuracy: subjectAccuracy,
+      // Subtopic-level accuracy (for detailed chapter analytics)
+      subtopic_accuracy: subtopicAccuracy,
       // Overall metrics
       overall_theta: overallTheta,
       overall_percentile: overallPercentile,
@@ -418,6 +425,7 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
         theta_by_chapter: assessmentResults.theta_by_chapter,
         theta_by_subject: assessmentResults.theta_by_subject,
         subject_accuracy: assessmentResults.subject_accuracy,
+        subtopic_accuracy: assessmentResults.subtopic_accuracy,
         overall_theta: assessmentResults.overall_theta,
         overall_percentile: assessmentResults.overall_percentile,
         completed_quiz_count: assessmentResults.completed_quiz_count,
@@ -469,6 +477,7 @@ async function saveAssessmentWithTransaction(userId, assessmentResults, response
           subject: response.subject,
           chapter: response.chapter,
           chapter_key: formatChapterKey(response.subject, response.chapter),
+          sub_topics: response.sub_topics || [],
           answered_at: admin.firestore.FieldValue.serverTimestamp(),
           created_at: admin.firestore.FieldValue.serverTimestamp()
         };

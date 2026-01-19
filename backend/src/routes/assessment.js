@@ -13,6 +13,7 @@ const rateLimit = require('express-rate-limit');
 const { db, admin } = require('../config/firebase');
 const { getRandomizedAssessmentQuestions } = require('../services/stratifiedRandomizationService');
 const { processInitialAssessment, validateAssessmentResponses } = require('../services/assessmentService');
+const { formatChapterKey } = require('../services/thetaCalculationService');
 const { authenticateUser } = require('../middleware/auth');
 const { validateQuestionId, validateStudentAnswer, validateTimeTaken } = require('../utils/validation');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
@@ -282,7 +283,10 @@ router.post('/submit', authenticateUser, async (req, res) => {
         is_correct: isCorrect,
         time_taken_seconds: validateTimeTaken(response.time_taken_seconds),
         subject: questionData.subject,
-        chapter: questionData.chapter
+        chapter: questionData.chapter,
+        // Include chapter_key and sub_topics for subtopic accuracy tracking
+        chapter_key: formatChapterKey(questionData.subject, questionData.chapter),
+        sub_topics: questionData.sub_topics || []
       };
     });
     

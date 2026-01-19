@@ -125,10 +125,17 @@ class SubjectProgressWidget extends StatelessWidget {
           ...['Physics', 'Chemistry', 'Mathematics'].map((subject) {
             final subjectData = subjects[subject.toLowerCase()] as Map<String, dynamic>?;
             if (subjectData == null) return const SizedBox.shrink();
-            
-            final percentile = (subjectData['current_percentile'] ?? subjectData['percentile'] ?? 0) as num;
-            final progressValue = percentile / 100;
-            
+
+            // Use accuracy instead of percentile - accuracy is 0-100 percentage
+            final accuracy = (subjectData['accuracy'] ?? 0) as num;
+            final correct = (subjectData['correct'] ?? 0) as num;
+            final total = (subjectData['total'] ?? 0) as num;
+            final progressValue = accuracy / 100;
+
+            // Determine display - show N/A if no questions attempted
+            final hasData = total > 0;
+            final displayText = hasData ? '${accuracy.toInt()}%' : 'N/A';
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: Row(
@@ -139,20 +146,34 @@ class SubjectProgressWidget extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          subject == 'Mathematics' ? 'Maths' : subject,
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              subject == 'Mathematics' ? 'Maths' : subject,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            if (hasData) ...[
+                              const SizedBox(width: 6),
+                              Text(
+                                '${correct.toInt()}/${total.toInt()}',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textLight,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: 8),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
-                            value: progressValue,
+                            value: hasData ? progressValue : 0,
                             backgroundColor: AppColors.borderGray,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              _getSubjectColor(subject),
+                              hasData ? _getSubjectColor(subject) : AppColors.borderGray,
                             ),
                             minHeight: 8,
                           ),
@@ -162,9 +183,9 @@ class SubjectProgressWidget extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '${percentile.toInt()}%',
+                    displayText,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.primaryPurple,
+                      color: hasData ? AppColors.primaryPurple : AppColors.textLight,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
