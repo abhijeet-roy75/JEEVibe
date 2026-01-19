@@ -1,12 +1,10 @@
 /// Chapter Practice Review Screen
-/// Shows practice session results and allows question review
+/// Shows all questions with filters (All, Correct, Wrong)
+/// Similar to DailyQuizReviewScreen - accessed from result screen
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../models/chapter_practice_models.dart';
-import '../../providers/chapter_practice_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../../widgets/priya_avatar.dart';
 
 class ChapterPracticeReviewScreen extends StatefulWidget {
   final PracticeSessionSummary? summary;
@@ -43,16 +41,8 @@ class _ChapterPracticeReviewScreenState
 
   int get _wrongCount => _totalQuestions - _correctCount;
 
-  double get _accuracy {
-    if (_totalQuestions == 0) return 0.0;
-    return _correctCount / _totalQuestions;
-  }
-
   String get _chapterName =>
       widget.summary?.chapterName ?? widget.session?.chapterName ?? 'Chapter';
-
-  String get _subject =>
-      widget.summary?.subject ?? widget.session?.subject ?? '';
 
   List<PracticeQuestionResult> get _allResults => widget.results ?? [];
 
@@ -67,306 +57,45 @@ class _ChapterPracticeReviewScreenState
     }
   }
 
-  String _getEncouragingMessage() {
-    final percentage = _accuracy * 100;
-    if (percentage >= 80) {
-      return 'Outstanding performance! You have a strong grasp of ${_chapterName}. Keep up the excellent work!';
-    } else if (percentage >= 60) {
-      return 'Good job! You\'re building a solid understanding of ${_chapterName}. Review the wrong answers to improve further.';
-    } else if (percentage >= 40) {
-      return 'Nice effort! Focus on reviewing the solutions for the questions you got wrong. Practice will help you improve!';
-    } else {
-      return 'Every practice session makes you stronger! Review the solutions carefully and try practicing again. You\'ll get better!';
-    }
-  }
-
-  void _goHome() {
-    // Reset provider state
-    final provider =
-        Provider.of<ChapterPracticeProvider>(context, listen: false);
-    provider.reset();
-
-    // Pop back to home
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
-
-  void _practiceAgain() {
-    // Reset provider and go back to loading screen to restart practice
-    final provider =
-        Provider.of<ChapterPracticeProvider>(context, listen: false);
-    provider.reset();
-
-    // Pop back twice (review -> question -> loading) or just go to first and let user restart
-    Navigator.of(context).popUntil((route) => route.isFirst);
-  }
-
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (bool didPop, dynamic result) {
-        if (didPop) return;
-        _goHome();
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.backgroundLight,
-        body: Column(
+    return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryPurple,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            _buildHeader(),
-            // Scrollable content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewPadding.bottom + 16,
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    // Summary cards
-                    _buildSummaryCards(),
-                    const SizedBox(height: 16),
-                    // Priya Ma'am message
-                    _buildPriyaMaamMessage(),
-                    const SizedBox(height: 16),
-                    // Filter buttons (only if we have results)
-                    if (_allResults.isNotEmpty) ...[
-                      _buildFilterButtons(),
-                      const SizedBox(height: 16),
-                      // Question list
-                      _buildQuestionList(),
-                      const SizedBox(height: 16),
-                    ],
-                    // Action buttons
-                    _buildActionButtons(),
-                    const SizedBox(height: 16),
-                  ],
-                ),
+            const Text(
+              'Review Questions',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              _chapterName,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            children: [
-              // Title
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: _goHome,
-                  ),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Text(
-                          'Practice Complete!',
-                          style: AppTextStyles.headerWhite.copyWith(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _chapterName,
-                          style: AppTextStyles.bodyWhite.copyWith(
-                            fontSize: 14,
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 48), // Balance the close button
-                ],
-              ),
-              const SizedBox(height: 24),
-              // Score circle
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${(_accuracy * 100).toInt()}%',
-                        style: AppTextStyles.headerWhite.copyWith(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '$_correctCount / $_totalQuestions',
-                        style: AppTextStyles.bodyWhite.copyWith(
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Subject badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  _subject,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryCards() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: _buildSummaryCard(
-                'Total',
-                '$_totalQuestions',
-                AppColors.primaryPurple,
-                Icons.quiz_outlined,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildSummaryCard(
-                'Correct',
-                '$_correctCount',
-                AppColors.successGreen,
-                Icons.check_circle_outline,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildSummaryCard(
-                'Wrong',
-                '$_wrongCount',
-                AppColors.errorRed,
-                Icons.cancel_outlined,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(
-      String label, String value, Color color, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      body: Column(
         children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: AppTextStyles.headerMedium.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textMedium,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPriyaMaamMessage() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.primaryPurple.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const PriyaAvatar(size: 56),
-          const SizedBox(width: 12),
+          // Filter buttons
+          _buildFilterButtons(),
+          // Question list
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Priya Ma\'am',
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: AppColors.primaryPurple,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Text('', style: TextStyle(fontSize: 16)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _getEncouragingMessage(),
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textMedium,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
+            child: _buildQuestionList(),
           ),
         ],
       ),
@@ -374,53 +103,44 @@ class _ChapterPracticeReviewScreenState
   }
 
   Widget _buildFilterButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.filter_list, color: AppColors.textMedium, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'REVIEW QUESTIONS',
-                style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.textMedium,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildFilterButton(
-                  label: 'All ($_totalQuestions)',
-                  isSelected: _currentFilter == 'all',
-                  onTap: () => setState(() => _currentFilter = 'all'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildFilterButton(
-                  label: 'Correct ($_correctCount)',
-                  isSelected: _currentFilter == 'correct',
-                  color: AppColors.successGreen,
-                  onTap: () => setState(() => _currentFilter = 'correct'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildFilterButton(
-                  label: 'Wrong ($_wrongCount)',
-                  isSelected: _currentFilter == 'wrong',
-                  color: AppColors.errorRed,
-                  onTap: () => setState(() => _currentFilter = 'wrong'),
-                ),
-              ),
-            ],
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildFilterButton(
+              label: 'All ($_totalQuestions)',
+              isSelected: _currentFilter == 'all',
+              onTap: () => setState(() => _currentFilter = 'all'),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildFilterButton(
+              label: 'Correct ($_correctCount)',
+              isSelected: _currentFilter == 'correct',
+              color: AppColors.successGreen,
+              onTap: () => setState(() => _currentFilter = 'correct'),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildFilterButton(
+              label: 'Wrong ($_wrongCount)',
+              isSelected: _currentFilter == 'wrong',
+              color: AppColors.errorRed,
+              onTap: () => setState(() => _currentFilter = 'wrong'),
+            ),
           ),
         ],
       ),
@@ -483,9 +203,9 @@ class _ChapterPracticeReviewScreenState
         iconColor = AppColors.textLight;
       }
 
-      return Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Center(
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -504,15 +224,12 @@ class _ChapterPracticeReviewScreenState
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: _filteredResults.asMap().entries.map((entry) {
-          final index = entry.key;
-          final result = entry.value;
-          return _buildQuestionCard(result, index);
-        }).toList(),
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _filteredResults.length,
+      itemBuilder: (context, index) {
+        return _buildQuestionCard(_filteredResults[index], index);
+      },
     );
   }
 
@@ -796,51 +513,6 @@ class _ChapterPracticeReviewScreenState
             ],
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          // Back to Home button (primary)
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton.icon(
-              onPressed: _goHome,
-              icon: const Icon(Icons.home_outlined),
-              label: const Text('Back to Home'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryPurple,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Practice Again button (secondary)
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: OutlinedButton.icon(
-              onPressed: _practiceAgain,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Practice Again'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primaryPurple,
-                side: const BorderSide(color: AppColors.primaryPurple),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

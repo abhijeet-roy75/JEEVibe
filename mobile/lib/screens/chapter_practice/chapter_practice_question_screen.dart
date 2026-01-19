@@ -13,7 +13,7 @@ import '../../utils/error_handler.dart';
 import '../../utils/question_adapters.dart';
 import '../../widgets/daily_quiz/feedback_banner_widget.dart';
 import '../../widgets/daily_quiz/detailed_explanation_widget.dart';
-import 'chapter_practice_review_screen.dart';
+import 'chapter_practice_result_screen.dart';
 
 class ChapterPracticeQuestionScreen extends StatefulWidget {
   const ChapterPracticeQuestionScreen({super.key});
@@ -163,14 +163,18 @@ class _ChapterPracticeQuestionScreenState
       if (mounted && summary != null) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => ChapterPracticeReviewScreen(summary: summary),
+            builder: (context) => ChapterPracticeResultScreen(
+              summary: summary,
+              results: provider.results,
+              session: provider.session,
+            ),
           ),
         );
       } else if (mounted) {
         // Even if summary is null, navigate to review with results from provider
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => ChapterPracticeReviewScreen(
+            builder: (context) => ChapterPracticeResultScreen(
               summary: null,
               results: provider.results,
               session: provider.session,
@@ -189,7 +193,7 @@ class _ChapterPracticeQuestionScreenState
           // Session was completed, navigate to review
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => ChapterPracticeReviewScreen(
+              builder: (context) => ChapterPracticeResultScreen(
                 summary: null,
                 results: provider.results,
                 session: provider.session,

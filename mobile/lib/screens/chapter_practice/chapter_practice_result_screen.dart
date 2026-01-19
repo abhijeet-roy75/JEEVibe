@@ -1,0 +1,471 @@
+/// Chapter Practice Result Screen
+/// Shows practice completion summary with performance breakdown
+/// Similar to DailyQuizResultScreen - navigates to separate review screen
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../models/chapter_practice_models.dart';
+import '../../providers/chapter_practice_provider.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_text_styles.dart';
+import '../../widgets/priya_avatar.dart';
+import '../../widgets/buttons/gradient_button.dart';
+import '../assessment_intro_screen.dart';
+import 'chapter_practice_review_screen.dart';
+
+class ChapterPracticeResultScreen extends StatelessWidget {
+  final PracticeSessionSummary? summary;
+  final List<PracticeQuestionResult>? results;
+  final ChapterPracticeSession? session;
+
+  const ChapterPracticeResultScreen({
+    super.key,
+    this.summary,
+    this.results,
+    this.session,
+  });
+
+  // Computed values from either summary or provider results
+  int get _totalQuestions =>
+      summary?.totalQuestions ?? results?.length ?? session?.totalQuestions ?? 0;
+
+  int get _correctCount =>
+      summary?.correctCount ?? results?.where((r) => r.isCorrect).length ?? 0;
+
+  int get _wrongCount => _totalQuestions - _correctCount;
+
+  double get _accuracy {
+    if (_totalQuestions == 0) return 0.0;
+    return _correctCount / _totalQuestions;
+  }
+
+  String get _chapterName =>
+      summary?.chapterName ?? session?.chapterName ?? 'Chapter';
+
+  String get _subject => summary?.subject ?? session?.subject ?? '';
+
+  String _getEncouragingMessage() {
+    final percentage = _accuracy * 100;
+    if (percentage >= 80) {
+      return 'Outstanding performance! You have a strong grasp of $_chapterName. Keep up the excellent work!';
+    } else if (percentage >= 60) {
+      return 'Good job! You\'re building a solid understanding of $_chapterName. Review the wrong answers to improve further.';
+    } else if (percentage >= 40) {
+      return 'Nice effort! Focus on reviewing the solutions for the questions you got wrong. Practice will help you improve!';
+    } else {
+      return 'Every practice session makes you stronger! Review the solutions carefully and try practicing again. You\'ll get better!';
+    }
+  }
+
+  /// Get performance tier based on accuracy
+  String _getPerformanceTier() {
+    final scoreOutOf10 = _accuracy * 10;
+    if (scoreOutOf10 >= 9) return 'excellent';
+    if (scoreOutOf10 >= 7) return 'good';
+    if (scoreOutOf10 >= 5) return 'average';
+    if (scoreOutOf10 >= 3) return 'struggling';
+    return 'tough_day';
+  }
+
+  /// Get header title based on performance tier
+  String _getHeaderTitle() {
+    switch (_getPerformanceTier()) {
+      case 'excellent':
+        return 'Outstanding!';
+      case 'good':
+        return 'Well Done!';
+      case 'average':
+        return 'Practice Complete!';
+      case 'struggling':
+        return 'Practice Complete';
+      case 'tough_day':
+        return 'Practice Complete';
+      default:
+        return 'Practice Complete';
+    }
+  }
+
+  void _goHome(BuildContext context) {
+    // Reset provider state
+    final provider =
+        Provider.of<ChapterPracticeProvider>(context, listen: false);
+    provider.reset();
+
+    // Navigate to dashboard (AssessmentIntroScreen)
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
+      (route) => false,
+    );
+  }
+
+  void _practiceAgain(BuildContext context) {
+    // Reset provider and go back to home to restart practice
+    final provider =
+        Provider.of<ChapterPracticeProvider>(context, listen: false);
+    provider.reset();
+
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  void _reviewQuestions(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChapterPracticeReviewScreen(
+          summary: summary,
+          results: results,
+          session: session,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop) return;
+        _goHome(context);
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundLight,
+        body: Column(
+          children: [
+            // Header
+            _buildHeader(context),
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewPadding.bottom + 16,
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    // Summary cards
+                    _buildSummaryCards(),
+                    const SizedBox(height: 16),
+                    // Priya Ma'am message
+                    _buildPriyaMaamMessage(),
+                    const SizedBox(height: 24),
+                    // Action buttons
+                    _buildActionButtons(context),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              // Title
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => _goHome(context),
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          _getHeaderTitle(),
+                          style: AppTextStyles.headerWhite.copyWith(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _chapterName,
+                          style: AppTextStyles.bodyWhite.copyWith(
+                            fontSize: 14,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 48), // Balance the close button
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Score circle
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${(_accuracy * 100).toInt()}%',
+                        style: AppTextStyles.headerWhite.copyWith(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '$_correctCount / $_totalQuestions',
+                        style: AppTextStyles.bodyWhite.copyWith(
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Subject badge
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _subject,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCards() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: _buildSummaryCard(
+                'Total',
+                '$_totalQuestions',
+                AppColors.primaryPurple,
+                Icons.quiz_outlined,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard(
+                'Correct',
+                '$_correctCount',
+                AppColors.successGreen,
+                Icons.check_circle_outline,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard(
+                'Wrong',
+                '$_wrongCount',
+                AppColors.errorRed,
+                Icons.cancel_outlined,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(
+      String label, String value, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: AppTextStyles.headerMedium.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriyaMaamMessage() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primaryPurple.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const PriyaAvatar(size: 56),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Priya Ma\'am',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.primaryPurple,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _getEncouragingMessage(),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textMedium,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          // Review All Questions button (primary action - like daily quiz)
+          _buildActionButton(
+            icon: Icons.rate_review,
+            iconColor: Colors.white,
+            label: 'Review Questions ($_totalQuestions)',
+            backgroundColor: AppColors.primaryPurple,
+            onTap: () => _reviewQuestions(context),
+          ),
+          const SizedBox(height: 12),
+          // Back to Dashboard button (standard GradientButton)
+          GradientButton(
+            text: 'Back to Dashboard',
+            onPressed: () => _goHome(context),
+            size: GradientButtonSize.large,
+          ),
+          const SizedBox(height: 12),
+          // Practice Again button (secondary)
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: OutlinedButton.icon(
+              onPressed: () => _practiceAgain(context),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Practice Again'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primaryPurple,
+                side: const BorderSide(color: AppColors.primaryPurple),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required Color backgroundColor,
+    required VoidCallback onTap,
+    Color? textColor,
+  }) {
+    final effectiveTextColor = textColor ?? Colors.white;
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(icon, color: iconColor, size: 20),
+                    const SizedBox(width: 12),
+                    Text(
+                      label,
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: effectiveTextColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                Icon(Icons.chevron_right, color: effectiveTextColor, size: 24),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
