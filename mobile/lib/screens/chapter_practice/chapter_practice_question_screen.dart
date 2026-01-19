@@ -56,6 +56,9 @@ class _ChapterPracticeQuestionScreenState
     final question = provider.currentQuestion;
     if (question == null) return;
 
+    // Prevent re-submission of already answered questions (e.g., from resumed session)
+    if (question.answered) return;
+
     // Get the answer based on question type
     final String? answer;
     if (question.isNumerical) {
@@ -249,7 +252,8 @@ class _ChapterPracticeQuestionScreenState
         final totalQuestions = session.totalQuestions;
         final progress =
             totalQuestions > 0 ? (currentIndex + 1) / totalQuestions : 0.0;
-        final isAnswered = provider.lastAnswerResult != null;
+        // Check both: fresh answer (lastAnswerResult) OR resumed already-answered question
+        final isAnswered = question.answered || provider.lastAnswerResult != null;
 
         // Completely prevent back navigation during active practice session
         // Students MUST complete the session - progress is auto-saved
@@ -284,8 +288,8 @@ class _ChapterPracticeQuestionScreenState
                     child: Column(
                       children: [
                         const SizedBox(height: 16),
-                        // Feedback banner (if answered) - using shared widget
-                        if (isAnswered) ...[
+                        // Feedback banner (if answered with result available) - using shared widget
+                        if (isAnswered && provider.lastAnswerResult != null) ...[
                           FeedbackBannerWidget(
                             feedback: practiceResultToFeedback(
                               provider.lastAnswerResult!,
@@ -297,11 +301,16 @@ class _ChapterPracticeQuestionScreenState
                           ),
                           const SizedBox(height: 16),
                         ],
+                        // For resumed already-answered questions without result, show simple indicator
+                        if (isAnswered && provider.lastAnswerResult == null) ...[
+                          _buildResumedAnswerIndicator(question),
+                          const SizedBox(height: 16),
+                        ],
                         // Question card
                         _buildQuestionCard(question, isAnswered),
                         const SizedBox(height: 16),
-                        // Solution (if answered) - using shared widget
-                        if (isAnswered) ...[
+                        // Solution (if answered with result available) - using shared widget
+                        if (isAnswered && provider.lastAnswerResult != null) ...[
                           DetailedExplanationWidget(
                             feedback: practiceResultToFeedback(
                               provider.lastAnswerResult!,
@@ -808,6 +817,71 @@ class _ChapterPracticeQuestionScreenState
                       color: AppColors.textMedium,
                     ),
                   ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Shows a simple indicator for resumed questions that were already answered
+  /// (when we don't have the full lastAnswerResult with solution details)
+  Widget _buildResumedAnswerIndicator(PracticeQuestion question) {
+    final isCorrect = question.isCorrect ?? false;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isCorrect
+              ? AppColors.successGreen.withValues(alpha: 0.1)
+              : AppColors.errorRed.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isCorrect ? Icons.check_circle : Icons.cancel,
+              color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isCorrect ? 'Correct!' : 'Incorrect',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'You answered: ${question.studentAnswer ?? "N/A"}',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textMedium,
+                    ),
+                  ),
+                  if (!isCorrect && question.correctAnswer != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      'Correct answer: ${question.correctAnswer}',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.successGreen,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
