@@ -23,7 +23,7 @@ const thetaSnapshotService = require('../services/thetaSnapshotService');
 const progressService = require('../services/progressService');
 const { getAnalyticsAccess } = require('../middleware/featureGate');
 const { getEffectiveTier } = require('../services/subscriptionService');
-const { getLastNDaysIST } = require('../utils/dateUtils');
+const { getCurrentWeekIST } = require('../utils/dateUtils');
 
 // ============================================================================
 // ANALYTICS OVERVIEW
@@ -475,8 +475,9 @@ router.get('/all-chapters', authenticateUser, async (req, res, next) => {
 /**
  * GET /api/analytics/weekly-activity
  *
- * Get daily questions answered for the current week (7 days).
- * Returns data for each day including days with no activity (0 questions).
+ * Get daily questions answered for the current calendar week (Sun-Sat).
+ * Returns data for each day with Sunday first and Saturday last.
+ * Future days are marked with isFuture: true.
  *
  * Authentication: Required
  */
@@ -493,20 +494,24 @@ router.get('/weekly-activity', authenticateUser, async (req, res, next) => {
       dataByDate[day.date] = day;
     });
 
-    // Generate all 7 days in IST (including days with no activity)
-    const last7Days = getLastNDaysIST(7);
-    const weekData = last7Days.map(day => {
+    // Generate current calendar week (Sun-Sat) in IST
+    const currentWeek = getCurrentWeekIST();
+    const weekData = currentWeek.map(day => {
       const existing = dataByDate[day.date];
       return {
         date: day.date,
         dayName: day.dayName,
         isToday: day.isToday,
+        isFuture: day.isFuture,
         quizzes: existing?.quizzes || 0,
         questions: existing?.questions || 0,
         correct: existing?.correct || 0,
         accuracy: existing?.accuracy || 0
       };
     });
+
+    // Only count questions up to today (exclude future days)
+    const pastAndTodayData = weekData.filter(d => !d.isFuture);
 
     logger.info('Weekly activity retrieved', {
       requestId: req.id,
@@ -519,8 +524,8 @@ router.get('/weekly-activity', authenticateUser, async (req, res, next) => {
       success: true,
       data: {
         week: weekData,
-        total_questions: weekData.reduce((sum, d) => sum + d.questions, 0),
-        total_quizzes: weekData.reduce((sum, d) => sum + d.quizzes, 0)
+        total_questions: pastAndTodayData.reduce((sum, d) => sum + d.questions, 0),
+        total_quizzes: pastAndTodayData.reduce((sum, d) => sum + d.quizzes, 0)
       },
       requestId: req.id
     });

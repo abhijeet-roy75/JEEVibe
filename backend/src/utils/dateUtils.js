@@ -135,6 +135,37 @@ function getLastNDaysIST(days = 7) {
   return result;
 }
 
+/**
+ * Get current calendar week (Sunday to Saturday) in IST
+ * Always returns 7 days with Sunday first and Saturday last
+ * @returns {Array<{date: string, dayName: string, isToday: boolean, isFuture: boolean}>}
+ */
+function getCurrentWeekIST() {
+  const result = [];
+  const nowIST = getNowIST();
+  const todayStr = formatDateIST(nowIST);
+
+  // Find the Sunday of this week
+  const dayOfWeek = nowIST.getUTCDay(); // 0 = Sunday, 6 = Saturday
+  const sundayDate = new Date(nowIST);
+  sundayDate.setDate(sundayDate.getDate() - dayOfWeek);
+
+  // Generate all 7 days (Sun to Sat)
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(sundayDate);
+    date.setDate(date.getDate() + i);
+    const dateStr = formatDateIST(date);
+    result.push({
+      date: dateStr,
+      dayName: getDayNameIST(new Date(date.getTime() - IST_OFFSET_MS)),
+      isToday: dateStr === todayStr,
+      isFuture: dateStr > todayStr
+    });
+  }
+
+  return result;
+}
+
 module.exports = {
   IST_OFFSET_HOURS,
   IST_OFFSET_MS,
@@ -148,5 +179,6 @@ module.exports = {
   getDayOfWeekIST,
   getDayNameIST,
   isTodayIST,
-  getLastNDaysIST
+  getLastNDaysIST,
+  getCurrentWeekIST
 };

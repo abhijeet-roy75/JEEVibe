@@ -493,6 +493,7 @@ class DailyActivity {
   final int correct;
   final double accuracy;
   final bool isToday;
+  final bool isFuture;
 
   DailyActivity({
     required this.date,
@@ -502,6 +503,7 @@ class DailyActivity {
     required this.correct,
     required this.accuracy,
     required this.isToday,
+    this.isFuture = false,
   });
 
   factory DailyActivity.fromJson(Map<String, dynamic> json) {
@@ -513,6 +515,7 @@ class DailyActivity {
       correct: json['correct'] ?? 0,
       accuracy: (json['accuracy'] ?? 0).toDouble(),
       isToday: json['isToday'] ?? false,
+      isFuture: json['isFuture'] ?? false,
     );
   }
 }

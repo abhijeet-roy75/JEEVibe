@@ -32,10 +32,11 @@ class WeeklyActivityChart extends StatelessWidget {
       );
     }
 
-    // Find max questions for Y-axis scaling
+    // Find max questions for Y-axis scaling (only count past/today, not future)
     final maxQuestions = activity.week
+        .where((d) => !d.isFuture)
         .map((d) => d.questions)
-        .reduce((a, b) => a > b ? a : b);
+        .fold(0, (a, b) => a > b ? a : b);
     final double yMax = maxQuestions > 0 ? (maxQuestions * 1.2).ceil().toDouble() : 10.0;
 
     return SizedBox(
@@ -53,6 +54,8 @@ class WeeklyActivityChart extends StatelessWidget {
               tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               getTooltipItem: (group, groupIndex, rod, rodIndex) {
                 final day = activity.week[group.x.toInt()];
+                // Don't show tooltip for future days
+                if (day.isFuture) return null;
                 return BarTooltipItem(
                   '${day.questions} Qs',
                   AppTextStyles.bodySmall.copyWith(
@@ -84,16 +87,26 @@ class WeeklyActivityChart extends StatelessWidget {
                     return const SizedBox.shrink();
                   }
                   final day = activity.week[index];
+                  // Style: Today = purple bold, Future = light grey, Past = normal grey
+                  Color labelColor;
+                  FontWeight labelWeight;
+                  if (day.isToday) {
+                    labelColor = AppColors.primaryPurple;
+                    labelWeight = FontWeight.bold;
+                  } else if (day.isFuture) {
+                    labelColor = Colors.grey.shade300;
+                    labelWeight = FontWeight.normal;
+                  } else {
+                    labelColor = AppColors.textTertiary;
+                    labelWeight = FontWeight.normal;
+                  }
                   return SideTitleWidget(
                     axisSide: meta.axisSide,
                     child: Text(
                       day.dayName,
                       style: AppTextStyles.caption.copyWith(
-                        color: day.isToday
-                            ? AppColors.primaryPurple
-                            : AppColors.textTertiary,
-                        fontWeight:
-                            day.isToday ? FontWeight.bold : FontWeight.normal,
+                        color: labelColor,
+                        fontWeight: labelWeight,
                         fontSize: 11,
                       ),
                     ),
@@ -107,14 +120,26 @@ class WeeklyActivityChart extends StatelessWidget {
           barGroups: activity.week.asMap().entries.map((entry) {
             final index = entry.key;
             final day = entry.value;
+
+            // Bar color: Today = solid purple, Future = very light, Past = semi-transparent
+            Color barColor;
+            if (day.isFuture) {
+              barColor = Colors.grey.shade200;
+            } else if (day.isToday) {
+              barColor = AppColors.primaryPurple;
+            } else {
+              barColor = AppColors.primaryPurple.withValues(alpha: 0.5);
+            }
+
+            // Future days show minimal height bar as placeholder
+            final barHeight = day.isFuture ? 2.0 : day.questions.toDouble();
+
             return BarChartGroupData(
               x: index,
               barRods: [
                 BarChartRodData(
-                  toY: day.questions.toDouble(),
-                  color: day.isToday
-                      ? AppColors.primaryPurple
-                      : AppColors.primaryPurple.withValues(alpha: 0.5),
+                  toY: barHeight,
+                  color: barColor,
                   width: 28,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(6),
