@@ -17,6 +17,11 @@ const {
   generateWelcomeMessage
 } = require('../services/aiTutorService');
 const { hasConversation } = require('../services/tutorConversationService');
+const {
+  moderateMessage,
+  analyzeMessage,
+  SAFE_RESPONSES
+} = require('../services/contentModerationService');
 
 const router = express.Router();
 
@@ -300,6 +305,7 @@ router.post('/message',
       .isLength({ max: 2000 })
       .withMessage('message must be 2000 characters or less')
   ],
+  moderateMessage(), // Content moderation middleware
   async (req, res, next) => {
     try {
       // Validate request
@@ -310,11 +316,38 @@ router.post('/message',
 
       const userId = req.userId;
       const { message } = req.body;
+      const moderationAnalysis = req.moderationAnalysis;
 
       logger.info('AI Tutor message received', {
         messageLength: message.length,
+        flagged: moderationAnalysis?.flagged || false,
+        flagSeverity: moderationAnalysis?.severity || null,
         requestId: req.requestId
       });
+
+      // Handle high-severity flagged content with safe response
+      // For high severity (self-harm, violence, abuse, explicit), return safe response immediately
+      if (moderationAnalysis?.flagged && moderationAnalysis.severity === 'high') {
+        logger.warn('High-severity content intercepted', {
+          userId,
+          categories: moderationAnalysis.categories,
+          flagId: req.moderationFlagId,
+          requestId: req.requestId
+        });
+
+        // Return the safe response without calling the AI
+        const { getQuickActions } = require('../prompts/ai_tutor_prompts');
+        return res.json({
+          success: true,
+          data: {
+            response: moderationAnalysis.suggestedResponse || SAFE_RESPONSES.off_topic,
+            quickActions: getQuickActions('general')
+          },
+          usage: req.usage,
+          requestId: req.requestId,
+          moderated: true // Flag for client to know response was moderated
+        });
+      }
 
       const result = await sendMessage(userId, message);
 

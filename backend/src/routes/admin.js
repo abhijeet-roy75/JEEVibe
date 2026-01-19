@@ -19,6 +19,16 @@ const { authenticateAdmin } = require('../middleware/adminAuth');
 const logger = require('../utils/logger');
 const adminMetricsService = require('../services/adminMetricsService');
 const { getRecentAlerts, acknowledgeAlert } = require('../services/alertService');
+const {
+  getFlaggedContent,
+  reviewFlag,
+  generateDailySummary,
+  checkUserFlagThresholds,
+  getModerationStats,
+  getUnacknowledgedAlerts,
+  acknowledgeAlert: acknowledgeModerationAlert,
+  getUsersWithMostFlags
+} = require('../services/contentModerationService');
 
 // ============================================================================
 // DAILY HEALTH METRICS
@@ -339,6 +349,332 @@ router.post('/alerts/:alertId/acknowledge', authenticateAdmin, async (req, res, 
     });
   } catch (error) {
     logger.error('Error acknowledging alert', {
+      requestId: req.id,
+      error: error.message
+    });
+    next(error);
+  }
+});
+
+// ============================================================================
+// CONTENT MODERATION
+// ============================================================================
+
+/**
+ * GET /api/admin/moderation/stats
+ *
+ * Get moderation statistics for dashboard overview.
+ * Returns today's flags, weekly stats, pending items, category breakdown.
+ *
+ * Authentication: Admin required
+ */
+router.get('/moderation/stats', authenticateAdmin, async (req, res, next) => {
+  try {
+    const stats = await getModerationStats();
+
+    logger.info('Admin moderation stats retrieved', {
+      requestId: req.id,
+      adminEmail: req.userEmail,
+      todayTotal: stats.today.total,
+      pendingAlerts: stats.pending.unacknowledgedAlerts
+    });
+
+    res.json({
+      success: true,
+      data: stats,
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error fetching moderation stats', {
+      requestId: req.id,
+      error: error.message
+    });
+    next(error);
+  }
+});
+
+/**
+ * GET /api/admin/moderation/alerts
+ *
+ * Get unacknowledged moderation alerts (high-severity items needing attention).
+ *
+ * Query params:
+ * - limit: number of alerts to return (default: 50)
+ *
+ * Authentication: Admin required
+ */
+router.get('/moderation/alerts', authenticateAdmin, async (req, res, next) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+    const alerts = await getUnacknowledgedAlerts(limit);
+
+    logger.info('Admin moderation alerts retrieved', {
+      requestId: req.id,
+      adminEmail: req.userEmail,
+      alertCount: alerts.length
+    });
+
+    res.json({
+      success: true,
+      data: {
+        alerts,
+        total: alerts.length
+      },
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error fetching moderation alerts', {
+      requestId: req.id,
+      error: error.message
+    });
+    next(error);
+  }
+});
+
+/**
+ * POST /api/admin/moderation/alerts/:alertId/acknowledge
+ *
+ * Acknowledge a moderation alert.
+ *
+ * Authentication: Admin required
+ */
+router.post('/moderation/alerts/:alertId/acknowledge', authenticateAdmin, async (req, res, next) => {
+  try {
+    const { alertId } = req.params;
+
+    await acknowledgeModerationAlert(alertId, req.userEmail);
+
+    logger.info('Moderation alert acknowledged', {
+      requestId: req.id,
+      adminEmail: req.userEmail,
+      alertId
+    });
+
+    res.json({
+      success: true,
+      message: 'Alert acknowledged',
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error acknowledging moderation alert', {
+      requestId: req.id,
+      error: error.message
+    });
+    next(error);
+  }
+});
+
+/**
+ * GET /api/admin/moderation/users/flagged
+ *
+ * Get users with the most moderation flags (repeat offenders).
+ *
+ * Query params:
+ * - limit: number of users to return (default: 20)
+ *
+ * Authentication: Admin required
+ */
+router.get('/moderation/users/flagged', authenticateAdmin, async (req, res, next) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+    const users = await getUsersWithMostFlags(limit);
+
+    logger.info('Admin flagged users retrieved', {
+      requestId: req.id,
+      adminEmail: req.userEmail,
+      userCount: users.length
+    });
+
+    res.json({
+      success: true,
+      data: {
+        users,
+        total: users.length
+      },
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error fetching flagged users', {
+      requestId: req.id,
+      error: error.message
+    });
+    next(error);
+  }
+});
+
+/**
+ * GET /api/admin/moderation/flags
+ *
+ * Get flagged content for review.
+ *
+ * Query params:
+ * - severity: 'high' | 'medium' | 'low' (optional filter)
+ * - reviewed: 'true' | 'false' (optional filter)
+ * - userId: filter by specific user
+ * - limit: number of results (default: 50, max: 100)
+ *
+ * Authentication: Admin required
+ */
+router.get('/moderation/flags', authenticateAdmin, async (req, res, next) => {
+  try {
+    const { severity, reviewed, userId, limit = '50' } = req.query;
+
+    const filters = {
+      limit: Math.min(parseInt(limit) || 50, 100)
+    };
+
+    if (severity) filters.severity = severity;
+    if (reviewed !== undefined) filters.reviewed = reviewed === 'true';
+    if (userId) filters.userId = userId;
+
+    const flags = await getFlaggedContent(filters);
+
+    // Count by severity for dashboard
+    const stats = {
+      total: flags.length,
+      high: flags.filter(f => f.severity === 'high').length,
+      medium: flags.filter(f => f.severity === 'medium').length,
+      low: flags.filter(f => f.severity === 'low').length,
+      unreviewed: flags.filter(f => !f.reviewed).length
+    };
+
+    logger.info('Admin moderation flags retrieved', {
+      requestId: req.id,
+      adminEmail: req.userEmail,
+      total: stats.total,
+      unreviewed: stats.unreviewed
+    });
+
+    res.json({
+      success: true,
+      data: {
+        flags,
+        stats
+      },
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error fetching moderation flags', {
+      requestId: req.id,
+      error: error.message
+    });
+    next(error);
+  }
+});
+
+/**
+ * POST /api/admin/moderation/flags/:flagId/review
+ *
+ * Mark a flag as reviewed with action taken.
+ *
+ * Body:
+ * - action: 'dismissed' | 'warned' | 'restricted' | 'escalated'
+ * - notes: optional review notes
+ *
+ * Authentication: Admin required
+ */
+router.post('/moderation/flags/:flagId/review', authenticateAdmin, async (req, res, next) => {
+  try {
+    const { flagId } = req.params;
+    const { action, notes } = req.body;
+
+    if (!action || !['dismissed', 'warned', 'restricted', 'escalated'].includes(action)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid action. Must be one of: dismissed, warned, restricted, escalated',
+        requestId: req.id
+      });
+    }
+
+    await reviewFlag(flagId, req.userEmail, action, notes || '');
+
+    logger.info('Moderation flag reviewed', {
+      requestId: req.id,
+      adminEmail: req.userEmail,
+      flagId,
+      action
+    });
+
+    res.json({
+      success: true,
+      message: 'Flag reviewed successfully',
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error reviewing moderation flag', {
+      requestId: req.id,
+      error: error.message
+    });
+    next(error);
+  }
+});
+
+/**
+ * GET /api/admin/moderation/users/:userId/flags
+ *
+ * Get moderation history and thresholds for a specific user.
+ *
+ * Authentication: Admin required
+ */
+router.get('/moderation/users/:userId/flags', authenticateAdmin, async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    const [flags, thresholds] = await Promise.all([
+      getFlaggedContent({ userId, limit: 50 }),
+      checkUserFlagThresholds(userId)
+    ]);
+
+    logger.info('Admin user moderation history retrieved', {
+      requestId: req.id,
+      adminEmail: req.userEmail,
+      targetUserId: userId,
+      flagCount: flags.length
+    });
+
+    res.json({
+      success: true,
+      data: {
+        userId,
+        flags,
+        thresholds,
+        totalFlags: flags.length
+      },
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error fetching user moderation history', {
+      requestId: req.id,
+      error: error.message
+    });
+    next(error);
+  }
+});
+
+/**
+ * POST /api/admin/moderation/summary
+ *
+ * Generate daily moderation summary (can be called manually or by cron).
+ *
+ * Authentication: Admin required
+ */
+router.post('/moderation/summary', authenticateAdmin, async (req, res, next) => {
+  try {
+    const summary = await generateDailySummary();
+
+    logger.info('Moderation daily summary generated', {
+      requestId: req.id,
+      adminEmail: req.userEmail,
+      totalFlags: summary.totalFlags
+    });
+
+    res.json({
+      success: true,
+      data: summary,
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error generating moderation summary', {
       requestId: req.id,
       error: error.message
     });

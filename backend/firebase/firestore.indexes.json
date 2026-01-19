@@ -245,6 +245,51 @@
         { "fieldPath": "chapter_key", "order": "ASCENDING" },
         { "fieldPath": "answered_at", "order": "DESCENDING" }
       ]
+    },
+    {
+      "comment": "Cron/Email: user responses by date (daily/weekly email stats)",
+      "collectionGroup": "responses",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "user_id", "order": "ASCENDING" },
+        { "fieldPath": "answered_at", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "Content Moderation: flags by severity + timestamp",
+      "collectionGroup": "moderation_flags",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "severity", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Content Moderation: unreviewed flags by timestamp",
+      "collectionGroup": "moderation_flags",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "reviewed", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Content Moderation: flags by user + timestamp",
+      "collectionGroup": "moderation_flags",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Content Moderation: unacknowledged alerts by timestamp",
+      "collectionGroup": "moderation_alerts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "acknowledged", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
