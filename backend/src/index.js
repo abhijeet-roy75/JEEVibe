@@ -280,7 +280,7 @@ app.use((req, res) => {
 // START SERVER
 // ========================================
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info('🚀 JEEVibe backend server started', {
     port: PORT,
     environment: process.env.NODE_ENV || 'development',
@@ -303,6 +303,45 @@ app.listen(PORT, () => {
     logger.info('⚠️  Development mode - Some security features relaxed');
   }
 });
+
+// ========================================
+// GRACEFUL SHUTDOWN
+// ========================================
+
+// Track if shutdown is in progress
+let isShuttingDown = false;
+
+// Graceful shutdown handler
+const gracefulShutdown = (signal) => {
+  if (isShuttingDown) {
+    logger.warn(`⚠️  Received ${signal} during shutdown, ignoring`);
+    return;
+  }
+
+  isShuttingDown = true;
+  logger.info(`🛑 Received ${signal}, starting graceful shutdown...`);
+
+  // Stop accepting new connections
+  server.close((err) => {
+    if (err) {
+      logger.error('Error during server close', { error: err.message });
+      process.exit(1);
+    }
+
+    logger.info('✅ Server closed, all connections handled');
+    process.exit(0);
+  });
+
+  // Force shutdown after 30 seconds (Render gives ~30s grace period)
+  setTimeout(() => {
+    logger.error('⚠️  Forcing shutdown after timeout');
+    process.exit(1);
+  }, 25000);
+};
+
+// Listen for termination signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 module.exports = app;
 
