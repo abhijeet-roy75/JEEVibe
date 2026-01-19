@@ -539,12 +539,12 @@ class _ChapterPickerScreenState extends State<ChapterPickerScreen>
   Color _getSubjectColor(String subject) {
     switch (subject.toLowerCase()) {
       case 'physics':
-        return AppColors.physicsBlue;
+        return AppColors.subjectPhysics;
       case 'chemistry':
-        return AppColors.chemistryGreen;
+        return AppColors.subjectChemistry;
       case 'maths':
       case 'mathematics':
-        return AppColors.mathsPurple;
+        return AppColors.subjectMathematics;
       default:
         return AppColors.primary;
     }
