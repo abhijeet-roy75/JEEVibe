@@ -7,6 +7,7 @@
 const { admin } = require('../config/firebase');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
+const Sentry = require('@sentry/node');
 
 /**
  * Middleware to authenticate requests using Firebase Auth tokens
@@ -61,7 +62,15 @@ async function authenticateUser(req, res, next) {
     req.userId = decodedToken.uid;
     req.userEmail = decodedToken.email;
     req.userClaims = decodedToken;
-    
+
+    // Set Sentry user context for error tracking
+    if (process.env.SENTRY_DSN) {
+      Sentry.setUser({
+        id: decodedToken.uid,
+        email: decodedToken.email,
+      });
+    }
+
     next();
   } catch (error) {
     logger.error('Authentication error', {

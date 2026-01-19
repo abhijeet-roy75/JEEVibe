@@ -4,6 +4,49 @@
  */
 
 require('dotenv').config();
+
+// ========================================
+// SENTRY ERROR TRACKING (Initialize first!)
+// ========================================
+const Sentry = require('@sentry/node');
+
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+
+    // Performance monitoring (sample 10% of transactions in production)
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+
+    // Filter out sensitive data
+    beforeSend(event) {
+      // Remove sensitive headers
+      if (event.request?.headers) {
+        delete event.request.headers['authorization'];
+        delete event.request.headers['cookie'];
+      }
+      // Remove sensitive body fields
+      if (event.request?.data) {
+        const data = typeof event.request.data === 'string'
+          ? JSON.parse(event.request.data)
+          : event.request.data;
+        if (data.password) data.password = '[REDACTED]';
+        if (data.token) data.token = '[REDACTED]';
+        event.request.data = JSON.stringify(data);
+      }
+      return event;
+    },
+
+    // Ignore certain errors
+    ignoreErrors: [
+      'CORS',
+      'Not allowed by CORS',
+      'Rate limit exceeded',
+    ],
+  });
+  console.log('✅ Sentry initialized');
+}
+
 const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
@@ -26,6 +69,10 @@ process.on('unhandledRejection', (reason, promise) => {
     } : reason,
   };
   logger.error('Unhandled Rejection', errorInfo);
+  // Report to Sentry
+  if (process.env.SENTRY_DSN) {
+    Sentry.captureException(reason instanceof Error ? reason : new Error(String(reason)));
+  }
   // Also log to console for Render.com visibility
   console.error('UNHANDLED REJECTION:', JSON.stringify(errorInfo, null, 2));
   // Don't exit, just log the error
@@ -38,6 +85,10 @@ process.on('uncaughtException', (error) => {
     stack: error.stack,
   };
   logger.error('Uncaught Exception', errorInfo);
+  // Report to Sentry
+  if (process.env.SENTRY_DSN) {
+    Sentry.captureException(error);
+  }
   // Also log to console for Render.com visibility
   console.error('UNCAUGHT EXCEPTION:', JSON.stringify(errorInfo, null, 2));
   // Don't exit immediately, log and continue
@@ -126,6 +177,17 @@ app.use((req, res, next) => {
     ip: req.ip,
     userAgent: req.get('user-agent'),
   });
+
+  // Set Sentry context for this request
+  if (process.env.SENTRY_DSN) {
+    Sentry.setTag('request_id', req.id);
+    Sentry.setContext('request', {
+      method: req.method,
+      path: req.path,
+      ip: req.ip,
+    });
+  }
+
   next();
 });
 
@@ -261,6 +323,11 @@ app.get('/', (req, res) => {
 // ========================================
 // ERROR HANDLING
 // ========================================
+
+// Sentry error handler (must be before other error handlers)
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.Handlers.errorHandler());
+}
 
 const { errorHandler } = require('./middleware/errorHandler');
 app.use(errorHandler);
