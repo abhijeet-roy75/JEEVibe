@@ -56,6 +56,24 @@ class ChapterPracticeProvider extends ChangeNotifier {
     return correctCount / totalAnswered;
   }
 
+  /// Check if current question has been answered
+  ///
+  /// Returns true if either:
+  /// - The question was answered in this session (lastAnswerResult exists), OR
+  /// - The question was answered in a previous session (question.answered is true from backend)
+  bool get currentQuestionIsAnswered {
+    final question = currentQuestion;
+    if (question == null) return false;
+    return question.answered || _lastAnswerResult != null;
+  }
+
+  /// Check if full feedback (solution, steps, etc.) is available for display
+  ///
+  /// Returns true only if we have the lastAnswerResult, which contains
+  /// the detailed solution steps, explanation, and distractor analysis.
+  /// For resumed questions without this data, only basic correct/incorrect info is available.
+  bool get hasFullFeedbackAvailable => _lastAnswerResult != null;
+
   /// Start a new practice session for a chapter
   Future<bool> startPractice(
     String chapterKey,

@@ -252,8 +252,9 @@ class _ChapterPracticeQuestionScreenState
         final totalQuestions = session.totalQuestions;
         final progress =
             totalQuestions > 0 ? (currentIndex + 1) / totalQuestions : 0.0;
-        // Check both: fresh answer (lastAnswerResult) OR resumed already-answered question
-        final isAnswered = question.answered || provider.lastAnswerResult != null;
+        // Use provider's encapsulated logic for answer state
+        final isAnswered = provider.currentQuestionIsAnswered;
+        final hasFullFeedback = provider.hasFullFeedbackAvailable;
 
         // Completely prevent back navigation during active practice session
         // Students MUST complete the session - progress is auto-saved
@@ -288,8 +289,8 @@ class _ChapterPracticeQuestionScreenState
                     child: Column(
                       children: [
                         const SizedBox(height: 16),
-                        // Feedback banner (if answered with result available) - using shared widget
-                        if (isAnswered && provider.lastAnswerResult != null) ...[
+                        // Feedback banner (if answered with full result available) - using shared widget
+                        if (hasFullFeedback) ...[
                           FeedbackBannerWidget(
                             feedback: practiceResultToFeedback(
                               provider.lastAnswerResult!,
@@ -301,16 +302,16 @@ class _ChapterPracticeQuestionScreenState
                           ),
                           const SizedBox(height: 16),
                         ],
-                        // For resumed already-answered questions without result, show simple indicator
-                        if (isAnswered && provider.lastAnswerResult == null) ...[
+                        // For resumed already-answered questions without full feedback, show simple indicator
+                        if (isAnswered && !hasFullFeedback) ...[
                           _buildResumedAnswerIndicator(question),
                           const SizedBox(height: 16),
                         ],
                         // Question card
                         _buildQuestionCard(question, isAnswered),
                         const SizedBox(height: 16),
-                        // Solution (if answered with result available) - using shared widget
-                        if (isAnswered && provider.lastAnswerResult != null) ...[
+                        // Solution (if full feedback available) - using shared widget
+                        if (hasFullFeedback) ...[
                           DetailedExplanationWidget(
                             feedback: practiceResultToFeedback(
                               provider.lastAnswerResult!,

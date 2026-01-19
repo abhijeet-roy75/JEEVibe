@@ -216,12 +216,16 @@ class AnswerFeedback {
 }
 
 /// Solution Step Model
+///
+/// Unified model for solution steps used by both Daily Quiz and Chapter Practice.
+/// Supports both structured (map) and simple (string) JSON formats from backend.
 class SolutionStep {
   final int? stepNumber;
   final String? description;
   final String? explanation;
   final String? formula;
   final String? calculation;
+  final String? result;
 
   SolutionStep({
     this.stepNumber,
@@ -229,21 +233,21 @@ class SolutionStep {
     this.explanation,
     this.formula,
     this.calculation,
+    this.result,
   });
 
   factory SolutionStep.fromJson(dynamic json) {
-    // Handle both Map and String formats
+    // Handle string format (simple text)
     if (json is String) {
-      return SolutionStep(
-        description: json,
-      );
+      return SolutionStep(description: json);
     }
-    
+
+    // Handle non-map formats
     if (json is! Map<String, dynamic>) {
       return SolutionStep(description: json.toString());
     }
-    
-    // Handle different field names for solution steps
+
+    // Handle different field names for solution steps (backend inconsistency)
     String? text;
     if (json['description'] != null) {
       text = json['description'] as String?;
@@ -261,11 +265,11 @@ class SolutionStep {
       explanation: json['explanation'] as String?,
       formula: json['formula'] as String?,
       calculation: json['calculation'] as String?,
+      result: json['result'] as String?,
     );
   }
 
-  String get displayText {
-    return description ?? explanation ?? '';
-  }
+  /// Get display text (prioritize description, fallback to explanation)
+  String get displayText => description ?? explanation ?? '';
 }
 

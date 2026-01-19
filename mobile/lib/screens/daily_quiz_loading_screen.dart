@@ -2,6 +2,7 @@
 /// Generates quiz and navigates to question screen
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../constants/session_constants.dart';
 import '../models/daily_quiz_question.dart';
 import '../models/subscription_models.dart';
 import '../providers/daily_quiz_provider.dart';
@@ -56,9 +57,11 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
       // CRITICAL: Wait for provider to finish restoring any saved state
       // This ensures we don't miss an interrupted quiz that needs to be resumed
       int attempts = 0;
-      const maxAttempts = 20; // 10 seconds max wait
-      while (provider.isRestoringState && attempts < maxAttempts) {
-        await Future.delayed(const Duration(milliseconds: 500));
+      while (provider.isRestoringState &&
+          attempts < SessionTimeouts.maxRestorationAttempts) {
+        await Future.delayed(
+          Duration(milliseconds: SessionTimeouts.restorationPollIntervalMs),
+        );
         attempts++;
         if (!mounted) return;
       }
