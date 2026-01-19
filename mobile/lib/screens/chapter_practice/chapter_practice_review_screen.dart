@@ -779,7 +779,7 @@ class _ChapterPracticeReviewScreenState
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  step,
+                                  step.displayText,
                                   style: AppTextStyles.bodySmall.copyWith(
                                     color: AppColors.textDark,
                                   ),
