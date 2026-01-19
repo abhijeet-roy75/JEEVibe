@@ -437,24 +437,23 @@ async function getUsers(options = {}) {
     streaks[doc.id] = doc.data();
   });
 
-  // Get subscription data
-  const subscriptionsSnapshot = await db.collection('subscriptions').get();
-  const subscriptions = {};
-  subscriptionsSnapshot.forEach(doc => {
-    subscriptions[doc.id] = doc.data();
-  });
-
   // Enrich users with streak and subscription data
+  // Note: Subscription data is stored inside the user document at user.subscription.tier
   users = users.map(user => {
     const streak = streaks[user.uid] || {};
-    const subscription = subscriptions[user.uid] || {};
+    // Get tier from user.subscription.tier (set by subscriptionService.syncUserTier)
+    // or from user.subscription.override.tier_id for beta testers
+    const subscriptionData = user.subscription || {};
+    const effectiveTier = subscriptionData.tier ||
+                          subscriptionData.override?.tier_id ||
+                          'free';
     return {
       uid: user.uid,
       firstName: user.firstName || user.first_name || '',
       lastName: user.lastName || user.last_name || '',
       email: user.email || '',
       phone: user.phone || '',
-      tier: subscription.tier || 'free',
+      tier: effectiveTier,
       currentStreak: streak.current_streak || 0,
       longestStreak: streak.longest_streak || 0,
       totalQuestions: user.total_questions_solved || 0,
@@ -539,9 +538,11 @@ async function getUserDetails(userId) {
   const streakDoc = await db.collection('practice_streaks').doc(userId).get();
   const streakData = streakDoc.exists ? streakDoc.data() : {};
 
-  // Get subscription
-  const subscriptionDoc = await db.collection('subscriptions').doc(userId).get();
-  const subscriptionData = subscriptionDoc.exists ? subscriptionDoc.data() : {};
+  // Get subscription from user document (not a separate collection)
+  const subscriptionData = userData.subscription || {};
+  const effectiveTier = subscriptionData.tier ||
+                        subscriptionData.override?.tier_id ||
+                        'free';
 
   // Get recent quizzes
   const quizzesSnapshot = await db
@@ -568,10 +569,10 @@ async function getUserDetails(userId) {
       lastActive: userData.lastActive
     },
     subscription: {
-      tier: subscriptionData.tier || 'free',
-      status: subscriptionData.status || 'active',
-      startDate: subscriptionData.start_date,
-      endDate: subscriptionData.end_date
+      tier: effectiveTier,
+      source: subscriptionData.override ? 'override' : (subscriptionData.active_subscription_id ? 'subscription' : 'default'),
+      overrideType: subscriptionData.override?.type,
+      overrideExpires: subscriptionData.override?.expires_at
     },
     progress: {
       totalQuestions: userData.total_questions_solved || 0,
