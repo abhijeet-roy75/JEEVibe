@@ -18,6 +18,7 @@ const router = express.Router();
 const { authenticateAdmin } = require('../middleware/adminAuth');
 const logger = require('../utils/logger');
 const adminMetricsService = require('../services/adminMetricsService');
+const { getRecentAlerts, acknowledgeAlert } = require('../services/alertService');
 
 // ============================================================================
 // DAILY HEALTH METRICS
@@ -259,7 +260,7 @@ router.get('/users/:userId', authenticateAdmin, async (req, res, next) => {
 });
 
 // ============================================================================
-// ALERTS (placeholder for future implementation)
+// ALERTS
 // ============================================================================
 
 /**
@@ -267,21 +268,80 @@ router.get('/users/:userId', authenticateAdmin, async (req, res, next) => {
  *
  * Get active alerts and alert history.
  *
+ * Query params:
+ * - limit: number of alerts to return (default: 50)
+ *
  * Authentication: Admin required
  */
 router.get('/alerts', authenticateAdmin, async (req, res, next) => {
   try {
-    // Placeholder - will be implemented with alertService
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+    const alerts = await getRecentAlerts(limit);
+
+    const activeAlerts = alerts.filter(a => !a.acknowledged);
+    const acknowledgedAlerts = alerts.filter(a => a.acknowledged);
+
+    logger.info('Admin alerts retrieved', {
+      requestId: req.id,
+      adminEmail: req.userEmail,
+      activeCount: activeAlerts.length,
+      totalCount: alerts.length
+    });
+
     res.json({
       success: true,
       data: {
-        activeAlerts: [],
-        recentAlerts: [],
-        message: 'Alert system not yet implemented'
+        activeAlerts,
+        recentAlerts: acknowledgedAlerts,
+        total: alerts.length
       },
       requestId: req.id
     });
   } catch (error) {
+    logger.error('Error fetching alerts', {
+      requestId: req.id,
+      error: error.message
+    });
+    next(error);
+  }
+});
+
+/**
+ * POST /api/admin/alerts/:alertId/acknowledge
+ *
+ * Acknowledge an alert.
+ *
+ * Authentication: Admin required
+ */
+router.post('/alerts/:alertId/acknowledge', authenticateAdmin, async (req, res, next) => {
+  try {
+    const { alertId } = req.params;
+    const result = await acknowledgeAlert(alertId);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: result.error,
+        requestId: req.id
+      });
+    }
+
+    logger.info('Alert acknowledged', {
+      requestId: req.id,
+      adminEmail: req.userEmail,
+      alertId
+    });
+
+    res.json({
+      success: true,
+      message: 'Alert acknowledged',
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error acknowledging alert', {
+      requestId: req.id,
+      error: error.message
+    });
     next(error);
   }
 });

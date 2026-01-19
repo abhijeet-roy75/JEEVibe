@@ -9,6 +9,8 @@
 const express = require('express');
 const router = express.Router();
 const { createWeeklySnapshotsForAllUsers } = require('../services/weeklySnapshotService');
+const { sendAllDailyEmails, sendAllWeeklyEmails } = require('../services/studentEmailService');
+const { runAlertChecks } = require('../services/alertService');
 const logger = require('../utils/logger');
 
 // ============================================================================
@@ -163,8 +165,209 @@ router.get('/weekly-snapshots', verifyCronRequest, async (req, res) => {
 });
 
 /**
+ * POST /api/cron/daily-student-emails
+ *
+ * Sends daily progress emails to all active students
+ * Should be called at 8 AM IST daily
+ */
+router.post('/daily-student-emails', verifyCronRequest, async (req, res) => {
+  try {
+    logger.info('Daily student emails cron job triggered', { requestId: req.id });
+
+    const results = await sendAllDailyEmails();
+
+    res.json({
+      success: true,
+      message: 'Daily emails sent',
+      results,
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error in daily student emails cron job', {
+      error: error.message,
+      stack: error.stack,
+      requestId: req.id
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send daily emails',
+      message: error.message,
+      requestId: req.id
+    });
+  }
+});
+
+/**
+ * GET /api/cron/daily-student-emails
+ *
+ * Same as POST, but for GET requests
+ */
+router.get('/daily-student-emails', verifyCronRequest, async (req, res) => {
+  try {
+    logger.info('Daily student emails cron job triggered (GET)', { requestId: req.id });
+
+    const results = await sendAllDailyEmails();
+
+    res.json({
+      success: true,
+      message: 'Daily emails sent',
+      results,
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error in daily student emails cron job', {
+      error: error.message,
+      stack: error.stack,
+      requestId: req.id
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send daily emails',
+      message: error.message,
+      requestId: req.id
+    });
+  }
+});
+
+/**
+ * POST /api/cron/weekly-student-emails
+ *
+ * Sends weekly progress summary emails to all active students
+ * Should be called on Sunday at 6 PM IST
+ */
+router.post('/weekly-student-emails', verifyCronRequest, async (req, res) => {
+  try {
+    logger.info('Weekly student emails cron job triggered', { requestId: req.id });
+
+    const results = await sendAllWeeklyEmails();
+
+    res.json({
+      success: true,
+      message: 'Weekly emails sent',
+      results,
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error in weekly student emails cron job', {
+      error: error.message,
+      stack: error.stack,
+      requestId: req.id
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send weekly emails',
+      message: error.message,
+      requestId: req.id
+    });
+  }
+});
+
+/**
+ * GET /api/cron/weekly-student-emails
+ *
+ * Same as POST, but for GET requests
+ */
+router.get('/weekly-student-emails', verifyCronRequest, async (req, res) => {
+  try {
+    logger.info('Weekly student emails cron job triggered (GET)', { requestId: req.id });
+
+    const results = await sendAllWeeklyEmails();
+
+    res.json({
+      success: true,
+      message: 'Weekly emails sent',
+      results,
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error in weekly student emails cron job', {
+      error: error.message,
+      stack: error.stack,
+      requestId: req.id
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send weekly emails',
+      message: error.message,
+      requestId: req.id
+    });
+  }
+});
+
+/**
+ * POST /api/cron/check-alerts
+ *
+ * Runs all alert checks and sends notifications for triggered alerts
+ * Should be called every 6 hours or daily
+ */
+router.post('/check-alerts', verifyCronRequest, async (req, res) => {
+  try {
+    logger.info('Alert check cron job triggered', { requestId: req.id });
+
+    const results = await runAlertChecks();
+
+    res.json({
+      success: true,
+      message: 'Alert checks complete',
+      results,
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error in alert check cron job', {
+      error: error.message,
+      stack: error.stack,
+      requestId: req.id
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'Failed to run alert checks',
+      message: error.message,
+      requestId: req.id
+    });
+  }
+});
+
+/**
+ * GET /api/cron/check-alerts
+ *
+ * Same as POST, but for GET requests
+ */
+router.get('/check-alerts', verifyCronRequest, async (req, res) => {
+  try {
+    logger.info('Alert check cron job triggered (GET)', { requestId: req.id });
+
+    const results = await runAlertChecks();
+
+    res.json({
+      success: true,
+      message: 'Alert checks complete',
+      results,
+      requestId: req.id
+    });
+  } catch (error) {
+    logger.error('Error in alert check cron job', {
+      error: error.message,
+      stack: error.stack,
+      requestId: req.id
+    });
+
+    res.status(500).json({
+      success: false,
+      error: 'Failed to run alert checks',
+      message: error.message,
+      requestId: req.id
+    });
+  }
+});
+
+/**
  * GET /api/cron/health
- * 
+ *
  * Health check for cron service
  */
 router.get('/health', (req, res) => {
