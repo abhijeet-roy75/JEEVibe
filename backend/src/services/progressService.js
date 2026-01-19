@@ -270,6 +270,70 @@ async function getAccuracyTrends(userId, days = 30) {
       });
     }
 
+    // 3. Get chapter practice responses
+    const chapterPracticeRef = db.collection('chapter_practice_responses')
+      .doc(userId)
+      .collection('responses')
+      .where('answered_at', '>=', cutoffTimestamp);
+
+    const chapterPracticeSnapshot = await retryFirestoreOperation(async () => {
+      return await chapterPracticeRef.get();
+    });
+
+    if (!chapterPracticeSnapshot.empty) {
+      // Group chapter practice responses by date
+      const practiceSessionDates = new Set();
+
+      chapterPracticeSnapshot.docs.forEach(doc => {
+        const response = doc.data();
+        const answeredAt = response.answered_at?.toDate();
+
+        if (!answeredAt) return;
+
+        // Convert to IST for correct date grouping
+        const answeredAtIST = toIST(answeredAt);
+        const dateKey = formatDateIST(answeredAtIST);
+
+        if (!dailyData[dateKey]) {
+          dailyData[dateKey] = {
+            date: dateKey,
+            quizzes: 0,
+            questions: 0,
+            correct: 0,
+            accuracy: 0
+          };
+        }
+
+        dailyData[dateKey].questions += 1;
+        if (response.is_correct) {
+          dailyData[dateKey].correct += 1;
+        }
+
+        // Track unique session_ids per date to count as "quizzes"
+        if (response.session_id) {
+          practiceSessionDates.add(`${dateKey}_${response.session_id}`);
+        }
+      });
+
+      // Count unique chapter practice sessions as additional "quizzes"
+      // Group by date first
+      const sessionsByDate = {};
+      practiceSessionDates.forEach(key => {
+        const [dateKey] = key.split('_');
+        if (!sessionsByDate[dateKey]) {
+          sessionsByDate[dateKey] = new Set();
+        }
+        sessionsByDate[dateKey].add(key);
+      });
+
+      // Add session counts to quiz totals
+      Object.entries(sessionsByDate).forEach(([dateKey, sessions]) => {
+        if (dailyData[dateKey]) {
+          dailyData[dateKey].quizzes += sessions.size;
+        }
+      });
+    }
+
     // Calculate accuracy for each day
     const trends = [];
     for (const [date, data] of Object.entries(dailyData)) {
