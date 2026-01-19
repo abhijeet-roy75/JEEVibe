@@ -1,0 +1,607 @@
+/**
+ * Admin Metrics Service
+ *
+ * Aggregation queries for admin dashboard analytics.
+ * All metrics are computed from Firestore collections.
+ */
+
+const { db } = require('../config/firebase');
+const logger = require('../utils/logger');
+const { getTodayIST, getYesterdayIST, formatDateIST, toIST } = require('../utils/dateUtils');
+
+/**
+ * Get daily health metrics for the dashboard
+ *
+ * @returns {Object} Health metrics including DAU, signups, completions, at-risk users
+ */
+async function getDailyHealth() {
+  const today = getTodayIST();
+  const yesterday = getYesterdayIST();
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+
+  // Get all users for various calculations
+  const usersSnapshot = await db.collection('users').get();
+  const users = [];
+  usersSnapshot.forEach(doc => {
+    users.push({ uid: doc.id, ...doc.data() });
+  });
+
+  // Calculate metrics
+  const totalUsers = users.length;
+
+  // DAU - users with lastActive today
+  const todayStart = new Date(today + 'T00:00:00+05:30');
+  const dau = users.filter(u => {
+    if (!u.lastActive) return false;
+    const lastActive = u.lastActive.toDate ? u.lastActive.toDate() : new Date(u.lastActive);
+    return lastActive >= todayStart;
+  }).length;
+
+  // Yesterday's DAU for comparison
+  const yesterdayStart = new Date(yesterday + 'T00:00:00+05:30');
+  const yesterdayEnd = todayStart;
+  const dauYesterday = users.filter(u => {
+    if (!u.lastActive) return false;
+    const lastActive = u.lastActive.toDate ? u.lastActive.toDate() : new Date(u.lastActive);
+    return lastActive >= yesterdayStart && lastActive < yesterdayEnd;
+  }).length;
+
+  const dauChange = dauYesterday > 0 ? dau - dauYesterday : 0;
+
+  // New signups today
+  const newSignups = users.filter(u => {
+    if (!u.createdAt) return false;
+    const createdAt = u.createdAt.toDate ? u.createdAt.toDate() : new Date(u.createdAt);
+    return createdAt >= todayStart;
+  }).length;
+
+  // Assessment completions today
+  const assessmentCompletions = users.filter(u => {
+    if (!u.assessment?.completed_at) return false;
+    const completedAt = u.assessment.completed_at.toDate
+      ? u.assessment.completed_at.toDate()
+      : new Date(u.assessment.completed_at);
+    return completedAt >= todayStart;
+  }).length;
+
+  // Quiz completion rate (last 7 days)
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  let totalQuizzes = 0;
+  let completedQuizzes = 0;
+
+  // Query quizzes from all users
+  for (const user of users.slice(0, 100)) { // Limit to avoid timeout
+    try {
+      const quizzesSnapshot = await db
+        .collection('users')
+        .doc(user.uid)
+        .collection('quizzes')
+        .where('generated_at', '>=', sevenDaysAgo)
+        .get();
+
+      quizzesSnapshot.forEach(doc => {
+        totalQuizzes++;
+        if (doc.data().status === 'completed') {
+          completedQuizzes++;
+        }
+      });
+    } catch (err) {
+      // Skip users without quizzes subcollection
+    }
+  }
+
+  const quizCompletionRate = totalQuizzes > 0
+    ? Math.round((completedQuizzes / totalQuizzes) * 100) / 100
+    : 0;
+
+  // At-risk users (no activity in 3+ days, excluding brand new users)
+  const atRiskUsers = users.filter(u => {
+    if (!u.lastActive) return false;
+    const lastActive = u.lastActive.toDate ? u.lastActive.toDate() : new Date(u.lastActive);
+    const createdAt = u.createdAt?.toDate ? u.createdAt.toDate() : new Date(u.createdAt || 0);
+    // User must be at least 3 days old and inactive for 3+ days
+    return lastActive < threeDaysAgo && createdAt < threeDaysAgo;
+  }).length;
+
+  // DAU trend (last 7 days)
+  const dauTrend = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    const dateStr = formatDateIST(toIST(date));
+    const dayStart = new Date(dateStr + 'T00:00:00+05:30');
+    const dayEnd = new Date(dateStr + 'T23:59:59+05:30');
+
+    const dayDau = users.filter(u => {
+      if (!u.lastActive) return false;
+      const lastActive = u.lastActive.toDate ? u.lastActive.toDate() : new Date(u.lastActive);
+      return lastActive >= dayStart && lastActive <= dayEnd;
+    }).length;
+
+    dauTrend.push({ date: dateStr, value: dayDau });
+  }
+
+  return {
+    dau,
+    dauChange,
+    newSignups,
+    totalUsers,
+    assessmentCompletions,
+    quizCompletionRate,
+    atRiskUsers,
+    dauTrend,
+    generatedAt: new Date().toISOString()
+  };
+}
+
+/**
+ * Get engagement metrics
+ *
+ * @returns {Object} Engagement metrics including averages and distributions
+ */
+async function getEngagement() {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  // Get users with activity
+  const usersSnapshot = await db.collection('users').get();
+  const users = [];
+  usersSnapshot.forEach(doc => {
+    users.push({ uid: doc.id, ...doc.data() });
+  });
+
+  // Get streak data
+  const streaksSnapshot = await db.collection('practice_streaks').get();
+  const streaks = {};
+  streaksSnapshot.forEach(doc => {
+    streaks[doc.id] = doc.data();
+  });
+
+  // Calculate active users (last 7 days)
+  const activeUsers = users.filter(u => {
+    if (!u.lastActive) return false;
+    const lastActive = u.lastActive.toDate ? u.lastActive.toDate() : new Date(u.lastActive);
+    return lastActive >= sevenDaysAgo;
+  });
+
+  // Avg quizzes per user (from completed_quiz_count)
+  const totalQuizzes = activeUsers.reduce((sum, u) => sum + (u.completed_quiz_count || 0), 0);
+  const avgQuizzesPerUser = activeUsers.length > 0
+    ? Math.round((totalQuizzes / activeUsers.length) * 10) / 10
+    : 0;
+
+  // Avg questions per user
+  const totalQuestions = activeUsers.reduce((sum, u) => sum + (u.total_questions_solved || 0), 0);
+  const avgQuestionsPerUser = activeUsers.length > 0
+    ? Math.round(totalQuestions / activeUsers.length)
+    : 0;
+
+  // Avg session time (from total_time_spent_minutes)
+  const totalTime = activeUsers.reduce((sum, u) => sum + (u.total_time_spent_minutes || 0), 0);
+  const avgSessionMinutes = activeUsers.length > 0
+    ? Math.round(totalTime / activeUsers.length)
+    : 0;
+
+  // Feature usage (aggregate from daily_usage for last 7 days)
+  const featureUsage = {
+    daily_quiz: 0,
+    snap_solve: 0,
+    ai_tutor: 0,
+    chapter_practice: 0
+  };
+
+  // Sample feature usage from recent users
+  for (const user of activeUsers.slice(0, 50)) {
+    try {
+      const usageSnapshot = await db
+        .collection('users')
+        .doc(user.uid)
+        .collection('daily_usage')
+        .orderBy('last_updated', 'desc')
+        .limit(7)
+        .get();
+
+      usageSnapshot.forEach(doc => {
+        const data = doc.data();
+        featureUsage.daily_quiz += data.daily_quiz || 0;
+        featureUsage.snap_solve += data.snap_solve || 0;
+        featureUsage.ai_tutor += data.ai_tutor || 0;
+        featureUsage.chapter_practice += data.chapter_practice || 0;
+      });
+    } catch (err) {
+      // Skip users without usage data
+    }
+  }
+
+  // Streak distribution
+  const streakDistribution = {
+    '0': 0,
+    '1-3': 0,
+    '4-7': 0,
+    '8-14': 0,
+    '15+': 0
+  };
+
+  Object.values(streaks).forEach(s => {
+    const streak = s.current_streak || 0;
+    if (streak === 0) streakDistribution['0']++;
+    else if (streak <= 3) streakDistribution['1-3']++;
+    else if (streak <= 7) streakDistribution['4-7']++;
+    else if (streak <= 14) streakDistribution['8-14']++;
+    else streakDistribution['15+']++;
+  });
+
+  return {
+    activeUsers: activeUsers.length,
+    avgQuizzesPerUser,
+    avgQuestionsPerUser,
+    avgSessionMinutes,
+    featureUsage,
+    streakDistribution,
+    generatedAt: new Date().toISOString()
+  };
+}
+
+/**
+ * Get learning outcomes metrics
+ *
+ * @returns {Object} Learning metrics including theta changes and mastery progression
+ */
+async function getLearning() {
+  // Get users with theta data
+  const usersSnapshot = await db.collection('users').get();
+  const users = [];
+  usersSnapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.theta_by_chapter || data.overall_theta !== undefined) {
+      users.push({ uid: doc.id, ...data });
+    }
+  });
+
+  // Calculate mastery status counts
+  const masteryProgression = {
+    mastered: 0, // >= 80 percentile
+    growing: 0,  // 40-79 percentile
+    focus: 0     // < 40 percentile
+  };
+
+  // Track chapter focus areas
+  const focusChapterCounts = {};
+
+  users.forEach(user => {
+    const percentile = user.overall_percentile || 0;
+    if (percentile >= 80) masteryProgression.mastered++;
+    else if (percentile >= 40) masteryProgression.growing++;
+    else masteryProgression.focus++;
+
+    // Count focus chapters (low percentile chapters)
+    const thetaByChapter = user.theta_by_chapter || {};
+    Object.entries(thetaByChapter).forEach(([chapter, data]) => {
+      if ((data.percentile || 0) < 40 && (data.attempts || 0) > 0) {
+        focusChapterCounts[chapter] = (focusChapterCounts[chapter] || 0) + 1;
+      }
+    });
+  });
+
+  // Get most common focus chapters
+  const mostCommonFocusChapters = Object.entries(focusChapterCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([chapter, count]) => ({ chapter, count }));
+
+  // Calculate avg theta change (would need weekly snapshots for accurate calculation)
+  // For now, estimate from baseline comparison
+  let totalImprovement = 0;
+  let usersWithBaseline = 0;
+
+  users.forEach(user => {
+    if (user.assessment_baseline?.overall_theta !== undefined && user.overall_theta !== undefined) {
+      totalImprovement += user.overall_theta - user.assessment_baseline.overall_theta;
+      usersWithBaseline++;
+    }
+  });
+
+  const avgThetaImprovement = usersWithBaseline > 0
+    ? Math.round((totalImprovement / usersWithBaseline) * 100) / 100
+    : 0;
+
+  // Percentage of students improving
+  const improvingStudents = users.filter(user => {
+    if (user.assessment_baseline?.overall_theta === undefined) return false;
+    return (user.overall_theta || 0) > user.assessment_baseline.overall_theta;
+  }).length;
+
+  const percentImproving = users.length > 0
+    ? Math.round((improvingStudents / users.length) * 100)
+    : 0;
+
+  return {
+    totalStudentsWithProgress: users.length,
+    masteryProgression,
+    avgThetaImprovement,
+    percentImproving,
+    mostCommonFocusChapters,
+    generatedAt: new Date().toISOString()
+  };
+}
+
+/**
+ * Get content quality metrics
+ *
+ * @returns {Object} Content metrics including question accuracy anomalies
+ */
+async function getContent() {
+  // Get questions with stats
+  const questionsSnapshot = await db.collection('questions').get();
+  const questions = [];
+  questionsSnapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.times_shown && data.times_shown > 10) { // Only questions with enough data
+      questions.push({
+        question_id: doc.id,
+        ...data
+      });
+    }
+  });
+
+  // Find accuracy anomalies
+  const lowAccuracyQuestions = questions
+    .filter(q => q.accuracy_rate !== undefined && q.accuracy_rate < 0.20)
+    .sort((a, b) => a.accuracy_rate - b.accuracy_rate)
+    .slice(0, 20)
+    .map(q => ({
+      question_id: q.question_id,
+      subject: q.subject,
+      chapter: q.chapter,
+      accuracy_rate: Math.round(q.accuracy_rate * 100),
+      times_shown: q.times_shown,
+      difficulty_b: q.irt_parameters?.difficulty_b || q.difficulty_b
+    }));
+
+  const highAccuracyQuestions = questions
+    .filter(q => q.accuracy_rate !== undefined && q.accuracy_rate > 0.95)
+    .sort((a, b) => b.accuracy_rate - a.accuracy_rate)
+    .slice(0, 20)
+    .map(q => ({
+      question_id: q.question_id,
+      subject: q.subject,
+      chapter: q.chapter,
+      accuracy_rate: Math.round(q.accuracy_rate * 100),
+      times_shown: q.times_shown,
+      difficulty_b: q.irt_parameters?.difficulty_b || q.difficulty_b
+    }));
+
+  // Avg time by difficulty
+  const timeByDifficulty = {
+    easy: { total: 0, count: 0 },
+    medium: { total: 0, count: 0 },
+    hard: { total: 0, count: 0 }
+  };
+
+  questions.forEach(q => {
+    const difficulty = q.irt_parameters?.difficulty_b || q.difficulty_b || 0;
+    const avgTime = q.avg_time_taken || 0;
+    if (avgTime > 0) {
+      if (difficulty < -0.5) {
+        timeByDifficulty.easy.total += avgTime;
+        timeByDifficulty.easy.count++;
+      } else if (difficulty < 0.5) {
+        timeByDifficulty.medium.total += avgTime;
+        timeByDifficulty.medium.count++;
+      } else {
+        timeByDifficulty.hard.total += avgTime;
+        timeByDifficulty.hard.count++;
+      }
+    }
+  });
+
+  const avgTimeByDifficulty = {
+    easy: timeByDifficulty.easy.count > 0
+      ? Math.round(timeByDifficulty.easy.total / timeByDifficulty.easy.count)
+      : 0,
+    medium: timeByDifficulty.medium.count > 0
+      ? Math.round(timeByDifficulty.medium.total / timeByDifficulty.medium.count)
+      : 0,
+    hard: timeByDifficulty.hard.count > 0
+      ? Math.round(timeByDifficulty.hard.total / timeByDifficulty.hard.count)
+      : 0
+  };
+
+  return {
+    totalQuestionsWithStats: questions.length,
+    lowAccuracyQuestions,
+    highAccuracyQuestions,
+    avgTimeByDifficulty,
+    generatedAt: new Date().toISOString()
+  };
+}
+
+/**
+ * Get user list with filters
+ *
+ * @param {Object} options - Filter options
+ * @returns {Object} Paginated user list
+ */
+async function getUsers(options = {}) {
+  const { filter = 'all', search = '', limit = 50, offset = 0 } = options;
+
+  // Get all users
+  const usersSnapshot = await db.collection('users').get();
+  let users = [];
+  usersSnapshot.forEach(doc => {
+    users.push({ uid: doc.id, ...doc.data() });
+  });
+
+  // Get streak data
+  const streaksSnapshot = await db.collection('practice_streaks').get();
+  const streaks = {};
+  streaksSnapshot.forEach(doc => {
+    streaks[doc.id] = doc.data();
+  });
+
+  // Get subscription data
+  const subscriptionsSnapshot = await db.collection('subscriptions').get();
+  const subscriptions = {};
+  subscriptionsSnapshot.forEach(doc => {
+    subscriptions[doc.id] = doc.data();
+  });
+
+  // Enrich users with streak and subscription data
+  users = users.map(user => {
+    const streak = streaks[user.uid] || {};
+    const subscription = subscriptions[user.uid] || {};
+    return {
+      uid: user.uid,
+      firstName: user.firstName || user.first_name || '',
+      lastName: user.lastName || user.last_name || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      tier: subscription.tier || 'free',
+      currentStreak: streak.current_streak || 0,
+      longestStreak: streak.longest_streak || 0,
+      totalQuestions: user.total_questions_solved || 0,
+      quizzesCompleted: user.completed_quiz_count || 0,
+      lastActive: user.lastActive,
+      createdAt: user.createdAt,
+      overallPercentile: Math.round(user.overall_percentile || 0),
+      assessmentCompleted: user.assessment?.status === 'completed'
+    };
+  });
+
+  // Apply filters
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+
+  if (filter === 'active') {
+    users = users.filter(u => {
+      if (!u.lastActive) return false;
+      const lastActive = u.lastActive.toDate ? u.lastActive.toDate() : new Date(u.lastActive);
+      return lastActive >= threeDaysAgo;
+    });
+  } else if (filter === 'at-risk') {
+    users = users.filter(u => {
+      if (!u.lastActive) return true;
+      const lastActive = u.lastActive.toDate ? u.lastActive.toDate() : new Date(u.lastActive);
+      return lastActive < threeDaysAgo;
+    });
+  } else if (filter === 'pro') {
+    users = users.filter(u => u.tier === 'pro');
+  } else if (filter === 'ultra') {
+    users = users.filter(u => u.tier === 'ultra');
+  }
+
+  // Apply search
+  if (search) {
+    const searchLower = search.toLowerCase();
+    users = users.filter(u =>
+      (u.firstName || '').toLowerCase().includes(searchLower) ||
+      (u.lastName || '').toLowerCase().includes(searchLower) ||
+      (u.email || '').toLowerCase().includes(searchLower) ||
+      (u.phone || '').includes(search)
+    );
+  }
+
+  // Sort by lastActive (most recent first)
+  users.sort((a, b) => {
+    const aTime = a.lastActive?.toDate ? a.lastActive.toDate() : new Date(a.lastActive || 0);
+    const bTime = b.lastActive?.toDate ? b.lastActive.toDate() : new Date(b.lastActive || 0);
+    return bTime - aTime;
+  });
+
+  // Format dates for response
+  const formattedUsers = users.slice(offset, offset + limit).map(u => ({
+    ...u,
+    lastActive: u.lastActive?.toDate ? u.lastActive.toDate().toISOString() : u.lastActive,
+    createdAt: u.createdAt?.toDate ? u.createdAt.toDate().toISOString() : u.createdAt
+  }));
+
+  return {
+    users: formattedUsers,
+    total: users.length,
+    limit,
+    offset,
+    hasMore: offset + limit < users.length
+  };
+}
+
+/**
+ * Get single user details
+ *
+ * @param {string} userId - User ID
+ * @returns {Object} User details with all analytics
+ */
+async function getUserDetails(userId) {
+  const userDoc = await db.collection('users').doc(userId).get();
+  if (!userDoc.exists) {
+    throw new Error('User not found');
+  }
+
+  const userData = userDoc.data();
+
+  // Get streak
+  const streakDoc = await db.collection('practice_streaks').doc(userId).get();
+  const streakData = streakDoc.exists ? streakDoc.data() : {};
+
+  // Get subscription
+  const subscriptionDoc = await db.collection('subscriptions').doc(userId).get();
+  const subscriptionData = subscriptionDoc.exists ? subscriptionDoc.data() : {};
+
+  // Get recent quizzes
+  const quizzesSnapshot = await db
+    .collection('users')
+    .doc(userId)
+    .collection('quizzes')
+    .orderBy('generated_at', 'desc')
+    .limit(10)
+    .get();
+
+  const recentQuizzes = [];
+  quizzesSnapshot.forEach(doc => {
+    recentQuizzes.push({ quiz_id: doc.id, ...doc.data() });
+  });
+
+  return {
+    uid: userId,
+    profile: {
+      firstName: userData.firstName || userData.first_name || '',
+      lastName: userData.lastName || userData.last_name || '',
+      email: userData.email || '',
+      phone: userData.phone || '',
+      createdAt: userData.createdAt,
+      lastActive: userData.lastActive
+    },
+    subscription: {
+      tier: subscriptionData.tier || 'free',
+      status: subscriptionData.status || 'active',
+      startDate: subscriptionData.start_date,
+      endDate: subscriptionData.end_date
+    },
+    progress: {
+      totalQuestions: userData.total_questions_solved || 0,
+      quizzesCompleted: userData.completed_quiz_count || 0,
+      overallTheta: userData.overall_theta,
+      overallPercentile: userData.overall_percentile,
+      thetaBySubject: userData.theta_by_subject,
+      assessmentCompleted: userData.assessment?.status === 'completed'
+    },
+    streak: {
+      current: streakData.current_streak || 0,
+      longest: streakData.longest_streak || 0,
+      totalDays: streakData.total_days_practiced || 0
+    },
+    recentQuizzes: recentQuizzes.map(q => ({
+      quizId: q.quiz_id,
+      status: q.status,
+      accuracy: q.quiz_accuracy,
+      questionsCount: q.questions?.length || 0,
+      generatedAt: q.generated_at,
+      completedAt: q.completed_at
+    }))
+  };
+}
+
+module.exports = {
+  getDailyHealth,
+  getEngagement,
+  getLearning,
+  getContent,
+  getUsers,
+  getUserDetails
+};

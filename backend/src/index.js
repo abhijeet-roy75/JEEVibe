@@ -185,6 +185,9 @@ app.use('/api/chapter-practice', chapterPracticeRouter);
 const shareRouter = require('./routes/share');
 app.use('/api/share', shareRouter);
 
+const adminRouter = require('./routes/admin');
+app.use('/api/admin', adminRouter);
+
 // Test endpoints (only in development)
 if (process.env.NODE_ENV !== 'production') {
   const testFirebaseRouter = require('./routes/test-firebase');
