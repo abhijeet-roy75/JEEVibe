@@ -108,6 +108,7 @@ class QuizStorageService {
                 'explanation': step.explanation,
                 'formula': step.formula,
                 'calculation': step.calculation,
+                'result': step.result,
               }).toList(),
             } : null,
           },
@@ -212,6 +213,7 @@ class QuizStorageService {
                       explanation: step['explanation'] as String?,
                       formula: step['formula'] as String?,
                       calculation: step['calculation'] as String?,
+                      result: step['result'] as String?,
                     );
                   }).toList()
                 : null;
