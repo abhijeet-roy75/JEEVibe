@@ -1,112 +1,122 @@
-/// Daily Quiz Question Review Screen
-/// Shows individual question with full details in review mode
+/// Question Review Screen
+///
+/// Common reusable screen for reviewing questions after practice/quiz completion.
+/// Used by both Daily Quiz and Chapter Practice review flows.
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../models/daily_quiz_question.dart';
-import '../models/ai_tutor_models.dart';
-import '../services/api_service.dart';
-import '../services/firebase/auth_service.dart';
-import '../services/subscription_service.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
-import '../widgets/safe_svg_widget.dart';
-import '../widgets/priya_avatar.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'ai_tutor_chat_screen.dart';
+import '../../models/review_question_data.dart';
+import '../../models/daily_quiz_question.dart' show SolutionStep;
+import '../../models/ai_tutor_models.dart';
+import '../../services/subscription_service.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_text_styles.dart';
+import '../../widgets/safe_svg_widget.dart';
+import '../../widgets/priya_avatar.dart';
+import '../../screens/ai_tutor_chat_screen.dart';
 
-class DailyQuizQuestionReviewScreen extends StatefulWidget {
-  final String quizId;
-  final int questionIndex;
-  final String? filterType; // 'all', 'correct', 'wrong'
+/// Configuration for AI Tutor context in the review screen
+class ReviewTutorContext {
+  final TutorContextType type;
+  final String id;
+  final String title;
 
-  const DailyQuizQuestionReviewScreen({
+  const ReviewTutorContext({
+    required this.type,
+    required this.id,
+    required this.title,
+  });
+}
+
+class QuestionReviewScreen extends StatefulWidget {
+  /// List of questions to review
+  final List<ReviewQuestionData> questions;
+
+  /// Initial question index to show
+  final int initialIndex;
+
+  /// Optional filter applied ('all', 'correct', 'wrong')
+  final String? filterType;
+
+  /// Subject name for display
+  final String? subject;
+
+  /// Chapter name for display
+  final String? chapterName;
+
+  /// Context for AI Tutor integration (optional)
+  final ReviewTutorContext? tutorContext;
+
+  const QuestionReviewScreen({
     super.key,
-    required this.quizId,
-    required this.questionIndex,
+    required this.questions,
+    required this.initialIndex,
     this.filterType,
+    this.subject,
+    this.chapterName,
+    this.tutorContext,
   });
 
   @override
-  State<DailyQuizQuestionReviewScreen> createState() => _DailyQuizQuestionReviewScreenState();
+  State<QuestionReviewScreen> createState() => _QuestionReviewScreenState();
 }
 
-class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewScreen> {
-  Map<String, dynamic>? _quizResult;
+class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
   int _currentIndex = 0;
-  bool _isLoading = true;
-  String? _error;
   bool _showDetailedExplanation = true;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.questionIndex;
-    _loadQuizResult();
+    // Clamp initialIndex to valid range (filtered questions will be validated in getter)
+    final maxIndex = widget.questions.isEmpty ? 0 : widget.questions.length - 1;
+    _currentIndex = widget.initialIndex.clamp(0, maxIndex);
   }
 
-  Future<void> _loadQuizResult() async {
-    try {
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final token = await authService.getIdToken();
-      
-      if (token == null) {
-        setState(() {
-          _error = 'Authentication required';
-          _isLoading = false;
-        });
-        return;
-      }
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
-      final result = await ApiService.getDailyQuizResult(
-        authToken: token,
-        quizId: widget.quizId,
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
       );
-
-      if (mounted) {
-        setState(() {
-          _quizResult = result;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString().replaceFirst('Exception: ', '');
-          _isLoading = false;
-        });
-      }
     }
   }
 
-  List<dynamic> get _allQuestions => _quizResult?['quiz']?['questions'] ?? [];
-  
-  List<dynamic> get _filteredQuestions {
-    if (widget.filterType == null) return _allQuestions;
-    
+  List<ReviewQuestionData> get _filteredQuestions {
+    if (widget.filterType == null || widget.filterType == 'all') {
+      return widget.questions;
+    }
+
     switch (widget.filterType) {
       case 'correct':
-        return _allQuestions.where((q) => q['is_correct'] == true).toList();
+        return widget.questions.where((q) => q.isCorrect).toList();
       case 'wrong':
-        return _allQuestions.where((q) => q['is_correct'] == false).toList();
+        return widget.questions.where((q) => !q.isCorrect).toList();
       default:
-        return _allQuestions;
+        return widget.questions;
     }
   }
 
-  Map<String, dynamic>? get _currentQuestion {
-    if (_currentIndex >= _filteredQuestions.length || _filteredQuestions.isEmpty) return null;
-    return _filteredQuestions[_currentIndex] as Map<String, dynamic>?;
+  ReviewQuestionData? get _currentQuestion {
+    if (_currentIndex >= _filteredQuestions.length || _filteredQuestions.isEmpty) {
+      return null;
+    }
+    return _filteredQuestions[_currentIndex];
   }
-  
+
   int get _currentQuestionPosition {
     if (_currentQuestion == null) return _currentIndex + 1;
-    // Return the original position in the full quiz (position is 0-indexed, display as 1-indexed)
-    final position = _currentQuestion!['position'] as int?;
-    return position != null ? position + 1 : (_currentIndex + 1);
+    return _currentQuestion!.position + 1;
   }
-  
+
   int get _currentQuestionNumberInFiltered {
-    // Return the position within the filtered list (1-indexed)
     return _currentIndex + 1;
   }
 
@@ -119,6 +129,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
         _currentIndex--;
         _showDetailedExplanation = true;
       });
+      _scrollToTop();
     }
   }
 
@@ -128,11 +139,11 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
         _currentIndex++;
         _showDetailedExplanation = true;
       });
+      _scrollToTop();
     }
   }
 
   void _handleDone() {
-    // Navigate back to review screen (previous screen)
     Navigator.of(context).pop();
   }
 
@@ -147,16 +158,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        backgroundColor: AppColors.backgroundLight,
-        body: const Center(
-          child: CircularProgressIndicator(color: AppColors.primaryPurple),
-        ),
-      );
-    }
-
-    if (_error != null || _quizResult == null || _currentQuestion == null) {
+    if (_currentQuestion == null) {
       return Scaffold(
         backgroundColor: AppColors.backgroundLight,
         body: Center(
@@ -169,7 +171,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                 const SizedBox(height: 16),
                 Text('Error', style: AppTextStyles.headerMedium),
                 const SizedBox(height: 8),
-                Text(_error ?? 'Failed to load question', style: AppTextStyles.bodyMedium),
+                Text('No question to display', style: AppTextStyles.bodyMedium),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
@@ -183,7 +185,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
     }
 
     final question = _currentQuestion!;
-    final isCorrect = question['is_correct'] as bool? ?? false;
+    final isCorrect = question.isCorrect;
     final questionNumberInFiltered = _currentQuestionNumberInFiltered;
     final totalFiltered = _filteredQuestions.length;
 
@@ -196,6 +198,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
           // Content
           Expanded(
             child: SingleChildScrollView(
+              controller: _scrollController,
               child: Column(
                 children: [
                   const SizedBox(height: 16),
@@ -249,22 +252,24 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                       style: AppTextStyles.headerWhite.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(totalFiltered, (index) {
-                        return Container(
-                          width: 8,
-                          height: 8,
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(
-                            color: index == _currentIndex 
-                                ? Colors.white 
-                                : Colors.white.withValues(alpha: 0.3),
-                            shape: BoxShape.circle,
-                          ),
-                        );
-                      }),
-                    ),
+                    // Progress dots (limit to reasonable number)
+                    if (totalFiltered <= 15)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(totalFiltered, (index) {
+                          return Container(
+                            width: 8,
+                            height: 8,
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            decoration: BoxDecoration(
+                              color: index == _currentIndex
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                            ),
+                          );
+                        }),
+                      ),
                   ],
                 ),
               ),
@@ -276,10 +281,10 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
     );
   }
 
-  Widget _buildStatusBanner(Map<String, dynamic> question, bool isCorrect) {
-    final timeTaken = question['time_taken_seconds'] as int? ?? 0;
-    final studentAnswer = question['student_answer'] as String? ?? '';
-    final correctAnswer = question['correct_answer'] as String? ?? '';
+  Widget _buildStatusBanner(ReviewQuestionData question, bool isCorrect) {
+    final studentAnswer = question.studentAnswer;
+    final correctAnswer = question.correctAnswer;
+    final timeTaken = question.timeTakenSeconds;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -318,7 +323,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    isCorrect 
+                    isCorrect
                         ? 'Well done! You got this right.'
                         : 'Your answer: ${studentAnswer.toUpperCase()} • Correct: ${correctAnswer.toUpperCase()}',
                     style: AppTextStyles.bodySmall.copyWith(
@@ -328,36 +333,37 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                 ],
               ),
             ),
-            Row(
-              children: [
-                const Icon(Icons.access_time, color: Colors.white, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  _formatTime(timeTaken),
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
+            if (timeTaken != null)
+              Row(
+                children: [
+                  const Icon(Icons.access_time, color: Colors.white, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    _formatTime(timeTaken),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQuestionCard(Map<String, dynamic> question) {
-    final subject = question['subject'] as String? ?? 'Unknown';
-    final chapter = question['chapter'] as String? ?? 'Unknown';
-    final questionText = question['question_text'] as String? ?? '';
-    final questionTextHtml = question['question_text_html'] as String?;
-    final imageUrl = question['image_url'] as String?;
-    final options = question['options'] as List<dynamic>?;
-    final isCorrect = question['is_correct'] as bool? ?? false;
-    final studentAnswer = question['student_answer'] as String? ?? '';
-    final correctAnswer = question['correct_answer'] as String? ?? '';
-    final difficulty = question['difficulty'] as String?;
+  Widget _buildQuestionCard(ReviewQuestionData question) {
+    final questionText = question.questionText;
+    final questionTextHtml = question.questionTextHtml;
+    final options = question.options;
+    final isCorrect = question.isCorrect;
+    final studentAnswer = question.studentAnswer;
+    final correctAnswer = question.correctAnswer;
+    final subject = question.subject ?? widget.subject;
+    final chapter = question.chapter ?? widget.chapterName;
+    final difficulty = question.difficulty;
+    final imageUrl = question.imageUrl;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -377,32 +383,33 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Subject and difficulty
-            Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _getSubjectColor(subject),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '$subject • $chapter',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
+            // Subject and chapter
+            if (subject != null || chapter != null)
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: _getSubjectColor(subject),
+                      shape: BoxShape.circle,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 2,
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      [subject, chapter].where((s) => s != null).join(' • '),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                  ),
+                ],
+              ),
             const SizedBox(height: 16),
-            // Question number and difficulty tags
+            // Tags (question number and difficulty)
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -420,27 +427,31 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                     ),
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.warningAmber.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _getDifficultyLabel(difficulty),
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.warningAmber,
+                if (difficulty != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.warningAmber.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      _getDifficultyLabel(difficulty),
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.warningAmber,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
             const SizedBox(height: 16),
             // Question text
             if (questionTextHtml != null)
-              Html(data: questionTextHtml, style: {
-                'body': Style(margin: Margins.zero, padding: HtmlPaddings.zero),
-              })
+              Html(
+                data: questionTextHtml,
+                style: {
+                  'body': Style(margin: Margins.zero, padding: HtmlPaddings.zero),
+                },
+              )
             else
               Text(
                 questionText,
@@ -448,19 +459,19 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                   fontWeight: FontWeight.w600,
                 ),
               ),
+            // Image if present
             if (imageUrl != null && imageUrl.isNotEmpty) ...[
               const SizedBox(height: 16),
               SafeSvgWidget(url: imageUrl),
             ],
             const SizedBox(height: 24),
             // Answer options
-            if (options != null)
-              ...options.map((opt) => _buildReviewOption(
-                opt as Map<String, dynamic>,
-                studentAnswer,
-                correctAnswer,
-                isCorrect,
-              )),
+            ...options.map((opt) => _buildReviewOption(
+                  opt,
+                  studentAnswer,
+                  correctAnswer,
+                  isCorrect,
+                )),
           ],
         ),
       ),
@@ -468,18 +479,18 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
   }
 
   Widget _buildReviewOption(
-    Map<String, dynamic> option,
+    ReviewOptionData option,
     String studentAnswer,
     String correctAnswer,
     bool isCorrect,
   ) {
-    final optionId = option['option_id'] as String? ?? '';
-    final optionText = option['text'] as String? ?? '';
-    final optionHtml = option['html'] as String?;
-    
+    final optionId = option.optionId;
+    final optionText = option.text;
+    final optionHtml = option.html;
+
     final isSelected = studentAnswer == optionId;
     final isCorrectAnswer = correctAnswer == optionId;
-    
+
     Color backgroundColor = Colors.white;
     Color borderColor = AppColors.borderGray;
     Color textColor = AppColors.textDark;
@@ -489,7 +500,8 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
       backgroundColor = AppColors.successGreen.withValues(alpha: 0.1);
       borderColor = AppColors.successGreen;
       textColor = AppColors.successGreen;
-      trailingIcon = const Icon(Icons.check_circle, color: AppColors.successGreen);
+      trailingIcon =
+          const Icon(Icons.check_circle, color: AppColors.successGreen);
     } else if (isSelected && !isCorrect) {
       backgroundColor = AppColors.errorRed.withValues(alpha: 0.1);
       borderColor = AppColors.errorRed;
@@ -528,9 +540,13 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
             const SizedBox(width: 12),
             Expanded(
               child: optionHtml != null
-                  ? Html(data: optionHtml, style: {
-                      'body': Style(margin: Margins.zero, padding: HtmlPaddings.zero),
-                    })
+                  ? Html(
+                      data: optionHtml,
+                      style: {
+                        'body': Style(
+                            margin: Margins.zero, padding: HtmlPaddings.zero),
+                      },
+                    )
                   : Text(
                       optionText,
                       style: AppTextStyles.bodyMedium.copyWith(color: textColor),
@@ -546,13 +562,16 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
     );
   }
 
-  Widget _buildDetailedExplanation(Map<String, dynamic> question) {
-    final solutionText = question['solution_text'] as String?;
-    final solutionSteps = question['solution_steps'] as List<dynamic>?;
-    final explanation = question['explanation'] as String?;
-    final isCorrect = question['is_correct'] as bool? ?? false;
+  Widget _buildDetailedExplanation(ReviewQuestionData question) {
+    final solutionText = question.solutionText;
+    final solutionSteps = question.solutionSteps;
+    final isCorrect = question.isCorrect;
+    final keyInsight = question.keyInsight;
+    final distractorAnalysis = question.distractorAnalysis;
+    final commonMistakes = question.commonMistakes;
+    final studentAnswer = question.studentAnswer;
 
-    if (solutionText == null && (solutionSteps == null || solutionSteps!.isEmpty) && explanation == null) {
+    if (solutionText == null && solutionSteps.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -585,7 +604,9 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _showDetailedExplanation ? 'Hide Detailed Explanation' : 'Show Detailed Explanation',
+                        _showDetailedExplanation
+                            ? 'Hide Detailed Explanation'
+                            : 'Show Detailed Explanation',
                         style: AppTextStyles.labelMedium.copyWith(
                           color: AppColors.primaryPurple,
                         ),
@@ -609,27 +630,32 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Quick Explanation
-                    if (explanation != null || solutionText != null) ...[
+                    if (solutionText != null) ...[
                       _buildExplanationSection(
                         icon: Icons.lightbulb,
                         iconColor: AppColors.warningAmber,
                         title: 'Quick Explanation',
-                        content: explanation ?? solutionText ?? '',
+                        content: solutionText,
                       ),
                       const SizedBox(height: 16),
                     ],
                     // Step-by-Step Solution
-                    if (solutionSteps != null && solutionSteps.isNotEmpty) ...[
+                    if (solutionSteps.isNotEmpty) ...[
                       _buildStepByStepSolution(solutionSteps),
                       const SizedBox(height: 16),
                     ],
                     // Why You Got This Wrong (only for incorrect)
                     if (!isCorrect) ...[
-                      _buildWhyWrongSection(question),
+                      _buildWhyWrongSection(
+                        studentAnswer: studentAnswer,
+                        distractorAnalysis: distractorAnalysis,
+                        commonMistakes: commonMistakes,
+                      ),
                       const SizedBox(height: 16),
                     ],
                     // Key Takeaway
-                    _buildKeyTakeawaySection(solutionText ?? explanation ?? ''),
+                    if (keyInsight != null || solutionText != null)
+                      _buildKeyTakeawaySection(keyInsight ?? solutionText!),
                   ],
                 ),
               ),
@@ -679,7 +705,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
     );
   }
 
-  Widget _buildStepByStepSolution(List<dynamic> steps) {
+  Widget _buildStepByStepSolution(List<SolutionStep> steps) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -699,21 +725,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
               ...steps.asMap().entries.map((entry) {
                 final index = entry.key;
                 final step = entry.value;
-                String stepText = '';
-                String? formula;
-                String? calculation;
-                String? explanation;
-                String? description;
-
-                if (step is Map<String, dynamic>) {
-                  description = step['description'] as String?;
-                  stepText = description ?? step['explanation'] as String? ?? step['step'] as String? ?? '';
-                  formula = step['formula'] as String?;
-                  calculation = step['calculation'] as String?;
-                  explanation = step['explanation'] as String?;
-                } else if (step is String) {
-                  stepText = step;
-                }
+                final stepText = step.displayText;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
@@ -742,7 +754,6 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Description
                             Html(
                               data: stepText,
                               style: {
@@ -757,129 +768,35 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                                 'b': Style(fontWeight: FontWeight.w700),
                               },
                             ),
-                            // Formula (if exists)
-                            if (formula != null && formula.isNotEmpty) ...[
+                            // Formula
+                            if (step.formula != null && step.formula!.isNotEmpty) ...[
                               const SizedBox(height: 8),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryPurple.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: AppColors.primaryPurple.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Icon(
-                                      Icons.functions,
-                                      size: 16,
-                                      color: AppColors.primaryPurple,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Html(
-                                        data: formula,
-                                        style: {
-                                          'body': Style(
-                                            margin: Margins.zero,
-                                            padding: HtmlPaddings.zero,
-                                            fontSize: FontSize(15),
-                                            lineHeight: LineHeight(1.4),
-                                            color: AppColors.primaryPurple,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              _buildStepBox(
+                                icon: Icons.functions,
+                                color: AppColors.primaryPurple,
+                                content: step.formula!,
                               ),
                             ],
-                            // Calculation (if exists)
-                            if (calculation != null && calculation.isNotEmpty) ...[
+                            // Calculation
+                            if (step.calculation != null && step.calculation!.isNotEmpty) ...[
                               const SizedBox(height: 8),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: AppColors.successGreen.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: AppColors.successGreen.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Icon(
-                                      Icons.calculate,
-                                      size: 16,
-                                      color: AppColors.successGreen,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Html(
-                                        data: calculation,
-                                        style: {
-                                          'body': Style(
-                                            margin: Margins.zero,
-                                            padding: HtmlPaddings.zero,
-                                            fontSize: FontSize(15),
-                                            lineHeight: LineHeight(1.4),
-                                            color: AppColors.textMedium,
-                                            fontFamily: 'monospace',
-                                          ),
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              _buildStepBox(
+                                icon: Icons.calculate,
+                                color: AppColors.successGreen,
+                                content: step.calculation!,
+                                fontFamily: 'monospace',
                               ),
                             ],
-                            // Explanation (if exists and different from description)
-                            if (explanation != null &&
-                                explanation.isNotEmpty &&
-                                explanation != description) ...[
+                            // Explanation (if different from description)
+                            if (step.explanation != null &&
+                                step.explanation!.isNotEmpty &&
+                                step.explanation != step.description) ...[
                               const SizedBox(height: 8),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: AppColors.warningAmber.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: AppColors.warningAmber.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Icon(
-                                      Icons.lightbulb_outline,
-                                      size: 16,
-                                      color: AppColors.warningAmber,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Html(
-                                        data: explanation,
-                                        style: {
-                                          'body': Style(
-                                            margin: Margins.zero,
-                                            padding: HtmlPaddings.zero,
-                                            fontSize: FontSize(15),
-                                            lineHeight: LineHeight(1.4),
-                                            color: AppColors.textMedium,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              _buildStepBox(
+                                icon: Icons.lightbulb_outline,
+                                color: AppColors.warningAmber,
+                                content: step.explanation!,
+                                fontStyle: FontStyle.italic,
                               ),
                             ],
                           ],
@@ -896,33 +813,62 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
     );
   }
 
-  Widget _buildWhyWrongSection(Map<String, dynamic> question) {
-    // Get question type and relevant data
-    final questionType = question['question_type'] as String? ?? 'mcq';
-    final isMcq = questionType == 'mcq' || questionType == 'MCQ';
-    final isNumerical = questionType == 'numerical' || questionType == 'NUMERICAL';
-    final studentAnswer = question['student_answer'] as String? ?? '';
+  Widget _buildStepBox({
+    required IconData icon,
+    required Color color,
+    required String content,
+    String? fontFamily,
+    FontStyle? fontStyle,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Html(
+              data: content,
+              style: {
+                'body': Style(
+                  margin: Margins.zero,
+                  padding: HtmlPaddings.zero,
+                  fontSize: FontSize(15),
+                  lineHeight: LineHeight(1.4),
+                  color: fontFamily != null ? AppColors.textMedium : color,
+                  fontFamily: fontFamily,
+                  fontStyle: fontStyle,
+                  fontWeight: fontFamily == null ? FontWeight.w500 : null,
+                ),
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    // For MCQ: get distractor analysis for the student's wrong answer
+  Widget _buildWhyWrongSection({
+    required String studentAnswer,
+    Map<String, String>? distractorAnalysis,
+    List<String>? commonMistakes,
+  }) {
+    // Get distractor explanation for MCQ
     String? distractorExplanation;
-    if (isMcq && question['distractor_analysis'] != null) {
-      final distractorAnalysis = question['distractor_analysis'] as Map<String, dynamic>?;
-      if (distractorAnalysis != null && studentAnswer.isNotEmpty) {
-        // Try exact match first, then case-insensitive
-        distractorExplanation = distractorAnalysis[studentAnswer] as String? ??
-            distractorAnalysis[studentAnswer.toLowerCase()] as String? ??
-            distractorAnalysis[studentAnswer.toUpperCase()] as String?;
-      }
+    if (distractorAnalysis != null && studentAnswer.isNotEmpty) {
+      distractorExplanation = distractorAnalysis[studentAnswer] ??
+          distractorAnalysis[studentAnswer.toLowerCase()] ??
+          distractorAnalysis[studentAnswer.toUpperCase()];
     }
 
-    // For numerical: check if we have common mistakes
-    List<String>? commonMistakes;
-    if (isNumerical && question['common_mistakes'] != null) {
-      final mistakes = question['common_mistakes'];
-      if (mistakes is List) {
-        commonMistakes = mistakes.map((e) => e.toString()).toList();
-      }
-    }
+    final hasCommonMistakes = commonMistakes != null && commonMistakes.isNotEmpty;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -953,7 +899,6 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
               ),
               const SizedBox(height: 8),
               if (distractorExplanation != null) ...[
-                // MCQ: Show why the selected wrong option is incorrect
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -986,39 +931,37 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                     ),
                   },
                 ),
-              ] else if (commonMistakes != null && commonMistakes.isNotEmpty) ...[
-                // Numerical: Show common mistakes
+              ] else if (hasCommonMistakes) ...[
                 ...commonMistakes.map((mistake) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '• ',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.warningAmber,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Expanded(
-                        child: Html(
-                          data: mistake,
-                          style: {
-                            'body': Style(
-                              margin: Margins.zero,
-                              padding: HtmlPaddings.zero,
-                              fontSize: FontSize(16),
-                              lineHeight: LineHeight(1.5),
-                              color: AppColors.textMedium,
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '• ',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.warningAmber,
+                              fontWeight: FontWeight.bold,
                             ),
-                          },
-                        ),
+                          ),
+                          Expanded(
+                            child: Html(
+                              data: mistake,
+                              style: {
+                                'body': Style(
+                                  margin: Margins.zero,
+                                  padding: HtmlPaddings.zero,
+                                  fontSize: FontSize(16),
+                                  lineHeight: LineHeight(1.5),
+                                  color: AppColors.textMedium,
+                                ),
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )),
+                    )),
               ] else ...[
-                // Fallback to generic message
                 Text(
                   'Review the explanation carefully. Understanding why you made this mistake helps you avoid it in the future.',
                   style: AppTextStyles.bodySmall,
@@ -1066,21 +1009,17 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
     );
   }
 
-  Widget _buildPriyaMaamMessage(Map<String, dynamic> question, bool isCorrect) {
+  Widget _buildPriyaMaamMessage(ReviewQuestionData question, bool isCorrect) {
     String message;
     if (isCorrect) {
-      // Vary correct answer messages during review
       message = _getCorrectReviewMessage();
     } else {
-      // Vary incorrect answer messages for encouragement during review
       message = _getIncorrectReviewMessage();
     }
 
     final subscriptionService = SubscriptionService();
-    final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
-    final subject = question['subject'] as String? ?? 'Unknown';
-    final chapter = question['chapter'] as String? ?? 'Unknown';
-    final questionId = question['question_id'] as String? ?? '';
+    final hasAiTutorAccess =
+        subscriptionService.status?.limits.aiTutorEnabled ?? false;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1126,7 +1065,7 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                 ),
               ],
             ),
-            if (hasAiTutorAccess) ...[
+            if (hasAiTutorAccess && widget.tutorContext != null) ...[
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
@@ -1136,9 +1075,9 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                       MaterialPageRoute(
                         builder: (context) => AiTutorChatScreen(
                           injectContext: TutorContext(
-                            type: TutorContextType.quiz,
-                            id: widget.quizId,
-                            title: '$chapter - $subject',
+                            type: widget.tutorContext!.type,
+                            id: widget.tutorContext!.id,
+                            title: widget.tutorContext!.title,
                           ),
                         ),
                       ),
@@ -1221,7 +1160,8 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
                 children: [
                   Text(_isLastQuestion ? 'Done' : 'Next'),
                   const SizedBox(width: 8),
-                  Icon(_isLastQuestion ? Icons.check : Icons.arrow_forward, size: 20),
+                  Icon(_isLastQuestion ? Icons.check : Icons.arrow_forward,
+                      size: 20),
                 ],
               ),
             ),
@@ -1264,11 +1204,11 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
   // Varied messages for correct answers during review
   String _getCorrectReviewMessage() {
     final messages = [
-      "Excellent! You understood this concept well. Make sure you can explain it to someone else—that's when you truly master it! 🎯",
-      "Great work! Your solid understanding here shows your preparation is on track. 🌟",
-      "Well done! This is exactly the kind of clarity you need for JEE. Keep building on it! 💪",
-      "Perfect! Understanding like this gives you confidence. You're doing great! ✨",
-      "Wonderful! Questions like this will feel easy in the exam with this foundation. 🎉",
+      "Excellent! You understood this concept well. Make sure you can explain it to someone else—that's when you truly master it!",
+      "Great work! Your solid understanding here shows your preparation is on track.",
+      "Well done! This is exactly the kind of clarity you need for JEE. Keep building on it!",
+      "Perfect! Understanding like this gives you confidence. You're doing great!",
+      "Wonderful! Questions like this will feel easy in the exam with this foundation.",
     ];
     return messages[_currentIndex % messages.length];
   }
@@ -1276,13 +1216,12 @@ class _DailyQuizQuestionReviewScreenState extends State<DailyQuizQuestionReviewS
   // Varied messages for incorrect answers during review (encouraging)
   String _getIncorrectReviewMessage() {
     final messages = [
-      "Don't worry about getting this wrong! Understanding why you made this mistake is actually more valuable than getting it right the first time. Review the explanation carefully! 💪",
-      "This was a tricky one! What matters is you're taking time to review it. That's how toppers improve! 📚",
-      "Everyone gets these wrong sometimes. The key is learning from it—you're doing exactly that! 🌱",
-      "No problem! JEE tests deep understanding. This review will help you nail similar questions next time. ❤️",
-      "It's okay! Some concepts need more practice. I believe in your ability to master this! 📖",
+      "Don't worry about getting this wrong! Understanding why you made this mistake is actually more valuable than getting it right the first time. Review the explanation carefully!",
+      "This was a tricky one! What matters is you're taking time to review it. That's how toppers improve!",
+      "Everyone gets these wrong sometimes. The key is learning from it—you're doing exactly that!",
+      "No problem! JEE tests deep understanding. This review will help you nail similar questions next time.",
+      "It's okay! Some concepts need more practice. I believe in your ability to master this!",
     ];
     return messages[_currentIndex % messages.length];
   }
 }
-

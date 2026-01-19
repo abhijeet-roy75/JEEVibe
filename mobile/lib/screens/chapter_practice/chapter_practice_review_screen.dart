@@ -3,8 +3,12 @@
 /// Similar to DailyQuizReviewScreen - accessed from result screen
 import 'package:flutter/material.dart';
 import '../../models/chapter_practice_models.dart';
+import '../../models/review_question_data.dart';
+import '../../models/ai_tutor_models.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/priya_avatar.dart';
+import '../../widgets/question_review/question_review_screen.dart';
 
 class ChapterPracticeReviewScreen extends StatefulWidget {
   final PracticeSessionSummary? summary;
@@ -57,45 +61,179 @@ class _ChapterPracticeReviewScreenState
     }
   }
 
+  String get _subject =>
+      widget.summary?.subject ?? widget.session?.subject ?? '';
+
+  String? get _sessionId => widget.summary?.sessionId ?? widget.session?.sessionId;
+
+  /// Convert results to ReviewQuestionData for the common screen
+  List<ReviewQuestionData> get _reviewQuestionData {
+    return _allResults
+        .map((r) => ReviewQuestionData.fromChapterPractice(
+              r,
+              subject: _subject,
+              chapter: _chapterName,
+            ))
+        .toList();
+  }
+
+  void _navigateToQuestionReview(int index) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuestionReviewScreen(
+          questions: _reviewQuestionData,
+          initialIndex: index,
+          filterType: _currentFilter,
+          subject: _subject,
+          chapterName: _chapterName,
+          tutorContext: _sessionId != null
+              ? ReviewTutorContext(
+                  type: TutorContextType.quiz,
+                  id: _sessionId!,
+                  title: '$_chapterName - $_subject',
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.primaryPurple,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Review Questions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+      body: Column(
+        children: [
+          // Purple header
+          _buildHeader(),
+          // Scrollable content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewPadding.bottom,
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  // Summary cards
+                  _buildSummaryCards(),
+                  const SizedBox(height: 16),
+                  // Filter buttons
+                  _buildFilterButtons(),
+                  const SizedBox(height: 16),
+                  // Question list
+                  _buildQuestionList(),
+                  const SizedBox(height: 16),
+                  // Priya Ma'am message
+                  _buildPriyaMaamMessage(),
+                  const SizedBox(height: 16),
+                  // Start Reviewing button
+                  _buildStartReviewingButton(),
+                  const SizedBox(height: 32),
+                ],
               ),
             ),
-            Text(
-              _chapterName,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.white.withValues(alpha: 0.8),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
               ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      'Review All Questions',
+                      style: AppTextStyles.headerWhite.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _chapterName,
+                      style: AppTextStyles.bodyWhite.copyWith(fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 48),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCards() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: _buildSummaryCard('Total', '$_totalQuestions', AppColors.primaryPurple),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard('Correct', '$_correctCount', AppColors.successGreen),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSummaryCard('Wrong', '$_wrongCount', AppColors.errorRed),
             ),
           ],
         ),
       ),
-      body: Column(
+    );
+  }
+
+  Widget _buildSummaryCard(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Filter buttons
-          _buildFilterButtons(),
-          // Question list
-          Expanded(
-            child: _buildQuestionList(),
+          Text(
+            value,
+            style: AppTextStyles.headerWhite.copyWith(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: AppTextStyles.bodyWhite.copyWith(fontSize: 11),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -203,9 +341,9 @@ class _ChapterPracticeReviewScreenState
         iconColor = AppColors.textLight;
       }
 
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -224,12 +362,15 @@ class _ChapterPracticeReviewScreenState
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _filteredResults.length,
-      itemBuilder: (context, index) {
-        return _buildQuestionCard(_filteredResults[index], index);
-      },
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: _filteredResults.asMap().entries.map((entry) {
+          final index = entry.key;
+          final result = entry.value;
+          return _buildQuestionCard(result, index);
+        }).toList(),
+      ),
     );
   }
 
@@ -239,6 +380,7 @@ class _ChapterPracticeReviewScreenState
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -246,272 +388,190 @@ class _ChapterPracticeReviewScreenState
           color: isCorrect
               ? AppColors.successGreen.withValues(alpha: 0.3)
               : AppColors.errorRed.withValues(alpha: 0.3),
+          width: 1,
         ),
       ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '$questionNumber',
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          title: Text(
-            result.questionText.length > 60
-                ? '${result.questionText.substring(0, 60)}...'
-                : result.questionText,
-            style: AppTextStyles.bodyMedium.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(
-              children: [
-                Icon(
-                  isCorrect ? Icons.check_circle : Icons.cancel,
-                  size: 16,
-                  color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  isCorrect ? 'Correct' : 'Wrong',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color:
-                        isCorrect ? AppColors.successGreen : AppColors.errorRed,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                if (!isCorrect) ...[
-                  const SizedBox(width: 12),
-                  Text(
-                    'Your: ${result.studentAnswer.toUpperCase()}',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.errorRed,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Correct: ${result.correctAnswer.toUpperCase()}',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.successGreen,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
+      child: InkWell(
+        onTap: () => _navigateToQuestionReview(displayIndex),
+        child: Row(
           children: [
-            // Full question text
+            // Question number circle
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: AppColors.backgroundLight,
-                borderRadius: BorderRadius.circular(8),
+                color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
+                shape: BoxShape.circle,
               ),
+              child: Center(
+                child: Text(
+                  '$questionNumber',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Question details
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Question text (truncated)
                   Text(
-                    'Question:',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.textMedium,
-                      fontWeight: FontWeight.w600,
+                    result.questionText.length > 60
+                        ? '${result.questionText.substring(0, 60)}...'
+                        : result.questionText,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w500,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    result.questionText,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textDark,
-                    ),
+                  // Status and answers
+                  Row(
+                    children: [
+                      Icon(
+                        isCorrect ? Icons.check_circle : Icons.cancel,
+                        size: 16,
+                        color: isCorrect
+                            ? AppColors.successGreen
+                            : AppColors.errorRed,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        isCorrect ? 'Correct' : 'Wrong',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: isCorrect
+                              ? AppColors.successGreen
+                              : AppColors.errorRed,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (!isCorrect) ...[
+                        const SizedBox(width: 12),
+                        Text(
+                          'Your: ${result.studentAnswer.toUpperCase()}',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.errorRed,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Correct: ${result.correctAnswer.toUpperCase()}',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.successGreen,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            // Options
-            ...result.options.asMap().entries.map((entry) {
-              final optIndex = entry.key;
-              final option = entry.value;
-              final isSelectedOption = option.optionId == result.studentAnswer;
-              final isCorrectOption = option.optionId == result.correctAnswer;
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right, color: AppColors.textLight),
+          ],
+        ),
+      ),
+    );
+  }
 
-              Color bgColor = Colors.transparent;
-              Color borderColor = AppColors.borderGray;
+  Widget _buildPriyaMaamMessage() {
+    String message;
+    if (_currentFilter == 'wrong') {
+      message =
+          "Focus on understanding why you got these wrong. Review the step-by-step explanations carefully!";
+    } else {
+      message =
+          "Great job! Review all questions to reinforce your understanding and identify areas for improvement.";
+    }
 
-              if (isCorrectOption) {
-                bgColor = AppColors.successGreen.withValues(alpha: 0.1);
-                borderColor = AppColors.successGreen;
-              } else if (isSelectedOption && !isCorrect) {
-                bgColor = AppColors.errorRed.withValues(alpha: 0.1);
-                borderColor = AppColors.errorRed;
-              }
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: bgColor,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: borderColor),
-                ),
-                child: Row(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primaryPurple.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const PriyaAvatar(size: 48),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: isCorrectOption
-                            ? AppColors.successGreen
-                            : isSelectedOption && !isCorrect
-                                ? AppColors.errorRed
-                                : Colors.transparent,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isCorrectOption
-                              ? AppColors.successGreen
-                              : isSelectedOption && !isCorrect
-                                  ? AppColors.errorRed
-                                  : AppColors.borderGray,
-                        ),
-                      ),
-                      child: Center(
-                        child: isCorrectOption || (isSelectedOption && !isCorrect)
-                            ? Icon(
-                                isCorrectOption ? Icons.check : Icons.close,
-                                color: Colors.white,
-                                size: 16,
-                              )
-                            : Text(
-                                String.fromCharCode(65 + optIndex),
-                                style: AppTextStyles.labelSmall.copyWith(
-                                  color: AppColors.textMedium,
-                                ),
-                              ),
+                    Text(
+                      'Priya Ma\'am',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.primaryPurple,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        option.text,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                    ),
+                    const SizedBox(width: 4),
+                    const Text('✨', style: TextStyle(fontSize: 16)),
                   ],
                 ),
-              );
-            }),
-            // Solution
-            if (result.solutionText != null ||
-                result.solutionSteps.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryPurple.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                const SizedBox(height: 4),
+                Text(
+                  message,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textMedium,
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.lightbulb_outline,
-                          color: AppColors.primaryPurple,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Solution',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: AppColors.primaryPurple,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStartReviewingButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          color: AppColors.primaryPurple,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () {
+              if (_filteredResults.isNotEmpty) {
+                _navigateToQuestionReview(0); // First item in filtered list
+              }
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.menu_book, color: Colors.white, size: 20),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Start Reviewing',
+                    style: AppTextStyles.labelMedium.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(height: 8),
-                    if (result.solutionText != null)
-                      Text(
-                        result.solutionText!,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textDark,
-                          height: 1.5,
-                        ),
-                      ),
-                    if (result.solutionSteps.isNotEmpty) ...[
-                      if (result.solutionText != null)
-                        const SizedBox(height: 12),
-                      ...result.solutionSteps.asMap().entries.map((entry) {
-                        final stepIndex = entry.key;
-                        final step = entry.value;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryPurple
-                                      .withValues(alpha: 0.2),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    '${stepIndex + 1}',
-                                    style: AppTextStyles.labelSmall.copyWith(
-                                      color: AppColors.primaryPurple,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  step.displayText,
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: AppColors.textDark,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
-                    ],
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                ],
               ),
-            ],
-          ],
+            ),
+          ),
         ),
       ),
     );

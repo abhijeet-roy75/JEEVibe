@@ -2,13 +2,14 @@
 /// Shows all questions with filters (All, Correct, Wrong)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/daily_quiz_question.dart';
+import '../models/review_question_data.dart';
+import '../models/ai_tutor_models.dart';
 import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/priya_avatar.dart';
-import 'daily_quiz_question_review_screen.dart';
+import '../widgets/question_review/question_review_screen.dart';
 
 class DailyQuizReviewScreen extends StatefulWidget {
   final String quizId;
@@ -133,6 +134,32 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
       default:
         return AppColors.textMedium;
     }
+  }
+
+  /// Convert all questions to ReviewQuestionData for the common widget
+  List<ReviewQuestionData> get _reviewQuestionData {
+    return _allQuestions
+        .map((q) => ReviewQuestionData.fromDailyQuizMap(q as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Navigate to the common question review screen
+  void _navigateToQuestionReview(int index) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => QuestionReviewScreen(
+          questions: _reviewQuestionData,
+          initialIndex: index,
+          filterType: _currentFilter,
+          tutorContext: ReviewTutorContext(
+            type: TutorContextType.quiz,
+            id: widget.quizId,
+            title: 'Daily Quiz Review',
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -517,20 +544,7 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
         ),
       ),
       child: InkWell(
-        onTap: () {
-          // Use actual position if available, otherwise use the filtered index
-          // This is critical when filtering - filtered index != original position
-          final navigationIndex = actualPosition ?? index;
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DailyQuizQuestionReviewScreen(
-                quizId: widget.quizId,
-                questionIndex: navigationIndex, // Already 0-indexed from backend
-              ),
-            ),
-          );
-        },
+        onTap: () => _navigateToQuestionReview(index),
         child: Row(
           children: [
             // Question number circle
@@ -717,16 +731,7 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
           child: InkWell(
             onTap: () {
               if (_filteredQuestions.isNotEmpty) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DailyQuizQuestionReviewScreen(
-                      quizId: widget.quizId,
-                      questionIndex: 0,
-                      filterType: _currentFilter,
-                    ),
-                  ),
-                );
+                _navigateToQuestionReview(0); // First item in filtered list
               }
             },
             borderRadius: BorderRadius.circular(12),
