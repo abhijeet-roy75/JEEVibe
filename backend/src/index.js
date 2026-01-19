@@ -325,8 +325,9 @@ app.get('/', (req, res) => {
 // ========================================
 
 // Sentry error handler (must be before other error handlers)
+// Note: Sentry v8+ uses setupExpressErrorHandler instead of Handlers.errorHandler
 if (process.env.SENTRY_DSN) {
-  app.use(Sentry.Handlers.errorHandler());
+  Sentry.setupExpressErrorHandler(app);
 }
 
 const { errorHandler } = require('./middleware/errorHandler');
