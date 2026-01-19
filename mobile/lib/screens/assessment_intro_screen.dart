@@ -38,6 +38,7 @@ import '../services/share_service.dart';
 import '../widgets/shareable_journey_card.dart';
 import 'subscription/paywall_screen.dart';
 import 'chapter_practice/chapter_practice_loading_screen.dart';
+import 'chapter_practice/chapter_picker_screen.dart';
 
 class AssessmentIntroScreen extends StatefulWidget {
   const AssessmentIntroScreen({super.key});
@@ -1720,6 +1721,11 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     final unlockInfo = isFree ? subscriptionService.getSubjectUnlockInfo(area.subject) : null;
                     return _buildFocusAreaRow(area, isLast, isSubjectLocked, unlockInfo);
                   }),
+                  // Show "Practice any chapter" link for Pro/Ultra users
+                  if (!isFree) ...[
+                    const SizedBox(height: 12),
+                    _buildPracticeAnyChapterLink(),
+                  ],
                   // Show upgrade button at bottom if any subject is locked (free tier only)
                   if (isFree && hasAnySubjectLocked) ...[
                     const SizedBox(height: 12),
@@ -1728,15 +1734,24 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 ],
               )
             else if (focusAreas.isEmpty && hasChapterPractice)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  'Great job! No weak areas detected yet.',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textTertiary,
-                    fontSize: 13,
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      'Great job! No weak areas detected yet.',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
-                ),
+                  // Show "Practice any chapter" link for Pro/Ultra users even when no focus areas
+                  if (!isFree) ...[
+                    const SizedBox(height: 8),
+                    _buildPracticeAnyChapterLink(),
+                  ],
+                ],
               )
             // Fallback for users without chapter practice enabled (shouldn't happen with new config)
             else
@@ -1914,6 +1929,48 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPracticeAnyChapterLink() {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ChapterPickerScreen(),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ShaderMask(
+              shaderCallback: (bounds) => AppColors.ctaGradient.createShader(bounds),
+              child: Text(
+                'Practice any chapter',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            ShaderMask(
+              shaderCallback: (bounds) => AppColors.ctaGradient.createShader(bounds),
+              child: const Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ],
         ),
       ),
     );

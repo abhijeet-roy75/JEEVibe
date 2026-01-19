@@ -192,4 +192,43 @@ class AnalyticsService {
       rethrow;
     }
   }
+
+  /// Get all chapters for a subject (including unpracticed ones)
+  /// Used by the Chapter Picker feature for Pro/Ultra users
+  static Future<List<ChapterMastery>> getChaptersBySubject({
+    required String authToken,
+    required String subject,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/analytics/chapters-by-subject/$subject'),
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(timeout);
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json['success'] == true && json['data'] != null) {
+          final chaptersJson = json['data']['chapters'] as List<dynamic>? ?? [];
+          return chaptersJson
+              .whereType<Map<String, dynamic>>()
+              .map((e) => ChapterMastery.fromJson(e))
+              .toList();
+        }
+        throw Exception(json['error'] ?? 'Failed to load chapters');
+      } else if (response.statusCode == 401) {
+        throw Exception('Authentication required');
+      } else if (response.statusCode == 400) {
+        throw Exception('Invalid subject');
+      } else {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(errorBody['error'] ?? 'Failed to load chapters (${response.statusCode})');
+      }
+    } catch (e) {
+      debugPrint('Error fetching chapters by subject: $e');
+      rethrow;
+    }
+  }
 }
