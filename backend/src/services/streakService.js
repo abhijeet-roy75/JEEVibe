@@ -118,9 +118,9 @@ async function updateStreak(userId) {
     };
     
     // Keep only last 7 days
-    const sevenDaysAgo = new Date(today);
+    const sevenDaysAgo = new Date(todayIST);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const sevenDaysAgoStr = formatDate(sevenDaysAgo);
+    const sevenDaysAgoStr = formatDateIST(sevenDaysAgo);
     
     Object.keys(practiceDays).forEach(date => {
       if (date < sevenDaysAgoStr) {
@@ -157,14 +157,14 @@ async function updateStreak(userId) {
 
     // Update weekly stats (Sunday = week end)
     const weeklyStats = [...(streakData.weekly_stats || [])];
-    const currentWeekEnd = getWeekEnd(today);
+    const currentWeekEnd = getWeekEnd(todayIST);
 
     // Check if current week already exists in stats
     const existingWeekIndex = weeklyStats.findIndex(w => w.week_end === currentWeekEnd);
 
     const weekData = {
       week_end: currentWeekEnd,
-      days_practiced: Object.keys(practiceDays).filter(d => d >= getWeekStart(today) && d <= currentWeekEnd).length,
+      days_practiced: Object.keys(practiceDays).filter(d => d >= getWeekStart(todayIST) && d <= currentWeekEnd).length,
       total_quizzes: todayQuizCount,
       total_questions: todayQuestions,
       total_correct: todayCorrect,
