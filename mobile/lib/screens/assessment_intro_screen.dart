@@ -176,13 +176,13 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               debugPrint('Chemistry: ${assessmentData?.subjectAccuracy['chemistry']}');
               debugPrint('Mathematics: ${assessmentData?.subjectAccuracy['mathematics']}');
             } else if (result.success == false) {
-              // Only reset if we get a 404 or explicit error AND status is completed
-              // This handles the case where local storage has stale data for a new user
-              // But don't reset if status is already 'not_started' or 'in_progress'
+              // Backend explicitly says assessment is not completed
+              // This is different from a network error (which throws an exception)
+              // If backend says not completed but local says completed, local has stale data
               if (status == 'completed') {
-                debugPrint('No assessment data in backend, but keeping local status as completed (may be offline or data not yet synced)');
-                // Don't reset - user may have completed assessment but backend hasn't synced yet
-                // Or they may be offline. Only reset if we're absolutely certain.
+                debugPrint('Backend says assessment not completed, resetting stale local status');
+                await storageService.setAssessmentStatus('not_started');
+                status = 'not_started';
               }
             }
           }
