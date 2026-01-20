@@ -537,7 +537,7 @@ function formatChapterKey(subject, chapter) {
 function getSubjectFromChapter(chapterKey) {
   if (chapterKey.startsWith('physics_')) return 'physics';
   if (chapterKey.startsWith('chemistry_')) return 'chemistry';
-  if (chapterKey.startsWith('mathematics_')) return 'mathematics';
+  if (chapterKey.startsWith('mathematics_') || chapterKey.startsWith('maths_')) return 'mathematics';
   return 'unknown';
 }
 

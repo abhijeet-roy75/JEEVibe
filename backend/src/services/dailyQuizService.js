@@ -181,7 +181,11 @@ function selectChaptersForExploration(chapterThetas, count = 7, options = {}) {
   // Mark chapters that were recently tested
   // For chapters without theta data, use defaults (unexplored)
   allChapterKeys.forEach(key => {
-    const subject = key.split('_')[0]?.toLowerCase();
+    let subject = key.split('_')[0]?.toLowerCase();
+    // Normalize maths → mathematics for grouping
+    if (subject === 'maths') {
+      subject = 'mathematics';
+    }
     if (subject && chaptersBySubject[subject]) {
       const existingData = chapterThetas[key];
       chaptersBySubject[subject].push({
@@ -265,7 +269,8 @@ function selectChaptersForExploration(chapterThetas, count = 7, options = {}) {
       const subject = subjectKeys[(subjectIndex + i) % subjectKeys.length];
       const subjectChapters = chaptersBySubject[subject];
       const subjectSelected = selected.filter(c => {
-        const cSubject = c.split('_')[0]?.toLowerCase();
+        let cSubject = c.split('_')[0]?.toLowerCase();
+        if (cSubject === 'maths') cSubject = 'mathematics';
         return cSubject === subject;
       }).length;
 
@@ -328,7 +333,7 @@ function selectChaptersForExploration(chapterThetas, count = 7, options = {}) {
     subjectDistribution: {
       physics: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'physics').length,
       chemistry: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'chemistry').length,
-      mathematics: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'mathematics').length
+      mathematics: selected.filter(c => { const s = c.split('_')[0]?.toLowerCase(); return s === 'mathematics' || s === 'maths'; }).length
     }
   });
 
@@ -362,7 +367,11 @@ function selectChaptersForExploitation(chapterThetas, count = 6, options = {}) {
   Object.entries(chapterThetas)
     .filter(([_, data]) => (data.attempts || 0) >= 2) // At least 2 attempts (explored)
     .forEach(([key, data]) => {
-      const subject = key.split('_')[0]?.toLowerCase();
+      let subject = key.split('_')[0]?.toLowerCase();
+      // Normalize maths → mathematics for grouping
+      if (subject === 'maths') {
+        subject = 'mathematics';
+      }
       if (subject && chaptersBySubject[subject]) {
         chaptersBySubject[subject].push({
           chapter_key: key,
@@ -414,7 +423,8 @@ function selectChaptersForExploitation(chapterThetas, count = 6, options = {}) {
       const subject = subjectKeys[(subjectIndex + i) % subjectKeys.length];
       const subjectChapters = chaptersBySubject[subject];
       const subjectSelected = selected.filter(c => {
-        const cSubject = c.split('_')[0]?.toLowerCase();
+        let cSubject = c.split('_')[0]?.toLowerCase();
+        if (cSubject === 'maths') cSubject = 'mathematics';
         return cSubject === subject;
       }).length;
 
@@ -473,7 +483,7 @@ function selectChaptersForExploitation(chapterThetas, count = 6, options = {}) {
     subjectDistribution: {
       physics: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'physics').length,
       chemistry: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'chemistry').length,
-      mathematics: selected.filter(c => c.split('_')[0]?.toLowerCase() === 'mathematics').length
+      mathematics: selected.filter(c => { const s = c.split('_')[0]?.toLowerCase(); return s === 'mathematics' || s === 'maths'; }).length
     }
   });
 
