@@ -191,13 +191,17 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
         }
 
         // Fetch daily quiz summary for dynamic Priya messages
+        // Get authService reference once before async operations to avoid context access after unmount
+        final authServiceForSummary = Provider.of<AuthService>(context, listen: false);
         try {
-          final authService = Provider.of<AuthService>(context, listen: false);
-          final token = await authService.getIdToken();
-          if (token != null) {
+          if (!mounted) return;
+          final token = await authServiceForSummary.getIdToken();
+          if (token != null && mounted) {
             final summary = await ApiService.getDailyQuizSummary(authToken: token);
-            _quizSummary = summary;
-            debugPrint('Quiz summary loaded: streak=${summary['streak']?['current_streak']}, today_accuracy=${summary['today_stats']?['accuracy']}');
+            if (mounted) {
+              _quizSummary = summary;
+              debugPrint('Quiz summary loaded: streak=${summary['streak']?['current_streak']}, today_accuracy=${summary['today_stats']?['accuracy']}');
+            }
           }
         } catch (e) {
           debugPrint('Error fetching quiz summary: $e');
@@ -206,12 +210,14 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
 
         // Fetch analytics overview for cumulative progress display
         try {
-          final authService = Provider.of<AuthService>(context, listen: false);
-          final token = await authService.getIdToken();
-          if (token != null) {
+          if (!mounted) return;
+          final token = await authServiceForSummary.getIdToken();
+          if (token != null && mounted) {
             final overview = await AnalyticsService.getOverview(authToken: token);
-            _analyticsOverview = overview;
-            debugPrint('Analytics overview loaded: quizzes=${overview.stats.quizzesCompleted}, questions=${overview.stats.questionsSolved}');
+            if (mounted) {
+              _analyticsOverview = overview;
+              debugPrint('Analytics overview loaded: quizzes=${overview.stats.quizzesCompleted}, questions=${overview.stats.questionsSolved}');
+            }
           }
         } catch (e) {
           debugPrint('Error fetching analytics overview: $e');
@@ -221,11 +227,13 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
         // Refresh subscription status to get fresh usage data (quiz/snap counts)
         // This ensures the Daily Quiz card shows accurate remaining count
         try {
-          final authService = Provider.of<AuthService>(context, listen: false);
-          final token = await authService.getIdToken();
-          if (token != null) {
+          if (!mounted) return;
+          final token = await authServiceForSummary.getIdToken();
+          if (token != null && mounted) {
             await SubscriptionService().fetchStatus(token, forceRefresh: true);
-            debugPrint('Subscription status refreshed');
+            if (mounted) {
+              debugPrint('Subscription status refreshed');
+            }
           }
         } catch (e) {
           debugPrint('Error refreshing subscription status: $e');
