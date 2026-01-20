@@ -103,7 +103,7 @@ class PracticeResultsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Questions\nCorrect',
+                  'Correct',
                   style: AppTextStyles.bodySmall,
                   textAlign: TextAlign.center,
                 ),

@@ -4,7 +4,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../services/firebase/auth_service.dart';
 import '../../services/firebase/firestore_user_service.dart';
 import '../../services/subscription_service.dart';
-import '../../providers/app_state_provider.dart';
 import '../../providers/offline_provider.dart';
 import '../../models/user_profile.dart';
 import '../../models/subscription_models.dart';
@@ -588,12 +587,6 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
         const SizedBox(height: AppSpacing.lg),
 
-        // Usage Section
-        if (!_loadingSubscription && _subscriptionStatus != null) ...[
-          _buildUsageSection(),
-          const SizedBox(height: AppSpacing.lg),
-        ],
-
         // Upgrade or Manage Button
         _buildSubscriptionCTA(),
       ],
@@ -736,122 +729,6 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildUsageSection() {
-    final limits = _subscriptionStatus?.limits;
-    final usage = _subscriptionStatus?.usage;
-
-    if (limits == null || usage == null) return const SizedBox.shrink();
-
-    // Use AppStateProvider for snap usage (real-time updates)
-    final appState = context.watch<AppStateProvider>();
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundWhite,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.borderLight, width: 1),
-        boxShadow: AppShadows.card,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Today's Usage",
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textDark,
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          // Snap & Solve usage - use AppStateProvider for real-time updates
-          _buildUsageBar(
-            icon: Icons.camera_alt_outlined,
-            label: 'Snap & Solve',
-            used: appState.snapsUsed,
-            limit: appState.snapLimit,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          // Daily Quiz usage
-          _buildUsageBar(
-            icon: Icons.quiz_outlined,
-            label: 'Daily Quizzes',
-            used: usage.dailyQuiz.used,
-            limit: limits.dailyQuizDaily,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUsageBar({
-    required IconData icon,
-    required String label,
-    required int used,
-    required int limit,
-  }) {
-    final isUnlimited = limit == -1;
-    final progress = isUnlimited ? 0.0 : (used / limit).clamp(0.0, 1.0);
-
-    // Color based on usage
-    Color progressColor;
-    if (isUnlimited) {
-      progressColor = AppColors.successGreen;
-    } else if (progress >= 1.0) {
-      progressColor = AppColors.errorRed;
-    } else if (progress >= 0.8) {
-      progressColor = AppColors.warningAmber;
-    } else {
-      progressColor = AppColors.successGreen;
-    }
-
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: AppColors.textMedium),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    label,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textMedium,
-                      fontSize: 13,
-                    ),
-                  ),
-                  Text(
-                    isUnlimited ? 'Unlimited' : '$used/$limit used',
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: progressColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: isUnlimited ? 1.0 : progress,
-                  backgroundColor: AppColors.borderGray,
-                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-                  minHeight: 6,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 

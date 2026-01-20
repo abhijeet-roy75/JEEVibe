@@ -3,8 +3,8 @@
 /// Common reusable screen for reviewing questions after practice/quiz completion.
 /// Used by both Daily Quiz and Chapter Practice review flows.
 import 'package:flutter/material.dart';
-import 'package:flutter_html/flutter_html.dart';
 import '../../models/review_question_data.dart';
+import '../latex_widget.dart';
 import '../../models/daily_quiz_question.dart' show SolutionStep;
 import '../../models/ai_tutor_models.dart';
 import '../../services/subscription_service.dart';
@@ -446,11 +446,11 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
             const SizedBox(height: 16),
             // Question text
             if (questionTextHtml != null)
-              Html(
-                data: questionTextHtml,
-                style: {
-                  'body': Style(margin: Margins.zero, padding: HtmlPaddings.zero),
-                },
+              LaTeXWidget(
+                text: questionTextHtml,
+                textStyle: AppTextStyles.bodyLarge.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               )
             else
               Text(
@@ -540,12 +540,9 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: optionHtml != null
-                  ? Html(
-                      data: optionHtml,
-                      style: {
-                        'body': Style(
-                            margin: Margins.zero, padding: HtmlPaddings.zero),
-                      },
+                  ? LaTeXWidget(
+                      text: optionHtml,
+                      textStyle: AppTextStyles.bodyMedium.copyWith(color: textColor),
                     )
                   : Text(
                       optionText,
@@ -688,15 +685,13 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Html(
-                data: content,
-                style: {
-                  'body': Style(
-                    margin: Margins.zero,
-                    padding: HtmlPaddings.zero,
-                    fontSize: FontSize(14),
-                  ),
-                },
+              LaTeXWidget(
+                text: content,
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: AppColors.textMedium,
+                ),
               ),
             ],
           ),
@@ -754,19 +749,13 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Html(
-                              data: stepText,
-                              style: {
-                                'body': Style(
-                                  margin: Margins.zero,
-                                  padding: HtmlPaddings.zero,
-                                  fontSize: FontSize(16),
-                                  lineHeight: LineHeight(1.5),
-                                  color: AppColors.textMedium,
-                                ),
-                                'strong': Style(fontWeight: FontWeight.w700),
-                                'b': Style(fontWeight: FontWeight.w700),
-                              },
+                            LaTeXWidget(
+                              text: stepText,
+                              textStyle: TextStyle(
+                                fontSize: 16,
+                                height: 1.5,
+                                color: AppColors.textMedium,
+                              ),
                             ),
                             // Formula
                             if (step.formula != null && step.formula!.isNotEmpty) ...[
@@ -834,20 +823,16 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 8),
           Expanded(
-            child: Html(
-              data: content,
-              style: {
-                'body': Style(
-                  margin: Margins.zero,
-                  padding: HtmlPaddings.zero,
-                  fontSize: FontSize(15),
-                  lineHeight: LineHeight(1.4),
-                  color: fontFamily != null ? AppColors.textMedium : color,
-                  fontFamily: fontFamily,
-                  fontStyle: fontStyle,
-                  fontWeight: fontFamily == null ? FontWeight.w500 : null,
-                ),
-              },
+            child: LaTeXWidget(
+              text: content,
+              textStyle: TextStyle(
+                fontSize: 15,
+                height: 1.4,
+                color: fontFamily != null ? AppColors.textMedium : color,
+                fontFamily: fontFamily,
+                fontStyle: fontStyle,
+                fontWeight: fontFamily == null ? FontWeight.w500 : null,
+              ),
             ),
           ),
         ],
@@ -919,17 +904,13 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Html(
-                  data: distractorExplanation,
-                  style: {
-                    'body': Style(
-                      margin: Margins.zero,
-                      padding: HtmlPaddings.zero,
-                      fontSize: FontSize(16),
-                      lineHeight: LineHeight(1.5),
-                      color: AppColors.textMedium,
-                    ),
-                  },
+                LaTeXWidget(
+                  text: distractorExplanation,
+                  textStyle: TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                    color: AppColors.textMedium,
+                  ),
                 ),
               ] else if (hasCommonMistakes) ...[
                 ...commonMistakes.map((mistake) => Padding(
@@ -945,17 +926,13 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                             ),
                           ),
                           Expanded(
-                            child: Html(
-                              data: mistake,
-                              style: {
-                                'body': Style(
-                                  margin: Margins.zero,
-                                  padding: HtmlPaddings.zero,
-                                  fontSize: FontSize(16),
-                                  lineHeight: LineHeight(1.5),
-                                  color: AppColors.textMedium,
-                                ),
-                              },
+                            child: LaTeXWidget(
+                              text: mistake,
+                              textStyle: TextStyle(
+                                fontSize: 16,
+                                height: 1.5,
+                                color: AppColors.textMedium,
+                              ),
                             ),
                           ),
                         ],
@@ -992,15 +969,13 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Html(
-                data: content,
-                style: {
-                  'body': Style(
-                    margin: Margins.zero,
-                    padding: HtmlPaddings.zero,
-                    fontSize: FontSize(14),
-                  ),
-                },
+              LaTeXWidget(
+                text: content,
+                textStyle: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: AppColors.textMedium,
+                ),
               ),
             ],
           ),

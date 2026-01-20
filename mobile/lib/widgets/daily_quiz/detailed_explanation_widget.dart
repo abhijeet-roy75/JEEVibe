@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../models/daily_quiz_question.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import 'package:flutter_html/flutter_html.dart';
+import '../latex_widget.dart';
 
 class DetailedExplanationWidget extends StatefulWidget {
   final AnswerFeedback feedback;
@@ -140,23 +140,13 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                 style: AppTextStyles.solutionHeader, // Guideline: 17px for section headers
               ),
               const SizedBox(height: 8),
-              Html(
-                data: content,
-                style: {
-                  'body': Style(
-                    margin: Margins.zero,
-                    padding: HtmlPaddings.zero,
-                    fontSize: FontSize(16), // Guideline: 16px for explanation body
-                    lineHeight: LineHeight(1.6),
-                    color: AppColors.textSecondary,
-                  ),
-                  'strong': Style(
-                    fontWeight: FontWeight.w700,
-                  ),
-                  'b': Style(
-                    fontWeight: FontWeight.w700,
-                  ),
-                },
+              LaTeXWidget(
+                text: content,
+                textStyle: TextStyle(
+                  fontSize: 16, // Guideline: 16px for explanation body
+                  height: 1.6,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -212,23 +202,13 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Description
-                            Html(
-                              data: stepText,
-                              style: {
-                                'body': Style(
-                                  margin: Margins.zero,
-                                  padding: HtmlPaddings.zero,
-                                  fontSize: FontSize(16), // Guideline: 16-17px for step text
-                                  lineHeight: LineHeight(1.5),
-                                  color: AppColors.textSecondary,
-                                ),
-                                'strong': Style(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                                'b': Style(
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              },
+                            LaTeXWidget(
+                              text: stepText,
+                              textStyle: TextStyle(
+                                fontSize: 16, // Guideline: 16-17px for step text
+                                height: 1.5,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                             // Formula (if exists)
                             if (step.formula != null && step.formula!.isNotEmpty) ...[
@@ -253,18 +233,14 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
-                                      child: Html(
-                                        data: step.formula!,
-                                        style: {
-                                          'body': Style(
-                                            margin: Margins.zero,
-                                            padding: HtmlPaddings.zero,
-                                            fontSize: FontSize(15),
-                                            lineHeight: LineHeight(1.4),
-                                            color: AppColors.primaryPurple,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        },
+                                      child: LaTeXWidget(
+                                        text: step.formula!,
+                                        textStyle: TextStyle(
+                                          fontSize: 15,
+                                          height: 1.4,
+                                          color: AppColors.primaryPurple,
+                                          fontWeight: FontWeight.w500,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -294,18 +270,14 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
-                                      child: Html(
-                                        data: step.calculation!,
-                                        style: {
-                                          'body': Style(
-                                            margin: Margins.zero,
-                                            padding: HtmlPaddings.zero,
-                                            fontSize: FontSize(15),
-                                            lineHeight: LineHeight(1.4),
-                                            color: AppColors.textSecondary,
-                                            fontFamily: 'monospace',
-                                          ),
-                                        },
+                                      child: LaTeXWidget(
+                                        text: step.calculation!,
+                                        textStyle: TextStyle(
+                                          fontSize: 15,
+                                          height: 1.4,
+                                          color: AppColors.textSecondary,
+                                          fontFamily: 'monospace',
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -337,18 +309,14 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                                     ),
                                     const SizedBox(width: 8),
                                     Expanded(
-                                      child: Html(
-                                        data: step.explanation!,
-                                        style: {
-                                          'body': Style(
-                                            margin: Margins.zero,
-                                            padding: HtmlPaddings.zero,
-                                            fontSize: FontSize(15),
-                                            lineHeight: LineHeight(1.4),
-                                            color: AppColors.textSecondary,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        },
+                                      child: LaTeXWidget(
+                                        text: step.explanation!,
+                                        textStyle: TextStyle(
+                                          fontSize: 15,
+                                          height: 1.4,
+                                          color: AppColors.textSecondary,
+                                          fontStyle: FontStyle.italic,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -438,17 +406,13 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Html(
-                  data: distractorExplanation,
-                  style: {
-                    'body': Style(
-                      margin: Margins.zero,
-                      padding: HtmlPaddings.zero,
-                      fontSize: FontSize(16),
-                      lineHeight: LineHeight(1.5),
-                      color: AppColors.textSecondary,
-                    ),
-                  },
+                LaTeXWidget(
+                  text: distractorExplanation,
+                  textStyle: TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ] else if (hasCommonMistakes) ...[
                 // Numerical: Show common mistakes
@@ -465,17 +429,13 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                         ),
                       ),
                       Expanded(
-                        child: Html(
-                          data: mistake,
-                          style: {
-                            'body': Style(
-                              margin: Margins.zero,
-                              padding: HtmlPaddings.zero,
-                              fontSize: FontSize(16),
-                              lineHeight: LineHeight(1.5),
-                              color: AppColors.textSecondary,
-                            ),
-                          },
+                        child: LaTeXWidget(
+                          text: mistake,
+                          textStyle: TextStyle(
+                            fontSize: 16,
+                            height: 1.5,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                     ],
@@ -512,23 +472,13 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                 ),
               ),
               const SizedBox(height: 8),
-              Html(
-                data: content,
-                style: {
-                  'body': Style(
-                    margin: Margins.zero,
-                    padding: HtmlPaddings.zero,
-                    fontSize: FontSize(16), // Guideline: 16px for body text
-                    lineHeight: LineHeight(1.5),
-                    color: AppColors.textSecondary,
-                  ),
-                  'strong': Style(
-                    fontWeight: FontWeight.w700,
-                  ),
-                  'b': Style(
-                    fontWeight: FontWeight.w700,
-                  ),
-                },
+              LaTeXWidget(
+                text: content,
+                textStyle: TextStyle(
+                  fontSize: 16, // Guideline: 16px for body text
+                  height: 1.5,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
           ),
