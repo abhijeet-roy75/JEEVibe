@@ -457,11 +457,40 @@ function getRandomPriyaNote() {
  * This ensures compatibility with the existing mobile app models
  */
 function transformDatabaseQuestionToFollowUp(dbQuestion) {
-  // Convert options array [{option_id, text}] to map format {A: "text", B: "text"}
-  const optionsMap = {};
+  // Convert options to map format {A: "text", B: "text"}
+  // Handle multiple possible formats from database
+  let optionsMap = {};
+
   if (Array.isArray(dbQuestion.options)) {
-    dbQuestion.options.forEach(opt => {
-      optionsMap[opt.option_id] = opt.text;
+    // Format 1: [{option_id: 'A', text: '...'}, ...]
+    if (dbQuestion.options.length > 0 && typeof dbQuestion.options[0] === 'object' && dbQuestion.options[0].option_id) {
+      dbQuestion.options.forEach(opt => {
+        optionsMap[opt.option_id] = opt.text || opt.option_text || '';
+      });
+    }
+    // Format 2: Array of strings ['option1', 'option2', 'option3', 'option4']
+    else if (dbQuestion.options.length > 0 && typeof dbQuestion.options[0] === 'string') {
+      const labels = ['A', 'B', 'C', 'D'];
+      dbQuestion.options.forEach((text, index) => {
+        if (index < 4) {
+          optionsMap[labels[index]] = text;
+        }
+      });
+    }
+  }
+  // Format 3: Already a map {A: '...', B: '...'}
+  else if (dbQuestion.options && typeof dbQuestion.options === 'object') {
+    optionsMap = { ...dbQuestion.options };
+  }
+
+  // Log warning if options are empty (likely a data issue)
+  if (Object.keys(optionsMap).length === 0) {
+    logger.warn('Database question has no options', {
+      questionId: dbQuestion.question_id,
+      questionType: dbQuestion.question_type,
+      hasOptions: !!dbQuestion.options,
+      optionsType: typeof dbQuestion.options,
+      optionsValue: JSON.stringify(dbQuestion.options)?.substring(0, 200)
     });
   }
 
@@ -491,7 +520,8 @@ function transformDatabaseQuestionToFollowUp(dbQuestion) {
     },
     priyaMaamNote: priyaNote,
     source: 'database',
-    questionId: dbQuestion.question_id
+    questionId: dbQuestion.question_id,
+    questionType: dbQuestion.question_type || 'mcq_single' // 'mcq_single' or 'numerical'
   };
 }
 
