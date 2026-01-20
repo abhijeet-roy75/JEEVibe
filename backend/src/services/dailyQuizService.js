@@ -22,6 +22,7 @@ const { selectQuestionsForChapters, selectAnyAvailableQuestions, getRecentQuesti
 const { getReviewQuestions } = require('./spacedRepetitionService');
 const { checkConsecutiveFailures, generateRecoveryQuiz } = require('./circuitBreakerService');
 const { formatChapterKey } = require('./thetaCalculationService');
+const { initializeMappings } = require('./chapterMappingService');
 
 // ============================================================================
 // CONSTANTS
@@ -134,15 +135,25 @@ async function getRecentlyTestedChapters(userId, lookback = CHAPTER_RECENCY_LOOK
  * Prioritizes chapters with fewer attempts, ensuring subject diversity
  * Avoids chapters from recent quizzes to ensure variety
  *
- * @param {Object} chapterThetas - Object mapping chapterKey to theta data
+ * IMPORTANT: Uses ALL available chapters from the question database,
+ * not just those with existing theta values. This ensures proper exploration
+ * of the full curriculum during the exploration phase.
+ *
+ * @param {Object} chapterThetas - Object mapping chapterKey to theta data (from user profile)
  * @param {number} count - Number of chapters to select
  * @param {Object} options - Selection options
  * @param {Set} options.recentChapters - Chapters from recent quizzes to deprioritize
  * @param {number} options.maxOverlap - Maximum number of recent chapters to allow (default: 30% of count)
+ * @param {Map} options.allChapterMappings - All chapters available in question DB (from initializeMappings)
  * @returns {Array} Selected chapter keys
  */
 function selectChaptersForExploration(chapterThetas, count = 7, options = {}) {
-  const { recentChapters = new Set(), maxOverlap = Math.floor(count * MAX_CHAPTER_OVERLAP_RATIO) } = options;
+  const {
+    recentChapters = new Set(),
+    maxOverlap = Math.floor(count * MAX_CHAPTER_OVERLAP_RATIO),
+    allChapterMappings = null
+  } = options;
+
   // Group chapters by subject
   const chaptersBySubject = {
     physics: [],
@@ -150,37 +161,86 @@ function selectChaptersForExploration(chapterThetas, count = 7, options = {}) {
     mathematics: []
   };
 
+  // Build a merged set of chapters: all available chapters + existing theta data
+  // This ensures we explore chapters even if they don't have theta yet
+  const allChapterKeys = new Set(Object.keys(chapterThetas));
+
+  // Add all available chapters from the question database (via chapterMappingService)
+  if (allChapterMappings && allChapterMappings.size > 0) {
+    for (const chapterKey of allChapterMappings.keys()) {
+      allChapterKeys.add(chapterKey);
+    }
+    logger.info('Merged available chapters for exploration', {
+      existingThetaChapters: Object.keys(chapterThetas).length,
+      availableInDB: allChapterMappings.size,
+      totalUnique: allChapterKeys.size
+    });
+  }
+
   // Extract subject from chapter key (format: "subject_chapter_name")
   // Mark chapters that were recently tested
-  Object.entries(chapterThetas).forEach(([key, data]) => {
+  // For chapters without theta data, use defaults (unexplored)
+  allChapterKeys.forEach(key => {
     const subject = key.split('_')[0]?.toLowerCase();
     if (subject && chaptersBySubject[subject]) {
+      const existingData = chapterThetas[key];
       chaptersBySubject[subject].push({
         chapter_key: key,
-        attempts: data.attempts || 0,
-        theta: data.theta || 0,
-        isRecent: recentChapters.has(key) // Flag for recently tested chapters
+        attempts: existingData?.attempts || 0,
+        theta: existingData?.theta || 0,
+        isRecent: recentChapters.has(key), // Flag for recently tested chapters
+        isUnexplored: !existingData // Flag for chapters not yet in user's theta profile
       });
     }
   });
 
-  // Sort each subject's chapters:
-  // 1. Non-recent chapters first (to avoid repetition)
-  // 2. Then by attempts (fewer attempts first)
-  // 3. Then by theta (lower first)
+  // Log exploration coverage stats before sorting
+  const coverageStats = {
+    physics: { total: chaptersBySubject.physics.length, unexplored: chaptersBySubject.physics.filter(c => c.isUnexplored).length },
+    chemistry: { total: chaptersBySubject.chemistry.length, unexplored: chaptersBySubject.chemistry.filter(c => c.isUnexplored).length },
+    mathematics: { total: chaptersBySubject.mathematics.length, unexplored: chaptersBySubject.mathematics.filter(c => c.isUnexplored).length }
+  };
+  const totalChapters = coverageStats.physics.total + coverageStats.chemistry.total + coverageStats.mathematics.total;
+  const totalUnexplored = coverageStats.physics.unexplored + coverageStats.chemistry.unexplored + coverageStats.mathematics.unexplored;
+  const coveragePercent = totalChapters > 0 ? Math.round(((totalChapters - totalUnexplored) / totalChapters) * 100) : 0;
+
+  logger.info('Exploration phase coverage status', {
+    totalChaptersInDB: totalChapters,
+    unexploredChapters: totalUnexplored,
+    exploredChapters: totalChapters - totalUnexplored,
+    coveragePercent: coveragePercent + '%',
+    bySubject: coverageStats
+  });
+
+  // Shuffle unexplored chapters within each subject to ensure variety
+  // This prevents always selecting the same chapters in the same order
   Object.keys(chaptersBySubject).forEach(subject => {
-    chaptersBySubject[subject].sort((a, b) => {
+    // Separate unexplored and explored chapters
+    const unexplored = chaptersBySubject[subject].filter(c => c.isUnexplored);
+    const explored = chaptersBySubject[subject].filter(c => !c.isUnexplored);
+
+    // Shuffle unexplored chapters (Fisher-Yates shuffle)
+    for (let i = unexplored.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [unexplored[i], unexplored[j]] = [unexplored[j], unexplored[i]];
+    }
+
+    // Sort explored chapters by: non-recent first, then by attempts, then by theta
+    explored.sort((a, b) => {
       // Prioritize non-recent chapters
       if (a.isRecent !== b.isRecent) {
         return a.isRecent ? 1 : -1; // Non-recent first
       }
-      // Then by attempts
+      // Then by attempts (fewer first)
       if (a.attempts !== b.attempts) {
         return a.attempts - b.attempts;
       }
-      // Then by theta
+      // Then by theta (lower first)
       return a.theta - b.theta;
     });
+
+    // Combine: unexplored first (shuffled), then explored (sorted)
+    chaptersBySubject[subject] = [...unexplored, ...explored];
   });
 
   // Select chapters ensuring subject diversity
@@ -254,11 +314,15 @@ function selectChaptersForExploration(chapterThetas, count = 7, options = {}) {
     }
   }
 
-  // Count how many selected chapters were from recent quizzes
+  // Count how many selected chapters were from recent quizzes and how many are unexplored
   const recentSelectedCount = selected.filter(c => recentChapters.has(c)).length;
+  const unexploredSelectedCount = selected.filter(c => !chapterThetas[c]).length;
 
   logger.info('Chapters selected for exploration with subject diversity', {
     selected,
+    totalSelected: selected.length,
+    newChaptersSelected: unexploredSelectedCount,
+    previouslyExploredSelected: selected.length - unexploredSelectedCount,
     recentChaptersAvoided: recentChapters.size,
     recentChaptersStillSelected: recentSelectedCount,
     subjectDistribution: {
@@ -597,6 +661,24 @@ async function generateDailyQuizInternal(userId) {
       recentChapterCount: recentChapters.size
     });
 
+    // Get ALL available chapters from the question database
+    // This allows exploration phase to discover chapters beyond those in theta_by_chapter
+    logger.info('Getting all available chapters from database', { userId });
+    let allChapterMappings = null;
+    try {
+      allChapterMappings = await initializeMappings();
+      logger.info('All chapter mappings loaded', {
+        userId,
+        totalChaptersInDB: allChapterMappings.size,
+        userThetaChapters: Object.keys(thetaByChapter).length
+      });
+    } catch (error) {
+      logger.warn('Failed to load chapter mappings, will use only user theta chapters', {
+        userId,
+        error: error.message
+      });
+    }
+
     // Get review questions (1 per quiz)
     // If review questions fail (e.g., missing index), continue without them
     let reviewQuestions = [];
@@ -618,10 +700,11 @@ async function generateDailyQuizInternal(userId) {
     if (learningPhase === 'exploration') {
       logger.info('Exploration phase: selecting chapters', { userId });
       // Exploration phase: Map ability across topics
-      // Pass recent chapters to avoid repetition from previous quizzes
+      // Pass all chapter mappings to allow exploring chapters not yet in user's theta profile
       const selectedChapters = selectChaptersForExploration(thetaByChapter, EXPLORATION_QUESTIONS_PER_QUIZ, {
         recentChapters,
-        maxOverlap: Math.floor(EXPLORATION_QUESTIONS_PER_QUIZ * MAX_CHAPTER_OVERLAP_RATIO)
+        maxOverlap: Math.floor(EXPLORATION_QUESTIONS_PER_QUIZ * MAX_CHAPTER_OVERLAP_RATIO),
+        allChapterMappings
       });
       logger.info('Chapters selected for exploration', { userId, selectedChapters, count: selectedChapters.length });
 
