@@ -18,6 +18,10 @@ const router = express.Router();
 const { authenticateAdmin } = require('../middleware/adminAuth');
 const logger = require('../utils/logger');
 const adminMetricsService = require('../services/adminMetricsService');
+const { withTimeout } = require('../utils/timeout');
+
+// Timeout for admin metrics queries (25 seconds - under Render's 30s limit)
+const ADMIN_METRICS_TIMEOUT = 25000;
 const { getRecentAlerts, acknowledgeAlert } = require('../services/alertService');
 const {
   getFlaggedContent,
@@ -44,7 +48,11 @@ const {
  */
 router.get('/metrics/daily-health', authenticateAdmin, async (req, res, next) => {
   try {
-    const metrics = await adminMetricsService.getDailyHealth();
+    const metrics = await withTimeout(
+      adminMetricsService.getDailyHealth(),
+      ADMIN_METRICS_TIMEOUT,
+      'Daily health metrics query timed out'
+    );
 
     logger.info('Admin daily health metrics retrieved', {
       requestId: req.id,
@@ -59,6 +67,21 @@ router.get('/metrics/daily-health', authenticateAdmin, async (req, res, next) =>
       requestId: req.id
     });
   } catch (error) {
+    // Handle timeout with graceful degradation
+    if (error.message.includes('timed out')) {
+      logger.warn('Admin metrics timeout - returning partial data', {
+        requestId: req.id,
+        error: error.message
+      });
+      return res.status(503).json({
+        success: false,
+        error: {
+          code: 'METRICS_TIMEOUT',
+          message: 'Metrics query timed out. Please try again or use a smaller date range.'
+        },
+        requestId: req.id
+      });
+    }
     logger.error('Error fetching daily health metrics', {
       requestId: req.id,
       error: error.message
@@ -81,7 +104,11 @@ router.get('/metrics/daily-health', authenticateAdmin, async (req, res, next) =>
  */
 router.get('/metrics/engagement', authenticateAdmin, async (req, res, next) => {
   try {
-    const metrics = await adminMetricsService.getEngagement();
+    const metrics = await withTimeout(
+      adminMetricsService.getEngagement(),
+      ADMIN_METRICS_TIMEOUT,
+      'Engagement metrics query timed out'
+    );
 
     logger.info('Admin engagement metrics retrieved', {
       requestId: req.id,
@@ -95,6 +122,14 @@ router.get('/metrics/engagement', authenticateAdmin, async (req, res, next) => {
       requestId: req.id
     });
   } catch (error) {
+    if (error.message.includes('timed out')) {
+      logger.warn('Admin engagement metrics timeout', { requestId: req.id });
+      return res.status(503).json({
+        success: false,
+        error: { code: 'METRICS_TIMEOUT', message: 'Engagement metrics query timed out.' },
+        requestId: req.id
+      });
+    }
     logger.error('Error fetching engagement metrics', {
       requestId: req.id,
       error: error.message
@@ -117,7 +152,11 @@ router.get('/metrics/engagement', authenticateAdmin, async (req, res, next) => {
  */
 router.get('/metrics/learning', authenticateAdmin, async (req, res, next) => {
   try {
-    const metrics = await adminMetricsService.getLearning();
+    const metrics = await withTimeout(
+      adminMetricsService.getLearning(),
+      ADMIN_METRICS_TIMEOUT,
+      'Learning metrics query timed out'
+    );
 
     logger.info('Admin learning metrics retrieved', {
       requestId: req.id,
@@ -131,6 +170,14 @@ router.get('/metrics/learning', authenticateAdmin, async (req, res, next) => {
       requestId: req.id
     });
   } catch (error) {
+    if (error.message.includes('timed out')) {
+      logger.warn('Admin learning metrics timeout', { requestId: req.id });
+      return res.status(503).json({
+        success: false,
+        error: { code: 'METRICS_TIMEOUT', message: 'Learning metrics query timed out.' },
+        requestId: req.id
+      });
+    }
     logger.error('Error fetching learning metrics', {
       requestId: req.id,
       error: error.message
@@ -153,7 +200,11 @@ router.get('/metrics/learning', authenticateAdmin, async (req, res, next) => {
  */
 router.get('/metrics/content', authenticateAdmin, async (req, res, next) => {
   try {
-    const metrics = await adminMetricsService.getContent();
+    const metrics = await withTimeout(
+      adminMetricsService.getContent(),
+      ADMIN_METRICS_TIMEOUT,
+      'Content metrics query timed out'
+    );
 
     logger.info('Admin content metrics retrieved', {
       requestId: req.id,
@@ -167,6 +218,14 @@ router.get('/metrics/content', authenticateAdmin, async (req, res, next) => {
       requestId: req.id
     });
   } catch (error) {
+    if (error.message.includes('timed out')) {
+      logger.warn('Admin content metrics timeout', { requestId: req.id });
+      return res.status(503).json({
+        success: false,
+        error: { code: 'METRICS_TIMEOUT', message: 'Content metrics query timed out.' },
+        requestId: req.id
+      });
+    }
     logger.error('Error fetching content metrics', {
       requestId: req.id,
       error: error.message

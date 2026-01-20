@@ -8,11 +8,43 @@ const { BASE_PROMPT_TEMPLATE } = require('../prompts/priya_maam_base');
 const { SNAP_SOLVE_FOLLOWUP_PROMPT } = require('../prompts/snap_solve');
 const { getSyllabusAlignedTopic, JEE_SYLLABUS } = require('../prompts/jee_syllabus_reference');
 const { validateAndNormalizeLaTeX, validateDelimiters, validateAndReject, validateSolutionResponse } = require('./latex-validator');
+const { createOpenAICircuitBreaker } = require('../utils/circuitBreaker');
+const { withTimeout } = require('../utils/timeout');
+const logger = require('../utils/logger');
 
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
+
+// Timeout configurations (in milliseconds)
+const OPENAI_VISION_TIMEOUT = 120000; // 2 minutes for image processing
+const OPENAI_TEXT_TIMEOUT = 60000;    // 1 minute for text generation
+
+/**
+ * Wrapper for OpenAI chat completion with timeout
+ * @param {Object} params - OpenAI chat completion parameters
+ * @param {number} timeout - Timeout in milliseconds
+ * @returns {Promise<Object>} OpenAI response
+ */
+async function openaiChatWithTimeout(params, timeout) {
+  return withTimeout(
+    openai.chat.completions.create(params),
+    timeout,
+    'OpenAI API request timed out'
+  );
+}
+
+// Create circuit breaker wrapped versions of OpenAI calls
+const openaiVisionBreaker = createOpenAICircuitBreaker(
+  async (params) => openaiChatWithTimeout(params, OPENAI_VISION_TIMEOUT),
+  { timeout: OPENAI_VISION_TIMEOUT + 5000, name: 'OpenAI-Vision' } // Circuit breaker timeout slightly higher
+);
+
+const openaiTextBreaker = createOpenAICircuitBreaker(
+  async (params) => openaiChatWithTimeout(params, OPENAI_TEXT_TIMEOUT),
+  { timeout: OPENAI_TEXT_TIMEOUT + 5000, name: 'OpenAI-Text' }
+);
 
 /**
  * Solve question from image using Vision API
@@ -73,7 +105,8 @@ OUTPUT FORMAT (strict JSON):
   }
 }`;
 
-    const response = await openai.chat.completions.create({
+    // Use circuit breaker for OpenAI Vision API call
+    const response = await openaiVisionBreaker.fire({
       model: "gpt-4o-mini",  // Switched from gpt-4o for 40-45% faster responses + 94% cost savings
       messages: [
         {
@@ -261,7 +294,8 @@ async function generateFollowUpQuestions(originalQuestion, solution, topic, diff
   try {
     const prompt = SNAP_SOLVE_FOLLOWUP_PROMPT(originalQuestion, solution, topic, difficulty, language);
 
-    const response = await openai.chat.completions.create({
+    // Use circuit breaker for OpenAI Text API call
+    const response = await openaiTextBreaker.fire({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -279,7 +313,7 @@ async function generateFollowUpQuestions(originalQuestion, solution, topic, diff
     });
 
     const content = response.choices[0].message.content;
-    console.log('Raw OpenAI response:', content.substring(0, 500)); // Log first 500 chars for debugging
+    logger.debug('Raw OpenAI response', { preview: content.substring(0, 500) });
 
     const data = JSON.parse(content);
 
@@ -442,7 +476,8 @@ OUTPUT FORMAT (strict JSON object):
 
 Generate Question ${questionNumber} NOW in strict JSON object format.`;
 
-    const response = await openai.chat.completions.create({
+    // Use circuit breaker for OpenAI Text API call
+    const response = await openaiTextBreaker.fire({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -460,7 +495,7 @@ Generate Question ${questionNumber} NOW in strict JSON object format.`;
     });
 
     const content = response.choices[0].message.content;
-    console.log(`Raw response for Q${questionNumber}:`, content.substring(0, 300));
+    logger.debug(`Raw response for Q${questionNumber}`, { preview: content.substring(0, 300) });
 
     let data;
     try {

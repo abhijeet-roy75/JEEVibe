@@ -5,13 +5,16 @@
 
 const express = require('express');
 const multer = require('multer');
-const { promisify } = require('util');
 const { body, validationResult } = require('express-validator');
 const { solveQuestionFromImage, generateFollowUpQuestions, generateSingleFollowUpQuestion } = require('../services/openai');
 const { authenticateUser } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
 const { storage } = require('../config/firebase');
+const { withTimeout } = require('../utils/timeout');
+
+// Timeout for Firebase Storage upload (30 seconds)
+const STORAGE_UPLOAD_TIMEOUT = 30000;
 const { saveSnapRecord } = require('../services/snapHistoryService');
 const { canUse, incrementUsage, getUsage } = require('../services/usageTrackingService');
 const { v4: uuidv4 } = require('uuid');
@@ -198,15 +201,20 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
     const filename = `snaps/${userId}/${uuidv4()}_${req.file.originalname}`;
     const file = storage.bucket().file(filename);
 
-    await file.save(imageBuffer, {
-      metadata: {
-        contentType: req.file.mimetype,
+    // Upload with timeout protection
+    await withTimeout(
+      file.save(imageBuffer, {
         metadata: {
-          userId: userId,
-          requestId: req.id
+          contentType: req.file.mimetype,
+          metadata: {
+            userId: userId,
+            requestId: req.id
+          }
         }
-      }
-    });
+      }),
+      STORAGE_UPLOAD_TIMEOUT,
+      'Image upload timed out. Please try again.'
+    );
     perfSteps.firebaseStorageUpload = Date.now() - storageStartTime;
     logger.info(`⏱️  [PERF] Firebase Storage upload: ${perfSteps.firebaseStorageUpload}ms`, { requestId: req.id });
 
@@ -214,22 +222,15 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
     const imageUrl = `gs://${storage.bucket().name}/${filename}`;
 
     // Step 1: Solve question from image (don't generate follow-up questions yet)
+    // Note: OpenAI service now has built-in circuit breaker with 120s timeout
     logger.info('⏱️  [PERF] Starting OpenAI Vision API call', {
       requestId: req.id,
       userId,
       imageSize,
     });
 
-    // Add timeout for long-running OpenAI operations (2 minutes)
-    const setTimeoutPromise = promisify(setTimeout);
-
     const openaiStartTime = Date.now();
-    const solutionData = await Promise.race([
-      solveQuestionFromImage(imageBuffer),
-      setTimeoutPromise(120000).then(() => {
-        throw new ApiError(504, 'Request timeout. Image processing took too long. Please try again with a clearer image.');
-      }),
-    ]);
+    const solutionData = await solveQuestionFromImage(imageBuffer);
     perfSteps.openaiApiCall = Date.now() - openaiStartTime;
     logger.info(`⏱️  [PERF] OpenAI Vision API call: ${perfSteps.openaiApiCall}ms`, {
       requestId: req.id,

@@ -1,8 +1,8 @@
 /**
  * Cron Job Routes
- * 
+ *
  * API endpoints for scheduled jobs (called by Render.com cron or external cron service)
- * 
+ *
  * Security: These endpoints should be protected by a secret token or IP whitelist
  */
 
@@ -12,6 +12,13 @@ const { createWeeklySnapshotsForAllUsers } = require('../services/weeklySnapshot
 const { sendAllDailyEmails, sendAllWeeklyEmails } = require('../services/studentEmailService');
 const { runAlertChecks } = require('../services/alertService');
 const logger = require('../utils/logger');
+const { withTimeout } = require('../utils/timeout');
+
+// Cron job timeouts (in milliseconds)
+// These are generous to allow batch processing, but prevent infinite hangs
+const WEEKLY_SNAPSHOT_TIMEOUT = 300000;  // 5 minutes for weekly snapshots
+const EMAIL_BATCH_TIMEOUT = 180000;       // 3 minutes for email batches
+const ALERT_CHECK_TIMEOUT = 60000;        // 1 minute for alert checks
 
 // ============================================================================
 // SECURITY MIDDLEWARE
@@ -67,15 +74,19 @@ router.post('/weekly-snapshots', verifyCronRequest, async (req, res) => {
     const options = {
       updateQuestionStats: req.body.updateQuestionStats !== false // Default: true
     };
-    
+
     logger.info('Weekly snapshot cron job triggered', {
       snapshotDate: snapshotDate.toISOString(),
       updateQuestionStats: options.updateQuestionStats,
       requestId: req.id
     });
-    
-    const results = await createWeeklySnapshotsForAllUsers(snapshotDate, options);
-    
+
+    const results = await withTimeout(
+      createWeeklySnapshotsForAllUsers(snapshotDate, options),
+      WEEKLY_SNAPSHOT_TIMEOUT,
+      'Weekly snapshot job timed out'
+    );
+
     res.json({
       success: true,
       message: 'Weekly snapshots created',
@@ -93,15 +104,17 @@ router.post('/weekly-snapshots', verifyCronRequest, async (req, res) => {
       requestId: req.id
     });
   } catch (error) {
+    const isTimeout = error.message.includes('timed out');
     logger.error('Error in weekly snapshot cron job', {
       error: error.message,
+      isTimeout,
       stack: error.stack,
       requestId: req.id
     });
-    
-    res.status(500).json({
+
+    res.status(isTimeout ? 504 : 500).json({
       success: false,
-      error: 'Failed to create weekly snapshots',
+      error: isTimeout ? 'Weekly snapshot job timed out' : 'Failed to create weekly snapshots',
       message: error.message,
       requestId: req.id
     });
@@ -123,15 +136,19 @@ router.get('/weekly-snapshots', verifyCronRequest, async (req, res) => {
     const options = {
       updateQuestionStats: req.query.updateQuestionStats !== 'false' // Default: true
     };
-    
+
     logger.info('Weekly snapshot cron job triggered (GET)', {
       snapshotDate: snapshotDate.toISOString(),
       updateQuestionStats: options.updateQuestionStats,
       requestId: req.id
     });
-    
-    const results = await createWeeklySnapshotsForAllUsers(snapshotDate, options);
-    
+
+    const results = await withTimeout(
+      createWeeklySnapshotsForAllUsers(snapshotDate, options),
+      WEEKLY_SNAPSHOT_TIMEOUT,
+      'Weekly snapshot job timed out'
+    );
+
     res.json({
       success: true,
       message: 'Weekly snapshots created',
@@ -149,15 +166,17 @@ router.get('/weekly-snapshots', verifyCronRequest, async (req, res) => {
       requestId: req.id
     });
   } catch (error) {
+    const isTimeout = error.message.includes('timed out');
     logger.error('Error in weekly snapshot cron job', {
       error: error.message,
+      isTimeout,
       stack: error.stack,
       requestId: req.id
     });
-    
-    res.status(500).json({
+
+    res.status(isTimeout ? 504 : 500).json({
       success: false,
-      error: 'Failed to create weekly snapshots',
+      error: isTimeout ? 'Weekly snapshot job timed out' : 'Failed to create weekly snapshots',
       message: error.message,
       requestId: req.id
     });
@@ -174,7 +193,11 @@ router.post('/daily-student-emails', verifyCronRequest, async (req, res) => {
   try {
     logger.info('Daily student emails cron job triggered', { requestId: req.id });
 
-    const results = await sendAllDailyEmails();
+    const results = await withTimeout(
+      sendAllDailyEmails(),
+      EMAIL_BATCH_TIMEOUT,
+      'Daily email job timed out'
+    );
 
     res.json({
       success: true,
@@ -183,15 +206,17 @@ router.post('/daily-student-emails', verifyCronRequest, async (req, res) => {
       requestId: req.id
     });
   } catch (error) {
+    const isTimeout = error.message.includes('timed out');
     logger.error('Error in daily student emails cron job', {
       error: error.message,
+      isTimeout,
       stack: error.stack,
       requestId: req.id
     });
 
-    res.status(500).json({
+    res.status(isTimeout ? 504 : 500).json({
       success: false,
-      error: 'Failed to send daily emails',
+      error: isTimeout ? 'Daily email job timed out' : 'Failed to send daily emails',
       message: error.message,
       requestId: req.id
     });
@@ -207,7 +232,11 @@ router.get('/daily-student-emails', verifyCronRequest, async (req, res) => {
   try {
     logger.info('Daily student emails cron job triggered (GET)', { requestId: req.id });
 
-    const results = await sendAllDailyEmails();
+    const results = await withTimeout(
+      sendAllDailyEmails(),
+      EMAIL_BATCH_TIMEOUT,
+      'Daily email job timed out'
+    );
 
     res.json({
       success: true,
@@ -216,15 +245,17 @@ router.get('/daily-student-emails', verifyCronRequest, async (req, res) => {
       requestId: req.id
     });
   } catch (error) {
+    const isTimeout = error.message.includes('timed out');
     logger.error('Error in daily student emails cron job', {
       error: error.message,
+      isTimeout,
       stack: error.stack,
       requestId: req.id
     });
 
-    res.status(500).json({
+    res.status(isTimeout ? 504 : 500).json({
       success: false,
-      error: 'Failed to send daily emails',
+      error: isTimeout ? 'Daily email job timed out' : 'Failed to send daily emails',
       message: error.message,
       requestId: req.id
     });
@@ -241,7 +272,11 @@ router.post('/weekly-student-emails', verifyCronRequest, async (req, res) => {
   try {
     logger.info('Weekly student emails cron job triggered', { requestId: req.id });
 
-    const results = await sendAllWeeklyEmails();
+    const results = await withTimeout(
+      sendAllWeeklyEmails(),
+      EMAIL_BATCH_TIMEOUT,
+      'Weekly email job timed out'
+    );
 
     res.json({
       success: true,
@@ -250,15 +285,17 @@ router.post('/weekly-student-emails', verifyCronRequest, async (req, res) => {
       requestId: req.id
     });
   } catch (error) {
+    const isTimeout = error.message.includes('timed out');
     logger.error('Error in weekly student emails cron job', {
       error: error.message,
+      isTimeout,
       stack: error.stack,
       requestId: req.id
     });
 
-    res.status(500).json({
+    res.status(isTimeout ? 504 : 500).json({
       success: false,
-      error: 'Failed to send weekly emails',
+      error: isTimeout ? 'Weekly email job timed out' : 'Failed to send weekly emails',
       message: error.message,
       requestId: req.id
     });
@@ -274,7 +311,11 @@ router.get('/weekly-student-emails', verifyCronRequest, async (req, res) => {
   try {
     logger.info('Weekly student emails cron job triggered (GET)', { requestId: req.id });
 
-    const results = await sendAllWeeklyEmails();
+    const results = await withTimeout(
+      sendAllWeeklyEmails(),
+      EMAIL_BATCH_TIMEOUT,
+      'Weekly email job timed out'
+    );
 
     res.json({
       success: true,
@@ -283,15 +324,17 @@ router.get('/weekly-student-emails', verifyCronRequest, async (req, res) => {
       requestId: req.id
     });
   } catch (error) {
+    const isTimeout = error.message.includes('timed out');
     logger.error('Error in weekly student emails cron job', {
       error: error.message,
+      isTimeout,
       stack: error.stack,
       requestId: req.id
     });
 
-    res.status(500).json({
+    res.status(isTimeout ? 504 : 500).json({
       success: false,
-      error: 'Failed to send weekly emails',
+      error: isTimeout ? 'Weekly email job timed out' : 'Failed to send weekly emails',
       message: error.message,
       requestId: req.id
     });
@@ -308,7 +351,11 @@ router.post('/check-alerts', verifyCronRequest, async (req, res) => {
   try {
     logger.info('Alert check cron job triggered', { requestId: req.id });
 
-    const results = await runAlertChecks();
+    const results = await withTimeout(
+      runAlertChecks(),
+      ALERT_CHECK_TIMEOUT,
+      'Alert check job timed out'
+    );
 
     res.json({
       success: true,
@@ -317,15 +364,17 @@ router.post('/check-alerts', verifyCronRequest, async (req, res) => {
       requestId: req.id
     });
   } catch (error) {
+    const isTimeout = error.message.includes('timed out');
     logger.error('Error in alert check cron job', {
       error: error.message,
+      isTimeout,
       stack: error.stack,
       requestId: req.id
     });
 
-    res.status(500).json({
+    res.status(isTimeout ? 504 : 500).json({
       success: false,
-      error: 'Failed to run alert checks',
+      error: isTimeout ? 'Alert check job timed out' : 'Failed to run alert checks',
       message: error.message,
       requestId: req.id
     });
@@ -341,7 +390,11 @@ router.get('/check-alerts', verifyCronRequest, async (req, res) => {
   try {
     logger.info('Alert check cron job triggered (GET)', { requestId: req.id });
 
-    const results = await runAlertChecks();
+    const results = await withTimeout(
+      runAlertChecks(),
+      ALERT_CHECK_TIMEOUT,
+      'Alert check job timed out'
+    );
 
     res.json({
       success: true,
@@ -350,15 +403,17 @@ router.get('/check-alerts', verifyCronRequest, async (req, res) => {
       requestId: req.id
     });
   } catch (error) {
+    const isTimeout = error.message.includes('timed out');
     logger.error('Error in alert check cron job', {
       error: error.message,
+      isTimeout,
       stack: error.stack,
       requestId: req.id
     });
 
-    res.status(500).json({
+    res.status(isTimeout ? 504 : 500).json({
       success: false,
-      error: 'Failed to run alert checks',
+      error: isTimeout ? 'Alert check job timed out' : 'Failed to run alert checks',
       message: error.message,
       requestId: req.id
     });

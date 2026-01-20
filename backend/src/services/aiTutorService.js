@@ -26,11 +26,16 @@ const {
   updateTokenUsage
 } = require('./tutorConversationService');
 const { validateAndNormalizeLaTeX } = require('./latex-validator');
+const { withTimeout } = require('../utils/timeout');
+const { createOpenAICircuitBreaker } = require('../utils/circuitBreaker');
 
 // Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
+
+// Timeout configuration
+const AI_TUTOR_TIMEOUT = 60000; // 60 seconds for AI Tutor responses
 
 // Model configuration - loaded from environment with defaults
 const MODEL = process.env.AI_TUTOR_MODEL || 'gpt-4o-mini';
@@ -39,6 +44,25 @@ const TEMPERATURE = parseFloat(process.env.AI_TUTOR_TEMPERATURE) || 0.7;
 const ROLLING_WINDOW_SIZE = parseInt(process.env.AI_TUTOR_ROLLING_WINDOW, 10) || 20;
 const GREETING_MAX_TOKENS = parseInt(process.env.AI_TUTOR_GREETING_MAX_TOKENS, 10) || 300;
 const WELCOME_MAX_TOKENS = parseInt(process.env.AI_TUTOR_WELCOME_MAX_TOKENS, 10) || 200;
+
+/**
+ * OpenAI chat completion with timeout protection
+ * @param {Object} params - OpenAI chat completion parameters
+ * @returns {Promise<Object>} OpenAI response
+ */
+async function openaiChatWithTimeout(params) {
+  return withTimeout(
+    openai.chat.completions.create(params),
+    AI_TUTOR_TIMEOUT,
+    'AI Tutor response timed out. Please try again.'
+  );
+}
+
+// Create circuit breaker for AI Tutor OpenAI calls
+const aiTutorBreaker = createOpenAICircuitBreaker(
+  openaiChatWithTimeout,
+  { timeout: AI_TUTOR_TIMEOUT + 5000, name: 'AI-Tutor' }
+);
 
 /**
  * Build the system prompt with student and context data injected
@@ -97,8 +121,8 @@ async function sendMessage(userId, message) {
       { role: 'user', content: message }
     ];
 
-    // Call OpenAI API
-    const completion = await openai.chat.completions.create({
+    // Call OpenAI API with circuit breaker and timeout protection
+    const completion = await aiTutorBreaker.fire({
       model: MODEL,
       messages: messages,
       max_tokens: MAX_TOKENS,
@@ -207,7 +231,8 @@ Generate a brief, warm greeting (2-3 sentences max) acknowledging what they're l
 Don't solve anything yet - just welcome them and show you understand the context.`;
     }
 
-    const completion = await openai.chat.completions.create({
+    // Call OpenAI API with circuit breaker and timeout protection
+    const completion = await aiTutorBreaker.fire({
       model: MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
@@ -344,7 +369,8 @@ async function generateWelcomeMessage(userId) {
 Introduce yourself as Priya Ma'am and let them know you're here to help with their JEE preparation.
 Be encouraging but concise.`;
 
-    const completion = await openai.chat.completions.create({
+    // Call OpenAI API with circuit breaker and timeout protection
+    const completion = await aiTutorBreaker.fire({
       model: MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
