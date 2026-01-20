@@ -147,11 +147,7 @@ async function getWeeklyStats(userId) {
  */
 async function generateDailyEmailContent(userId, userData, streakData) {
   const yesterdayStats = await getYesterdayStats(userId);
-
-  // If no activity yesterday, skip email
-  if (yesterdayStats.questions === 0) {
-    return null;
-  }
+  const hadActivity = yesterdayStats.questions > 0;
 
   const thetaByChapter = userData.theta_by_chapter || {};
   const thetaBySubject = userData.theta_by_subject || {};
@@ -185,7 +181,10 @@ async function generateDailyEmailContent(userId, userData, streakData) {
   else if (currentStreak >= 7) streakEmoji = '🔥';
   else if (currentStreak > 0) streakEmoji = '✨';
 
-  const subject = `Day ${currentStreak} ${streakEmoji} | ${yesterdayStats.questions} questions | ${yesterdayStats.accuracy}% | Focus: ${topFocus?.chapter_name || 'Practice more!'}`;
+  // Different subject based on activity
+  const subject = hadActivity
+    ? `Day ${currentStreak} ${streakEmoji} | ${yesterdayStats.questions} questions | ${yesterdayStats.accuracy}% | Focus: ${topFocus?.chapter_name || 'Practice more!'}`
+    : `${firstName}, we missed you yesterday! 📚 Focus today: ${topFocus?.chapter_name || 'Start practicing!'}`;
 
   const html = `
 <!DOCTYPE html>
@@ -207,7 +206,8 @@ async function generateDailyEmailContent(userId, userData, streakData) {
     <div style="padding: 24px;">
       <p style="font-size: 16px; color: #333; margin: 0 0 16px 0;">Hi ${firstName},</p>
 
-      <!-- Yesterday's Stats -->
+      <!-- Yesterday's Stats or Come Back Message -->
+      ${hadActivity ? `
       <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
         <h2 style="font-size: 14px; color: #666; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 1px;">Yesterday's Activity</h2>
         <div style="display: flex; justify-content: space-around; text-align: center;">
@@ -225,6 +225,12 @@ async function generateDailyEmailContent(userId, userData, streakData) {
           </div>
         </div>
       </div>
+      ` : `
+      <div style="background: #fff3e0; border-radius: 12px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #ff9800;">
+        <h2 style="font-size: 14px; color: #e65100; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">We Missed You!</h2>
+        <p style="font-size: 15px; color: #bf360c; margin: 0; line-height: 1.5;">You didn't practice yesterday. Even 10 minutes of daily practice can make a huge difference in your JEE prep. Come back today!</p>
+      </div>
+      `}
 
       <!-- Streak -->
       ${currentStreak > 0 ? `
@@ -274,7 +280,7 @@ async function generateDailyEmailContent(userId, userData, streakData) {
 </html>
   `.trim();
 
-  const text = `
+  const text = hadActivity ? `
 Your JEE Prep Snapshot - ${formatDateIST(toIST(new Date()))}
 
 Hi ${firstName},
@@ -290,6 +296,18 @@ ${topFocus ? `📍 Today's Focus: ${topFocus.chapter_name} (${topFocus.subject_n
 Priya Ma'am says: ${priyaMaamMessage}
 
 Keep practicing at https://jeevibe.com
+  `.trim() : `
+We Missed You! - ${formatDateIST(toIST(new Date()))}
+
+Hi ${firstName},
+
+You didn't practice yesterday. Even 10 minutes of daily practice can make a huge difference in your JEE prep!
+
+${topFocus ? `📍 Today's Focus: ${topFocus.chapter_name} (${topFocus.subject_name})\n` : ''}
+
+Priya Ma'am says: ${priyaMaamMessage}
+
+Come back and practice at https://jeevibe.com
   `.trim();
 
   return { subject, html, text };
@@ -667,11 +685,14 @@ async function sendAllDailyEmails() {
 
       if (result.sent) {
         results.sent++;
-      } else if (result.reason === 'No activity yesterday' || result.reason === 'User opted out') {
+        logger.info('Daily email sent to user', { userId: doc.id, emailId: result.emailId });
+      } else if (result.reason === 'User opted out' || result.reason === 'No email address') {
         results.skipped++;
+        logger.debug('Daily email skipped', { userId: doc.id, reason: result.reason });
       } else {
         results.failed++;
         results.errors.push({ userId: doc.id, reason: result.reason });
+        logger.warn('Daily email failed', { userId: doc.id, reason: result.reason });
       }
     }
 
