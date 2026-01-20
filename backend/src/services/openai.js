@@ -514,13 +514,23 @@ Generate Question ${questionNumber} NOW in strict JSON object format.`;
           content: prompt
         }
       ],
-      max_tokens: 1500,
+      max_tokens: 2500, // Increased from 1500 to prevent truncation on complex math questions
       temperature: 0.7,
       response_format: { type: "json_object" }
     });
 
     const content = response.choices[0].message.content;
-    logger.debug(`Raw response for Q${questionNumber}`, { preview: content.substring(0, 300) });
+    const finishReason = response.choices[0].finish_reason;
+    logger.debug(`Raw response for Q${questionNumber}`, {
+      preview: content.substring(0, 300),
+      finishReason,
+      contentLength: content.length
+    });
+
+    // Check if response was truncated
+    if (finishReason === 'length') {
+      logger.warn(`Response truncated for Q${questionNumber}, may have incomplete JSON`);
+    }
 
     let data;
     try {
@@ -533,11 +543,18 @@ Generate Question ${questionNumber} NOW in strict JSON object format.`;
       try {
         let repairedContent = content;
 
-        // Remove any trailing incomplete data after the last valid closing brace
+        // Fix 1: Remove any trailing incomplete data after the last valid closing brace
         const lastBrace = repairedContent.lastIndexOf('}');
         if (lastBrace > 0) {
           repairedContent = repairedContent.substring(0, lastBrace + 1);
         }
+
+        // Fix 2: Handle unescaped newlines inside strings (common with LaTeX)
+        repairedContent = repairedContent.replace(/(?<!\\)\n/g, '\\n');
+
+        // Fix 3: Handle unescaped backslashes that aren't part of valid escape sequences
+        // This is tricky with LaTeX, so we only fix obvious issues
+        repairedContent = repairedContent.replace(/\\([^"\\\/bfnrtu])/g, '\\\\$1');
 
         // Try parsing the repaired content
         data = JSON.parse(repairedContent);
@@ -547,9 +564,19 @@ Generate Question ${questionNumber} NOW in strict JSON object format.`;
         const jsonMatch = content.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           try {
-            data = JSON.parse(jsonMatch[0]);
+            // Try more aggressive repair on extracted JSON
+            let extracted = jsonMatch[0];
+            // Replace problematic LaTeX that might break JSON
+            extracted = extracted.replace(/\\\\/g, '\\\\\\\\'); // Double-escape backslashes
+            data = JSON.parse(extracted);
             logger.info(`JSON extraction succeeded for Q${questionNumber}`);
           } catch (extractError) {
+            // Last resort: try to build a minimal valid response
+            logger.error(`All JSON repair attempts failed for Q${questionNumber}`, {
+              parseError: parseError.message,
+              repairError: repairError.message,
+              extractError: extractError.message
+            });
             throw new Error(`Failed to parse JSON response: ${parseError.message}`);
           }
         } else {
