@@ -502,8 +502,35 @@ Generate Question ${questionNumber} NOW in strict JSON object format.`;
       data = JSON.parse(content);
     } catch (parseError) {
       console.error(`JSON parse error for Q${questionNumber}:`, parseError);
-      console.error('Content:', content);
-      throw new Error(`Failed to parse JSON response: ${parseError.message}`);
+      console.error('Content preview:', content.substring(0, 500));
+
+      // Try to repair common JSON issues
+      try {
+        let repairedContent = content;
+
+        // Remove any trailing incomplete data after the last valid closing brace
+        const lastBrace = repairedContent.lastIndexOf('}');
+        if (lastBrace > 0) {
+          repairedContent = repairedContent.substring(0, lastBrace + 1);
+        }
+
+        // Try parsing the repaired content
+        data = JSON.parse(repairedContent);
+        logger.info(`JSON repair succeeded for Q${questionNumber}`);
+      } catch (repairError) {
+        // If repair fails, try extracting JSON object from the content
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            data = JSON.parse(jsonMatch[0]);
+            logger.info(`JSON extraction succeeded for Q${questionNumber}`);
+          } catch (extractError) {
+            throw new Error(`Failed to parse JSON response: ${parseError.message}`);
+          }
+        } else {
+          throw new Error(`Failed to parse JSON response: ${parseError.message}`);
+        }
+      }
     }
 
     // Validate question structure

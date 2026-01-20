@@ -635,6 +635,27 @@ router.post('/snap-practice/questions',
       const dbTransformed = dbQuestions.map(q => transformDatabaseQuestionToFollowUp(q));
       const needFromAI = count - dbTransformed.length;
 
+      // OPTIMIZATION: If DB has 0 questions, return immediately with empty results
+      // This allows the mobile app to fall back to individual question generation
+      // which provides better progressive loading UX (questions appear one by one)
+      if (dbTransformed.length === 0) {
+        logger.info('No DB questions found, returning empty for progressive loading fallback', {
+          requestId: req.id,
+          chapterKey: chapterKey
+        });
+
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        return res.json({
+          success: true,
+          data: {
+            questions: [],
+            source: 'none',
+            note: 'No questions in database for this topic. Use individual generation.'
+          },
+          requestId: req.id
+        });
+      }
+
       if (needFromAI > 0 && recognizedQuestion && solution) {
         logger.info('Falling back to AI for remaining questions', {
           requestId: req.id,
