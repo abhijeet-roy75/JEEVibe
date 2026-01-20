@@ -334,6 +334,44 @@ async function getAccuracyTrends(userId, days = 30) {
       });
     }
 
+    // 4. Get Snap & Solve practice sessions
+    const snapPracticeRef = db.collection('snap_practice_sessions')
+      .doc(userId)
+      .collection('sessions')
+      .where('completed_at', '>=', cutoffTimestamp);
+
+    const snapPracticeSnapshot = await retryFirestoreOperation(async () => {
+      return await snapPracticeRef.get();
+    });
+
+    if (!snapPracticeSnapshot.empty) {
+      snapPracticeSnapshot.docs.forEach(doc => {
+        const session = doc.data();
+        const completedAt = session.completed_at?.toDate();
+
+        if (!completedAt) return;
+
+        // Convert to IST for correct date grouping
+        const completedAtIST = toIST(completedAt);
+        const dateKey = formatDateIST(completedAtIST);
+
+        if (!dailyData[dateKey]) {
+          dailyData[dateKey] = {
+            date: dateKey,
+            quizzes: 0,
+            questions: 0,
+            correct: 0,
+            accuracy: 0
+          };
+        }
+
+        // Add snap practice questions to daily totals
+        dailyData[dateKey].quizzes += 1; // Each snap practice session counts as 1 quiz
+        dailyData[dateKey].questions += (session.total_questions || 0);
+        dailyData[dateKey].correct += (session.correct_count || 0);
+      });
+    }
+
     // Calculate accuracy for each day
     const trends = [];
     for (const [date, data] of Object.entries(dailyData)) {
