@@ -84,6 +84,14 @@ class LaTeXParser {
   static String _normalizeInput(String input) {
     String result = input;
 
+    // Clean up corrupted LATEX_BLOCK placeholders from bad data imports
+    // These are placeholders that were never restored - show visual indicator
+    // Matches both __LATEX_BLOCK_X__ (2 underscores) and ___LATEX_BLOCK_X___ (3 underscores)
+    result = result.replaceAll(
+      RegExp(r'_{2,3}LATEX_BLOCK_\d+_{2,3}'),
+      '[formula]',
+    );
+
     // Replace newlines with spaces (LaTeX doesn't handle raw newlines)
     result = result.replaceAll('\n', ' ');
     result = result.replaceAll('\r', ' ');

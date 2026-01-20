@@ -1778,4 +1778,40 @@ $\mathrm{HCHO} + \mathrm{CH}_3\mathrm{CHO} \xrightarrow{\mathrm{NaOH}} \mathrm{H
       expect(segments.any((s) => s.isLatex && s.content.contains('xrightleftharpoons')), true);
     });
   });
+
+  // =========================================================================
+  // CORRUPTED DATA HANDLING
+  // =========================================================================
+  group('Corrupted Data Handling', () {
+    test('cleans __LATEX_BLOCK_X__ placeholders (2 underscores)', () {
+      final input = 'Let k ∈ ℝ. If lim__LATEX_BLOCK_1__frac__LATEX_BLOCK_11__{x³} = 2';
+
+      final segments = LaTeXParser.parse(input);
+      final fullText = segments.map((s) => s.content).join('');
+
+      expect(fullText.contains('__LATEX_BLOCK_'), false);
+      expect(fullText.contains('[formula]'), true);
+    });
+
+    test('cleans ___LATEX_BLOCK_X___ placeholders (3 underscores)', () {
+      final input = 'Calculate ___LATEX_BLOCK_0___ where x = 5';
+
+      final segments = LaTeXParser.parse(input);
+      final fullText = segments.map((s) => s.content).join('');
+
+      expect(fullText.contains('___LATEX_BLOCK_'), false);
+      expect(fullText.contains('[formula]'), true);
+    });
+
+    test('handles mixed placeholders and real LaTeX', () {
+      final input = r'Find __LATEX_BLOCK_1__ when $x = \sqrt{2}$';
+
+      final segments = LaTeXParser.parse(input);
+      final fullText = segments.map((s) => s.content).join('');
+
+      expect(fullText.contains('__LATEX_BLOCK_'), false);
+      expect(fullText.contains('[formula]'), true);
+      expect(segments.any((s) => s.isLatex && s.content.contains('sqrt')), true);
+    });
+  });
 }

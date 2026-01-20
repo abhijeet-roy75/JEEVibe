@@ -52,6 +52,8 @@ const CHAPTER_NAME_NORMALIZATIONS = {
 
   // Mathematics variations
   "calculus": "limits_continuity_differentiability", // "Calculus" maps to limits
+  "limits_and_differentiability": "limits_continuity_differentiability", // Missing "continuity" in name
+  "limits_differentiability": "limits_continuity_differentiability", // Short form
   "algebra": "complex_numbers", // "Algebra" maps to complex_numbers
   "coordinate_geometry": "straight_lines", // Maps to straight_lines (foundation)
   "geometry": "straight_lines", // Default if ambiguous
