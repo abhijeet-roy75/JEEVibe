@@ -69,6 +69,28 @@ jest.mock('../../../src/prompts/ai_tutor_prompts', () => ({
   ])
 }));
 
+jest.mock('../../../src/services/contentModerationService', () => ({
+  // moderateMessage is a middleware factory that returns an async middleware
+  moderateMessage: jest.fn(() => async (req, res, next) => {
+    req.moderationAnalysis = {
+      flagged: false,
+      categories: [],
+      severity: null,
+      suggestedResponse: null
+    };
+    next();
+  }),
+  analyzeMessage: jest.fn().mockReturnValue({
+    category: 'academic',
+    jeeRelevant: true,
+    flagged: false
+  }),
+  SAFE_RESPONSES: {
+    general: "I'm here to help with JEE preparation.",
+    off_topic: "Let's focus on JEE preparation."
+  }
+}));
+
 const { authenticateUser } = require('../../../src/middleware/auth');
 const { requireFeature, checkUsageLimit } = require('../../../src/middleware/featureGate');
 const logger = require('../../../src/utils/logger');
