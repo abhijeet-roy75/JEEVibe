@@ -17,6 +17,26 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
+/**
+ * Normalize subject name to standard format
+ * Handles variations: math, maths, mathematics -> Mathematics
+ */
+function normalizeSubject(subject) {
+  if (!subject) return 'Mathematics';
+  const lower = subject.toLowerCase().trim();
+  if (lower === 'math' || lower === 'maths' || lower === 'mathematics') {
+    return 'Mathematics';
+  }
+  if (lower === 'physics' || lower === 'phy') {
+    return 'Physics';
+  }
+  if (lower === 'chemistry' || lower === 'chem') {
+    return 'Chemistry';
+  }
+  // Return with proper capitalization if unknown
+  return subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase();
+}
+
 // Timeout configurations (in milliseconds)
 const OPENAI_VISION_TIMEOUT = 120000; // 2 minutes for image processing
 const OPENAI_TEXT_TIMEOUT = 60000;    // 1 minute for text generation
@@ -106,8 +126,10 @@ OUTPUT FORMAT (strict JSON):
 }`;
 
     // Use circuit breaker for OpenAI Vision API call
+    // Using gpt-4o for better OCR accuracy on complex math LaTeX (fractions, intervals, matrices)
+    // gpt-4o-mini had issues with: losing fraction numerators, logical contradictions in reasoning
     const response = await openaiVisionBreaker.fire({
-      model: "gpt-4o-mini",  // Switched from gpt-4o for 40-45% faster responses + 94% cost savings
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -262,15 +284,18 @@ OUTPUT FORMAT (strict JSON):
     }
 
 
+    // Normalize subject name (handles math/maths/mathematics variations)
+    const normalizedSubject = normalizeSubject(solutionData.subject);
+
     // Align topic with JEE syllabus structure
     const alignedTopic = getSyllabusAlignedTopic(
       solutionData.topic || "General",
-      solutionData.subject || "Mathematics"
+      normalizedSubject
     );
 
     return {
       recognizedQuestion: finalRecognizedQuestion,
-      subject: solutionData.subject || "Mathematics",
+      subject: normalizedSubject,
       topic: alignedTopic,
       difficulty: solutionData.difficulty || "medium",
       language: solutionData.language || "en",
