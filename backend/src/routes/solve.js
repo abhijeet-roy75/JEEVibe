@@ -13,7 +13,7 @@ const { ApiError } = require('../middleware/errorHandler');
 const { storage, db, admin } = require('../config/firebase');
 const { withTimeout } = require('../utils/timeout');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
-const { calculateSubjectAndOverallThetaUpdate } = require('../services/chapterPracticeService');
+const { calculateSubjectAndOverallThetaUpdate } = require('../services/thetaUpdateService');
 
 // Timeout for Firebase Storage upload (30 seconds)
 const STORAGE_UPLOAD_TIMEOUT = 30000;
