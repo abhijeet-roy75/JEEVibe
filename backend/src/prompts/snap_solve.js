@@ -44,36 +44,41 @@ MAINTAIN:
 - Each question standalone (don't reference previous)
 
 OUTPUT FORMAT (strict JSON object - required for API):
-IMPORTANT: Use LaTeX format \\(...\\) for ALL mathematical and chemical expressions.
-CRITICAL: ALL math/chemistry must be wrapped in \\(...\\). Do NOT use plain text for formulas (e.g., H2O must be \\(\\mathrm{H}_{2}\\mathrm{O}\\)).
-CRITICAL: NEVER nest delimiters - use single-level \\(...\\) only.
-CRITICAL: Ensure strict delimiter balance - every opening \\( MUST have a matching closing \\).
+IMPORTANT: Use UNICODE characters for ALL mathematical and chemical expressions (NOT LaTeX).
+This ensures clean JSON output without escaping issues.
 
-CORRECT EXAMPLES OF JEE FORMAT:
-- Math: "Find \\(\\int_0^1 x^2 dx\\)" 
-- Chemistry: "Mass of \\(\\mathrm{H}_{2}\\mathrm{SO}_{4}\\)"
-- Ions: "\\(\\mathrm{NH}_{4}^{+}\\)"
-- Electronic config: "\\(1\\mathrm{s}^{2} 2\\mathrm{s}^{2} 2\\mathrm{p}^{3}\\)" (Note: spaces inside \\( ... \\) must be preserved)
-- Hybridization: "\\(\\mathrm{sp}^{3}\\mathrm{d}^{2}\\)"
-- Orbital notation: "\\(t_{2g}^{6} e_{g}^{0}\\)"
-- Greek letters: "\\(\\alpha\\), \\(\\beta\\), \\(\\gamma\\)"
-- Fractions: "\\(\\frac{\\mathrm{dy}}{\\mathrm{dx}}\\)"
+UNICODE CONVERSION RULES:
+- Fractions: Use (a)/(b) format, e.g., (1)/(2) for one-half
+- Superscripts: Use ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻ⁿˣʸ, e.g., x² for x squared, aⁿ for a to the n
+- Subscripts: Use ₀₁₂₃₄₅₆₇₈₉ₐₑᵢₒᵣᵤₓₙ, e.g., H₂O, CO₂, a₁
+- Common symbols: × (times), ÷ (divide), ± (plus-minus), √ (sqrt), ∞ (infinity)
+- Comparisons: ≤ ≥ ≠ ≈
+- Set notation: ∈ ∪ ∩ ⊂ ⊃
+- Arrows: → ⇒ ⇔ ↔
+- Number sets: ℝ ℕ ℤ ℚ ℂ
+- Greek: α β γ δ θ λ μ π σ ω Δ Σ Ω
+- Calculus: ∫ ∂ ∑ ∏ ∇
+- Angles: ° (degree)
 
-WRONG EXAMPLES (DO NOT DO THIS):
-- ❌ "Find ∫₀¹ x² dx" (Unicode - WRONG)
-- ❌ "Mass of H₂SO₄" (Unicode - WRONG)
-- ❌ "NH₄⁺" (Unicode - WRONG)
-- ❌ "\\(\\(x + y\\)\\)" (nested delimiters - WRONG)
-- ❌ "x^2" (missing delimiters - WRONG - MUST be \\(x^{2}\\))
-- ❌ "H_2O" (missing delimiters - WRONG - MUST be \\(\\mathrm{H}_{2}\\mathrm{O}\\))
+CORRECT EXAMPLES (Unicode):
+- Math: "Find ∫₀¹ x² dx"
+- Chemistry: "Mass of H₂SO₄"
+- Ions: "NH₄⁺", "SO₄²⁻"
+- Fractions: "(dy)/(dx)", "(1)/(π²)"
+- Intervals: "[1/10¹⁰, ∞)", "(1/π², 1/π)"
+- Functions: "f(x) = x² sin(π/x²)"
+- Limits: "lim x→0"
+- Sets: "x ∈ ℝ", "A ∪ B"
 
-NEVER use Unicode subscripts/superscripts - always use LaTeX with \\mathrm{} for chemistry.
-NEVER nest delimiters - if you see \\(\\(...\\)\\) you are doing it WRONG.
+DO NOT USE:
+- ❌ LaTeX backslashes: \\frac, \\int, \\mathrm (causes JSON escaping issues)
+- ❌ Plain text for math: "x^2" (use x² instead)
+- ❌ Plain text subscripts: "H2O" (use H₂O instead)
 
 {
   "questions": [
     {
-      "question": "Question 1 text with LaTeX \\(\\frac{a}{b}\\)",
+      "question": "Question 1 text with Unicode like x² + (a)/(b) = 0",
       "options": {
         "A": "Option A",
         "B": "Option B",
@@ -89,7 +94,7 @@ NEVER nest delimiters - if you see \\(\\(...\\)\\) you are doing it WRONG.
       "priyaMaamNote": "Encouraging tip"
     },
     {
-      "question": "Question 2 text with LaTeX",
+      "question": "Question 2 text with Unicode like ∫₀¹ f(x) dx",
       "options": {
         "A": "Option A",
         "B": "Option B",
@@ -105,7 +110,7 @@ NEVER nest delimiters - if you see \\(\\(...\\)\\) you are doing it WRONG.
       "priyaMaamNote": "Encouraging tip"
     },
     {
-      "question": "Question 3 text with LaTeX",
+      "question": "Question 3 text with Unicode like H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O",
       "options": {
         "A": "Option A",
         "B": "Option B",
