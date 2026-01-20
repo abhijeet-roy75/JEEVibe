@@ -24,17 +24,21 @@ class LaTeXToText {
     
     // Step 5: Convert chemical formulas
     result = _convertChemistry(result);
-    
-    // Step 6: Convert common math operators
-    result = _convertMathOperators(result);
-    
-    // Step 7: Convert calculus notation
+
+    // Step 6: Convert matrix environments
+    result = _convertMatrices(result);
+
+    // Step 7: Convert calculus notation FIRST (before operators)
+    // This ensures \int is converted before \in can match within it
     result = _convertCalculus(result);
-    
-    // Step 8: Clean up remaining LaTeX commands
+
+    // Step 8: Convert common math operators
+    result = _convertMathOperators(result);
+
+    // Step 9: Clean up remaining LaTeX commands
     result = _cleanupCommands(result);
-    
-    // Step 9: Final cleanup
+
+    // Step 10: Final cleanup
     result = _finalCleanup(result);
     
     return result;
@@ -256,10 +260,38 @@ class LaTeXToText {
     return result;
   }
   
+  /// Convert matrix environments to readable format
+  static String _convertMatrices(String text) {
+    String result = text;
+
+    // Convert matrix environments: \begin{pmatrix}...\end{pmatrix} -> [...]
+    // Handle pmatrix, bmatrix, matrix, vmatrix, Vmatrix
+    final matrixTypes = ['pmatrix', 'bmatrix', 'matrix', 'vmatrix', 'Vmatrix', 'array'];
+    for (final type in matrixTypes) {
+      result = result.replaceAllMapped(
+        RegExp('\\\\begin\\{$type\\}([\\s\\S]*?)\\\\end\\{$type\\}'),
+        (match) {
+          String content = match.group(1) ?? '';
+          // Convert & to spaces and \\ to newlines representation
+          content = content.replaceAll('&', ' ');
+          content = content.replaceAll(r'\\', '; ');
+          content = content.replaceAll(RegExp(r'\s+'), ' ').trim();
+          return '[$content]';
+        },
+      );
+    }
+
+    // Remove any remaining \begin{...} and \end{...}
+    result = result.replaceAll(RegExp(r'\\begin\{[^}]+\}'), '');
+    result = result.replaceAll(RegExp(r'\\end\{[^}]+\}'), '');
+
+    return result;
+  }
+
   /// Clean up remaining LaTeX commands
   static String _cleanupCommands(String text) {
     String result = text;
-    
+
     // Remove common commands that don't need conversion
     result = result.replaceAll(r'\text', '');
     result = result.replaceAll(r'\mathrm', '');
@@ -267,7 +299,7 @@ class LaTeXToText {
     result = result.replaceAll(r'\mathit', '');
     result = result.replaceAll(r'\displaystyle', '');
     result = result.replaceAll(r'\textstyle', '');
-    
+
     // Remove \left and \right
     result = result.replaceAll(r'\left', '');
     result = result.replaceAll(r'\right', '');
