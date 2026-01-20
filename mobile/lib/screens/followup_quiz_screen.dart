@@ -302,10 +302,45 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
 
   void _showCompletionSummary() async {
     final sessionDuration = DateTime.now().difference(_sessionStartTime!);
-    
+
+    // Update local stats
     final appState = Provider.of<AppStateProvider>(context, listen: false);
     await appState.updateStats(_questionResults.length, correctCount);
-    
+
+    // Submit results to backend for analytics and theta update
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final token = await authService.getIdToken();
+
+      if (token != null) {
+        // Prepare results for API
+        final resultsForApi = _questionResults.asMap().entries.map((entry) {
+          final result = entry.value;
+          return {
+            'question_number': result.questionNumber,
+            'is_correct': result.isCorrect,
+            'time_spent_seconds': result.timeSpentSeconds,
+            'question_id': _questions[entry.key]?.questionId,
+          };
+        }).toList();
+
+        // Call API to record results and update theta
+        await ApiService.completeSnapPractice(
+          authToken: token,
+          subject: widget.subject,
+          topic: widget.topic,
+          results: resultsForApi,
+          totalTimeSeconds: sessionDuration.inSeconds,
+          source: _questionSource,
+        );
+
+        debugPrint('Snap practice results submitted successfully');
+      }
+    } catch (e) {
+      // Log error but don't block navigation - results are saved locally
+      debugPrint('Failed to submit snap practice results: $e');
+    }
+
     final sessionResult = PracticeSessionResult(
       score: correctCount,
       total: _questionResults.length,
@@ -314,7 +349,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
       sessionId: 'session_${DateTime.now().millisecondsSinceEpoch}',
       timestamp: DateTime.now().toIso8601String(),
     );
-    
+
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(

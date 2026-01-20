@@ -382,6 +382,62 @@ class ApiService {
     });
   }
 
+  /// Complete a snap practice session and record results
+  /// Updates total_questions_solved, cumulative_stats, and theta (with 0.4x multiplier if correct >= 1)
+  /// Requires Firebase ID token for authentication
+  static Future<Map<String, dynamic>> completeSnapPractice({
+    required String authToken,
+    required String subject,
+    required String topic,
+    String? chapterKey,
+    required List<Map<String, dynamic>> results,
+    required int totalTimeSeconds,
+    String? source,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/snap-practice/complete'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+          body: json.encode({
+            'subject': subject,
+            'topic': topic,
+            if (chapterKey != null) 'chapter_key': chapterKey,
+            'results': results,
+            'total_time_seconds': totalTimeSeconds,
+            if (source != null) 'source': source,
+          }),
+        ).timeout(const Duration(seconds: 30));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to complete snap practice';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } catch (e) {
+        if (e.toString().contains('Exception:')) {
+          rethrow;
+        }
+        throw Exception('Failed to complete snap practice: ${e.toString()}');
+      }
+    });
+  }
+
   /// Health check
   static Future<bool> checkHealth() async {
     try {

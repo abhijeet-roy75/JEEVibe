@@ -10,8 +10,10 @@ const { solveQuestionFromImage, generateFollowUpQuestions, generateSingleFollowU
 const { authenticateUser } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
-const { storage } = require('../config/firebase');
+const { storage, db, admin } = require('../config/firebase');
 const { withTimeout } = require('../utils/timeout');
+const { retryFirestoreOperation } = require('../utils/firestoreRetry');
+const { calculateSubjectAndOverallThetaUpdate } = require('../services/chapterPracticeService');
 
 // Timeout for Firebase Storage upload (30 seconds)
 const STORAGE_UPLOAD_TIMEOUT = 30000;
@@ -24,6 +26,10 @@ const { getEffectiveTier } = require('../services/subscriptionService');
 
 // Valid subjects for JEE
 const VALID_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry'];
+
+// Snap practice theta multiplier (0.4x compared to daily quiz's 1.0x)
+// Only applied when student gets at least 1 correct answer
+const SNAP_PRACTICE_THETA_MULTIPLIER = 0.4;
 
 // Encouraging notes for practice questions (used when DB doesn't have key_insight)
 const PRIYA_PRACTICE_NOTES = [
@@ -733,6 +739,273 @@ router.post('/snap-practice/questions',
 
     } catch (error) {
       handleOpenAIError(error, next);
+    }
+  }
+);
+
+/**
+ * POST /api/snap-practice/complete
+ * Complete a snap practice session and record results
+ *
+ * Updates:
+ * - total_questions_solved counter
+ * - cumulative_stats (total_questions_correct, total_questions_attempted)
+ * - subject-level theta with 0.4x multiplier (only if correct >= 1)
+ * - snap_practice_history for analytics
+ *
+ * Body: {
+ *   subject: string,
+ *   topic: string,
+ *   chapter_key: string (optional - will be derived from topic if not provided),
+ *   results: [{
+ *     question_number: number,
+ *     is_correct: boolean,
+ *     time_spent_seconds: number,
+ *     question_id: string (optional)
+ *   }],
+ *   total_time_seconds: number,
+ *   source: string ("database" | "ai" | "mixed")
+ * }
+ *
+ * Returns: { success, summary, theta_update }
+ */
+router.post('/snap-practice/complete',
+  authenticateUser,
+  [
+    body('subject').isIn(VALID_SUBJECTS).withMessage('Invalid subject'),
+    body('topic').notEmpty().withMessage('Topic is required'),
+    body('results').isArray({ min: 1, max: 5 }).withMessage('Results must be an array of 1-5 items'),
+    body('results.*.is_correct').isBoolean().withMessage('is_correct must be a boolean'),
+    body('results.*.time_spent_seconds').isInt({ min: 0 }).withMessage('time_spent_seconds must be a non-negative integer'),
+    body('total_time_seconds').isInt({ min: 0 }).withMessage('total_time_seconds must be a non-negative integer')
+  ],
+  async (req, res, next) => {
+    try {
+      // Validate request
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return next(new ApiError(400, 'Validation failed', errors.array()));
+      }
+
+      const userId = req.userId;
+      const { subject, topic, chapter_key, results, total_time_seconds, source } = req.body;
+
+      // Calculate stats
+      const totalQuestions = results.length;
+      const correctCount = results.filter(r => r.is_correct).length;
+      const accuracy = totalQuestions > 0 ? correctCount / totalQuestions : 0;
+
+      logger.info('🔵 [SNAP PRACTICE COMPLETE] Starting', {
+        userId,
+        subject,
+        topic,
+        chapterKey: chapter_key,
+        totalQuestions,
+        correctCount,
+        accuracy: Math.round(accuracy * 100) / 100,
+        source
+      });
+
+      // Get user data
+      const userRef = db.collection('users').doc(userId);
+      const userDoc = await retryFirestoreOperation(async () => {
+        return await userRef.get();
+      });
+
+      if (!userDoc.exists) {
+        throw new ApiError(404, 'User not found');
+      }
+
+      const userData = userDoc.data();
+
+      // Derive chapter key if not provided
+      const effectiveChapterKey = chapter_key || formatChapterKey(subject, topic);
+
+      // ========================================================================
+      // THETA UPDATE (only if correct >= 1)
+      // ========================================================================
+      let thetaUpdateInfo = null;
+
+      if (correctCount > 0) {
+        const thetaByChapter = userData.theta_by_chapter || {};
+
+        // Get current chapter theta or use default
+        const currentChapterData = thetaByChapter[effectiveChapterKey] || {
+          theta: 0.0,
+          se: 0.5,
+          attempts: 0,
+          correct: 0,
+          accuracy: 0,
+          percentile: 50
+        };
+
+        // Calculate simple accuracy-based theta adjustment
+        // Higher accuracy = positive theta change, lower = negative
+        // Using a simple ELO-like formula scaled by multiplier
+        const expectedAccuracy = 0.5; // Baseline expectation
+        const accuracyDelta = accuracy - expectedAccuracy;
+
+        // Base theta change: +0.1 for each 10% above expected, -0.1 for each 10% below
+        const baseThetaDelta = accuracyDelta * 1.0;
+
+        // Apply 0.4x multiplier for snap practice
+        const adjustedThetaDelta = baseThetaDelta * SNAP_PRACTICE_THETA_MULTIPLIER;
+
+        // Calculate new theta (bounded -3 to +3)
+        const newTheta = Math.max(-3, Math.min(3, currentChapterData.theta + adjustedThetaDelta));
+
+        // Update chapter data
+        const updatedChapterData = {
+          theta: newTheta,
+          se: Math.max(0.15, currentChapterData.se * 0.98), // Slight SE reduction
+          attempts: currentChapterData.attempts + totalQuestions,
+          correct: currentChapterData.correct + correctCount,
+          accuracy: (currentChapterData.correct + correctCount) / (currentChapterData.attempts + totalQuestions),
+          percentile: Math.round(50 + (newTheta / 3) * 50), // Rough percentile estimate
+          last_updated: admin.firestore.FieldValue.serverTimestamp()
+        };
+
+        // Merge updated chapter data
+        const updatedThetaByChapter = {
+          ...thetaByChapter,
+          [effectiveChapterKey]: updatedChapterData
+        };
+
+        // Calculate subject and overall theta
+        const subjectAndOverallUpdate = calculateSubjectAndOverallThetaUpdate(updatedThetaByChapter);
+
+        thetaUpdateInfo = {
+          chapter_key: effectiveChapterKey,
+          before: {
+            theta: currentChapterData.theta,
+            percentile: currentChapterData.percentile
+          },
+          after: {
+            theta: newTheta,
+            percentile: updatedChapterData.percentile
+          },
+          delta: adjustedThetaDelta,
+          multiplier: SNAP_PRACTICE_THETA_MULTIPLIER,
+          subject_theta: subjectAndOverallUpdate.theta_by_subject?.[subject]?.theta,
+          overall_theta: subjectAndOverallUpdate.overall_theta
+        };
+
+        logger.info('🟢 [SNAP PRACTICE COMPLETE] Theta update calculated', {
+          userId,
+          chapterKey: effectiveChapterKey,
+          thetaUpdateInfo
+        });
+
+        // Update user document with theta and stats
+        await retryFirestoreOperation(async () => {
+          return await userRef.update({
+            theta_by_chapter: updatedThetaByChapter,
+            theta_by_subject: subjectAndOverallUpdate.theta_by_subject,
+            overall_theta: subjectAndOverallUpdate.overall_theta,
+            overall_percentile: subjectAndOverallUpdate.overall_percentile,
+            total_questions_solved: admin.firestore.FieldValue.increment(totalQuestions),
+            total_time_spent_minutes: admin.firestore.FieldValue.increment(Math.round(total_time_seconds / 60)),
+            'cumulative_stats.total_questions_correct': admin.firestore.FieldValue.increment(correctCount),
+            'cumulative_stats.total_questions_attempted': admin.firestore.FieldValue.increment(totalQuestions),
+            'cumulative_stats.last_updated': admin.firestore.FieldValue.serverTimestamp(),
+            // Track snap practice specific stats
+            'snap_practice_stats.total_sessions': admin.firestore.FieldValue.increment(1),
+            'snap_practice_stats.total_questions': admin.firestore.FieldValue.increment(totalQuestions),
+            'snap_practice_stats.total_correct': admin.firestore.FieldValue.increment(correctCount),
+            'snap_practice_stats.last_session': admin.firestore.FieldValue.serverTimestamp()
+          });
+        });
+      } else {
+        // No correct answers - update stats only, no theta update
+        logger.info('🟡 [SNAP PRACTICE COMPLETE] No correct answers - skipping theta update', {
+          userId,
+          subject,
+          topic,
+          totalQuestions,
+          correctCount
+        });
+
+        await retryFirestoreOperation(async () => {
+          return await userRef.update({
+            total_questions_solved: admin.firestore.FieldValue.increment(totalQuestions),
+            total_time_spent_minutes: admin.firestore.FieldValue.increment(Math.round(total_time_seconds / 60)),
+            'cumulative_stats.total_questions_correct': admin.firestore.FieldValue.increment(correctCount),
+            'cumulative_stats.total_questions_attempted': admin.firestore.FieldValue.increment(totalQuestions),
+            'cumulative_stats.last_updated': admin.firestore.FieldValue.serverTimestamp(),
+            'snap_practice_stats.total_sessions': admin.firestore.FieldValue.increment(1),
+            'snap_practice_stats.total_questions': admin.firestore.FieldValue.increment(totalQuestions),
+            'snap_practice_stats.total_correct': admin.firestore.FieldValue.increment(correctCount),
+            'snap_practice_stats.last_session': admin.firestore.FieldValue.serverTimestamp()
+          });
+        });
+      }
+
+      // ========================================================================
+      // SAVE SESSION TO HISTORY (for analytics)
+      // ========================================================================
+      const sessionId = `snap_practice_${Date.now()}_${uuidv4().slice(0, 8)}`;
+
+      await retryFirestoreOperation(async () => {
+        return await db.collection('snap_practice_sessions')
+          .doc(userId)
+          .collection('sessions')
+          .doc(sessionId)
+          .set({
+            session_id: sessionId,
+            subject,
+            topic,
+            chapter_key: effectiveChapterKey,
+            total_questions: totalQuestions,
+            correct_count: correctCount,
+            accuracy: Math.round(accuracy * 100) / 100,
+            total_time_seconds,
+            source: source || 'unknown',
+            results: results.map((r, i) => ({
+              question_number: r.question_number || i + 1,
+              is_correct: r.is_correct,
+              time_spent_seconds: r.time_spent_seconds,
+              question_id: r.question_id || null
+            })),
+            theta_update: thetaUpdateInfo,
+            created_at: admin.firestore.FieldValue.serverTimestamp()
+          });
+      });
+
+      logger.info('✅ [SNAP PRACTICE COMPLETE] Session completed successfully', {
+        userId,
+        sessionId,
+        subject,
+        topic,
+        totalQuestions,
+        correctCount,
+        thetaUpdated: correctCount > 0
+      });
+
+      res.json({
+        success: true,
+        message: 'Snap practice session completed',
+        summary: {
+          session_id: sessionId,
+          subject,
+          topic,
+          chapter_key: effectiveChapterKey,
+          total_questions: totalQuestions,
+          correct_count: correctCount,
+          accuracy: Math.round(accuracy * 100),
+          total_time_seconds,
+          theta_updated: correctCount > 0
+        },
+        theta_update: thetaUpdateInfo,
+        requestId: req.id
+      });
+
+    } catch (error) {
+      logger.error('❌ [SNAP PRACTICE COMPLETE] Error', {
+        userId: req.userId,
+        error: error.message,
+        stack: error.stack
+      });
+      next(error);
     }
   }
 );
