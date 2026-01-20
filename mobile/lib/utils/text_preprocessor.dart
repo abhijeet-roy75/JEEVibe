@@ -11,50 +11,55 @@ class TextPreprocessor {
   /// - "paramagneticwiththree" -> "paramagnetic with three"
   /// - "(A)and(C)only" -> "(A) and (C) only"
   /// - "StatementI" -> "Statement I"
-  /// 
+  /// - "StatementIisfalsebutStatementIIistrue" -> "Statement I is false but Statement II is true"
+  ///
   /// IMPORTANT: This function should NOT modify LaTeX content inside delimiters
   static String addSpacesToText(String text) {
     if (text.isEmpty) return text;
-    
+
     // First, check if this is pure LaTeX (wrapped in delimiters) - if so, don't add spaces
     final trimmed = text.trim();
     if (_isPureLaTeX(trimmed)) {
       return text; // Don't modify pure LaTeX
     }
-    
+
     String result = text;
-    
+
     // Protect LaTeX content inside delimiters - extract and restore later
     final latexBlocks = <String>[];
     result = _protectLatexBlocks(result, latexBlocks);
-    
-    // CRITICAL: Fix common concatenated chemistry/physics terms FIRST
+
+    // CRITICAL: Fix assertion-reason patterns FIRST (before Statement patterns add spaces)
+    // This handles patterns like "Iand" -> "I and" before "StatementIand" becomes "Statement Iand"
+    result = _fixAssertionReasonPatterns(result);
+
+    // Fix Statement patterns (after assertion-reason so "StatementIandStatement" becomes properly spaced)
+    result = _fixStatementPatterns(result);
+
+    // Fix common concatenated chemistry/physics terms
     result = _fixCommonTerms(result);
-    
+
     // Add space before capital letters that follow lowercase letters or numbers
     result = result.replaceAllMapped(
       RegExp(r'([a-z0-9])([A-Z])'),
       (match) => '${match.group(1)} ${match.group(2)}',
     );
-    
+
     // Add space before numbers that follow letters
     result = result.replaceAllMapped(
       RegExp(r'([a-zA-Z])(\d)'),
       (match) => '${match.group(1)} ${match.group(2)}',
     );
-    
+
     // Add space after numbers that are followed by letters
     result = result.replaceAllMapped(
       RegExp(r'(\d)([A-Za-z])'),
       (match) => '${match.group(1)} ${match.group(2)}',
     );
-    
-    // Fix common patterns like "StatementI" -> "Statement I", "StatementII" -> "Statement II"
-    result = _fixStatementPatterns(result);
-    
+
     // Fix "and" patterns like "(A)and(C)only" -> "(A) and (C) only"
     result = _fixAndPatterns(result);
-    
+
     // Fix "only" patterns like "(C)only" -> "(C) only"
     result = result.replaceAllMapped(
       RegExp(r'(\([A-Z]\))(only)', caseSensitive: false),
@@ -64,13 +69,13 @@ class TextPreprocessor {
       RegExp(r'([\)])(only)', caseSensitive: false),
       (match) => '${match.group(1)} ${match.group(2)}',
     );
-    
+
     // Clean up multiple spaces
     result = result.replaceAll(RegExp(r'\s+'), ' ');
-    
+
     // Restore protected LaTeX blocks
     result = _restoreLatexBlocks(result, latexBlocks);
-    
+
     return result.trim();
   }
   
@@ -171,26 +176,80 @@ class TextPreprocessor {
   /// Fix Statement patterns
   static String _fixStatementPatterns(String text) {
     String result = text;
-    
+
     // "Statements" or "Statement" followed by (A), (B), etc.
     // Handle: "Statements(A)" -> "Statements (A)"
     result = result.replaceAllMapped(
       RegExp(r'(Statements?)\(([A-Z])\)', caseSensitive: false),
       (match) => '${match.group(1)} (${match.group(2)})',
     );
-    
+
     // "StatementI" -> "Statement I", "StatementII" -> "Statement II"
+    // Must run BEFORE CamelCase split
     result = result.replaceAllMapped(
       RegExp(r'Statement([IVX]+)', caseSensitive: false),
       (match) => 'Statement ${match.group(1)}',
     );
-    
+
+    // "BothStatement" -> "Both Statement"
+    result = result.replaceAllMapped(
+      RegExp(r'Both(Statement)', caseSensitive: false),
+      (match) => 'Both ${match.group(1)}',
+    );
+
     // "Option(A)" -> "Option (A)"
     result = result.replaceAllMapped(
       RegExp(r'Option\(([A-Z])\)', caseSensitive: false),
       (match) => 'Option (${match.group(1)})',
     );
-    
+
+    return result;
+  }
+
+  /// Fix common assertion-reason question patterns
+  /// Handles words like "is", "are", "but", "true", "false", "Both", "correct", etc.
+  static String _fixAssertionReasonPatterns(String text) {
+    String result = text;
+
+    // Common words that get concatenated in assertion-reason questions
+    // NOTE: Can't use \b word boundaries as words are concatenated without spaces
+
+    // Fix "Iis" -> "I is", "IIis" -> "II is" (Roman numerals followed by "is")
+    result = result.replaceAllMapped(
+      RegExp(r'([IVX]+)(is|are|was|were)([a-z])', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
+    );
+
+    // Fix "isfalse" -> "is false", "istrue" -> "is true"
+    result = result.replaceAllMapped(
+      RegExp(r'(is|are)(true|false|correct|incorrect|wrong|right)', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+
+    // Fix "falsebut" -> "false but", "truebut" -> "true but"
+    result = result.replaceAllMapped(
+      RegExp(r'(true|false|correct|incorrect)(but|and|or)([A-Z])', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
+    );
+
+    // Fix "butStatement" -> "but Statement", "andStatement" -> "and Statement"
+    result = result.replaceAllMapped(
+      RegExp(r'(but|and|or)(Statement|Both)', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+
+    // Fix "Iand" -> "I and", "IIand" -> "II and" (Roman numerals followed by "and")
+    result = result.replaceAllMapped(
+      RegExp(r'([IVX]+)(and|or|but)([A-Z])', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)} ${match.group(3)}',
+    );
+
+    // Fix "aretrue" -> "are true", "arefalse" -> "are false"
+    result = result.replaceAllMapped(
+      RegExp(r'(are)(true|false|correct|incorrect)', caseSensitive: false),
+      (match) => '${match.group(1)} ${match.group(2)}',
+    );
+
     return result;
   }
   
