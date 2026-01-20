@@ -937,8 +937,8 @@ router.post('/snap-practice/complete',
           },
           delta: adjustedThetaDelta,
           multiplier: SNAP_PRACTICE_THETA_MULTIPLIER,
-          subject_theta: subjectAndOverallUpdate.theta_by_subject?.[subject]?.theta,
-          overall_theta: subjectAndOverallUpdate.overall_theta
+          subject_theta: subjectAndOverallUpdate.theta_by_subject?.[subject.toLowerCase()]?.theta ?? null,
+          overall_theta: subjectAndOverallUpdate.overall_theta ?? null
         };
 
         logger.info('🟢 [SNAP PRACTICE COMPLETE] Theta update calculated', {
