@@ -171,8 +171,22 @@ class PracticeResultsScreen extends StatelessWidget {
   }
 
   Widget _buildTopicMastery() {
-    final mastery = (sessionResult.accuracy * 0.72).roundToDouble(); // Mock calculation
-    final improvement = 15; // Mock data
+    // Use session accuracy directly as the mastery indicator
+    final accuracy = sessionResult.accuracy.round();
+
+    // Determine color based on accuracy
+    final Color progressColor;
+    final Color textColor;
+    if (accuracy >= 70) {
+      progressColor = AppColors.successGreen;
+      textColor = AppColors.successGreen;
+    } else if (accuracy >= 40) {
+      progressColor = AppColors.warningAmber;
+      textColor = AppColors.warningAmber;
+    } else {
+      progressColor = AppColors.errorRed;
+      textColor = AppColors.errorRed;
+    }
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -187,11 +201,11 @@ class PracticeResultsScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Topic Mastery', style: AppTextStyles.labelMedium),
+              Text('Session Accuracy', style: AppTextStyles.labelMedium),
               Text(
-                '+$improvement% ↑',
+                '$accuracy%',
                 style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.successGreen,
+                  color: textColor,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -207,12 +221,10 @@ class PracticeResultsScreen extends StatelessWidget {
             ),
             child: FractionallySizedBox(
               alignment: Alignment.centerLeft,
-              widthFactor: mastery / 100,
+              widthFactor: accuracy / 100,
               child: Container(
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.warningAmber, Color(0xFFFBBF24)],
-                  ),
+                  color: progressColor,
                   borderRadius: BorderRadius.circular(6),
                 ),
               ),
@@ -227,9 +239,9 @@ class PracticeResultsScreen extends StatelessWidget {
                 style: AppTextStyles.bodySmall,
               ),
               Text(
-                '${mastery.toInt()}% Mastered',
+                '${sessionResult.score}/${sessionResult.total} correct',
                 style: AppTextStyles.labelSmall.copyWith(
-                  color: AppColors.warningAmber,
+                  color: textColor,
                   fontWeight: FontWeight.w700,
                 ),
               ),
