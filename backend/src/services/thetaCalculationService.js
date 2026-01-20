@@ -54,6 +54,8 @@ const CHAPTER_NAME_NORMALIZATIONS = {
   "calculus": "limits_continuity_differentiability", // "Calculus" maps to limits
   "limits_and_differentiability": "limits_continuity_differentiability", // Missing "continuity" in name
   "limits_differentiability": "limits_continuity_differentiability", // Short form
+  "limit_continuity_and_differentiability": "limits_continuity_differentiability", // JEE syllabus exact name (singular "Limit")
+  "limits_continuity_and_differentiability": "limits_continuity_differentiability", // Plural variation with "and"
   "algebra": "complex_numbers", // "Algebra" maps to complex_numbers
   "coordinate_geometry": "straight_lines", // Maps to straight_lines (foundation)
   "geometry": "straight_lines", // Default if ambiguous
@@ -499,13 +501,34 @@ function calculateOverallTheta(thetaEstimates) {
 /**
  * Format chapter key from subject and chapter name
  * Example: "Physics", "Laws of Motion" -> "physics_laws_of_motion"
- * 
+ *
  * @param {string} subject - Subject name
  * @param {string} chapter - Chapter name
  * @returns {string} Chapter key
  */
 function formatChapterKey(subject, chapter) {
-  const subjectLower = subject.toLowerCase().trim();
+  let subjectLower = subject.toLowerCase().trim();
+
+  // Defensive check: if subject looks like an already-formed key (contains underscores followed by more text),
+  // extract just the subject portion. This handles cases where a chapter key is mistakenly passed as subject.
+  // Valid subjects are: physics, chemistry, mathematics, maths, math
+  const validSubjects = ['physics', 'chemistry', 'mathematics', 'maths', 'math'];
+  if (subjectLower.includes('_')) {
+    const possibleSubject = subjectLower.split('_')[0];
+    if (validSubjects.includes(possibleSubject)) {
+      console.warn(
+        `formatChapterKey received what looks like a chapter key as subject: "${subject}". ` +
+        `Extracting subject: "${possibleSubject}"`
+      );
+      subjectLower = possibleSubject;
+    }
+  }
+
+  // Normalize subject name variations
+  if (subjectLower === 'math' || subjectLower === 'maths') {
+    subjectLower = 'mathematics';
+  }
+
   let chapterLower = chapter.toLowerCase().trim()
     .replace(/[^a-z0-9\s]/g, '')  // Remove special characters
     .replace(/\s+/g, '_');         // Replace spaces with underscores
