@@ -96,10 +96,12 @@ const app = initializeFirebase();
 // Export Firestore and Storage instances
 const db = admin.firestore();
 const storage = admin.storage();
+const FieldValue = admin.firestore.FieldValue;
 
 module.exports = {
   admin,
   db,
   storage,
-  app
+  app,
+  FieldValue
 };
