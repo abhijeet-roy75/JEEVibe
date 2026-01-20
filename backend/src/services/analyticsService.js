@@ -203,8 +203,17 @@ async function calculateFocusAreas(thetaByChapter, chapterMappings = null, subto
       status: getMasteryStatus(percentile)
     };
 
-    // Keep the chapter with lowest percentile for each subject
-    if (!subjectFocusAreas[subject] || percentile < subjectFocusAreas[subject].percentile) {
+    // Keep the chapter with lowest accuracy for each subject
+    // This ensures Focus Areas shows chapters where students need the most practice
+    // We use accuracy (not percentile) because:
+    // 1. Accuracy directly reflects what students see in the UI
+    // 2. Percentile may not be set for all chapters (defaults to 0)
+    // 3. IRT percentile can be counterintuitive (hard chapters may have high percentile despite low accuracy)
+    const currentFocus = subjectFocusAreas[subject];
+    if (!currentFocus || accuracy < currentFocus.accuracy) {
+      subjectFocusAreas[subject] = focusArea;
+    } else if (accuracy === currentFocus.accuracy && attempts > currentFocus.attempts) {
+      // Tie-breaker: if same accuracy, prefer chapter with more attempts (more data = more reliable)
       subjectFocusAreas[subject] = focusArea;
     }
   }
