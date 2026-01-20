@@ -77,6 +77,7 @@ class FollowUpQuestion {
   final String? priyaMaamNote;
   final String? source; // "database" or "ai" - indicates where the question came from
   final String? questionId; // Database question ID for tracking
+  final String questionType; // "mcq_single" or "numerical"
 
   FollowUpQuestion({
     required this.question,
@@ -86,7 +87,14 @@ class FollowUpQuestion {
     this.priyaMaamNote,
     this.source,
     this.questionId,
+    this.questionType = 'mcq_single',
   });
+
+  /// Check if this is a numerical answer question
+  bool get isNumerical => questionType == 'numerical';
+
+  /// Check if this is an MCQ question
+  bool get isMcq => questionType == 'mcq_single' || questionType == 'mcq';
 
   factory FollowUpQuestion.fromJson(Map<String, dynamic> json) {
     try {
@@ -123,6 +131,7 @@ class FollowUpQuestion {
         priyaMaamNote: json['priyaMaamNote']?.toString(),
         source: json['source']?.toString(),
         questionId: json['questionId']?.toString(),
+        questionType: json['questionType']?.toString() ?? 'mcq_single',
       );
     } catch (e) {
       // Return a safe default if parsing completely fails

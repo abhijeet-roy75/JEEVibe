@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/solution_model.dart';
 import '../models/snap_data_model.dart';
+import '../models/daily_quiz_question.dart' show AnswerFeedback;
 import '../widgets/latex_widget.dart';
 import '../widgets/chemistry_text.dart';
 import '../widgets/app_header.dart';
+import '../widgets/daily_quiz/feedback_banner_widget.dart';
+import '../widgets/daily_quiz/detailed_explanation_widget.dart';
 import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../theme/app_colors.dart';
@@ -15,6 +18,7 @@ import '../providers/app_state_provider.dart';
 import 'practice_results_screen.dart';
 import '../config/content_config.dart';
 import '../utils/text_preprocessor.dart';
+import '../utils/question_adapters.dart';
 
 class FollowUpQuizScreen extends StatefulWidget {
   final String recognizedQuestion;
@@ -54,6 +58,12 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
   List<QuestionResult> _questionResults = [];
   bool _dbQuestionsLoaded = false; // Track if we've tried DB loading
   String _questionSource = 'unknown'; // Track source: "database", "ai", "mixed"
+
+  // For numerical answer input
+  final TextEditingController _numericalAnswerController = TextEditingController();
+
+  // Current answer feedback for reusing DetailedExplanationWidget
+  AnswerFeedback? _currentFeedback;
 
   @override
   void initState() {
@@ -107,6 +117,17 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
           : <FollowUpQuestion>[];
       _questionSource = result['source'] as String? ?? 'unknown';
 
+      // Debug logging to identify question source and content
+      debugPrint('📚 Snap Practice Questions loaded:');
+      debugPrint('   Source: $_questionSource');
+      debugPrint('   Count: ${questions.length}');
+      for (int i = 0; i < questions.length; i++) {
+        final q = questions[i];
+        debugPrint('   Q${i + 1}: ${q.question.substring(0, q.question.length.clamp(0, 50))}...');
+        debugPrint('   Q${i + 1} options: ${q.options}');
+        debugPrint('   Q${i + 1} questionId: ${q.questionId}');
+      }
+
       if (mounted && questions.isNotEmpty) {
         setState(() {
           for (int i = 0; i < questions.length && i < 3; i++) {
@@ -122,6 +143,12 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
         // Start timer for first question
         if (_questions[0] != null && _timer == null) {
           _startTimer();
+        }
+
+        // Preload remaining questions if DB returned partial results
+        // This starts AI generation in background for missing questions
+        for (int i = questions.length; i < 3; i++) {
+          _preloadNextQuestion(i);
         }
         return;
       }
@@ -194,6 +221,9 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
         if (index == 0 && _timer == null) {
           _startTimer();
         }
+
+        // Preload next question immediately to reduce wait time
+        _preloadNextQuestion(index + 1);
       }
     } catch (e) {
       if (mounted) {
@@ -213,6 +243,30 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
     }
   }
 
+  /// Preload the next question in the background to reduce wait time
+  /// Called when current question is successfully loaded
+  void _preloadNextQuestion(int nextIndex) {
+    if (nextIndex < 0 || nextIndex >= 3) return;
+    if (_questions[nextIndex] != null || _questionLoading[nextIndex]) return;
+
+    // Fire and forget - load in background
+    _loadQuestion(nextIndex);
+  }
+
+  /// Wait for a question to be loaded, then start the timer
+  /// This ensures user doesn't lose time while waiting for question generation
+  void _waitForQuestionAndStartTimer(int index) async {
+    // Poll every 100ms to check if question is loaded
+    while (mounted && _questions[index] == null && currentQuestionIndex == index) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    // Only start timer if still on this question and mounted
+    if (mounted && currentQuestionIndex == index && _questions[index] != null && _timer == null) {
+      _startTimer();
+    }
+  }
+
   void _startTimer() {
     _questionStartTime = DateTime.now();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -226,6 +280,37 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
     });
   }
 
+  /// Compare numerical answers with tolerance for floating point differences
+  /// Handles various formats: integers, decimals, scientific notation
+  bool _compareNumericalAnswer(String? userAnswer, String correctAnswer) {
+    if (userAnswer == null || userAnswer.trim().isEmpty) return false;
+
+    try {
+      // Clean up the answers (remove spaces, convert commas to dots)
+      final cleanUser = userAnswer.trim().replaceAll(',', '.').replaceAll(' ', '');
+      final cleanCorrect = correctAnswer.trim().replaceAll(',', '.').replaceAll(' ', '');
+
+      // Try to parse as numbers
+      final userNum = double.tryParse(cleanUser);
+      final correctNum = double.tryParse(cleanCorrect);
+
+      if (userNum != null && correctNum != null) {
+        // Compare with relative tolerance of 1% or absolute tolerance of 0.01
+        final diff = (userNum - correctNum).abs();
+        final relativeTolerance = correctNum.abs() * 0.01; // 1% tolerance
+        const absoluteTolerance = 0.01;
+
+        return diff <= relativeTolerance || diff <= absoluteTolerance;
+      }
+
+      // If not parseable as numbers, do string comparison (case-insensitive)
+      return cleanUser.toLowerCase() == cleanCorrect.toLowerCase();
+    } catch (e) {
+      // Fallback to string comparison
+      return userAnswer.trim().toLowerCase() == correctAnswer.trim().toLowerCase();
+    }
+  }
+
   void _selectAnswer(String answer) {
     if (!showFeedback) {
       setState(() {
@@ -236,12 +321,18 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
 
   void _submitAnswer(String? answer) {
     _timer?.cancel();
-    
+
     final question = _questions[currentQuestionIndex];
     if (question == null) return;
-    
-    final isAnswerCorrect = answer == question.correctAnswer;
-    
+
+    // For numerical questions, compare numeric values with tolerance
+    bool isAnswerCorrect;
+    if (question.isNumerical || question.options.isEmpty) {
+      isAnswerCorrect = _compareNumericalAnswer(answer, question.correctAnswer);
+    } else {
+      isAnswerCorrect = answer == question.correctAnswer;
+    }
+
     // Calculate time spent on this question
     int timeSpent = 0;
     if (_questionStartTime != null) {
@@ -269,10 +360,19 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
       },
       timeSpentSeconds: timeSpent,
     ));
-    
+
+    // Create AnswerFeedback using the adapter for reusable widgets
+    final feedback = followUpQuestionToFeedback(
+      question,
+      isCorrect: isAnswerCorrect,
+      studentAnswer: answer,
+      timeTakenSeconds: timeSpent,
+    );
+
     setState(() {
       showFeedback = true;
       isCorrect = isAnswerCorrect;
+      _currentFeedback = feedback;
       if (isAnswerCorrect) {
         correctCount++;
       }
@@ -282,19 +382,28 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
   void _nextQuestion() {
     if (currentQuestionIndex < 2) {
       final nextIndex = currentQuestionIndex + 1;
-      
+
       if (_questions[nextIndex] == null && !_questionLoading[nextIndex]) {
         _loadQuestion(nextIndex);
       }
-      
+
       setState(() {
         currentQuestionIndex = nextIndex;
         selectedAnswer = null;
         showFeedback = false;
         timeRemaining = 90;
         _questionStartTime = null; // Reset for next question
+        _numericalAnswerController.clear(); // Clear numerical input for next question
+        _currentFeedback = null; // Reset feedback for next question
       });
-      _startTimer();
+
+      // Only start timer if the question is ready
+      // If not ready, timer will start when question loads (see _waitForQuestionAndStartTimer)
+      if (_questions[nextIndex] != null) {
+        _startTimer();
+      } else {
+        _waitForQuestionAndStartTimer(nextIndex);
+      }
     } else {
       _showCompletionSummary();
     }
@@ -364,6 +473,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _numericalAnswerController.dispose();
     super.dispose();
   }
 
@@ -404,6 +514,20 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
                     _buildQuestionCard(question),
                     const SizedBox(height: AppSpacing.space20),
                     _buildOptions(question),
+                    if (showFeedback && _currentFeedback != null) ...[
+                      const SizedBox(height: AppSpacing.space20),
+                      // Reuse FeedbackBannerWidget from daily quiz
+                      FeedbackBannerWidget(
+                        feedback: _currentFeedback!,
+                        timeTakenSeconds: _currentFeedback!.timeTakenSeconds,
+                      ),
+                      const SizedBox(height: AppSpacing.space16),
+                      // Reuse DetailedExplanationWidget from daily quiz
+                      DetailedExplanationWidget(
+                        feedback: _currentFeedback!,
+                        isCorrect: isCorrect,
+                      ),
+                    ],
                     const SizedBox(height: AppSpacing.space24),
                     _buildSubmitButton(),
                     const SizedBox(height: AppSpacing.space12),
@@ -622,6 +746,12 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
   }
 
   Widget _buildOptions(FollowUpQuestion question) {
+    // Check if this is a numerical question (no options or explicitly numerical type)
+    if (question.isNumerical || question.options.isEmpty) {
+      return _buildNumericalInput(question);
+    }
+
+    // MCQ options
     return Column(
       children: question.options.entries.map((entry) {
         final optionKey = entry.key;
@@ -717,6 +847,107 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
     );
   }
 
+  /// Build numerical answer input field
+  Widget _buildNumericalInput(FollowUpQuestion question) {
+    final userAnswer = _numericalAnswerController.text.trim();
+    final hasAnswer = userAnswer.isNotEmpty;
+
+    // Determine colors based on feedback state
+    Color borderColor = AppColors.borderGray;
+    Color backgroundColor = Colors.white;
+
+    if (showFeedback) {
+      borderColor = isCorrect ? AppColors.successGreen : AppColors.errorRed;
+      backgroundColor = isCorrect
+          ? AppColors.successGreen.withValues(alpha: 0.05)
+          : AppColors.errorRed.withValues(alpha: 0.05);
+    } else if (hasAnswer) {
+      borderColor = AppColors.primaryPurple;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Input field
+        Container(
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor, width: 2),
+          ),
+          child: TextField(
+            controller: _numericalAnswerController,
+            enabled: !showFeedback,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+            style: AppTextStyles.bodyLarge.copyWith(
+              color: AppColors.textDark,
+              fontWeight: FontWeight.w500,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Enter your answer...',
+              hintStyle: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textLight,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              border: InputBorder.none,
+              prefixIcon: Icon(
+                Icons.calculate_outlined,
+                color: showFeedback
+                    ? (isCorrect ? AppColors.successGreen : AppColors.errorRed)
+                    : AppColors.primaryPurple,
+              ),
+              suffixIcon: showFeedback
+                  ? Icon(
+                      isCorrect ? Icons.check_circle : Icons.cancel,
+                      color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
+                    )
+                  : null,
+            ),
+            onChanged: (value) {
+              // Update selectedAnswer to enable submit button
+              setState(() {
+                selectedAnswer = value.trim().isNotEmpty ? value.trim() : null;
+              });
+            },
+          ),
+        ),
+
+        // Show correct answer after feedback
+        if (showFeedback) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.successGreen.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.successGreen.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle, color: AppColors.successGreen, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textDark),
+                      children: [
+                        const TextSpan(text: 'Correct Answer: '),
+                        TextSpan(
+                          text: question.correctAnswer,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildSubmitButton() {
     final hasSelected = selectedAnswer != null;
     final buttonText = showFeedback 
@@ -769,7 +1000,6 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
     );
   }
 
-
   /// Build content widget based on subject (ChemistryText for Chemistry, LaTeXWidget for others)
   Widget _buildContentWidget(String content, String subject, TextStyle textStyle) {
     if (subject.toLowerCase() == 'chemistry') {
@@ -787,22 +1017,84 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
   }
 
   Widget _buildLoadingState() {
+    final questionNumber = currentQuestionIndex + 1;
+    final isFirstQuestion = currentQuestionIndex == 0;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppColors.primaryGradient,
         ),
-        child: const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(color: Colors.white),
-              SizedBox(height: 24),
-              Text(
-                'Loading question...',
-                style: TextStyle(color: Colors.white, fontSize: 16),
+        child: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Animated loading indicator
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 3,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    isFirstQuestion
+                        ? 'Preparing your practice questions...'
+                        : 'Loading Question $questionNumber...',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    isFirstQuestion
+                        ? 'Finding the best questions to help you learn'
+                        : 'Almost ready!',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (!isFirstQuestion) ...[
+                    const SizedBox(height: 24),
+                    // Progress dots
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(3, (index) {
+                        final isCompleted = index < currentQuestionIndex;
+                        final isCurrent = index == currentQuestionIndex;
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: isCurrent ? 24 : 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: isCompleted
+                                ? Colors.white
+                                : Colors.white.withValues(alpha: isCurrent ? 0.8 : 0.3),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

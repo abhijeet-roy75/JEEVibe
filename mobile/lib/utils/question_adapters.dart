@@ -1,11 +1,12 @@
 /// Question Adapters
 ///
-/// Utility functions to convert between Chapter Practice models and Daily Quiz models.
+/// Utility functions to convert between various question models and Daily Quiz models.
 /// This allows reuse of Daily Quiz widgets (FeedbackBanner, DetailedExplanation, QuestionCard)
-/// in the Chapter Practice flow.
+/// in multiple flows: Chapter Practice, Snap Practice, etc.
 
 import '../models/chapter_practice_models.dart';
 import '../models/daily_quiz_question.dart';
+import '../models/solution_model.dart' show FollowUpQuestion;
 import '../models/assessment_question.dart' show QuestionOption;
 
 /// Convert PracticeQuestion to DailyQuizQuestion
@@ -93,5 +94,86 @@ AnswerFeedback createFeedbackFromPractice({
     questionId: question.questionId,
     timeTakenSeconds: timeTakenSeconds,
     questionType: question.questionType,
+  );
+}
+
+// =============================================================================
+// SNAP PRACTICE ADAPTERS
+// =============================================================================
+
+/// Convert FollowUpQuestion to DailyQuizQuestion
+///
+/// Enables reuse of Daily Quiz widgets (QuestionCard) for Snap Practice questions.
+/// Handles MCQ and numerical question types.
+///
+/// Parameters:
+/// - [followUp]: The FollowUpQuestion from snap practice
+/// - [position]: The question position (1-3)
+/// - [subject]: The subject name
+/// - [topic]: The topic/chapter name
+DailyQuizQuestion followUpQuestionToDailyQuiz(
+  FollowUpQuestion followUp, {
+  required int position,
+  required String subject,
+  required String topic,
+}) {
+  // Convert Map<String, String> options to List<QuestionOption>
+  final List<QuestionOption> optionsList = followUp.options.entries
+      .map((entry) => QuestionOption(
+            optionId: entry.key,
+            text: entry.value,
+            html: null,
+          ))
+      .toList();
+
+  // Sort options by key (A, B, C, D)
+  optionsList.sort((a, b) => a.optionId.compareTo(b.optionId));
+
+  return DailyQuizQuestion(
+    questionId: followUp.questionId ?? 'snap_q_$position',
+    position: position,
+    subject: subject,
+    chapter: topic,
+    chapterKey: '${subject.toLowerCase()}_${topic.toLowerCase().replaceAll(' ', '_')}',
+    questionType: followUp.questionType,
+    questionText: followUp.question,
+    questionTextHtml: null, // FollowUpQuestion doesn't have HTML version
+    options: optionsList.isNotEmpty ? optionsList : null,
+  );
+}
+
+/// Create AnswerFeedback from FollowUpQuestion after answering
+///
+/// Enables reuse of FeedbackBannerWidget and DetailedExplanationWidget
+/// for Snap Practice answer feedback.
+///
+/// Parameters:
+/// - [followUp]: The FollowUpQuestion that was answered
+/// - [isCorrect]: Whether the answer was correct
+/// - [studentAnswer]: The student's answer
+/// - [timeTakenSeconds]: Time spent on the question
+AnswerFeedback followUpQuestionToFeedback(
+  FollowUpQuestion followUp, {
+  required bool isCorrect,
+  required String? studentAnswer,
+  int timeTakenSeconds = 0,
+}) {
+  // Convert explanation steps to SolutionStep format
+  final solutionSteps = followUp.explanation.steps
+      .map((step) => SolutionStep(description: step))
+      .toList();
+
+  return AnswerFeedback(
+    questionId: followUp.questionId ?? '',
+    isCorrect: isCorrect,
+    correctAnswer: followUp.correctAnswer,
+    correctAnswerText: followUp.explanation.finalAnswer,
+    explanation: followUp.explanation.approach,
+    solutionText: followUp.explanation.approach,
+    solutionSteps: solutionSteps,
+    keyInsight: followUp.priyaMaamNote,
+    timeTakenSeconds: timeTakenSeconds,
+    studentAnswer: studentAnswer,
+    questionType: followUp.questionType,
   );
 }
