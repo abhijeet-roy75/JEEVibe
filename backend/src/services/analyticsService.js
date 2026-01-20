@@ -149,8 +149,11 @@ async function calculateFocusAreas(thetaByChapter, chapterMappings = null, subto
     const percentile = data.percentile || 0;
     const attempts = data.attempts || 0;
 
-    // Extract subject from chapter key
-    const subject = chapterKey.split('_')[0];
+    // Extract subject from chapter key and normalize maths → mathematics
+    let subject = chapterKey.split('_')[0];
+    if (subject === 'maths') {
+      subject = 'mathematics';
+    }
 
     // Only process known subjects
     if (!subjects.includes(subject)) {
@@ -213,7 +216,11 @@ async function calculateFocusAreas(thetaByChapter, chapterMappings = null, subto
       // Find all chapters for this subject from mappings
       const subjectChapters = [];
       for (const [chapterKey, mapping] of chapterMappings.entries()) {
-        const keySubject = chapterKey.split('_')[0];
+        let keySubject = chapterKey.split('_')[0];
+        // Normalize maths → mathematics for comparison
+        if (keySubject === 'maths') {
+          keySubject = 'mathematics';
+        }
         if (keySubject === subject) {
           // Check if user has any data for this chapter
           const userData = thetaByChapter[chapterKey];
