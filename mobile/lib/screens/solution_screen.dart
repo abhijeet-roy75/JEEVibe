@@ -681,29 +681,87 @@ class _SolutionScreenState extends State<SolutionScreen> {
   }
   
   /// Clean LaTeX commands from text for use in titles
+  /// Converts LaTeX to plain text/Unicode for readable headers
   String _cleanLaTeXForTitle(String text) {
     String cleaned = text;
-    // Remove LaTeX delimiters
-    cleaned = cleaned.replaceAll(RegExp(r'\\[\(\[\)\]]'), '');
-    // Remove \mathrm{} but keep content - use replaceAllMapped for proper group capture
+
+    // Remove LaTeX delimiters \( \) \[ \]
+    cleaned = cleaned.replaceAll(RegExp(r'\\[\(\)\[\]]'), '');
+
+    // Convert common LaTeX symbols to Unicode
+    final latexToUnicode = {
+      r'\neq': '≠',
+      r'\leq': '≤',
+      r'\geq': '≥',
+      r'\pm': '±',
+      r'\times': '×',
+      r'\div': '÷',
+      r'\infty': '∞',
+      r'\alpha': 'α',
+      r'\beta': 'β',
+      r'\gamma': 'γ',
+      r'\delta': 'δ',
+      r'\theta': 'θ',
+      r'\lambda': 'λ',
+      r'\mu': 'μ',
+      r'\pi': 'π',
+      r'\sigma': 'σ',
+      r'\omega': 'ω',
+      r'\Delta': 'Δ',
+      r'\Sigma': 'Σ',
+      r'\Omega': 'Ω',
+      r'\sqrt': '√',
+      r'\rightarrow': '→',
+      r'\leftarrow': '←',
+      r'\Rightarrow': '⇒',
+      r'\approx': '≈',
+      r'\degree': '°',
+      r'\circ': '°',
+    };
+
+    for (final entry in latexToUnicode.entries) {
+      cleaned = cleaned.replaceAll(entry.key, entry.value);
+    }
+
+    // Remove \mathrm{} but keep content
     cleaned = cleaned.replaceAllMapped(
       RegExp(r'\\mathrm\{([^}]+)\}'),
       (match) => match.group(1) ?? '',
     );
+
+    // Remove \text{} but keep content
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'\\text\{([^}]+)\}'),
+      (match) => match.group(1) ?? '',
+    );
+
+    // Convert \frac{a}{b} to a/b
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'\\frac\{([^}]+)\}\{([^}]+)\}'),
+      (match) => '${match.group(1)}/${match.group(2)}',
+    );
+
     // Remove subscripts/superscripts but keep content
     cleaned = cleaned.replaceAllMapped(
       RegExp(r'[_\^]\{([^}]+)\}'),
       (match) => match.group(1) ?? '',
     );
-    // Also handle subscripts/superscripts without braces (e.g., _2, ^3)
+
+    // Handle subscripts/superscripts without braces (e.g., _2, ^3)
     cleaned = cleaned.replaceAllMapped(
       RegExp(r'[_\^](\d)'),
       (match) => match.group(1) ?? '',
     );
-    // Remove standalone LaTeX commands
-    cleaned = cleaned.replaceAll(RegExp(r'\\[a-zA-Z]+\{?[^}]*\}?'), '');
+
+    // Remove any remaining LaTeX commands
+    cleaned = cleaned.replaceAll(RegExp(r'\\[a-zA-Z]+'), '');
+
+    // Remove leftover braces
+    cleaned = cleaned.replaceAll(RegExp(r'[{}]'), '');
+
     // Clean up extra spaces
     cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
+
     return cleaned;
   }
 
