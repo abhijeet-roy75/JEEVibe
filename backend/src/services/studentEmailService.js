@@ -254,7 +254,7 @@ async function generateDailyEmailContent(userId, userData, streakData) {
       <div style="background: #e8f5e9; border-radius: 12px; padding: 16px; margin-bottom: 20px; border-left: 4px solid #4caf50;">
         <h3 style="font-size: 14px; color: #2e7d32; margin: 0 0 8px 0;">📍 Today's Focus</h3>
         <div style="font-size: 18px; font-weight: 600; color: #1b5e20;">${topFocus.chapter_name}</div>
-        <div style="font-size: 13px; color: #388e3c;">${topFocus.subject_name} • ${topFocus.percentile}th percentile</div>
+        <div style="font-size: 13px; color: #388e3c;">${topFocus.subject_name} • ${Math.round(topFocus.percentile)}th percentile</div>
       </div>
       ` : ''}
 
@@ -457,8 +457,8 @@ async function generateWeeklyEmailContent(userId, userData, streakData) {
             <span style="font-weight: 600; color: #333;">${s.displayName}</span>
           </div>
           <div style="text-align: right;">
-            <span style="font-size: 18px; font-weight: bold; color: #667eea;">${s.percentile}%</span>
-            ${s.change !== 0 ? `<span style="font-size: 12px; color: ${s.change > 0 ? '#22c55e' : '#ef4444'}; margin-left: 8px;">${s.change > 0 ? '↑' : '↓'}${Math.abs(s.change)}</span>` : ''}
+            <span style="font-size: 18px; font-weight: bold; color: #667eea;">${Math.round(s.percentile)}%</span>
+            ${s.change !== 0 ? `<span style="font-size: 12px; color: ${s.change > 0 ? '#22c55e' : '#ef4444'}; margin-left: 8px;">${s.change > 0 ? '↑' : '↓'}${Math.abs(s.change).toFixed(2)}</span>` : ''}
           </div>
         </div>
         `).join('')}
@@ -471,7 +471,7 @@ async function generateWeeklyEmailContent(userId, userData, streakData) {
         ${focusAreas.slice(0, 3).map(f => `
         <div style="background: #fff3e0; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; border-left: 4px solid #ff9800;">
           <div style="font-weight: 600; color: #e65100;">${f.chapter_name}</div>
-          <div style="font-size: 12px; color: #bf360c;">${f.subject_name} • ${f.percentile}th percentile</div>
+          <div style="font-size: 12px; color: #bf360c;">${f.subject_name} • ${Math.round(f.percentile)}th percentile</div>
         </div>
         `).join('')}
       </div>
@@ -482,7 +482,7 @@ async function generateWeeklyEmailContent(userId, userData, streakData) {
         <h2 style="font-size: 14px; color: #2e7d32; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 1px;">Since You Started</h2>
         <div style="display: flex; justify-content: space-around; text-align: center;">
           <div>
-            <div style="font-size: 24px; font-weight: bold; color: #1b5e20;">${baselinePercentile}% → ${overallPercentile}%</div>
+            <div style="font-size: 24px; font-weight: bold; color: #1b5e20;">${Math.round(baselinePercentile)}% → ${Math.round(overallPercentile)}%</div>
             <div style="font-size: 12px; color: #388e3c;">Percentile Growth</div>
           </div>
         </div>
@@ -538,12 +538,12 @@ Questions: ${weeklyStats.questions} | Time: ${weeklyStats.totalHours}h ${weeklyS
 Active Days: ${weeklyStats.activeDays}/7
 
 SUBJECT PROGRESS
-${subjectProgress.map(s => `${s.displayName}: ${s.percentile}% ${s.change !== 0 ? `(${s.change > 0 ? '+' : ''}${s.change})` : ''}`).join('\n')}
+${subjectProgress.map(s => `${s.displayName}: ${Math.round(s.percentile)}% ${s.change !== 0 ? `(${s.change > 0 ? '+' : ''}${s.change.toFixed(2)})` : ''}`).join('\n')}
 
 ${focusAreas.length > 0 ? `FOCUS AREAS\n${focusAreas.slice(0, 3).map(f => `- ${f.chapter_name} (${f.subject_name})`).join('\n')}\n` : ''}
 
 SINCE YOU STARTED
-Overall progress: ${baselinePercentile}% → ${overallPercentile}%
+Overall progress: ${Math.round(baselinePercentile)}% → ${Math.round(overallPercentile)}%
 Total questions: ${totalQuestionsSolved}
 Chapters mastered: ${chaptersMastered}
 Best streak: ${longestStreak} days
@@ -561,7 +561,7 @@ You didn't practice at all this week. Consistency is key to JEE success - even 1
 ${focusAreas.length > 0 ? `SUGGESTED FOCUS AREAS\n${focusAreas.slice(0, 3).map(f => `- ${f.chapter_name} (${f.subject_name})`).join('\n')}\n` : ''}
 
 YOUR PROGRESS SO FAR
-Overall percentile: ${overallPercentile}%
+Overall percentile: ${Math.round(overallPercentile)}%
 Total questions: ${totalQuestionsSolved}
 Chapters mastered: ${chaptersMastered}
 
