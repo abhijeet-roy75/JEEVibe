@@ -212,13 +212,18 @@ class LaTeXWidget extends StatelessWidget {
     }
 
     if (spans.isEmpty) {
-      return Text(text, style: style);
+      return Text(
+        text,
+        style: style,
+        softWrap: true,
+        overflow: TextOverflow.visible,
+      );
     }
 
     return RichText(
       text: TextSpan(children: spans),
       softWrap: true,
-      overflow: TextOverflow.clip,
+      overflow: TextOverflow.visible,
       textAlign: TextAlign.left,
     );
   }
@@ -228,7 +233,12 @@ class LaTeXWidget extends StatelessWidget {
     final converted = LaTeXToText.convert(latex);
 
     if (converted.isNotEmpty && converted.trim().isNotEmpty) {
-      return Text(converted, style: style);
+      return Text(
+        converted,
+        style: style,
+        softWrap: true,
+        overflow: TextOverflow.visible,
+      );
     }
 
     // Last resort: show original with basic cleanup
@@ -240,11 +250,21 @@ class LaTeXWidget extends StatelessWidget {
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
 
-    return Text(lastResort.isEmpty ? latex : lastResort, style: style);
+    return Text(
+      lastResort.isEmpty ? latex : lastResort,
+      style: style,
+      softWrap: true,
+      overflow: TextOverflow.visible,
+    );
   }
 
   /// Build a simple text widget
   Widget _buildTextWidget(String text, TextStyle style) {
-    return Text(text.isEmpty ? ' ' : text, style: style);
+    return Text(
+      text.isEmpty ? ' ' : text,
+      style: style,
+      softWrap: true,
+      overflow: TextOverflow.visible,
+    );
   }
 }
