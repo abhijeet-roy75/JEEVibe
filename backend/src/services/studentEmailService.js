@@ -7,7 +7,7 @@
 const { Resend } = require('resend');
 const { db } = require('../config/firebase');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
-const { toIST, formatDateIST } = require('../utils/dateUtils');
+const { toIST, formatDateIST, getStartOfDayIST, getEndOfDayIST } = require('../utils/dateUtils');
 const logger = require('../utils/logger');
 const {
   calculateFocusAreas,
@@ -25,37 +25,39 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'JEEVibe <noreply@jeevibe.com>';
 
 /**
- * Get yesterday's date range in IST
+ * Get yesterday's date range in IST (returns UTC timestamps for Firestore queries)
  */
 function getYesterdayRange() {
-  const now = toIST(new Date());
-  const yesterday = new Date(now);
+  const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  yesterday.setHours(0, 0, 0, 0);
 
-  const yesterdayEnd = new Date(yesterday);
-  yesterdayEnd.setHours(23, 59, 59, 999);
-
-  return { start: yesterday, end: yesterdayEnd };
+  return {
+    start: getStartOfDayIST(yesterday),
+    end: getEndOfDayIST(yesterday)
+  };
 }
 
 /**
- * Get last week's date range in IST (Mon-Sun)
+ * Get last week's date range in IST (Mon-Sun, returns UTC timestamps for Firestore queries)
  */
 function getLastWeekRange() {
-  const now = toIST(new Date());
+  const now = new Date();
 
-  // Find last Sunday
+  // Find last Sunday (end of last week)
   const lastSunday = new Date(now);
-  lastSunday.setDate(lastSunday.getDate() - lastSunday.getDay());
-  lastSunday.setHours(23, 59, 59, 999);
+  const dayOfWeek = now.getDay(); // 0 = Sunday
+  // If today is Sunday, go back 7 days; otherwise go back to last Sunday
+  const daysToLastSunday = dayOfWeek === 0 ? 7 : dayOfWeek;
+  lastSunday.setDate(lastSunday.getDate() - daysToLastSunday);
 
-  // Find last Monday
+  // Find last Monday (start of last week)
   const lastMonday = new Date(lastSunday);
   lastMonday.setDate(lastMonday.getDate() - 6);
-  lastMonday.setHours(0, 0, 0, 0);
 
-  return { start: lastMonday, end: lastSunday };
+  return {
+    start: getStartOfDayIST(lastMonday),
+    end: getEndOfDayIST(lastSunday)
+  };
 }
 
 /**
@@ -67,7 +69,7 @@ async function getYesterdayStats(userId) {
   // Query responses for yesterday
   const responsesSnapshot = await retryFirestoreOperation(async () => {
     return await db.collectionGroup('responses')
-      .where('user_id', '==', userId)
+      .where('student_id', '==', userId)
       .where('answered_at', '>=', start)
       .where('answered_at', '<=', end)
       .get();
@@ -104,7 +106,7 @@ async function getWeeklyStats(userId) {
   // Query responses for last week
   const responsesSnapshot = await retryFirestoreOperation(async () => {
     return await db.collectionGroup('responses')
-      .where('user_id', '==', userId)
+      .where('student_id', '==', userId)
       .where('answered_at', '>=', start)
       .where('answered_at', '<=', end)
       .get();

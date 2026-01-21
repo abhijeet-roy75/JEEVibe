@@ -247,11 +247,11 @@
       ]
     },
     {
-      "comment": "Cron/Email: user responses by date (daily/weekly email stats)",
+      "comment": "Cron/Email: student responses by date (daily/weekly email stats)",
       "collectionGroup": "responses",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
-        { "fieldPath": "user_id", "order": "ASCENDING" },
+        { "fieldPath": "student_id", "order": "ASCENDING" },
         { "fieldPath": "answered_at", "order": "ASCENDING" }
       ]
     },
