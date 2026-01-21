@@ -232,20 +232,23 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
     const imageUrl = `gs://${storage.bucket().name}/${filename}`;
 
     // Step 1: Solve question from image (don't generate follow-up questions yet)
-    // Note: OpenAI service now has built-in circuit breaker with 120s timeout
-    logger.info('⏱️  [PERF] Starting OpenAI Vision API call', {
+    // Note: AI service has built-in circuit breaker with 120s timeout
+    const aiProviderName = AI_PROVIDER === 'claude' ? 'Claude' : 'OpenAI';
+    logger.info(`⏱️  [PERF] Starting ${aiProviderName} Vision API call`, {
       requestId: req.id,
       userId,
       imageSize,
+      aiProvider: AI_PROVIDER,
     });
 
-    const openaiStartTime = Date.now();
+    const aiStartTime = Date.now();
     const solutionData = await solveQuestionFromImage(imageBuffer);
-    perfSteps.openaiApiCall = Date.now() - openaiStartTime;
-    logger.info(`⏱️  [PERF] OpenAI Vision API call: ${perfSteps.openaiApiCall}ms`, {
+    perfSteps.aiApiCall = Date.now() - aiStartTime;
+    logger.info(`⏱️  [PERF] ${aiProviderName} Vision API call: ${perfSteps.aiApiCall}ms`, {
       requestId: req.id,
       subject: solutionData.subject,
       topic: solutionData.topic,
+      aiProvider: AI_PROVIDER,
     });
 
     // Run Firestore operations in parallel (save + increment usage)
@@ -275,9 +278,10 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
       requestId: req.id,
       userId,
       totalTimeMs: totalTime,
+      aiProvider: AI_PROVIDER,
       breakdown: {
         firebaseStorageUpload: `${perfSteps.firebaseStorageUpload}ms (${((perfSteps.firebaseStorageUpload / totalTime) * 100).toFixed(1)}%)`,
-        openaiApiCall: `${perfSteps.openaiApiCall}ms (${((perfSteps.openaiApiCall / totalTime) * 100).toFixed(1)}%)`,
+        [`${aiProviderName.toLowerCase()}ApiCall`]: `${perfSteps.aiApiCall}ms (${((perfSteps.aiApiCall / totalTime) * 100).toFixed(1)}%)`,
         firestoreOperations: `${perfSteps.firestoreOperations}ms (${((perfSteps.firestoreOperations / totalTime) * 100).toFixed(1)}%) - parallel save + usage check`
       }
     });
