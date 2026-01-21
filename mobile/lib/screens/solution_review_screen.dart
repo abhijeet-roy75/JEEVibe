@@ -419,22 +419,11 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
                 color: AppColors.backgroundLight,
                 borderRadius: BorderRadius.circular(AppRadius.radiusSmall),
               ),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth: constraints.maxWidth,
-                      ),
-                      child:                       _buildContentWidget(
-                        TextPreprocessor.preprocessStepContent(stepContent),
-                        _currentSolution.subject,
-                        ContentConfig.getStepTextStyle(color: AppColors.textMedium),
-                      ),
-                    ),
-                  );
-                },
+              child: _buildContentWidget(
+                TextPreprocessor.preprocessStepContent(stepContent),
+                _currentSolution.subject,
+                ContentConfig.getStepTextStyle(color: AppColors.textMedium),
+                allowWrapping: true,
               ),
             ),
           ],
@@ -443,50 +432,121 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
     );
   }
 
-  /// Add spaces between words that are concatenated (e.g., "BothStatementI" -> "Both Statement I")
+  /// Extract simple English title from step content, cleaning LaTeX
   String _getStepTitle(int number, String stepContent) {
-    // Try to extract title from step content
-    // Format: "Step 1: Title" or "Title: description" or just use first few words
-    final content = stepContent.trim();
-    
+    // Clean LaTeX first
+    String content = _cleanLaTeXForTitle(stepContent.trim());
+
     // Check if step starts with "Step N:" or "Step N -"
-    final stepPattern = RegExp(r'^Step\s+\d+[:\-]\s*(.+?)(?:\.|$)', caseSensitive: false);
+    final stepPattern = RegExp(r'^Step\s+\d+[:\-]\s*(.+?)(?:\.|,|$)', caseSensitive: false);
     final match = stepPattern.firstMatch(content);
     if (match != null && match.group(1) != null) {
       String title = match.group(1)!.trim();
-      // Limit title length to avoid overflow
-      if (title.length > 50) {
-        title = '${title.substring(0, 47)}...';
+      // Stop at first sentence for cleaner title
+      final sentenceEnd = title.indexOf('.');
+      if (sentenceEnd > 0 && sentenceEnd < 40) {
+        title = title.substring(0, sentenceEnd);
+      }
+      if (title.length > 40) {
+        title = '${title.substring(0, 37)}...';
       }
       return title;
     }
-    
-    // Check if step has a colon separator (e.g., "Title: description")
-    final colonIndex = content.indexOf(':');
-    if (colonIndex > 0 && colonIndex < 60) {
-      String title = content.substring(0, colonIndex).trim();
-      // Remove common prefixes
+
+    // Check if step has a dash separator (e.g., "Title - description")
+    final dashIndex = content.indexOf(' - ');
+    if (dashIndex > 0 && dashIndex < 50) {
+      String title = content.substring(0, dashIndex).trim();
       title = title.replaceAll(RegExp(r'^(Step\s+\d+[:\-]?\s*)', caseSensitive: true), '');
-      if (title.isNotEmpty && title.length <= 50) {
+      if (title.isNotEmpty && title.length <= 40) {
         return title;
       }
     }
-    
-    // Fallback: use first few words (up to 6 words or 50 chars)
+
+    // Check if step has a colon separator (e.g., "Title: description")
+    final colonIndex = content.indexOf(':');
+    if (colonIndex > 0 && colonIndex < 50) {
+      String title = content.substring(0, colonIndex).trim();
+      title = title.replaceAll(RegExp(r'^(Step\s+\d+[:\-]?\s*)', caseSensitive: true), '');
+      if (title.isNotEmpty && title.length <= 40) {
+        return title;
+      }
+    }
+
+    // Fallback: use first few words (up to 5 words or 40 chars)
     final words = content.split(RegExp(r'\s+'));
     if (words.isNotEmpty) {
       String title = '';
-      for (int i = 0; i < words.length && i < 6 && title.length < 50; i++) {
-        if (title.isNotEmpty) title += ' ';
-        title += words[i];
+      int wordCount = 0;
+      for (int i = 0; i < words.length && wordCount < 5 && title.length < 40; i++) {
+        String word = words[i];
+        if (word.isNotEmpty) {
+          if (title.isNotEmpty) title += ' ';
+          title += word;
+          wordCount++;
+        }
       }
       if (title.isNotEmpty) {
-        return title.length > 50 ? '${title.substring(0, 47)}...' : title;
+        return title.length > 40 ? '${title.substring(0, 37)}...' : title;
       }
     }
-    
+
     // Ultimate fallback
     return 'Step $number';
+  }
+
+  /// Clean LaTeX commands from text for use in titles
+  String _cleanLaTeXForTitle(String text) {
+    String cleaned = text;
+
+    // Remove LaTeX delimiters \( \) \[ \]
+    cleaned = cleaned.replaceAll(RegExp(r'\\[\(\)\[\]]'), '');
+
+    // Convert common LaTeX symbols to Unicode
+    final latexToUnicode = {
+      r'\neq': '≠', r'\leq': '≤', r'\geq': '≥', r'\pm': '±',
+      r'\times': '×', r'\div': '÷', r'\infty': '∞',
+      r'\alpha': 'α', r'\beta': 'β', r'\gamma': 'γ', r'\delta': 'δ',
+      r'\theta': 'θ', r'\lambda': 'λ', r'\mu': 'μ', r'\pi': 'π',
+      r'\sigma': 'σ', r'\omega': 'ω', r'\Delta': 'Δ', r'\Sigma': 'Σ',
+      r'\sqrt': '√', r'\rightarrow': '→', r'\Rightarrow': '⇒',
+      r'\approx': '≈', r'\degree': '°', r'\circ': '°',
+    };
+
+    for (final entry in latexToUnicode.entries) {
+      cleaned = cleaned.replaceAll(entry.key, entry.value);
+    }
+
+    // Remove \mathrm{} and \text{} but keep content
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'\\(?:mathrm|text)\{([^}]+)\}'),
+      (match) => match.group(1) ?? '',
+    );
+
+    // Convert \frac{a}{b} to a/b
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'\\frac\{([^}]+)\}\{([^}]+)\}'),
+      (match) => '${match.group(1)}/${match.group(2)}',
+    );
+
+    // Remove subscripts/superscripts but keep content
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'[_\^]\{([^}]+)\}'),
+      (match) => match.group(1) ?? '',
+    );
+    cleaned = cleaned.replaceAllMapped(
+      RegExp(r'[_\^](\d)'),
+      (match) => match.group(1) ?? '',
+    );
+
+    // Remove any remaining LaTeX commands and braces
+    cleaned = cleaned.replaceAll(RegExp(r'\\[a-zA-Z]+'), '');
+    cleaned = cleaned.replaceAll(RegExp(r'[{}]'), '');
+
+    // Clean up extra spaces
+    cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    return cleaned;
   }
 
   Widget _buildFinalAnswer(Solution solution) {
