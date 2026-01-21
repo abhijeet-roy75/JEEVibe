@@ -103,6 +103,15 @@ You are solving a JEE Main 2025 level question from a photo. Your task:
 7. CRITICAL: Provide the solution in the SAME LANGUAGE as the question.
 8. Provide a clear final answer.
 
+STEP FORMAT REQUIREMENTS (CRITICAL):
+- Each step MUST start with a simple English title (NO formulas in the title)
+- Format: "Step N: [Simple English Title] - [Detailed explanation with formulas]"
+- Good: "Step 1: Identify when the function equals zero - For \\(x \\neq 0\\), we have \\(f(x) = 0\\) when..."
+- Good: "Step 2: Apply the sine function property - The sine function equals zero when its argument is \\(n\\pi\\)..."
+- Bad: "Step 1: For \\(x \\neq 0\\), we have \\(f(x) = 0\\)..." (starts with formula)
+- The title before the dash should be plain English describing what you're doing
+- Examples of good titles: "Set up the equation", "Apply the formula", "Simplify the expression", "Calculate the result"
+
 CRITICAL SPACING REQUIREMENTS:
 - ALL step descriptions MUST have proper word spacing
 - Write naturally: "Step 1: Draw the structure" NOT "Step1:Drawthestructure"
