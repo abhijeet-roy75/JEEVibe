@@ -20,7 +20,7 @@ const anthropic = new Anthropic({
 
 // Model configuration
 const CLAUDE_VISION_MODEL = 'claude-sonnet-4-20250514';  // Best for vision + complex reasoning
-const CLAUDE_TEXT_MODEL = 'claude-3-5-haiku-20241022';   // Fast and cost-effective for text
+const CLAUDE_TEXT_MODEL = 'claude-3-haiku-20240307';     // Fast and cost-effective for text
 
 /**
  * Normalize subject name to standard format
