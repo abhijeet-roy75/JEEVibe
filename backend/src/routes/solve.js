@@ -6,7 +6,13 @@
 const express = require('express');
 const multer = require('multer');
 const { body, validationResult } = require('express-validator');
-const { solveQuestionFromImage, generateFollowUpQuestions, generateSingleFollowUpQuestion } = require('../services/openai');
+// AI Provider selection - defaults to Claude, falls back to OpenAI if ANTHROPIC_API_KEY not set
+const AI_PROVIDER = process.env.AI_PROVIDER || (process.env.ANTHROPIC_API_KEY ? 'claude' : 'openai');
+const aiService = AI_PROVIDER === 'claude'
+  ? require('../services/claude')
+  : require('../services/openai');
+const { solveQuestionFromImage, generateFollowUpQuestions, generateSingleFollowUpQuestion } = aiService;
+console.log(`[Snap & Solve] Using AI provider: ${AI_PROVIDER}`);
 const { authenticateUser } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
@@ -45,9 +51,9 @@ const PRIYA_PRACTICE_NOTES = [
 
 
 /**
- * Handle OpenAI errors by mapping them to ApiError
+ * Handle AI service errors (OpenAI/Claude) by mapping them to ApiError
  */
-function handleOpenAIError(error, next) {
+function handleAIError(error, next) {
   if (error.status) {
     if (error.status === 401) {
       // 500 because it's a server config error, not client's fault
@@ -59,8 +65,6 @@ function handleOpenAIError(error, next) {
     if (error.status >= 500) {
       return next(new ApiError(502, 'AI Service temporarily unavailable'));
     }
-    // For other errors (400, etc), pass through message if safe?
-    // 400 from OpenAI means bad request (our prompt often).
     return next(new ApiError(error.status, error.message));
   }
   next(error);
@@ -299,7 +303,7 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
       requestId: req.id,
     });
   } catch (error) {
-    handleOpenAIError(error, next);
+    handleAIError(error, next);
   }
 });
 
@@ -359,7 +363,7 @@ router.post('/generate-practice-questions',
         requestId: req.id,
       });
     } catch (error) {
-      handleOpenAIError(error, next);
+      handleAIError(error, next);
     }
   }
 );
@@ -422,7 +426,7 @@ router.post('/generate-single-question',
         requestId: req.id,
       });
     } catch (error) {
-      handleOpenAIError(error, next);
+      handleAIError(error, next);
     }
   }
 );
@@ -789,7 +793,7 @@ router.post('/snap-practice/questions',
       throw new ApiError(404, 'No practice questions available for this topic. Please try a different topic.');
 
     } catch (error) {
-      handleOpenAIError(error, next);
+      handleAIError(error, next);
     }
   }
 );
