@@ -7,7 +7,7 @@
 const { Resend } = require('resend');
 const { db } = require('../config/firebase');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
-const { toIST, formatDateIST, getStartOfDayIST, getEndOfDayIST } = require('../utils/dateUtils');
+const { toIST, formatDateIST, getStartOfDayIST, getEndOfDayIST, getDayOfWeekIST } = require('../utils/dateUtils');
 const logger = require('../utils/logger');
 const {
   calculateFocusAreas,
@@ -43,11 +43,13 @@ function getYesterdayRange() {
 function getLastWeekRange() {
   const now = new Date();
 
+  // Use IST day of week, not local machine's day of week
+  const dayOfWeekIST = getDayOfWeekIST(now); // 0 = Sunday
+
   // Find last Sunday (end of last week)
+  // If today (in IST) is Sunday, go back 7 days; otherwise go back to last Sunday
+  const daysToLastSunday = dayOfWeekIST === 0 ? 7 : dayOfWeekIST;
   const lastSunday = new Date(now);
-  const dayOfWeek = now.getDay(); // 0 = Sunday
-  // If today is Sunday, go back 7 days; otherwise go back to last Sunday
-  const daysToLastSunday = dayOfWeek === 0 ? 7 : dayOfWeek;
   lastSunday.setDate(lastSunday.getDate() - daysToLastSunday);
 
   // Find last Monday (start of last week)
@@ -320,11 +322,7 @@ Come back and practice at https://jeevibe.com
  */
 async function generateWeeklyEmailContent(userId, userData, streakData) {
   const weeklyStats = await getWeeklyStats(userId);
-
-  // If no activity this week, skip email
-  if (weeklyStats.questions === 0) {
-    return null;
-  }
+  const hadActivity = weeklyStats.questions > 0;
 
   const thetaByChapter = userData.theta_by_chapter || {};
   const thetaBySubject = userData.theta_by_subject || {};
@@ -380,7 +378,10 @@ async function generateWeeklyEmailContent(userId, userData, streakData) {
   const createdAt = userData.createdAt?.toDate?.() || new Date();
   const weeksSinceSignup = Math.ceil((new Date() - createdAt) / (7 * 24 * 60 * 60 * 1000));
 
-  const subject = `Week ${weeksSinceSignup} Report | ${weeklyStats.questions} questions | ${overallPercentile}th percentile`;
+  // Different subject based on activity
+  const subject = hadActivity
+    ? `Week ${weeksSinceSignup} Report | ${weeklyStats.questions} questions | ${overallPercentile}th percentile`
+    : `${firstName}, we missed you this week! 📚 Let's get back on track`;
 
   const html = `
 <!DOCTYPE html>
@@ -401,7 +402,8 @@ async function generateWeeklyEmailContent(userId, userData, streakData) {
     <div style="padding: 24px;">
       <p style="font-size: 16px; color: #333; margin: 0 0 24px 0;">Hi ${firstName},</p>
 
-      <!-- Weekly Summary -->
+      <!-- Weekly Summary or Come Back Message -->
+      ${hadActivity ? `
       <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
         <h2 style="font-size: 14px; color: #666; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 1px;">Weekly Summary</h2>
         <table style="width: 100%; border-collapse: collapse;">
@@ -439,6 +441,12 @@ async function generateWeeklyEmailContent(userId, userData, streakData) {
           </tr>
         </table>
       </div>
+      ` : `
+      <div style="background: #fff3e0; border-radius: 12px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #ff9800;">
+        <h2 style="font-size: 14px; color: #e65100; margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">We Missed You This Week!</h2>
+        <p style="font-size: 15px; color: #bf360c; margin: 0; line-height: 1.5;">You didn't practice at all this week. Consistency is key to JEE success - even 15 minutes a day adds up to over 90 hours by exam time!</p>
+      </div>
+      `}
 
       <!-- Subject Progress -->
       <div style="margin-bottom: 20px;">
@@ -520,7 +528,7 @@ async function generateWeeklyEmailContent(userId, userData, streakData) {
 </html>
   `.trim();
 
-  const text = `
+  const text = hadActivity ? `
 Your Week in Review - Week ${weeksSinceSignup}
 
 Hi ${firstName},
@@ -543,6 +551,23 @@ Best streak: ${longestStreak} days
 Priya Ma'am says: ${priyaMaamMessage}
 
 Keep practicing at https://jeevibe.com
+  `.trim() : `
+We Missed You This Week! - Week ${weeksSinceSignup}
+
+Hi ${firstName},
+
+You didn't practice at all this week. Consistency is key to JEE success - even 15 minutes a day adds up to over 90 hours by exam time!
+
+${focusAreas.length > 0 ? `SUGGESTED FOCUS AREAS\n${focusAreas.slice(0, 3).map(f => `- ${f.chapter_name} (${f.subject_name})`).join('\n')}\n` : ''}
+
+YOUR PROGRESS SO FAR
+Overall percentile: ${overallPercentile}%
+Total questions: ${totalQuestionsSolved}
+Chapters mastered: ${chaptersMastered}
+
+Priya Ma'am says: ${priyaMaamMessage}
+
+Come back and practice at https://jeevibe.com
   `.trim();
 
   return { subject, html, text };
@@ -722,11 +747,14 @@ async function sendAllWeeklyEmails() {
 
       if (result.sent) {
         results.sent++;
-      } else if (result.reason === 'No activity this week' || result.reason === 'User opted out') {
+        logger.info('Weekly email sent to user', { userId: doc.id, emailId: result.emailId });
+      } else if (result.reason === 'User opted out' || result.reason === 'No email address') {
         results.skipped++;
+        logger.debug('Weekly email skipped', { userId: doc.id, reason: result.reason });
       } else {
         results.failed++;
         results.errors.push({ userId: doc.id, reason: result.reason });
+        logger.warn('Weekly email failed', { userId: doc.id, reason: result.reason });
       }
     }
 
