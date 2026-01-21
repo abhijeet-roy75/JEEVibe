@@ -30,6 +30,7 @@ const CHAPTER_NAME_NORMALIZATIONS = {
   "newton_laws": "laws_of_motion",
   "work_energy": "work_energy_power",
   "work_&_energy": "work_energy_power",
+  "work_energy_and_power": "work_energy_power", // Normalize "and" variant
   "rotational": "rotational_motion",
   "rotational_dynamics": "rotational_motion",
   "electrostatics": "electrostatics", // Already correct
@@ -246,6 +247,13 @@ const JEE_CHAPTER_WEIGHTS = {
   // Physics - Daily quiz chapter name variants
   "physics_magnetic_effects_magnetism": 1.0,  // Variant of magnetic_effects
   "physics_atoms_nuclei": 0.6,
+  "physics_work_energy_and_power": 1.0,       // Variant with "and"
+  "physics_units_measurements": 0.6,          // Units and Measurements
+  "physics_units_and_measurements": 0.6,      // With "and"
+  "physics_properties_of_solids_liquids": 0.6, // Variant name
+  "physics_dual_nature_of_radiation": 0.6,    // Full chapter name
+  "physics_electronic_devices": 0.4,          // Variant of semiconductors
+  "physics_optics": 0.8,                      // Combined optics
 
   // Chemistry (~27 chapters) - Original format
   "chemistry_atomic_structure": 0.8,
@@ -279,6 +287,14 @@ const JEE_CHAPTER_WEIGHTS = {
   "chemistry_general_organic_chemistry": 0.8,  // Variant of organic_basics/GOC
   "chemistry_p_block_elements": 1.0,           // Variant of p_block
   "chemistry_pblock_elements": 1.0,            // Another variant of p_block
+  "chemistry_d_f_block_elements": 0.8,         // Variant of d_f_block
+  "chemistry_redox_electrochemistry": 1.0,     // Redox and electrochemistry combined
+  "chemistry_alcohols_phenols_ethers": 0.8,    // Full chapter name
+  "chemistry_amines_diazonium_salts": 0.8,     // Full chapter name
+  "chemistry_carboxylic_acids_derivatives": 0.8, // Full chapter name
+  "chemistry_haloalkanes_and_haloarenes": 0.8, // With "and"
+  "chemistry_classification_periodicity": 0.6, // Full chapter name
+  "chemistry_purification_characterization": 0.6, // Purification chapter
 
   // Mathematics (~22 chapters) - Original format
   "mathematics_sets_relations": 0.6,
@@ -304,7 +320,15 @@ const JEE_CHAPTER_WEIGHTS = {
   "mathematics_statistics": 0.6,
   "mathematics_trigonometry": 0.8,
   // Mathematics - Daily quiz chapter name variants
-  "mathematics_limits_continuity_differentiability": 1.0  // Variant of limits_continuity
+  "mathematics_limits_continuity_differentiability": 1.0, // Variant of limits_continuity
+  "mathematics_permutations_and_combinations": 0.8,       // With "and"
+  "mathematics_sequences_and_series": 0.8,                // With "and"
+  "mathematics_sets_relations_functions": 0.6,            // Full chapter name
+  "mathematics_differential_calculus_aod": 1.0,           // AOD = Application of Derivatives
+  "mathematics_integral_calculus_indefinite": 1.0,        // Indefinite integrals
+  "mathematics_integral_calculus_definite_area": 0.8,     // Definite integrals + area
+  "mathematics_conic_sections_ellipse_hyperbola": 1.0,    // Full chapter name
+  "mathematics_vector_algebra": 1.0                       // Variant of vectors
 };
 
 // ============================================================================

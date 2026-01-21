@@ -561,44 +561,39 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header row with avatar and title
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PriyaAvatar(size: 48),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            LocalizationService.getString('priya_tip', solution.language ?? 'en'),
-                            style: AppTextStyles.labelMedium.copyWith(
-                              color: const Color(0xFF7C3AED),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Icon(
-                            Icons.auto_awesome,
-                            color: Color(0xFF9333EA),
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      _buildContentWidget(
-                        TextPreprocessor.addSpacesToText(solution.solution.priyaMaamTip),
-                        _currentSolution.subject,
-                        ContentConfig.getPriyaTipTextStyle(
-                          color: const Color(0xFF4C1D95),
-                        ),
-                        allowWrapping: true,
-                      ),
-                    ],
+                const PriyaAvatar(size: 40),
+                const SizedBox(width: 12),
+                Text(
+                  LocalizationService.getString('priya_tip', solution.language ?? 'en'),
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: const Color(0xFF7C3AED),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
+                const SizedBox(width: 6),
+                const Icon(
+                  Icons.auto_awesome,
+                  color: Color(0xFF9333EA),
+                  size: 18,
+                ),
               ],
+            ),
+            const SizedBox(height: 12),
+            // Tip content - full width
+            _buildContentWidget(
+              TextPreprocessor.addSpacesToText(solution.solution.priyaMaamTip),
+              _currentSolution.subject,
+              const TextStyle(
+                fontSize: 15,
+                color: Color(0xFF4C1D95),
+                height: 1.6,
+                fontWeight: FontWeight.w400, // Regular weight, not bold
+              ),
+              allowWrapping: true,
             ),
             // "Ask Priya Ma'am" action integrated into the card (Ultra tier only)
             if (hasAiTutorAccess) ...[

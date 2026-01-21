@@ -50,7 +50,7 @@ class ContentConfig {
   static const double latexScaleFactor = 1.0;
   static const FontWeight latexFontWeight = FontWeight.w600;
   static const FontWeight regularTextWeight = FontWeight.w400;
-  static const FontWeight priyaTipFontWeight = FontWeight.w700;
+  static const FontWeight priyaTipFontWeight = FontWeight.w400; // Regular weight for readability
 
   // ============================================================================
   // LINE HEIGHT / SPACING

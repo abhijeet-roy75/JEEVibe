@@ -13,7 +13,6 @@ import '../../theme/app_text_styles.dart';
 import '../../widgets/safe_svg_widget.dart';
 import '../../widgets/priya_avatar.dart';
 import '../../screens/ai_tutor_chat_screen.dart';
-import '../../utils/text_preprocessor.dart';
 
 /// Configuration for AI Tutor context in the review screen
 class ReviewTutorContext {
@@ -355,11 +354,9 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
   }
 
   Widget _buildQuestionCard(ReviewQuestionData question) {
-    // Strip HTML tags from question text for clean display
-    final questionText = TextPreprocessor.stripHtml(question.questionText);
-    final questionTextHtml = question.questionTextHtml != null
-        ? TextPreprocessor.stripHtml(question.questionTextHtml!)
-        : null;
+    // Use HTML content directly - LaTeXWidget handles HTML rendering
+    final questionText = question.questionText;
+    final questionTextHtml = question.questionTextHtml;
     final options = question.options;
     final isCorrect = question.isCorrect;
     final studentAnswer = question.studentAnswer;
@@ -489,11 +486,9 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
     bool isCorrect,
   ) {
     final optionId = option.optionId;
-    // Strip HTML tags from option text for clean display
-    final optionText = TextPreprocessor.stripHtml(option.text);
-    final optionHtml = option.html != null
-        ? TextPreprocessor.stripHtml(option.html!)
-        : null;
+    // Use HTML content directly - LaTeXWidget handles HTML rendering
+    final optionText = option.text;
+    final optionHtml = option.html;
 
     final isSelected = studentAnswer == optionId;
     final isCorrectAnswer = correctAnswer == optionId;

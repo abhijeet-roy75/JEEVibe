@@ -44,8 +44,20 @@ class LaTeXWidget extends StatelessWidget {
   }
 
   Widget _renderContent(String input, TextStyle style) {
-    // Step 1: Quick check - if no LaTeX markers at all, return plain text
+    // Step 1: Quick check - if no LaTeX markers at all, check for HTML or return plain text
     if (!LaTeXParser.containsLatex(input)) {
+      if (_containsHtmlTags(input)) {
+        // Render HTML-only content
+        final spans = _parseHtmlToSpans(input, style);
+        if (spans.isNotEmpty) {
+          return RichText(
+            text: TextSpan(children: spans),
+            softWrap: true,
+            overflow: TextOverflow.visible,
+            textAlign: TextAlign.left,
+          );
+        }
+      }
       return Text(input, style: style);
     }
 
@@ -152,6 +164,86 @@ class LaTeXWidget extends StatelessWidget {
     }
   }
 
+  /// Parse HTML tags and create styled TextSpans
+  List<InlineSpan> _parseHtmlToSpans(String text, TextStyle style) {
+    final spans = <InlineSpan>[];
+
+    // Pattern to match HTML tags like <strong>, <b>, <em>, <i>, <u> and their closing tags
+    final htmlPattern = RegExp(
+      r'<(strong|b|em|i|u|sub|sup)>(.*?)</\1>',
+      caseSensitive: false,
+      dotAll: true,
+    );
+
+    int lastEnd = 0;
+
+    for (final match in htmlPattern.allMatches(text)) {
+      // Add text before the match
+      if (match.start > lastEnd) {
+        final beforeText = text.substring(lastEnd, match.start);
+        if (beforeText.isNotEmpty) {
+          spans.add(TextSpan(text: beforeText, style: style));
+        }
+      }
+
+      // Get the tag and content
+      final tag = match.group(1)?.toLowerCase() ?? '';
+      final content = match.group(2) ?? '';
+
+      // Create styled span based on tag
+      TextStyle tagStyle = style;
+      switch (tag) {
+        case 'strong':
+        case 'b':
+          tagStyle = style.copyWith(fontWeight: FontWeight.bold);
+          break;
+        case 'em':
+        case 'i':
+          tagStyle = style.copyWith(fontStyle: FontStyle.italic);
+          break;
+        case 'u':
+          tagStyle = style.copyWith(decoration: TextDecoration.underline);
+          break;
+        case 'sub':
+          tagStyle = style.copyWith(
+            fontSize: (style.fontSize ?? 14) * 0.7,
+            fontFeatures: [const FontFeature.subscripts()],
+          );
+          break;
+        case 'sup':
+          tagStyle = style.copyWith(
+            fontSize: (style.fontSize ?? 14) * 0.7,
+            fontFeatures: [const FontFeature.superscripts()],
+          );
+          break;
+      }
+
+      // Recursively parse nested HTML
+      if (htmlPattern.hasMatch(content)) {
+        spans.addAll(_parseHtmlToSpans(content, tagStyle));
+      } else if (content.isNotEmpty) {
+        spans.add(TextSpan(text: content, style: tagStyle));
+      }
+
+      lastEnd = match.end;
+    }
+
+    // Add remaining text after last match
+    if (lastEnd < text.length) {
+      final remainingText = text.substring(lastEnd);
+      if (remainingText.isNotEmpty) {
+        spans.add(TextSpan(text: remainingText, style: style));
+      }
+    }
+
+    return spans;
+  }
+
+  /// Check if text contains HTML tags
+  bool _containsHtmlTags(String text) {
+    return RegExp(r'<(strong|b|em|i|u|sub|sup)>', caseSensitive: false).hasMatch(text);
+  }
+
   /// Render mixed content (text and LaTeX segments)
   Widget _renderMixedContent(List<ParsedSegment> segments, TextStyle style) {
     final spans = <InlineSpan>[];
@@ -161,9 +253,13 @@ class LaTeXWidget extends StatelessWidget {
 
     for (final segment in segments) {
       if (!segment.isLatex) {
-        // Plain text segment
+        // Plain text segment - check for HTML tags
         if (segment.content.isNotEmpty) {
-          spans.add(TextSpan(text: segment.content, style: style));
+          if (_containsHtmlTags(segment.content)) {
+            spans.addAll(_parseHtmlToSpans(segment.content, style));
+          } else {
+            spans.add(TextSpan(text: segment.content, style: style));
+          }
         }
       } else {
         // LaTeX segment

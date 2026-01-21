@@ -834,60 +834,46 @@ class _SolutionScreenState extends State<SolutionScreen> {
         );
       } : null,
       child: Container(
-        padding: const EdgeInsets.all(28), // Increased padding for more space
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: AppColors.priyaCardGradient,
           borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
           border: Border.all(color: const Color(0xFFE9D5FF), width: 2),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header row with avatar and title
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PriyaAvatar(size: 56), // Larger avatar
-                const SizedBox(width: 20), // More spacing
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            LocalizationService.getString('priya_tip', solution.language ?? 'en'),
-                            style: AppTextStyles.labelMedium.copyWith(
-                              color: const Color(0xFF7C3AED),
-                              fontSize: 18, // Larger title
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(
-                            Icons.auto_awesome,
-                            color: Color(0xFF9333EA),
-                            size: 20,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16), // More spacing
-                      // Use direct Text widget for maximum readability - no LaTeX processing
-                      Text(
-                        tipText,
-                        style: TextStyle(
-                          fontSize: ContentConfig.priyaTipTextSize,
-                          color: const Color(0xFF4C1D95), // Darker purple for better contrast
-                          height: ContentConfig.priyaTipLineHeight, // Increased line height for better readability
-                          fontWeight: ContentConfig.priyaTipFontWeight,
-                          letterSpacing: 0.3, // Slight letter spacing for clarity
-                        ),
-                        softWrap: true, // Enable text wrapping
-                        overflow: TextOverflow.visible, // Allow wrapping instead of clipping
-                      ),
-                    ],
+                const PriyaAvatar(size: 40),
+                const SizedBox(width: 12),
+                Text(
+                  LocalizationService.getString('priya_tip', solution.language ?? 'en'),
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: const Color(0xFF7C3AED),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
+                const SizedBox(width: 6),
+                const Icon(
+                  Icons.auto_awesome,
+                  color: Color(0xFF9333EA),
+                  size: 18,
+                ),
               ],
+            ),
+            const SizedBox(height: 12),
+            // Tip content - full width, uses LaTeXWidget for proper rendering
+            LaTeXWidget(
+              text: tipText,
+              textStyle: const TextStyle(
+                fontSize: 15,
+                color: Color(0xFF4C1D95),
+                height: 1.6,
+                fontWeight: FontWeight.w400, // Regular weight, not bold
+              ),
             ),
             // "Ask Priya Ma'am about this" action (Ultra tier only)
             if (hasAiTutorAccess) ...[
