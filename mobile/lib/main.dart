@@ -1,6 +1,8 @@
 import 'dart:ui';
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:screen_protector/screen_protector.dart';
 import 'providers/daily_quiz_provider.dart';
 import 'providers/ai_tutor_provider.dart';
 import 'providers/chapter_practice_provider.dart';
@@ -27,6 +29,26 @@ import 'screens/assessment_intro_screen.dart'; // The new home dashboard
 // Services
 import 'services/firebase/pin_service.dart';
 
+/// Initialize screenshot and screen recording prevention
+/// This applies globally to the entire app
+Future<void> _initializeScreenProtection() async {
+  try {
+    if (Platform.isAndroid) {
+      // Android: Uses FLAG_SECURE to prevent screenshots and screen recording
+      await ScreenProtector.protectDataLeakageOn();
+    } else if (Platform.isIOS) {
+      // iOS: Prevent screenshots (uses secure text field technique)
+      await ScreenProtector.preventScreenshotOn();
+      // Also blur content in app switcher
+      await ScreenProtector.protectDataLeakageWithBlur();
+    }
+
+    debugPrint('Screen protection enabled');
+  } catch (e) {
+    debugPrint('Failed to enable screen protection: $e');
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -42,6 +64,9 @@ void main() async {
   // Initialize offline database and image cache
   await DatabaseService().initialize();
   await ImageCacheService().initialize();
+
+  // Enable screenshot prevention (global - applies to entire app)
+  await _initializeScreenProtection();
 
   // Suppress harmless SVG warnings and LaTeX debug messages
   // These are informational and don't affect functionality
