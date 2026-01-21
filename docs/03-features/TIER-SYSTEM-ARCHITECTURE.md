@@ -25,12 +25,14 @@ This document describes the **3-tier subscription system** (FREE, PRO, ULTRA) wi
 | Feature | FREE | PRO | ULTRA |
 |---------|------|-----|-------|
 | **Snap & Solve** | 5/day | 10/day | Unlimited |
+| **Practice after Snap & Solve** | ❌ | 3/snap | 3/snap |
 | **Daily Quiz** | 1/day | 10/day | Unlimited |
 | **Chapter Practice** | 1 chapter/subject/week | Unlimited | Unlimited |
+| **Chapter Selection for Practice** | Fixed | Full Repository | Full Repository |
 | **Solution History** | Last 7 days | Last 30 days | Unlimited |
 | **Analytics** | Basic (streak, total) | Full access | Full access |
 | **AI Tutor (Priya Ma'am)** | ❌ | ❌ | ✅ Unlimited |
-| **Offline Mode** | ❌ | ✅ Unlimited | ✅ Unlimited |
+| **Offline Mode** | ❌ | ✅ Yes | ✅ Yes |
 
 > **Note**: All tiers receive full step-by-step solutions. We don't gate solution quality.
 
@@ -69,12 +71,14 @@ This document describes the **3-tier subscription system** (FREE, PRO, ULTRA) wi
 | Feature | Description | Gating |
 |---------|-------------|--------|
 | **Snap & Solve** | Take photo of question, get AI-generated solution with steps | Daily limit per tier |
+| **Practice after Snap & Solve** | AI-generated questions to solidify knowledge of area, additional practise for target area | Pro/Ultra only |
 | **Daily Quiz** | Adaptive quiz using IRT algorithm, personalized difficulty | Daily limit per tier |
 | **Solutions** | Full step-by-step explanations with approach, steps, final answer | No gating (full for all) |
 | **Analytics** | Performance tracking, theta scores, mastery levels, focus areas | Basic (free) vs Full (pro+) |
 | **Solution History** | View past snapped questions and solutions | Days limit per tier |
 | **AI Tutor (Priya Ma'am)** | Chatbot for doubt resolution, concept learning, personalized coaching | Ultra only |
 | **Chapter Practice** | Topic-wise problem sets organized by JEE syllabus | Per-chapter limit + weekly cooldown (free) |
+| **Chapter Selection for Practice** | Chapters to practise for, from JEE syllabus | Fixed for free, full repository for Pro/Ultra |
 | **Offline Mode** | Download solutions for offline viewing. Sync when back online. | Pro/Ultra only |
 
 ### Future Features (🔮 Roadmap)

@@ -66,16 +66,22 @@
       </p>
 
       <!-- Billing Toggle -->
-      <div class="mt-10 inline-flex items-center bg-white rounded-xl p-2 shadow-md border border-gray-200">
-        <button id="toggle-monthly"
-          class="px-6 py-3 rounded-lg text-sm font-medium bg-primary text-white border border-primary transition-all">Monthly</button>
-        <button id="toggle-quarterly"
-          class="px-6 py-3 rounded-lg text-sm font-medium text-text-muted hover:text-text border border-transparent hover:border-gray-200 transition-all mx-1">Quarterly</button>
-        <button id="toggle-annual"
-          class="px-6 py-3 rounded-lg text-sm font-medium text-text-muted hover:text-text border border-transparent hover:border-gray-200 transition-all">
-          Annual
-          <span class="ml-2 text-xs bg-success/10 text-success px-2 py-1 rounded-full">Save 33%</span>
-        </button>
+      <div class="mt-10 flex justify-center">
+        <div class="inline-flex items-center bg-gray-100 rounded-full p-1 shadow-sm">
+          <button id="toggle-monthly"
+            class="px-6 py-2.5 rounded-full text-sm font-semibold bg-white text-primary shadow-sm transition-all">
+            Monthly
+          </button>
+          <button id="toggle-quarterly"
+            class="px-6 py-2.5 rounded-full text-sm font-semibold text-text-muted hover:text-text transition-all mx-1">
+            Quarterly
+          </button>
+          <button id="toggle-annual"
+            class="px-6 py-2.5 rounded-full text-sm font-semibold text-text-muted hover:text-text transition-all">
+            Annual
+            <span class="ml-1.5 text-xs bg-success/10 text-success px-2 py-0.5 rounded-full font-medium">Save up to 40%</span>
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -83,10 +89,10 @@
   <!-- Pricing Cards -->
   <section class="section pt-12 pb-16">
     <div class="container-narrow">
-      <div class="grid md:grid-cols-3 gap-8 lg:gap-10">
+      <div class="grid md:grid-cols-3 gap-6 lg:gap-8">
 
         <!-- Free Tier -->
-        <div class="card border-gray-200 flex flex-col p-8">
+        <div class="card border-gray-200 flex flex-col p-8 h-full">
           <div class="mb-8">
             <h3 class="text-2xl font-bold text-text">Free</h3>
             <p class="text-text-muted text-sm mt-2">Get started with JEE prep</p>
@@ -110,13 +116,19 @@
               <svg class="w-5 h-5 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span class="text-text"><strong>1</strong> Daily Quiz</span>
+              <span class="text-text"><strong>1</strong> Daily Adaptive Quiz</span>
             </li>
             <li class="flex items-center gap-3 min-h-[28px]">
               <svg class="w-5 h-5 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
               <span class="text-text"><strong>1</strong> Chapter/subject/week</span>
+            </li>
+            <li class="flex items-center gap-3 min-h-[28px]">
+              <svg class="w-5 h-5 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text"><strong>Fixed</strong> chapter selection</span>
             </li>
             <li class="flex items-center gap-3 min-h-[28px]">
               <svg class="w-5 h-5 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,14 +168,14 @@
         </div>
 
         <!-- Pro Tier -->
-        <div class="card border-primary/30 bg-primary/5 flex flex-col relative p-8">
-          <div class="absolute -top-4 left-1/2 -translate-x-1/2">
+        <div class="card border-primary/30 bg-primary/5 flex flex-col relative p-8 h-full">
+          <div class="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
             <span
               class="bg-primary text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md border-2 border-white">MOST
               POPULAR</span>
           </div>
 
-          <div class="mb-8 pt-2">
+          <div class="mb-8 pt-4">
             <h3 class="text-2xl font-bold text-text">Pro</h3>
             <p class="text-text-muted text-sm mt-2">For serious JEE aspirants</p>
           </div>
@@ -173,7 +185,7 @@
               <span class="text-5xl font-bold text-text" id="pro-price">₹299</span>
               <span class="text-text-muted text-lg" id="pro-period">/month</span>
             </div>
-            <p class="text-sm text-text-muted mt-2 h-5" id="pro-savings"></p>
+            <p class="text-sm text-text-muted mt-2 min-h-[20px]" id="pro-savings"></p>
           </div>
 
           <ul class="space-y-4 mb-10 flex-grow">
@@ -187,13 +199,19 @@
               <svg class="w-5 h-5 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span class="text-text"><strong>10</strong> Daily Quizzes</span>
+              <span class="text-text"><strong>10</strong> Daily Adaptive Quizzes</span>
             </li>
             <li class="flex items-center gap-3 min-h-[28px]">
               <svg class="w-5 h-5 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
               <span class="text-text"><strong>Unlimited</strong> Chapter Practice</span>
+            </li>
+            <li class="flex items-center gap-3 min-h-[28px]">
+              <svg class="w-5 h-5 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-text"><strong>Full</strong> chapter selection</span>
             </li>
             <li class="flex items-center gap-3 min-h-[28px]">
               <svg class="w-5 h-5 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,7 +229,7 @@
               <svg class="w-5 h-5 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span class="text-text"><strong>Snap Practice</strong> (3 questions/solve)</span>
+              <span class="text-text"><strong>Snap Practice Questions</strong></span>
             </li>
             <li class="flex items-center gap-3 min-h-[28px]">
               <svg class="w-5 h-5 text-success flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,9 +252,13 @@
 
         <!-- Ultra Tier -->
         <div
-          class="card border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 flex flex-col relative overflow-hidden p-8">
+          class="card border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 flex flex-col relative overflow-hidden p-8 h-full">
           <div
             class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400/20 to-orange-400/20 rounded-bl-full">
+          </div>
+
+          <div id="ultra-badge" class="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+            <!-- Badge will be dynamically inserted here -->
           </div>
 
           <div class="mb-8 relative">
@@ -252,7 +274,7 @@
               <span class="text-5xl font-bold text-text" id="ultra-price">₹499</span>
               <span class="text-text-muted text-lg" id="ultra-period">/month</span>
             </div>
-            <p class="text-sm text-text-muted mt-2 h-5" id="ultra-savings"></p>
+            <p class="text-sm text-text-muted mt-2 min-h-[20px]" id="ultra-savings"></p>
           </div>
 
           <ul class="space-y-4 mb-10 flex-grow">
@@ -278,6 +300,12 @@
               <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
+              <span class="text-text"><strong>Full</strong> chapter selection</span>
+            </li>
+            <li class="flex items-center gap-3 min-h-[28px]">
+              <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
               <span class="text-text"><strong>Full</strong> analytics</span>
             </li>
             <li class="flex items-center gap-3 min-h-[28px]">
@@ -290,7 +318,7 @@
               <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span class="text-text"><strong>Snap Practice</strong> (3 questions/solve)</span>
+              <span class="text-text"><strong>Snap Practice Questions</strong></span>
             </li>
             <li class="flex items-center gap-3 min-h-[28px]">
               <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -355,8 +383,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </td>
-              <td class="py-4 px-4 text-center text-text">3/solve</td>
-              <td class="py-4 px-4 text-center font-medium text-amber-600">3/solve</td>
+              <td class="py-4 px-4 text-center text-text">3/snap</td>
+              <td class="py-4 px-4 text-center font-medium text-amber-600">3/snap</td>
             </tr>
             <tr class="border-b border-gray-50">
               <td class="py-4 px-6 text-text">Adaptive Daily Quizzes</td>
@@ -369,6 +397,12 @@
               <td class="py-4 px-4 text-center text-text-muted">1 chapter/subject/week</td>
               <td class="py-4 px-4 text-center font-medium text-text">Unlimited</td>
               <td class="py-4 px-4 text-center font-medium text-amber-600">Unlimited</td>
+            </tr>
+            <tr class="border-b border-gray-50">
+              <td class="py-4 px-6 text-text">Chapter Selection</td>
+              <td class="py-4 px-4 text-center text-text-muted">Fixed</td>
+              <td class="py-4 px-4 text-center font-medium text-text">Full Repository</td>
+              <td class="py-4 px-4 text-center font-medium text-amber-600">Full Repository</td>
             </tr>
             <tr class="border-b border-gray-50">
               <td class="py-4 px-6 text-text">Solution History</td>
@@ -443,10 +477,15 @@
 
             <!-- Pricing Row -->
             <tr class="bg-primary/5">
-              <td class="py-4 px-6 font-semibold text-text">Monthly Price</td>
+              <td class="py-4 px-6 font-semibold text-text">Starting Price</td>
               <td class="py-4 px-4 text-center font-semibold text-text">Free</td>
-              <td class="py-4 px-4 text-center font-semibold text-primary">₹299/mo</td>
-              <td class="py-4 px-4 text-center font-semibold text-amber-600">₹499/mo</td>
+              <td class="py-4 px-4 text-center font-semibold text-primary">₹199/mo*</td>
+              <td class="py-4 px-4 text-center font-semibold text-amber-600">₹299/mo*</td>
+            </tr>
+            <tr class="bg-primary/5 border-t border-gray-100">
+              <td colspan="4" class="py-2 px-6 text-xs text-text-muted text-center">
+                *Annual plan pricing. Monthly plans: Pro ₹299/mo, Ultra ₹499/mo
+              </td>
             </tr>
           </tbody>
         </table>
@@ -454,6 +493,88 @@
 
       <p class="text-center text-text-muted text-sm mt-6">All tiers receive full step-by-step solutions. We don't gate
         solution quality.</p>
+    </div>
+  </section>
+
+  <!-- Value Comparison Section -->
+  <section class="section py-16 bg-white">
+    <div class="container-narrow">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <h2 class="text-3xl font-bold text-text">Why JEEVibe is Worth It</h2>
+        <p class="mt-4 text-text-muted">Get IIT-level coaching quality at a fraction of the cost.</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <!-- Traditional Coaching -->
+        <div class="card border-red-100 bg-red-50/50">
+          <div class="flex items-center gap-3 mb-4">
+            <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <h3 class="text-xl font-bold text-text">Traditional Coaching</h3>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center gap-2 text-text-muted">
+              <span class="text-red-500">-</span>
+              <span>₹1,00,000+ per year</span>
+            </div>
+            <div class="flex items-center gap-2 text-text-muted">
+              <span class="text-red-500">-</span>
+              <span>Fixed schedule, no personalization</span>
+            </div>
+            <div class="flex items-center gap-2 text-text-muted">
+              <span class="text-red-500">-</span>
+              <span>8+ hours/day commitment</span>
+            </div>
+            <div class="flex items-center gap-2 text-text-muted">
+              <span class="text-red-500">-</span>
+              <span>Travel time and expenses</span>
+            </div>
+            <div class="flex items-center gap-2 text-text-muted">
+              <span class="text-red-500">-</span>
+              <span>Generic content for everyone</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- JEEVibe Pro -->
+        <div class="card border-primary/30 bg-primary/5">
+          <div class="flex items-center gap-3 mb-4">
+            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <h3 class="text-xl font-bold text-text">JEEVibe Pro</h3>
+          </div>
+          <div class="space-y-3">
+            <div class="flex items-center gap-2 text-text">
+              <span class="text-success font-bold">+</span>
+              <span><strong>₹2,388/year</strong> (₹199/mo) - <span class="text-success">98% savings</span></span>
+            </div>
+            <div class="flex items-center gap-2 text-text">
+              <span class="text-success font-bold">+</span>
+              <span>Fully personalized adaptive learning</span>
+            </div>
+            <div class="flex items-center gap-2 text-text">
+              <span class="text-success font-bold">+</span>
+              <span>Study 2-3 hours/day effectively</span>
+            </div>
+            <div class="flex items-center gap-2 text-text">
+              <span class="text-success font-bold">+</span>
+              <span>Study anywhere, anytime</span>
+            </div>
+            <div class="flex items-center gap-2 text-text">
+              <span class="text-success font-bold">+</span>
+              <span>AI-generated questions tailored to you</span>
+            </div>
+          </div>
+          <div class="mt-6 p-4 bg-white rounded-lg border border-primary/20">
+            <div class="text-center">
+              <div class="text-2xl font-bold text-primary">Same Quality</div>
+              <div class="text-sm text-text-muted mt-1">IIT-level personalized coaching</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -588,35 +709,51 @@
 
     const pricing = {
       pro: {
-        monthly: { price: '₹299', period: '/month', savings: '' },
-        quarterly: { price: '₹747', period: '/quarter', savings: '₹249/mo · Save 17%' },
-        annual: { price: '₹2,388', period: '/year', savings: '₹199/mo · Save 33%' }
+        monthly: { price: '₹299', period: '/month', savings: '', badge: null },
+        quarterly: { price: '₹747', period: '/quarter', savings: '₹249/mo · Save 17%', badge: 'MOST POPULAR' },
+        annual: { price: '₹2,388', period: '/year', savings: '₹199/mo · Save 33%', badge: 'SAVE 33%' }
       },
       ultra: {
-        monthly: { price: '₹499', period: '/month', savings: '' },
-        quarterly: { price: '₹1,197', period: '/quarter', savings: '₹399/mo · Save 20%' },
-        annual: { price: '₹3,588', period: '/year', savings: '₹299/mo · Save 40%' }
+        monthly: { price: '₹499', period: '/month', savings: '', badge: null },
+        quarterly: { price: '₹1,197', period: '/quarter', savings: '₹399/mo · Save 20%', badge: 'MOST POPULAR' },
+        annual: { price: '₹3,588', period: '/year', savings: '₹299/mo · Save 40%', badge: 'BEST VALUE' }
       }
     };
 
     function setActiveToggle(active) {
       [toggleMonthly, toggleQuarterly, toggleAnnual].forEach(btn => {
-        btn.classList.remove('bg-primary', 'text-white', 'border-primary');
-        btn.classList.add('text-text-muted', 'border-transparent');
+        btn.classList.remove('bg-white', 'text-primary', 'shadow-sm');
+        btn.classList.add('text-text-muted');
       });
-      active.classList.add('bg-primary', 'text-white', 'border-primary');
-      active.classList.remove('text-text-muted', 'border-transparent');
+      active.classList.add('bg-white', 'text-primary', 'shadow-sm');
+      active.classList.remove('text-text-muted');
     }
 
     function updatePricing(plan) {
+      // Update Pro pricing
       proPrice.textContent = pricing.pro[plan].price;
       proPeriod.textContent = pricing.pro[plan].period;
       proSavings.textContent = pricing.pro[plan].savings;
 
+      // Update Ultra pricing
       ultraPrice.textContent = pricing.ultra[plan].price;
       ultraPeriod.textContent = pricing.ultra[plan].period;
       ultraSavings.textContent = pricing.ultra[plan].savings;
+      
+      // Update Ultra badge (dynamic based on plan)
+      const ultraBadge = document.getElementById('ultra-badge');
+      if (pricing.ultra[plan].badge) {
+        const badgeColor = plan === 'annual' ? 'bg-amber-500' : 'bg-primary';
+        ultraBadge.innerHTML = `<span class="${badgeColor} text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md border-2 border-white">${pricing.ultra[plan].badge}</span>`;
+        ultraBadge.classList.remove('hidden');
+      } else {
+        ultraBadge.classList.add('hidden');
+      }
     }
+
+    // Initialize with monthly pricing
+    setActiveToggle(toggleMonthly);
+    updatePricing('monthly');
 
     toggleMonthly.addEventListener('click', () => {
       setActiveToggle(toggleMonthly);
