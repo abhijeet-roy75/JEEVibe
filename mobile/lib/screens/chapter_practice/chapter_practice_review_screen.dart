@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/priya_avatar.dart';
 import '../../widgets/question_review/question_review_screen.dart';
+import '../../utils/text_preprocessor.dart';
 
 class ChapterPracticeReviewScreen extends StatefulWidget {
   final PracticeSessionSummary? summary;
@@ -419,16 +420,21 @@ class _ChapterPracticeReviewScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Question text (truncated)
-                  Text(
-                    result.questionText.length > 60
-                        ? '${result.questionText.substring(0, 60)}...'
-                        : result.questionText,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  // Question text (truncated, HTML stripped)
+                  Builder(
+                    builder: (context) {
+                      final cleanText = TextPreprocessor.stripHtml(result.questionText);
+                      return Text(
+                        cleanText.length > 60
+                            ? '${cleanText.substring(0, 60)}...'
+                            : cleanText,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      );
+                    },
                   ),
                   const SizedBox(height: 8),
                   // Status and answers

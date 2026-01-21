@@ -472,5 +472,48 @@ class TextPreprocessor {
     
     return stepContent.substring(0, maxLength.clamp(0, stepContent.length));
   }
+
+  /// Strip HTML tags from text
+  /// Converts common HTML to plain text:
+  /// - <strong>text</strong> -> text
+  /// - <em>text</em> -> text
+  /// - <b>text</b> -> text
+  /// - <i>text</i> -> text
+  /// - <br> / <br/> -> newline
+  /// - <p>text</p> -> text with newlines
+  /// - &nbsp; -> space
+  /// - &lt; -> <
+  /// - &gt; -> >
+  /// - &amp; -> &
+  static String stripHtml(String text) {
+    if (text.isEmpty) return text;
+
+    String result = text;
+
+    // Replace <br> and <br/> with newlines
+    result = result.replaceAll(RegExp(r'<br\s*/?>'), '\n');
+
+    // Replace </p> with newlines (paragraph ends)
+    result = result.replaceAll(RegExp(r'</p>', caseSensitive: false), '\n');
+
+    // Remove all HTML tags but keep their content
+    result = result.replaceAll(RegExp(r'<[^>]+>'), '');
+
+    // Decode common HTML entities
+    result = result
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'")
+        .replaceAll('&apos;', "'");
+
+    // Clean up extra whitespace
+    result = result.replaceAll(RegExp(r'\n\s*\n'), '\n');
+    result = result.replaceAll(RegExp(r'  +'), ' ');
+
+    return result.trim();
+  }
 }
 
