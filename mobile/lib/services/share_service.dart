@@ -373,4 +373,170 @@ $achievementText
 
 Join me on JEEVibe - Download from App Store''';
   }
+
+  /// Share analytics overview as an image via native share sheet
+  /// Returns true if share was initiated successfully
+  ///
+  /// [imageBytes] is the PNG image data captured from the screenshot
+  /// [sharePositionOrigin] is required on iPad to position the share popover.
+  static Future<bool> shareAnalyticsOverviewAsImage({
+    required Uint8List imageBytes,
+    required String studentName,
+    required int currentStreak,
+    required int questionsSolved,
+    Rect? sharePositionOrigin,
+  }) async {
+    try {
+      // Save image to temporary file
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final imagePath = '${tempDir.path}/jeevibe_analytics_$timestamp.png';
+      final imageFile = File(imagePath);
+      await imageFile.writeAsBytes(imageBytes);
+
+      // Build share text
+      final shareText = _buildAnalyticsOverviewShareText(
+        studentName: studentName,
+        currentStreak: currentStreak,
+        questionsSolved: questionsSolved,
+      );
+
+      // Share via native share sheet with image
+      final result = await Share.shareXFiles(
+        [XFile(imagePath)],
+        text: shareText,
+        subject: 'My JEE Progress on JEEVibe',
+        sharePositionOrigin: sharePositionOrigin,
+      );
+
+      // Clean up temp file after a delay (let share complete)
+      Future.delayed(const Duration(seconds: 30), () {
+        try {
+          if (imageFile.existsSync()) {
+            imageFile.deleteSync();
+          }
+        } catch (e) {
+          debugPrint('Error cleaning up temp file: $e');
+        }
+      });
+
+      return result.status == ShareResultStatus.success ||
+             result.status == ShareResultStatus.dismissed;
+    } catch (e) {
+      debugPrint('Error sharing analytics overview as image: $e');
+      return false;
+    }
+  }
+
+  /// Build the analytics overview share text
+  static String _buildAnalyticsOverviewShareText({
+    required String studentName,
+    required int currentStreak,
+    required int questionsSolved,
+  }) {
+    String streakText = '';
+    if (currentStreak > 0) {
+      streakText = '\n🔥 $currentStreak day streak!';
+    }
+
+    return '''📊 *My JEE Progress*$streakText
+📚 $questionsSolved questions practiced
+
+Track your JEE prep with JEEVibe - Download from App Store''';
+  }
+
+  /// Share subject mastery as an image via native share sheet
+  /// Returns true if share was initiated successfully
+  ///
+  /// [imageBytes] is the PNG image data captured from the screenshot
+  /// [sharePositionOrigin] is required on iPad to position the share popover.
+  static Future<bool> shareSubjectMasteryAsImage({
+    required Uint8List imageBytes,
+    required String subject,
+    required int percentile,
+    required String status,
+    Rect? sharePositionOrigin,
+  }) async {
+    try {
+      // Save image to temporary file
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final imagePath = '${tempDir.path}/jeevibe_mastery_${subject.toLowerCase()}_$timestamp.png';
+      final imageFile = File(imagePath);
+      await imageFile.writeAsBytes(imageBytes);
+
+      // Build share text
+      final shareText = _buildSubjectMasteryShareText(
+        subject: subject,
+        percentile: percentile,
+        status: status,
+      );
+
+      // Share via native share sheet with image
+      final result = await Share.shareXFiles(
+        [XFile(imagePath)],
+        text: shareText,
+        subject: 'My $subject Mastery on JEEVibe',
+        sharePositionOrigin: sharePositionOrigin,
+      );
+
+      // Clean up temp file after a delay (let share complete)
+      Future.delayed(const Duration(seconds: 30), () {
+        try {
+          if (imageFile.existsSync()) {
+            imageFile.deleteSync();
+          }
+        } catch (e) {
+          debugPrint('Error cleaning up temp file: $e');
+        }
+      });
+
+      return result.status == ShareResultStatus.success ||
+             result.status == ShareResultStatus.dismissed;
+    } catch (e) {
+      debugPrint('Error sharing subject mastery as image: $e');
+      return false;
+    }
+  }
+
+  /// Build the subject mastery share text
+  static String _buildSubjectMasteryShareText({
+    required String subject,
+    required int percentile,
+    required String status,
+  }) {
+    String emoji;
+    switch (subject.toLowerCase()) {
+      case 'physics':
+        emoji = '⚡';
+        break;
+      case 'chemistry':
+        emoji = '🧪';
+        break;
+      case 'mathematics':
+      case 'maths':
+        emoji = '📐';
+        break;
+      default:
+        emoji = '📚';
+    }
+
+    String statusEmoji;
+    switch (status.toUpperCase()) {
+      case 'MASTERED':
+        statusEmoji = '✅';
+        break;
+      case 'GROWING':
+        statusEmoji = '📈';
+        break;
+      default:
+        statusEmoji = '🎯';
+    }
+
+    return '''$emoji *My $subject Mastery*
+📊 $percentile percentile
+$statusEmoji Status: $status
+
+Master JEE with JEEVibe - Download from App Store''';
+  }
 }

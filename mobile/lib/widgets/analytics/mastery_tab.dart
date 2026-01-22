@@ -2,16 +2,19 @@
 /// Displays subject mastery details with chapter breakdown and chart
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:screenshot/screenshot.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../models/analytics_data.dart';
 import '../../models/ai_tutor_models.dart';
 import '../../services/analytics_service.dart';
 import '../../services/subscription_service.dart';
+import '../../services/share_service.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../screens/assessment_intro_screen.dart';
 import '../../screens/ai_tutor_chat_screen.dart';
 import '../priya_avatar.dart';
+import '../shareable_subject_mastery_card.dart';
 import 'chapter_mastery_item.dart';
 import 'accuracy_chart.dart';
 
@@ -26,10 +29,10 @@ class MasteryTab extends StatefulWidget {
   });
 
   @override
-  State<MasteryTab> createState() => _MasteryTabState();
+  State<MasteryTab> createState() => MasteryTabState();
 }
 
-class _MasteryTabState extends State<MasteryTab> {
+class MasteryTabState extends State<MasteryTab> {
   String _selectedSubject = 'physics';
   SubjectMasteryDetails? _masteryDetails;
   AccuracyTimeline? _accuracyTimeline;
@@ -40,10 +43,48 @@ class _MasteryTabState extends State<MasteryTab> {
   final Map<String, SubjectMasteryDetails> _masteryCache = {};
   final Map<String, AccuracyTimeline> _timelineCache = {};
 
+  // Share functionality
+  final ScreenshotController _screenshotController = ScreenshotController();
+
   @override
   void initState() {
     super.initState();
     _loadSubjectData();
+  }
+
+  /// Public method to trigger share from parent widget
+  /// [sharePositionOrigin] is required on iPad to position the share popover
+  Future<void> triggerShare([Rect? sharePositionOrigin]) async {
+    if (_isLoading || _masteryDetails == null) return;
+
+    try {
+      // Capture screenshot of shareable card
+      final imageBytes = await _screenshotController.captureFromWidget(
+        MediaQuery(
+          data: const MediaQueryData(),
+          child: Material(
+            color: Colors.transparent,
+            child: ShareableSubjectMasteryCard(
+              studentName: widget.overview.user.firstName,
+              masteryDetails: _masteryDetails!,
+            ),
+          ),
+        ),
+        pixelRatio: 3.0,
+        delay: const Duration(milliseconds: 100),
+      );
+
+      // Share via native share sheet
+      await ShareService.shareSubjectMasteryAsImage(
+        imageBytes: imageBytes,
+        subject: _masteryDetails!.subjectName,
+        percentile: _masteryDetails!.overallPercentile.round(),
+        status: _masteryDetails!.status.displayName,
+        sharePositionOrigin: sharePositionOrigin,
+      );
+    } catch (e) {
+      debugPrint('Error sharing subject mastery: $e');
+    }
   }
 
   Future<void> _loadSubjectData() async {

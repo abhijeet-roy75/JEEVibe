@@ -198,24 +198,9 @@ class _ChapterPickerScreenState extends State<ChapterPickerScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Choose Chapter',
-          style: AppTextStyles.headerSmall.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-      ),
       body: Column(
         children: [
+          _buildHeader(),
           _buildTabBar(),
           Expanded(
             child: TabBarView(
@@ -224,6 +209,54 @@ class _ChapterPickerScreenState extends State<ChapterPickerScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: AppColors.ctaGradient,
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Row(
+            children: [
+              // Back button
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+              // Centered title
+              Expanded(
+                child: Text(
+                  'Choose Chapter',
+                  style: AppTextStyles.headerWhite.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              // Spacer to balance the back button
+              const SizedBox(width: 40),
+            ],
+          ),
+        ),
       ),
     );
   }

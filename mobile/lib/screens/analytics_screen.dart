@@ -35,6 +35,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   final SubscriptionService _subscriptionService = SubscriptionService();
   bool _hasFullAnalytics = false; // true for PRO/ULTRA, false for FREE
 
+  // Keys to access tab share methods
+  final GlobalKey<OverviewTabState> _overviewTabKey = GlobalKey<OverviewTabState>();
+  final GlobalKey<MasteryTabState> _masteryTabKey = GlobalKey<MasteryTabState>();
+  final GlobalKey _shareButtonKey = GlobalKey();
+  bool _isSharing = false;
+
   @override
   void initState() {
     super.initState();
@@ -108,6 +114,32 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
   String _getUserName() {
     return _userProfile?.firstName ?? 'Student';
+  }
+
+  Future<void> _onSharePressed() async {
+    if (_isSharing) return;
+
+    setState(() => _isSharing = true);
+
+    try {
+      // Get share button position for iPad popover
+      final RenderBox? renderBox =
+          _shareButtonKey.currentContext?.findRenderObject() as RenderBox?;
+      final sharePositionOrigin = renderBox != null
+          ? renderBox.localToGlobal(Offset.zero) & renderBox.size
+          : null;
+
+      // Call share on the appropriate tab based on current index
+      if (_tabController.index == 0) {
+        await _overviewTabKey.currentState?.triggerShare(sharePositionOrigin);
+      } else {
+        await _masteryTabKey.currentState?.triggerShare(sharePositionOrigin);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSharing = false);
+      }
+    }
   }
 
   @override
@@ -200,7 +232,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                       ],
                     ),
                   ),
-                  // Tier badge - show loading state while data is loading
+                  // Share button
                   if (_isLoading)
                     Container(
                       width: 60,
@@ -212,18 +244,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                     )
                   else
                     GestureDetector(
-                      onTap: _hasFullAnalytics
-                          ? null
-                          : () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const PaywallScreen(
-                                    featureName: 'Full Analytics',
-                                  ),
-                                ),
-                              );
-                            },
+                      key: _shareButtonKey,
+                      onTap: _isSharing ? null : _onSharePressed,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
@@ -233,16 +255,24 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              _hasFullAnalytics ? Icons.auto_awesome : Icons.lock_outline,
-                              color: Colors.white,
-                              size: 14,
-                            ),
+                            if (_isSharing)
+                              const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            else
+                              const Icon(
+                                Icons.share_outlined,
+                                color: Colors.white,
+                                size: 14,
+                              ),
                             const SizedBox(width: 4),
                             Text(
-                              _hasFullAnalytics
-                                  ? (_subscriptionService.currentTier.name.toUpperCase())
-                                  : 'FREE',
+                              'Share',
                               style: AppTextStyles.labelSmall.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -351,12 +381,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       controller: _tabController,
       children: [
         OverviewTab(
+          key: _overviewTabKey,
           overview: _overview!,
           weeklyActivity: _weeklyActivity,
           isBasicView: !_hasFullAnalytics,
         ),
         _hasFullAnalytics
             ? MasteryTab(
+                key: _masteryTabKey,
                 authToken: _authToken!,
                 overview: _overview!,
               )

@@ -1,6 +1,8 @@
 /// Overview Tab Widget
 /// Displays analytics overview content
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:screenshot/screenshot.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../models/analytics_data.dart';
@@ -10,11 +12,13 @@ import '../../screens/assessment_intro_screen.dart';
 import '../../screens/subscription/paywall_screen.dart';
 import '../../screens/ai_tutor_chat_screen.dart';
 import '../../services/subscription_service.dart';
+import '../../services/share_service.dart';
 import '../priya_avatar.dart';
+import '../shareable_analytics_overview_card.dart';
 import 'stat_card.dart';
 import 'weekly_activity_chart.dart';
 
-class OverviewTab extends StatelessWidget {
+class OverviewTab extends StatefulWidget {
   final AnalyticsOverview overview;
   final WeeklyActivity? weeklyActivity;
   final bool isBasicView; // true for FREE tier, false for PRO/ULTRA
@@ -27,6 +31,61 @@ class OverviewTab extends StatelessWidget {
   });
 
   @override
+  State<OverviewTab> createState() => OverviewTabState();
+}
+
+class OverviewTabState extends State<OverviewTab> {
+  final ScreenshotController _screenshotController = ScreenshotController();
+  bool _isSharing = false;
+
+  AnalyticsOverview get overview => widget.overview;
+  WeeklyActivity? get weeklyActivity => widget.weeklyActivity;
+  bool get isBasicView => widget.isBasicView;
+
+  /// Public method to trigger share from parent widget
+  /// [sharePositionOrigin] is required on iPad to position the share popover
+  Future<void> triggerShare([Rect? sharePositionOrigin]) async {
+    if (_isSharing) return;
+
+    setState(() => _isSharing = true);
+
+    try {
+      // Capture screenshot of shareable card
+      final imageBytes = await _screenshotController.captureFromWidget(
+        MediaQuery(
+          data: const MediaQueryData(),
+          child: Material(
+            color: Colors.transparent,
+            child: ShareableAnalyticsOverviewCard(
+              studentName: overview.user.firstName,
+              stats: overview.stats,
+              subjectProgress: overview.orderedSubjectProgress,
+              weeklyActivity: weeklyActivity,
+            ),
+          ),
+        ),
+        pixelRatio: 3.0,
+        delay: const Duration(milliseconds: 100),
+      );
+
+      // Share via native share sheet
+      await ShareService.shareAnalyticsOverviewAsImage(
+        imageBytes: imageBytes,
+        studentName: overview.user.firstName,
+        currentStreak: overview.stats.currentStreak,
+        questionsSolved: overview.stats.questionsSolved,
+        sharePositionOrigin: sharePositionOrigin,
+      );
+    } catch (e) {
+      debugPrint('Error sharing analytics overview: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isSharing = false);
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -37,7 +96,7 @@ class OverviewTab extends StatelessWidget {
           _buildStatsGrid(),
           const SizedBox(height: 20),
           // Your Progress section (same as home page)
-          _buildYourProgressCard(),
+          _buildYourProgressCard(context),
           const SizedBox(height: 20),
           // Weekly Activity chart
           if (weeklyActivity != null) ...[
@@ -110,7 +169,7 @@ class OverviewTab extends StatelessWidget {
     );
   }
 
-  Widget _buildYourProgressCard() {
+  Widget _buildYourProgressCard(BuildContext context) {
     final subjects = overview.orderedSubjectProgress;
 
     return Container(
