@@ -1227,4 +1227,154 @@ function formatTime(seconds) {
   return `${minutes}m`;
 }
 
+// ============================================================================
+// CHAPTER PRACTICE HISTORY
+// ============================================================================
+
+/**
+ * GET /api/chapter-practice/history
+ *
+ * Get chapter practice session history for the user
+ * Returns list of completed sessions with pagination and tier-based filtering
+ *
+ * Query params:
+ * - limit: Number of sessions to return (default: 20, max: 50)
+ * - offset: Number of sessions to skip (default: 0)
+ * - days: Filter sessions from last N days (default: tier-based limit)
+ * - subject: Filter by subject (optional: physics, chemistry, mathematics)
+ *
+ * Authentication: Required
+ */
+router.get('/history', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+    const offset = parseInt(req.query.offset) || 0;
+    const subjectFilter = req.query.subject ? req.query.subject.toLowerCase() : null;
+
+    // Validate pagination parameters
+    if (limit < 1 || limit > 50) {
+      throw new ApiError(400, 'limit must be between 1 and 50', 'INVALID_LIMIT');
+    }
+    if (offset < 0) {
+      throw new ApiError(400, 'offset must be >= 0', 'INVALID_OFFSET');
+    }
+    if (offset > 100) {
+      throw new ApiError(400,
+        'Offset > 100 not supported. Use cursor-based pagination for better performance',
+        'OFFSET_TOO_LARGE'
+      );
+    }
+
+    // Validate subject filter
+    if (subjectFilter && !['physics', 'chemistry', 'mathematics'].includes(subjectFilter)) {
+      throw new ApiError(400, 'subject must be physics, chemistry, or mathematics', 'INVALID_SUBJECT');
+    }
+
+    // Get tier-based history limit
+    const tierInfo = await getEffectiveTier(userId);
+    const limits = await getTierLimits(tierInfo.tier);
+    const tierHistoryDays = limits.solution_history_days || 7;
+
+    // Use provided days parameter or tier-based default
+    let historyDays = parseInt(req.query.days) || tierHistoryDays;
+
+    // For non-unlimited tiers, cap at tier limit
+    if (tierHistoryDays !== -1 && historyDays > tierHistoryDays) {
+      historyDays = tierHistoryDays;
+    }
+
+    // Calculate date filter
+    let startDate = null;
+    if (historyDays !== -1) {
+      startDate = new Date();
+      startDate.setDate(startDate.getDate() - historyDays);
+      startDate.setHours(0, 0, 0, 0);
+    }
+
+    // Build query
+    let query = db.collection('chapter_practice_sessions')
+      .doc(userId)
+      .collection('sessions')
+      .where('status', '==', 'completed');
+
+    // Apply date filter if not unlimited
+    if (startDate) {
+      query = query.where('completed_at', '>=', admin.firestore.Timestamp.fromDate(startDate));
+    }
+
+    // Apply subject filter if provided
+    if (subjectFilter) {
+      query = query.where('subject', '==', subjectFilter.charAt(0).toUpperCase() + subjectFilter.slice(1));
+    }
+
+    // Order by completed_at descending and apply pagination
+    query = query
+      .orderBy('completed_at', 'desc')
+      .limit(limit + offset);
+
+    const snapshot = await retryFirestoreOperation(async () => {
+      return await query.get();
+    });
+
+    // Apply offset manually (Firestore doesn't support offset directly)
+    const allSessions = snapshot.docs.slice(offset, offset + limit);
+
+    const sessions = allSessions.map(doc => {
+      const data = doc.data();
+      return {
+        session_id: doc.id,
+        chapter_key: data.chapter_key,
+        chapter_name: data.chapter_name,
+        subject: data.subject,
+        completed_at: data.completed_at?.toDate?.()?.toISOString() || data.completed_at,
+        total_questions: data.total_questions || 0,
+        questions_answered: data.final_total_answered || data.questions_answered || 0,
+        correct_count: data.final_correct_count || data.correct_count || 0,
+        accuracy: data.final_accuracy != null ? roundToDecimals(data.final_accuracy) : 0,
+        total_time_seconds: data.total_time_seconds || 0,
+        theta_improvement: data.theta_improvement ? roundToDecimals(data.theta_improvement, 4) : 0
+      };
+    });
+
+    // Get total count for pagination info
+    let countQuery = db.collection('chapter_practice_sessions')
+      .doc(userId)
+      .collection('sessions')
+      .where('status', '==', 'completed');
+
+    if (startDate) {
+      countQuery = countQuery.where('completed_at', '>=', admin.firestore.Timestamp.fromDate(startDate));
+    }
+    if (subjectFilter) {
+      countQuery = countQuery.where('subject', '==', subjectFilter.charAt(0).toUpperCase() + subjectFilter.slice(1));
+    }
+
+    const totalSnapshot = await retryFirestoreOperation(async () => {
+      return await countQuery.count().get();
+    });
+    const total = totalSnapshot.data().count;
+    const hasMore = offset + limit < total;
+
+    res.json({
+      success: true,
+      sessions: sessions,
+      pagination: {
+        limit: limit,
+        offset: offset,
+        total: total,
+        has_more: hasMore
+      },
+      tier_info: {
+        tier: tierInfo.tier,
+        history_days_limit: tierHistoryDays,
+        is_unlimited: tierHistoryDays === -1
+      },
+      requestId: req.id
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
