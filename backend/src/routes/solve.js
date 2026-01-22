@@ -29,6 +29,7 @@ const { v4: uuidv4 } = require('uuid');
 const { formatChapterKey } = require('../services/thetaCalculationService');
 const { selectQuestionsForChapter } = require('../services/questionSelectionService');
 const { getEffectiveTier } = require('../services/subscriptionService');
+const { updateStreak } = require('../services/streakService');
 
 // Valid subjects for JEE
 const VALID_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry'];
@@ -996,6 +997,18 @@ router.post('/snap-practice/complete',
             'snap_practice_stats.total_correct': admin.firestore.FieldValue.increment(correctCount),
             'snap_practice_stats.last_session': admin.firestore.FieldValue.serverTimestamp()
           });
+        });
+      }
+
+      // ========================================================================
+      // UPDATE PRACTICE STREAK
+      // ========================================================================
+      try {
+        await updateStreak(userId);
+      } catch (error) {
+        logger.error('Error updating streak after snap practice', {
+          userId,
+          error: error.message
         });
       }
 

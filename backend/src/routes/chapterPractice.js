@@ -37,6 +37,7 @@ const {
   calculateSubjectAndOverallThetaUpdate,
   calculateSubtopicAccuracyUpdate
 } = require('../services/thetaUpdateService');
+const { updateStreak } = require('../services/streakService');
 
 // ============================================================================
 // CONSTANTS
@@ -980,6 +981,16 @@ router.post('/complete', authenticateUser, validateSessionId, async (req, res, n
         'cumulative_stats.last_updated': admin.firestore.FieldValue.serverTimestamp()
       });
     });
+
+    // Update practice streak
+    try {
+      await updateStreak(userId);
+    } catch (error) {
+      logger.error('Error updating streak after chapter practice', {
+        userId,
+        error: error.message
+      });
+    }
 
     // Record weekly usage for free tier (if weekly limit applies)
     const tierInfo = await getEffectiveTier(userId);
