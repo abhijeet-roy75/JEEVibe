@@ -9,7 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/priya_avatar.dart';
 import '../../widgets/buttons/gradient_button.dart';
-import '../assessment_intro_screen.dart';
+import '../main_navigation_screen.dart';
 import 'chapter_practice_review_screen.dart';
 
 class ChapterPracticeResultScreen extends StatelessWidget {
@@ -90,9 +90,9 @@ class ChapterPracticeResultScreen extends StatelessWidget {
         Provider.of<ChapterPracticeProvider>(context, listen: false);
     provider.reset();
 
-    // Navigate to dashboard (AssessmentIntroScreen)
+    // Navigate to main home screen with bottom navigation
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
+      MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
       (route) => false,
     );
   }

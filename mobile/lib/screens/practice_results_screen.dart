@@ -10,7 +10,7 @@ import '../widgets/app_header.dart';
 import 'camera_screen.dart';
 import 'review_questions_screen.dart';
 import 'daily_limit_screen.dart';
-import 'assessment_intro_screen.dart';
+import 'main_navigation_screen.dart';
 
 class PracticeResultsScreen extends StatelessWidget {
   final PracticeSessionResult sessionResult;
@@ -462,9 +462,9 @@ class PracticeResultsScreen extends StatelessWidget {
       height: 56,
       child: ElevatedButton.icon(
         onPressed: () {
-          // Navigate to main home screen (AssessmentIntroScreen) where snap-and-solve card is
+          // Navigate to main home screen with bottom navigation
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
+            MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
             (route) => false,
           );
         },

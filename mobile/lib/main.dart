@@ -21,11 +21,13 @@ import 'services/offline/image_cache_service.dart';
 import 'services/offline/sync_service.dart';
 import 'providers/app_state_provider.dart';
 import 'providers/offline_provider.dart';
+import 'providers/user_profile_provider.dart';
 
 // Screens
 import 'screens/auth/welcome_screen.dart'; // The new Auth Wrapper
 import 'screens/auth/pin_verification_screen.dart'; // PIN verification
-import 'screens/assessment_intro_screen.dart'; // The new home dashboard
+import 'screens/assessment_intro_screen.dart'; // Home dashboard (used in bottom nav)
+import 'screens/main_navigation_screen.dart'; // Main navigation with bottom nav
 // Services
 import 'services/firebase/pin_service.dart';
 
@@ -135,7 +137,13 @@ void main() async {
       providers: [
         // Firebase Auth (Now defined FIRST so others can depend on it)
         ChangeNotifierProvider(create: (_) => AuthService()),
-        
+
+        // Subscription Service (singleton - provides tier info and feature gating)
+        ChangeNotifierProvider.value(value: SubscriptionService()),
+
+        // User Profile (centralized state for user info across all screens)
+        ChangeNotifierProvider(create: (_) => UserProfileProvider()),
+
         // App State (Snap limits, etc.) - Now depends on AuthService
         ChangeNotifierProxyProvider<AuthService, AppStateProvider>(
           create: (context) => AppStateProvider(
@@ -515,8 +523,8 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
 
     if (!mounted) return;
 
-    // Determine target screen (Assessment Intro is the new home)
-    final targetScreen = const AssessmentIntroScreen();
+    // Determine target screen (MainNavigation with bottom nav is the new home)
+    final targetScreen = const MainNavigationScreen();
 
     // If PIN exists, show PIN verification screen, otherwise go directly to home
     if (hasPin) {

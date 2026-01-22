@@ -11,6 +11,7 @@ import '../widgets/priya_avatar.dart';
 import '../widgets/daily_quiz/question_card_widget.dart';
 import '../widgets/daily_quiz/feedback_banner_widget.dart';
 import '../widgets/daily_quiz/detailed_explanation_widget.dart';
+import '../widgets/buttons/icon_button.dart';
 import '../utils/error_handler.dart';
 import 'daily_quiz_result_screen.dart';
 
@@ -151,6 +152,63 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     final minutes = seconds ~/ 60;
     final secs = seconds % 60;
     return '${minutes.toString().padLeft(1, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  Future<bool> _showQuitConfirmationDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.error.withAlpha(25),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.error,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Quit Quiz?'),
+          ],
+        ),
+        content: const Text(
+          'Your progress will be lost and this quiz will not be counted. Are you sure you want to quit?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Continue Quiz'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.error,
+            ),
+            child: const Text('Quit'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  void _handleQuitQuiz() async {
+    final shouldQuit = await _showQuitConfirmationDialog();
+    if (shouldQuit && mounted) {
+      // Clear the quiz state
+      final provider = Provider.of<DailyQuizProvider>(context, listen: false);
+      provider.reset();
+      Navigator.of(context).pop();
+    }
   }
 
   void _handleOptionSelection(String answer) {
@@ -607,11 +665,15 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top line with centered title/subtitle (no back button - quiz must be completed)
+              // Top line with close button and centered title/subtitle
               Row(
                 children: [
-                  // Spacer to balance the layout (no back button during quiz)
-                  const SizedBox(width: 48),
+                  // Close button to quit quiz
+                  AppIconButton.close(
+                    forGradientHeader: true,
+                    onPressed: _handleQuitQuiz,
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       children: [

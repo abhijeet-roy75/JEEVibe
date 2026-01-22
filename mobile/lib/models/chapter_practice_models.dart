@@ -377,4 +377,38 @@ class PracticeQuestionResult {
     this.solutionText,
     this.solutionSteps = const [],
   });
+
+  factory PracticeQuestionResult.fromJson(Map<String, dynamic> json) {
+    // Parse options
+    List<PracticeOption> parsedOptions = [];
+    final rawOptions = json['options'];
+    if (rawOptions != null && rawOptions is List) {
+      parsedOptions = rawOptions
+          .where((o) => o != null && o is Map<String, dynamic>)
+          .map((o) => PracticeOption.fromJson(o as Map<String, dynamic>))
+          .toList();
+    }
+
+    // Parse solution steps
+    List<SolutionStep> solutionSteps = [];
+    if (json['solution_steps'] != null && json['solution_steps'] is List) {
+      solutionSteps = (json['solution_steps'] as List)
+          .map((step) => SolutionStep.fromJson(step))
+          .toList();
+    }
+
+    return PracticeQuestionResult(
+      questionId: json['question_id'] ?? '',
+      position: json['position'] ?? 0,
+      questionText: json['question_text'] ?? '',
+      questionTextHtml: json['question_text_html'],
+      options: parsedOptions,
+      studentAnswer: json['student_answer'] ?? '',
+      correctAnswer: json['correct_answer'] ?? '',
+      isCorrect: json['is_correct'] ?? false,
+      timeTakenSeconds: json['time_taken_seconds'] ?? 0,
+      solutionText: json['solution_text'],
+      solutionSteps: solutionSteps,
+    );
+  }
 }

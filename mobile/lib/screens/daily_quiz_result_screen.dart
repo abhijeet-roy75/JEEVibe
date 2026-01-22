@@ -11,7 +11,7 @@ import '../theme/app_text_styles.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/buttons/gradient_button.dart';
 import 'daily_quiz_review_screen.dart';
-import 'assessment_intro_screen.dart';
+import 'main_navigation_screen.dart';
 import 'ai_tutor_chat_screen.dart';
 import '../models/ai_tutor_models.dart';
 import '../services/subscription_service.dart';
@@ -947,10 +947,10 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
           GradientButton(
             text: 'Back to Dashboard',
             onPressed: () {
-              // Navigate to main home screen (AssessmentIntroScreen) where snap-and-solve card is
+              // Navigate to main home screen with bottom navigation
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
-                (route) => false, // Remove all routes, make AssessmentIntroScreen the new root
+                MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+                (route) => false,
               );
             },
             size: GradientButtonSize.large,

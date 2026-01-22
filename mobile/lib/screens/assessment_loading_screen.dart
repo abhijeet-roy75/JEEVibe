@@ -9,7 +9,7 @@ import '../theme/app_text_styles.dart';
 import '../widgets/priya_avatar.dart';
 import '../services/storage_service.dart';
 import '../services/api_service.dart';
-import 'assessment_intro_screen.dart';
+import 'main_navigation_screen.dart';
 
 class AssessmentLoadingScreen extends StatefulWidget {
   final AssessmentData assessmentData;
@@ -249,7 +249,7 @@ class _AssessmentLoadingScreenState extends State<AssessmentLoadingScreen>
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
           (route) => false, // Remove all previous routes
         );
       }

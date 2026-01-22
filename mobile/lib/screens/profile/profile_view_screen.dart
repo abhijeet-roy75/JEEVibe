@@ -9,13 +9,19 @@ import '../../models/user_profile.dart';
 import '../../models/subscription_models.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../../widgets/buttons/icon_button.dart';
+import '../../widgets/app_header.dart';
 import '../auth/welcome_screen.dart';
 import '../subscription/paywall_screen.dart';
 import 'profile_edit_screen.dart';
 
 class ProfileViewScreen extends StatefulWidget {
-  const ProfileViewScreen({super.key});
+  /// When true, the screen is embedded in bottom navigation
+  final bool isInBottomNav;
+
+  const ProfileViewScreen({
+    super.key,
+    this.isInBottomNav = false,
+  });
 
   @override
   State<ProfileViewScreen> createState() => _ProfileViewScreenState();
@@ -119,34 +125,220 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     }
 
     final tierEnum = _subscriptionStatus?.subscription.tier ?? SubscriptionTier.free;
-    final isFreeTier = tierEnum == SubscriptionTier.free;
-    final tierName = isFreeTier ? 'FREE' : tierEnum.name.toUpperCase();
+    final tierInfo = _getTierBadgeInfo(tierEnum);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isFreeTier ? Icons.lock_outline : Icons.auto_awesome,
-            color: Colors.white,
-            size: 14,
+    return GestureDetector(
+      onTap: () => _onTierBadgeTap(tierEnum),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          gradient: tierInfo.gradient,
+          color: tierInfo.gradient == null ? tierInfo.backgroundColor : null,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: tierInfo.borderColor,
+            width: 1.5,
           ),
-          const SizedBox(width: 4),
-          Text(
-            tierName,
-            style: AppTextStyles.labelSmall.copyWith(
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              tierInfo.icon,
+              size: 14,
               color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 11,
             ),
+            const SizedBox(width: 6),
+            Text(
+              tierInfo.label,
+              style: AppTextStyles.caption.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  ({String label, IconData icon, Color backgroundColor, Color borderColor, Gradient? gradient}) _getTierBadgeInfo(SubscriptionTier tier) {
+    switch (tier) {
+      case SubscriptionTier.free:
+        return (
+          label: 'Free',
+          icon: Icons.person_outline,
+          backgroundColor: Colors.grey.withAlpha(100),
+          borderColor: Colors.grey.withAlpha(150),
+          gradient: null,
+        );
+      case SubscriptionTier.pro:
+        return (
+          label: 'Pro',
+          icon: Icons.workspace_premium_outlined,
+          backgroundColor: Colors.amber.withAlpha(150),
+          borderColor: Colors.amber,
+          gradient: null,
+        );
+      case SubscriptionTier.ultra:
+        return (
+          label: 'Ultra',
+          icon: Icons.diamond_outlined,
+          backgroundColor: const Color(0xFFFFD700),
+          borderColor: const Color(0xFFFFD700),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        );
+    }
+  }
+
+  void _onTierBadgeTap(SubscriptionTier tier) {
+    if (tier == SubscriptionTier.ultra) {
+      // Show tier benefits dialog for Ultra users
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primary, AppColors.secondary],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.star, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Text('Ultra Benefits'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTierBenefitItem('Unlimited history access'),
+              _buildTierBenefitItem('Unlimited daily quizzes'),
+              _buildTierBenefitItem('Unlimited snap & solve'),
+              _buildTierBenefitItem('AI Tutor (Priya Ma\'am)'),
+              _buildTierBenefitItem('Full analytics access'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Got it'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Navigate to paywall for Free/Pro users
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const PaywallScreen(
+            featureName: 'Upgrade',
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _buildTierBenefitItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle, color: AppColors.success, size: 18),
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return AppHeader(
+      showGradient: true,
+      gradient: AppColors.ctaGradient,
+      leading: widget.isInBottomNav
+          ? Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Image.asset(
+                    'assets/images/JEEVibeLogo.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.person,
+                        color: AppColors.primary,
+                        size: 22,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            )
+          : Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(),
+              ),
+            ),
+      title: Text(
+        'Hi ${_getUserName()}! 👋',
+        style: AppTextStyles.headerWhite.copyWith(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          'Profile',
+          style: AppTextStyles.bodyWhite.copyWith(
+            fontSize: 14,
+            color: Colors.white.withAlpha(230),
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+      trailing: _buildHeaderTierBadge(),
     );
   }
 
@@ -214,63 +406,8 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
             )
           : Column(
               children: [
-                // Enhanced Header Section with Greeting and Tier Badge
-                Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    gradient: AppColors.ctaGradient,
-                  ),
-                  child: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Back button
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: AppIconButton.back(
-                              onPressed: () => Navigator.of(context).pop(),
-                              color: Colors.white,
-                              size: AppIconButtonSize.small,
-                            ),
-                          ),
-                          // Centered greeting
-                          Expanded(
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Hi ${_getUserName()}! 👋',
-                                  style: AppTextStyles.headerWhite.copyWith(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Profile',
-                                  style: AppTextStyles.bodyWhite.copyWith(
-                                    fontSize: 14,
-                                    color: Colors.white.withValues(alpha: 0.8),
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Tier badge
-                          _buildHeaderTierBadge(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                // Header using AppHeader for consistency
+                _buildHeader(),
                 // White Content Section
                 Expanded(
                   child: SingleChildScrollView(

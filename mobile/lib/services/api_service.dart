@@ -1026,6 +1026,74 @@ class ApiService {
     });
   }
 
+  /// Get daily quiz history for the History screen
+  /// Returns list of completed quizzes with pagination
+  /// Requires Firebase ID token for authentication
+  static Future<Map<String, dynamic>> getDailyQuizHistory({
+    required String authToken,
+    int limit = 20,
+    int offset = 0,
+    int? days,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final queryParams = <String, String>{
+          'limit': limit.toString(),
+          'offset': offset.toString(),
+        };
+
+        // Add days filter if provided (for tier-based filtering)
+        if (days != null && days > 0) {
+          final startDate = DateTime.now().subtract(Duration(days: days));
+          queryParams['start_date'] = startDate.toIso8601String();
+        }
+
+        final uri = Uri.parse('$baseUrl/api/daily-quiz/history')
+            .replace(queryParameters: queryParams);
+
+        final response = await http.get(
+          uri,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData as Map<String, dynamic>;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ??
+                jsonData['error'] ??
+                'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          if (response.body.trimLeft().startsWith('<!DOCTYPE') ||
+              response.body.trimLeft().startsWith('<html')) {
+            throw Exception(
+                'Server temporarily unavailable (${response.statusCode}). Please try again.');
+          }
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ??
+              errorData['error'] ??
+              'Failed to get quiz history';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception(
+            'No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } on FormatException {
+        throw Exception('Server returned invalid response. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to get quiz history: ${e.toString()}');
+      }
+    });
+  }
+
   /// Submit user feedback
   /// Requires Firebase ID token for authentication
   static Future<void> submitFeedback({
@@ -1329,6 +1397,79 @@ class ApiService {
         throw Exception('Network error. Please try again.');
       } catch (e) {
         throw Exception('Failed to get practice stats: ${e.toString()}');
+      }
+    });
+  }
+
+  /// Get Chapter Practice History for the History screen
+  /// Returns list of completed practice sessions with pagination
+  /// Requires Firebase ID token for authentication
+  Future<Map<String, dynamic>> getChapterPracticeHistory(
+    String authToken, {
+    int limit = 20,
+    int offset = 0,
+    int? days,
+    String? subject,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final queryParams = <String, String>{
+          'limit': limit.toString(),
+          'offset': offset.toString(),
+        };
+
+        // Add days filter if provided (for tier-based filtering)
+        if (days != null && days > 0) {
+          queryParams['days'] = days.toString();
+        }
+
+        // Add subject filter if provided
+        if (subject != null && subject.isNotEmpty) {
+          queryParams['subject'] = subject.toLowerCase();
+        }
+
+        final uri = Uri.parse('$baseUrl/api/chapter-practice/history')
+            .replace(queryParameters: queryParams);
+
+        final response = await http.get(
+          uri,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        ).timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData as Map<String, dynamic>;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ??
+                jsonData['error'] ??
+                'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          if (response.body.trimLeft().startsWith('<!DOCTYPE') ||
+              response.body.trimLeft().startsWith('<html')) {
+            throw Exception(
+                'Server temporarily unavailable (${response.statusCode}). Please try again.');
+          }
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ??
+              errorData['error'] ??
+              'Failed to get practice history';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception(
+            'No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } on FormatException {
+        throw Exception('Server returned invalid response. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to get practice history: ${e.toString()}');
       }
     });
   }

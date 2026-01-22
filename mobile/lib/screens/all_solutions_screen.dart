@@ -2,7 +2,6 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:provider/provider.dart';
 import '../services/storage_service.dart';
 import '../services/offline/sync_service.dart';
@@ -15,12 +14,18 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'solution_review_screen.dart';
 import '../widgets/subject_icon_widget.dart';
+import '../widgets/subject_filter_bar.dart';
 import '../widgets/latex_widget.dart';
 import '../utils/text_preprocessor.dart';
 import 'home_screen.dart';
 
 class AllSolutionsScreen extends StatefulWidget {
-  const AllSolutionsScreen({super.key});
+  final bool isInHistoryTab;
+
+  const AllSolutionsScreen({
+    super.key,
+    this.isInHistoryTab = false,
+  });
 
   @override
   State<AllSolutionsScreen> createState() => _AllSolutionsScreenState();
@@ -133,18 +138,6 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
     });
   }
 
-  Future<String> _resolveImageUrl(String url) async {
-    if (url.startsWith('gs://')) {
-      try {
-        return await FirebaseStorage.instance.refFromURL(url).getDownloadURL();
-      } catch (e) {
-        debugPrint('Error resolving gs:// URL: $e');
-        return url;
-      }
-    }
-    return url;
-  }
-
   Widget _buildHeader() {
     final subtitle = _isLoading
         ? 'Loading...'
@@ -185,10 +178,10 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
   Widget _buildFooter() {
     return Container(
       padding: EdgeInsets.fromLTRB(
-        24,
-        24,
-        24,
-        24 + MediaQuery.of(context).viewPadding.bottom,
+        16,
+        10,
+        16,
+        8 + MediaQuery.of(context).viewPadding.bottom,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -202,7 +195,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
       ),
       child: Container(
         width: double.infinity,
-        height: 56,
+        height: 48,
         decoration: BoxDecoration(
           gradient: AppColors.ctaGradient,
           borderRadius: BorderRadius.circular(12),
@@ -237,7 +230,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
                 const Icon(Icons.camera_alt, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 Text(
-                  'Back to Snap and Solve',
+                  widget.isInHistoryTab ? 'Go to Snap & Solve' : 'Back to Snap & Solve',
                   style: AppTextStyles.labelMedium.copyWith(
                     color: Colors.white,
                     fontSize: 16,
@@ -254,128 +247,61 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.backgroundGradient,
-        ),
-        child: Column(
-          children: [
-            const OfflineBanner(),
-            _buildHeader(),
-            Expanded(
-              child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(color: AppColors.primaryPurple),
-                    )
-                  : Column(
-                      children: [
-                        _buildMetricsSection(),
-                        // Redundant filter bar removed as metrics now act as filters
-                        Expanded(
-                          child: _filteredSolutions.isEmpty
-                              ? _buildEmptyState()
-                              : _buildSolutionsList(),
-                        ),
-                      ],
-                    ),
-            ),
-            if (!_isLoading) _buildFooter(),
-          ],
-        ),
+    // When embedded in History tab, return just the content (no Scaffold)
+    // to avoid gesture conflicts with TabBarView
+    final content = Container(
+      decoration: const BoxDecoration(
+        gradient: AppColors.backgroundGradient,
+      ),
+      child: Column(
+        children: [
+          if (!widget.isInHistoryTab) const OfflineBanner(),
+          if (!widget.isInHistoryTab) _buildHeader(),
+          // Filter bar outside of scrollable content to avoid gesture conflicts
+          if (!_isLoading && _allSolutions.isNotEmpty) _buildMetricsSection(),
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.primaryPurple),
+                  )
+                : _filteredSolutions.isEmpty
+                    ? _buildEmptyState()
+                    : _buildSolutionsList(),
+          ),
+          if (!_isLoading) _buildFooter(),
+        ],
       ),
     );
+
+    // When used as a tab in History, return content directly (no Scaffold wrapper)
+    if (widget.isInHistoryTab) {
+      return content;
+    }
+
+    // When used standalone, wrap in Scaffold
+    return Scaffold(body: content);
   }
 
   Widget _buildMetricsSection() {
     if (_allSolutions.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
       color: Colors.white,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: AppColors.priyaCardGradient,
-          borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-          boxShadow: AppShadows.cardShadow,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildMetricItem('Total', 'All', _stats['All']!, SubjectIconWidget.getIcon('all'), SubjectIconWidget.getColor('all')),
-            _buildMetricItem('Physics', 'Physics', _stats['Physics']!, SubjectIconWidget.getIcon('phys'), SubjectIconWidget.getColor('phys')),
-            _buildMetricItem('Chemistry', 'Chemistry', _stats['Chemistry']!, SubjectIconWidget.getIcon('chem'), SubjectIconWidget.getColor('chem')),
-            _buildMetricItem('Math', 'Math', _stats['Math']!, SubjectIconWidget.getIcon('math'), SubjectIconWidget.getColor('math')),
-          ],
-        ),
-      ),
+      child: _buildMetricsSectionContent(),
     );
   }
 
-  // Helper colors for metrics if standard ones are not enough
-  Color get warningAmberColor => const Color(0xFFF59E0B);
-  Color get successGreenColor => const Color(0xFF10B981);
+  /// Inner metrics content without outer padding - used by both _buildMetricsSection
+  /// and _buildSolutionsWithMetrics for layout flexibility
+  Widget _buildMetricsSectionContent() {
+    if (_allSolutions.isEmpty) return const SizedBox.shrink();
 
-  Widget _buildMetricItem(String label, String subjectKey, int count, IconData icon, Color color) {
-    final bool isSelected = _selectedSubject == subjectKey;
-    
-    return GestureDetector(
-      onTap: () => _onFilterChanged(subjectKey),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? color : Colors.transparent,
-            width: 2,
-          ),
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: color.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ] : null,
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isSelected ? color.withValues(alpha: 0.1) : Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: isSelected ? null : [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Icon(icon, size: 16, color: color),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              count.toString(),
-              style: AppTextStyles.headerSmall.copyWith(
-                fontSize: 16,
-                color: isSelected ? color : AppColors.textDark,
-              ),
-            ),
-            Text(
-              label,
-              style: AppTextStyles.labelSmall.copyWith(
-                fontSize: 10, 
-                color: isSelected ? color : AppColors.textMedium,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return SubjectFilterBar(
+      selectedSubject: _selectedSubject,
+      onSubjectChanged: _onFilterChanged,
+      counts: _stats,
+      showCounts: true,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );
   }
 
@@ -414,13 +340,15 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
   Widget _buildSolutionsList() {
     return RefreshIndicator(
       onRefresh: _loadSolutions,
-      child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
         itemCount: _filteredSolutions.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final solution = _filteredSolutions[index];
-          return _buildSolutionCard(solution);
+          return Padding(
+            padding: EdgeInsets.only(bottom: index < _filteredSolutions.length - 1 ? 12 : 0),
+            child: _buildSolutionCard(solution),
+          );
         },
       ),
     );

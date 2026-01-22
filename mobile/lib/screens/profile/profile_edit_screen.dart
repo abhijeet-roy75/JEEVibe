@@ -8,6 +8,7 @@ import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/buttons/icon_button.dart';
 import '../../services/firebase/firestore_user_service.dart';
 import '../../models/user_profile.dart';
+import '../../providers/user_profile_provider.dart';
 
 /// Profile Edit Screen
 ///
@@ -117,6 +118,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       await firestoreService.saveUserProfile(updatedProfile);
 
       if (!mounted) return;
+
+      // Update centralized UserProfileProvider so all screens reflect the change
+      context.read<UserProfileProvider>().updateProfile(updatedProfile);
 
       // Show success message and navigate back
       ScaffoldMessenger.of(context).showSnackBar(

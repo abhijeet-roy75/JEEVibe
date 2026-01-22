@@ -8,8 +8,10 @@ import '../services/analytics_service.dart';
 import '../services/subscription_service.dart';
 import '../models/analytics_data.dart';
 import '../models/user_profile.dart';
+import '../providers/user_profile_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/app_header.dart';
 import '../widgets/analytics/overview_tab.dart';
 import '../widgets/analytics/mastery_tab.dart';
 import '../widgets/buttons/gradient_button.dart';
@@ -17,7 +19,13 @@ import '../widgets/offline/offline_banner.dart';
 import 'subscription/paywall_screen.dart';
 
 class AnalyticsScreen extends StatefulWidget {
-  const AnalyticsScreen({super.key});
+  /// When true, the screen is embedded in bottom navigation
+  final bool isInBottomNav;
+
+  const AnalyticsScreen({
+    super.key,
+    this.isInBottomNav = false,
+  });
 
   @override
   State<AnalyticsScreen> createState() => _AnalyticsScreenState();
@@ -81,6 +89,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
         final profile = await firestoreService.getUserProfile(user.uid);
         if (mounted) {
           _userProfile = profile;
+          // Sync profile to centralized provider so other screens get the update
+          if (profile != null) {
+            context.read<UserProfileProvider>().updateProfile(profile);
+          }
         }
       }
 
@@ -164,131 +176,133 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   }
 
   Widget _buildHeader() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: AppColors.ctaGradient,
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            children: [
-              // Top row with back button, greeting, and PRO badge
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Back button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      padding: const EdgeInsets.all(8),
-                      constraints: const BoxConstraints(),
-                    ),
+    return AppHeader(
+      showGradient: true,
+      gradient: AppColors.ctaGradient,
+      leading: widget.isInBottomNav
+          ? Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                  // Centered greeting - show loading state while data is loading
-                  Expanded(
-                    child: Column(
-                      children: [
-                        if (_isLoading)
-                          Container(
-                            height: 26,
-                            width: 140,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          )
-                        else
-                          Text(
-                            'Hi ${_getUserName()}! 👋',
-                            style: AppTextStyles.headerWhite.copyWith(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Historical Analytics',
-                          style: AppTextStyles.bodyWhite.copyWith(
-                            fontSize: 14,
-                            color: Colors.white.withValues(alpha: 0.8),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Share button
-                  if (_isLoading)
-                    Container(
-                      width: 60,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    )
-                  else
-                    GestureDetector(
-                      key: _shareButtonKey,
-                      onTap: _isSharing ? null : _onSharePressed,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (_isSharing)
-                              const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            else
-                              const Icon(
-                                Icons.share_outlined,
-                                color: Colors.white,
-                                size: 14,
-                              ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Share',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                 ],
               ),
-            ],
+              child: ClipOval(
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Image.asset(
+                    'assets/images/JEEVibeLogo.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.analytics,
+                        color: AppColors.primary,
+                        size: 22,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            )
+          : Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(),
+              ),
+            ),
+      title: _isLoading
+          ? Container(
+              height: 26,
+              width: 140,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            )
+          : Text(
+              'Hi ${_getUserName()}! 👋',
+              style: AppTextStyles.headerWhite.copyWith(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          'Historical Analytics',
+          style: AppTextStyles.bodyWhite.copyWith(
+            fontSize: 14,
+            color: Colors.white.withAlpha(230),
           ),
+          textAlign: TextAlign.center,
         ),
       ),
+      trailing: _isLoading
+          ? Container(
+              width: 60,
+              height: 24,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+            )
+          : GestureDetector(
+              key: _shareButtonKey,
+              onTap: _isSharing ? null : _onSharePressed,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_isSharing)
+                      const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    else
+                      const Icon(
+                        Icons.share_outlined,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Share',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 

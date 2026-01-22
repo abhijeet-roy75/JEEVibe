@@ -11,7 +11,6 @@ import '../../services/analytics_service.dart';
 import '../../services/subscription_service.dart';
 import '../../services/share_service.dart';
 import '../../widgets/buttons/gradient_button.dart';
-import '../../screens/assessment_intro_screen.dart';
 import '../../screens/ai_tutor_chat_screen.dart';
 import '../priya_avatar.dart';
 import '../shareable_subject_mastery_card.dart';
@@ -214,10 +213,7 @@ class MasteryTabState extends State<MasteryTab> {
                   const SizedBox(height: 20),
                   // Priya Ma'am card
                   _buildPriyaMaamCard(),
-                  const SizedBox(height: 20),
                 ],
-                // Back to Dashboard button
-                _buildBackToDashboardButton(),
                 // Bottom padding to account for Android navigation bar
                 SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 24),
               ],
@@ -662,23 +658,6 @@ class MasteryTabState extends State<MasteryTab> {
             return TextSpan(text: text);
           }
         }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildBackToDashboardButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GradientButton(
-        text: 'Back to Dashboard',
-        onPressed: () {
-          // Navigate to main home screen (AssessmentIntroScreen) where snap-and-solve card is
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
-            (route) => false,
-          );
-        },
-        size: GradientButtonSize.large,
       ),
     );
   }

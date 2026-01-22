@@ -17,6 +17,7 @@ import '../theme/app_text_styles.dart';
 import '../providers/app_state_provider.dart';
 import '../providers/offline_provider.dart';
 import '../widgets/buttons/gradient_button.dart';
+import '../widgets/buttons/icon_button.dart';
 import '../widgets/offline/offline_banner.dart';
 import '../models/snap_data_model.dart';
 import '../models/subscription_models.dart';
@@ -26,7 +27,7 @@ import '../services/subscription_service.dart';
 import '../utils/text_preprocessor.dart';
 import '../widgets/subject_icon_widget.dart';
 import '../widgets/priya_avatar.dart';
-import 'assessment_intro_screen.dart';
+import 'main_navigation_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -171,101 +172,94 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   child: Column(
                     children: [
+                      // Top row: Back button | Title with icon | Remaining counter
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           // Left: Back Button
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          AppIconButton.back(
+                            forGradientHeader: true,
                             onPressed: () => Navigator.of(context).pop(),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
                           ),
-                          // Middle: Centered Counter
+                          const SizedBox(width: 12),
+                          // Center: Icon + Title
                           Expanded(
-                            child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(AppRadius.radiusRound),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.3),
-                                    width: 1,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 36,
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt_outlined,
+                                    size: 18,
+                                    color: AppColors.primaryPurple,
                                   ),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.camera_alt,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      appState.snapLimit == -1
-                                          ? '∞ remaining'
-                                          : '${appState.snapsRemaining} remaining',
-                                      style: AppTextStyles.bodySmall.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Snap Your Question',
+                                  style: AppTextStyles.headerWhite.copyWith(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
                           ),
-                          // Right: Invisible Back Button for balance
-                          Opacity(
-                            opacity: 0,
-                            child: IgnorePointer(
-                              child: IconButton(
-                                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                                onPressed: () {},
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(),
-                              ),
+                          const SizedBox(width: 12),
+                          // Right: Remaining counter
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.camera_alt,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  appState.snapLimit == -1
+                                      ? '∞'
+                                      : '${appState.snapsRemaining}',
+                                  style: AppTextStyles.labelSmall.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt_outlined,
-                          size: 24,
-                          color: AppColors.primaryPurple,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Snap Your Question',
-                        style: AppTextStyles.headerWhite.copyWith(fontSize: 24),
-                        textAlign: TextAlign.center,
-                      ),
                       const SizedBox(height: 8),
+                      // Subtitle
                       Text(
                         'Point your camera at any JEE question',
                         style: AppTextStyles.bodyWhite.copyWith(
                           color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 13,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -438,9 +432,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return GradientButton(
       text: 'Back to Dashboard',
       onPressed: () {
-        // Navigate to main home screen (AssessmentIntroScreen) where snap-and-solve card is
+        // Navigate to main home screen with bottom navigation
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
           (route) => false,
         );
       },

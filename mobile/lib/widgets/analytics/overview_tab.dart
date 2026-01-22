@@ -8,7 +8,6 @@ import '../../theme/app_text_styles.dart';
 import '../../models/analytics_data.dart';
 import '../../models/ai_tutor_models.dart';
 import '../../widgets/buttons/gradient_button.dart';
-import '../../screens/assessment_intro_screen.dart';
 import '../../screens/subscription/paywall_screen.dart';
 import '../../screens/ai_tutor_chat_screen.dart';
 import '../../services/subscription_service.dart';
@@ -108,9 +107,6 @@ class OverviewTabState extends State<OverviewTab> {
           const SizedBox(height: 20),
           // Priya Ma'am motivation card (after Focus Areas)
           _buildPriyaMaamCard(context),
-          const SizedBox(height: 20),
-          // Back to Dashboard button
-          _buildBackToDashboardButton(context),
           // Bottom padding to account for Android navigation bar
           SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 24),
         ],
@@ -720,20 +716,4 @@ class OverviewTabState extends State<OverviewTab> {
     );
   }
 
-  Widget _buildBackToDashboardButton(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GradientButton(
-        text: 'Back to Dashboard',
-        onPressed: () {
-          // Navigate to main home screen (AssessmentIntroScreen) where snap-and-solve card is
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
-            (route) => false,
-          );
-        },
-        size: GradientButtonSize.large,
-      ),
-    );
-  }
 }

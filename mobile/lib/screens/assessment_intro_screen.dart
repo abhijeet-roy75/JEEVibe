@@ -22,6 +22,7 @@ import '../models/assessment_response.dart';
 import '../models/analytics_data.dart';
 import '../providers/app_state_provider.dart';
 import '../providers/offline_provider.dart';
+import '../providers/user_profile_provider.dart';
 import 'profile/profile_view_screen.dart';
 import 'assessment_instructions_screen.dart';
 import 'daily_quiz_loading_screen.dart';
@@ -41,7 +42,14 @@ import 'chapter_practice/chapter_practice_loading_screen.dart';
 import 'chapter_practice/chapter_picker_screen.dart';
 
 class AssessmentIntroScreen extends StatefulWidget {
-  const AssessmentIntroScreen({super.key});
+  /// When true, the screen is embedded in bottom navigation
+  /// Profile icon is replaced with tier badge (profile is in bottom nav)
+  final bool isInBottomNav;
+
+  const AssessmentIntroScreen({
+    super.key,
+    this.isInBottomNav = false,
+  });
 
   @override
   State<AssessmentIntroScreen> createState() => _AssessmentIntroScreenState();
@@ -85,11 +93,15 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     try {
       final storageService = StorageService();
       var status = await storageService.getAssessmentStatus();
-      
+
       final user = FirebaseAuth.instance.currentUser;
-      UserProfile? profile;
       AssessmentData? assessmentData;
-      
+
+      // Get profile from centralized provider (already loaded at startup)
+      // This avoids duplicate Firestore calls
+      final userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
+      UserProfile? profile = userProfileProvider.profile;
+
       // Get remaining snap count from provider
       int remainingSnaps = 5;
       try {
@@ -103,21 +115,10 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
         debugPrint('Error getting snap count: $e');
       }
 
-      // Initialize offline provider
-      try {
-        if (user != null) {
-          final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);
-          // Check if user has Pro/Ultra tier for offline access
-          // For now, initialize with basic offline detection (offlineEnabled will be updated when subscription status is fetched)
-          await offlineProvider.initialize(user.uid, offlineEnabled: false);
-        }
-      } catch (e) {
-        debugPrint('Error initializing offline provider: $e');
-      }
-      
+      // Note: offlineProvider is already initialized at app startup in main.dart
+      // No need to initialize again here
+
       if (user != null) {
-        final firestoreService = FirestoreUserService();
-        profile = await firestoreService.getUserProfile(user.uid);
 
         // Always try to fetch assessment results from backend to sync status
         // This handles the case where user reinstalled app but has completed assessment
@@ -224,21 +225,8 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           // Non-critical - fall back to assessment data
         }
 
-        // Refresh subscription status to get fresh usage data (quiz/snap counts)
-        // This ensures the Daily Quiz card shows accurate remaining count
-        try {
-          if (!mounted) return;
-          final token = await authServiceForSummary.getIdToken();
-          if (token != null && mounted) {
-            await SubscriptionService().fetchStatus(token, forceRefresh: true);
-            if (mounted) {
-              debugPrint('Subscription status refreshed');
-            }
-          }
-        } catch (e) {
-          debugPrint('Error refreshing subscription status: $e');
-          // Non-critical - will use cached data
-        }
+        // Note: Subscription status is already fetched at app startup in main.dart
+        // Using cached data to avoid duplicate API calls
       }
 
       if (mounted) {
@@ -247,6 +235,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
         if (status == 'completed') {
           priyaMessage = _generatePriyaMessage(profile);
         }
+
+        // Note: Profile is already loaded from UserProfileProvider
+        // No need to sync it back - it's already centralized
 
         setState(() {
           _assessmentStatus = status;
@@ -447,26 +438,177 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           textAlign: TextAlign.center,
         ),
       ),
-      trailing: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ProfileViewScreen()),
-          ).then((_) {
-            // Refresh data when returning from profile (user may have edited their profile)
-            _loadData();
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white24,
+      trailing: widget.isInBottomNav
+          ? _buildTierBadge()
+          : GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileViewScreen()),
+                ).then((_) {
+                  // Refresh data when returning from profile (user may have edited their profile)
+                  _loadData();
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white24,
+                ),
+                child: const Icon(Icons.person, color: Colors.white, size: 20),
+              ),
+            ),
+    );
+  }
+
+  Widget _buildTierBadge() {
+    return Consumer<SubscriptionService>(
+      builder: (context, subscriptionService, child) {
+        final tier = subscriptionService.currentTier;
+        final tierInfo = _getTierBadgeInfo(tier);
+
+        return GestureDetector(
+          onTap: () => _onTierBadgeTap(tier),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              gradient: tierInfo.gradient,
+              color: tierInfo.gradient == null ? tierInfo.backgroundColor : null,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: tierInfo.borderColor,
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  tierInfo.icon,
+                  size: 14,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  tierInfo.label,
+                  style: AppTextStyles.caption.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: const Icon(Icons.person, color: Colors.white, size: 20),
+        );
+      },
+    );
+  }
+
+  void _onTierBadgeTap(SubscriptionTier tier) {
+    if (tier == SubscriptionTier.ultra) {
+      // Show tier benefits dialog for Ultra users
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primary, AppColors.secondary],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.star, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Text('Ultra Benefits'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTierBenefitItem('Unlimited history access'),
+              _buildTierBenefitItem('Unlimited daily quizzes'),
+              _buildTierBenefitItem('Unlimited snap & solve'),
+              _buildTierBenefitItem('AI Tutor (Priya Ma\'am)'),
+              _buildTierBenefitItem('Full analytics access'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Got it'),
+            ),
+          ],
         ),
+      );
+    } else {
+      // Navigate to paywall for Free/Pro users
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const PaywallScreen(
+            featureName: 'Upgrade',
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _buildTierBenefitItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          const Icon(Icons.check_circle, color: AppColors.success, size: 18),
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+          ),
+        ],
       ),
     );
+  }
+
+  ({String label, IconData icon, Color backgroundColor, Color borderColor, Gradient? gradient}) _getTierBadgeInfo(SubscriptionTier tier) {
+    switch (tier) {
+      case SubscriptionTier.free:
+        return (
+          label: 'Free',
+          icon: Icons.person_outline,
+          backgroundColor: Colors.grey.withAlpha(100),
+          borderColor: Colors.grey.withAlpha(150),
+          gradient: null,
+        );
+      case SubscriptionTier.pro:
+        return (
+          label: 'Pro',
+          icon: Icons.workspace_premium_outlined,
+          backgroundColor: Colors.amber.withAlpha(150),
+          borderColor: Colors.amber,
+          gradient: null,
+        );
+      case SubscriptionTier.ultra:
+        return (
+          label: 'Ultra',
+          icon: Icons.diamond_outlined,
+          backgroundColor: const Color(0xFFFFD700),
+          borderColor: const Color(0xFFFFD700),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        );
+    }
   }
 
   Widget _buildAssessmentCard() {
@@ -821,39 +963,6 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    // View History link in header - increased tap target
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => AllSolutionsScreen(),
-                          ),
-                        ).then((_) => _loadData());
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'History',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.primaryPurple,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(
-                              Icons.arrow_forward_ios,
-                              size: 12,
-                              color: AppColors.primaryPurple,
-                            ),
-                          ],
-                        ),
                       ),
                     ),
                   ],
@@ -1487,39 +1596,6 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     ],
                   ),
                 ),
-                // Analytics link - increased tap target
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const AnalyticsScreen(),
-                      ),
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Analytics',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.primaryPurple,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 12,
-                          color: AppColors.primaryPurple,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -1682,7 +1758,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Focus Areas',
+                        'Focus Chapters',
                         style: AppTextStyles.headerSmall.copyWith(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -1943,44 +2019,21 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   }
 
   Widget _buildPracticeAnyChapterLink() {
-    return InkWell(
-      onTap: () {
+    return GradientButton(
+      text: 'Practice Any Chapter',
+      onPressed: () {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => const ChapterPickerScreen(),
           ),
-        );
+        ).then((_) {
+          // Refresh data when returning from chapter practice
+          _loadData();
+        });
       },
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ShaderMask(
-              shaderCallback: (bounds) => AppColors.ctaGradient.createShader(bounds),
-              child: Text(
-                'Practice any chapter',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            ShaderMask(
-              shaderCallback: (bounds) => AppColors.ctaGradient.createShader(bounds),
-              child: const Icon(
-                Icons.arrow_forward,
-                color: Colors.white,
-                size: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
+      size: GradientButtonSize.large,
+      trailingIcon: Icons.arrow_forward,
     );
   }
 

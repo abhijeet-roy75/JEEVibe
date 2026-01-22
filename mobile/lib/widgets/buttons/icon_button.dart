@@ -27,6 +27,9 @@ enum AppIconButtonVariant {
 
   /// Circular with light background
   circular,
+
+  /// Semi-transparent white background for use on gradient headers
+  glass,
 }
 
 class AppIconButton extends StatelessWidget {
@@ -52,11 +55,13 @@ class AppIconButton extends StatelessWidget {
   });
 
   /// Creates a back button with standard styling
+  /// Set [forGradientHeader] to true for the glass style on gradient backgrounds
   factory AppIconButton.back({
     Key? key,
     VoidCallback? onPressed,
     Color? color,
     AppIconButtonSize size = AppIconButtonSize.medium,
+    bool forGradientHeader = false,
   }) {
     return AppIconButton(
       key: key,
@@ -64,23 +69,27 @@ class AppIconButton extends StatelessWidget {
       onPressed: onPressed,
       iconColor: color ?? Colors.white,
       size: size,
+      variant: forGradientHeader ? AppIconButtonVariant.glass : AppIconButtonVariant.ghost,
       tooltip: 'Go back',
     );
   }
 
   /// Creates a close button with standard styling
+  /// Set [forGradientHeader] to true for the glass style on gradient backgrounds
   factory AppIconButton.close({
     Key? key,
     VoidCallback? onPressed,
     Color? color,
     AppIconButtonSize size = AppIconButtonSize.medium,
+    bool forGradientHeader = false,
   }) {
     return AppIconButton(
       key: key,
       icon: Icons.close_rounded,
       onPressed: onPressed,
-      iconColor: color ?? AppColors.textSecondary,
+      iconColor: color ?? (forGradientHeader ? Colors.white : AppColors.textSecondary),
       size: size,
+      variant: forGradientHeader ? AppIconButtonVariant.glass : AppIconButtonVariant.ghost,
       tooltip: 'Close',
     );
   }
@@ -210,6 +219,8 @@ class AppIconButton extends StatelessWidget {
         return AppRadius.md;
       case AppIconButtonVariant.circular:
         return AppRadius.round;
+      case AppIconButtonVariant.glass:
+        return AppRadius.md;
     }
   }
 
@@ -227,6 +238,8 @@ class AppIconButton extends StatelessWidget {
         return AppColors.primary;
       case AppIconButtonVariant.circular:
         return AppColors.primary;
+      case AppIconButtonVariant.glass:
+        return Colors.white;
     }
   }
 
@@ -243,6 +256,8 @@ class AppIconButton extends StatelessWidget {
           return AppColors.surface;
         case AppIconButtonVariant.circular:
           return AppColors.disabled;
+        case AppIconButtonVariant.glass:
+          return Colors.white.withValues(alpha: 0.1);
       }
     }
 
@@ -255,6 +270,8 @@ class AppIconButton extends StatelessWidget {
         return AppColors.surface;
       case AppIconButtonVariant.circular:
         return AppColors.cardLightPurple;
+      case AppIconButtonVariant.glass:
+        return Colors.white.withValues(alpha: 0.2);
     }
   }
 
@@ -282,6 +299,11 @@ class AppIconButton extends StatelessWidget {
         return BoxDecoration(
           color: bgColor,
           shape: BoxShape.circle,
+        );
+      case AppIconButtonVariant.glass:
+        return BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(_getBorderRadius()),
         );
     }
   }

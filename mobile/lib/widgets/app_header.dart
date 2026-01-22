@@ -22,8 +22,8 @@ class AppHeader extends StatelessWidget {
     this.subtitle,
     this.trailing,
     this.centerContent,
-    this.topPadding = 24, // Reduced from 48
-    this.bottomPadding = 16, // Reduced from 32 (default)
+    this.topPadding = 8, // Compact: reduced from 24
+    this.bottomPadding = 12, // Compact: reduced from 16
     this.showGradient = true,
     this.gradient,
   }) : super(key: key);
@@ -166,7 +166,7 @@ class AppHeaderWithIcon extends StatelessWidget {
           : null,
       trailing: trailing,
       bottomPadding: bottomPadding,
-      topPadding: 20, // Reduced from default 24 for more compact header
+      topPadding: 8, // Compact header
       gradient: gradient,
     );
   }
@@ -215,7 +215,7 @@ class AppHeaderWithProgress extends StatelessWidget {
               textAlign: TextAlign.center,
             )
           : null,
-      bottomPadding: 20, // Reduced from 40
+      bottomPadding: 12, // Compact header
     );
   }
 }

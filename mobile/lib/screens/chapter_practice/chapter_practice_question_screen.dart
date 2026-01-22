@@ -13,6 +13,7 @@ import '../../utils/error_handler.dart';
 import '../../utils/question_adapters.dart';
 import '../../widgets/daily_quiz/feedback_banner_widget.dart';
 import '../../widgets/daily_quiz/detailed_explanation_widget.dart';
+import '../../widgets/buttons/icon_button.dart';
 import 'chapter_practice_result_screen.dart';
 
 class ChapterPracticeQuestionScreen extends StatefulWidget {
@@ -107,6 +108,64 @@ class _ChapterPracticeQuestionScreenState
           onRetry: _handleAnswerSubmission,
         );
       }
+    }
+  }
+
+  Future<bool> _showQuitConfirmationDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.error.withAlpha(25),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.error,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('Quit Practice?'),
+          ],
+        ),
+        content: const Text(
+          'Your progress will be lost and this session will not be saved. Are you sure you want to quit?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Continue Practice'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.error,
+            ),
+            child: const Text('Quit'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  void _handleQuitPractice() async {
+    final shouldQuit = await _showQuitConfirmationDialog();
+    if (shouldQuit && mounted) {
+      // Clear the session state
+      final provider =
+          Provider.of<ChapterPracticeProvider>(context, listen: false);
+      provider.reset();
+      Navigator.of(context).pop();
     }
   }
 
@@ -369,11 +428,15 @@ class _ChapterPracticeQuestionScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top line with centered title (no back button - session must be completed)
+              // Top line with close button and centered title
               Row(
                 children: [
-                  // Spacer to balance the layout (no back button during practice)
-                  const SizedBox(width: 48),
+                  // Close button to quit practice
+                  AppIconButton.close(
+                    forGradientHeader: true,
+                    onPressed: _handleQuitPractice,
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       children: [

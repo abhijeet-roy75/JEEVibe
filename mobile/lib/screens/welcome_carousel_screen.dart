@@ -7,7 +7,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/buttons/gradient_button.dart';
 import '../services/storage_service.dart';
-import 'assessment_intro_screen.dart';
+import 'main_navigation_screen.dart';
 
 class WelcomeCarouselScreen extends StatefulWidget {
   final VoidCallback? onComplete;
@@ -137,13 +137,13 @@ class _WelcomeCarouselScreenState extends State<WelcomeCarouselScreen> with Tick
       return;
     }
     
-    // Default behavior: mark as seen and navigate to assessment intro (new home)
+    // Default behavior: mark as seen and navigate to main home with bottom navigation
     final storageService = StorageService();
     await storageService.setHasSeenWelcome(true);
-    
+
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const AssessmentIntroScreen()),
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
         (route) => false,
       );
     }
