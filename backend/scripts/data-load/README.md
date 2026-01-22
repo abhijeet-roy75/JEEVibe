@@ -7,22 +7,25 @@ Scripts for completely refreshing the question bank in Firebase (Firestore + Sto
 ```bash
 cd backend
 
-# Step 1: Preview what will be deleted
+# Step 1: VALIDATE first (checks for missing images, invalid data - no DB changes)
+node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load --validate
+
+# Step 2: Preview what will be deleted
 node scripts/data-load/cleanup-all-questions.js --preview
 node scripts/data-load/cleanup-storage.js --preview
 
-# Step 2a: Delete everything with backup (for fresh load)
+# Step 3a: Delete everything with backup (for fresh load)
 node scripts/data-load/cleanup-all-questions.js --backup
 node scripts/data-load/cleanup-storage.js --force
 
-# Step 2b: OR Archive instead of delete (recommended for production)
+# Step 3b: OR Archive instead of delete (recommended for production)
 node scripts/data-load/cleanup-all-questions.js --archive --reason "Replaced with v2 question bank"
 
-# Step 3: Import new questions
+# Step 4: Import new questions
 node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load --preview
 node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load
 
-# Step 4: Verify
+# Step 5: Verify
 node scripts/cleanup-questions.js --list
 ```
 
@@ -162,6 +165,9 @@ Imports questions from nested Subject/Chapter folder structure.
 **Usage:**
 
 ```bash
+# VALIDATE first (RECOMMENDED) - checks for missing images, invalid data
+node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load --validate
+
 # Preview (safe, no changes)
 node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load --preview
 
@@ -173,6 +179,35 @@ node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load --subje
 
 # Skip image uploads (just import JSON data)
 node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load --skip-images
+```
+
+**Validate Mode (`--validate`):**
+
+Checks your data files without making any database changes:
+
+| Check | Description |
+|-------|-------------|
+| Missing JSON files | No question file found in chapter folder |
+| Invalid JSON | Parse errors in JSON file |
+| Missing required fields | subject, chapter, question_type, etc. |
+| Missing images | `has_image: true` but no corresponding .svg file |
+| Empty images | Image file exists but is 0 bytes |
+| Orphan images | Image file exists but `has_image` is not true |
+| Invalid MCQ options | MCQ with < 2 options |
+| Invalid answers | correct_answer not matching option keys |
+
+**Example output:**
+```
+📚 Physics
+   ✅ Mechanics: 25 questions - OK
+   ❌ Thermodynamics: 18 questions, 3 errors, 1 warnings
+
+🖼️  MISSING IMAGES (3):
+   Physics/Thermodynamics/PHY_THERMO_015.svg
+   Physics/Thermodynamics/PHY_THERMO_016.svg
+   Physics/Thermodynamics/PHY_THERMO_017.svg
+
+❌ VALIDATION FAILED - Fix errors before importing
 ```
 
 ---

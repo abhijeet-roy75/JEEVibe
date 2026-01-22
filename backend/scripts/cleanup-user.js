@@ -22,11 +22,12 @@
  * 17. Share events (share_events/{userId}/items)
  * 18. Feedback entries (feedback collection, queried by userId)
  * 19. User quizzes subcollection (users/{userId}/quizzes)
+ * 20. Snap practice sessions (snap_practice_sessions/{odatgabkak}/{odatgabkak} - from snap-and-solve)
  *
  * LEGACY COLLECTIONS (typos - kept for cleanup):
- * 20. thetha_snapshots/{userId}/daily (typo: thetha -> theta)
- * 21. thetha_history/{userId}/snapshots (typo: thetha -> theta)
- * 22. chapter_practise_sessions/{userId}/sessions (typo: practise -> practice)
+ * 21. thetha_snapshots/{userId}/daily (typo: thetha -> theta)
+ * 22. thetha_history/{userId}/snapshots (typo: thetha -> theta)
+ * 23. chapter_practise_sessions/{userId}/sessions (typo: practise -> practice)
  *
  * Usage:
  *   node scripts/cleanup-user.js <userId|phoneNumber> [--preview] [--force]
@@ -386,6 +387,11 @@ async function cleanupUser(identifier, options = {}) {
         console.log('   - Processing chapter practice weekly limits...');
         await deleteCollection(userRef.collection('chapter_practice_weekly'), isPreview);
 
+        // --- SNAP PRACTICE SESSIONS (from snap-and-solve) ---
+        console.log('   - Processing snap practice sessions...');
+        await deleteCollection(db.collection('snap_practice_sessions').doc(userId).collection('sessions'), isPreview);
+        if (!isPreview) await db.collection('snap_practice_sessions').doc(userId).delete().catch(() => {});
+
         // --- SUBSCRIPTIONS ---
         console.log('   - Processing subscription records...');
         await deleteCollection(userRef.collection('subscriptions'), isPreview);
@@ -433,12 +439,17 @@ async function cleanupUser(identifier, options = {}) {
     }
 }
 
-// Parse args
-const args = process.argv.slice(2);
-const identifier = args.find(arg => !arg.startsWith('--'));
-const options = {
-    isPreview: args.includes('--preview'),
-    isForce: args.includes('--force')
-};
+// Export for use by other scripts
+module.exports = { cleanupUser };
 
-cleanupUser(identifier, options).then(() => process.exit(0));
+// Only run if called directly (not imported)
+if (require.main === module) {
+    const args = process.argv.slice(2);
+    const identifier = args.find(arg => !arg.startsWith('--'));
+    const options = {
+        isPreview: args.includes('--preview'),
+        isForce: args.includes('--force')
+    };
+
+    cleanupUser(identifier, options).then(() => process.exit(0));
+}

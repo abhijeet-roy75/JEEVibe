@@ -4,7 +4,7 @@
  * Imports questions from a nested folder structure:
  *   Subject/
  *     Chapter/
- *       question_list.json (or questions.json)
+ *       *.json (any JSON file with questions)
  *       *.svg (image files)
  *
  * Supports both collections:
@@ -16,9 +16,13 @@
  * - Handles SVG images in each chapter folder
  * - Validates all questions before import
  * - Preview mode (dry run)
+ * - Validate mode (checks for missing images & data issues)
  * - Supports InitialAssessment special folder
  *
  * Usage:
+ *   # VALIDATE ONLY - Check for missing images & data issues (RECOMMENDED FIRST STEP)
+ *   node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load --validate
+ *
  *   # Preview import (safe, no changes)
  *   node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load --preview
  *
@@ -35,18 +39,18 @@
  *   inputs/fresh_load/
  *     Physics/
  *       Mechanics/
- *         question_list.json
+ *         questions_mechanics.json   <- Any JSON filename accepted
  *         PHY_MECH_001.svg
  *         PHY_MECH_002.svg
  *       Thermodynamics/
- *         question_list.json
+ *         *.json                     <- Any JSON filename accepted
  *         *.svg
  *     Chemistry/
  *       ...
  *     Mathematics/
  *       ...
- *     InitialAssessment/    <- Special folder for assessment questions
- *       assessment_questions.json
+ *     InitialAssessment/             <- Special folder for assessment questions
+ *       questions.json
  *       ASSESS_*.svg
  */
 
@@ -370,12 +374,12 @@ function discoverFolders(rootDir) {
 
       if (!subStat.isDirectory()) continue;
 
-      // Check if it has a question JSON file
-      const hasQuestionFile = QUESTION_FILE_NAMES.some(name =>
-        fs.existsSync(path.join(subItemPath, name))
+      // Check if it has any JSON file (question file)
+      const jsonFiles = fs.readdirSync(subItemPath).filter(f =>
+        f.endsWith('.json') && !f.startsWith('.')
       );
 
-      if (hasQuestionFile) {
+      if (jsonFiles.length > 0) {
         structure.chapters[item].push({
           name: subItem,
           path: subItemPath
@@ -389,14 +393,27 @@ function discoverFolders(rootDir) {
 
 /**
  * Find question JSON file in a folder
+ * Accepts any JSON file (not just specific names)
  */
 function findQuestionFile(folderPath) {
+  // First try the standard names for backwards compatibility
   for (const name of QUESTION_FILE_NAMES) {
     const filePath = path.join(folderPath, name);
     if (fs.existsSync(filePath)) {
       return filePath;
     }
   }
+
+  // Otherwise, find any JSON file in the folder
+  const files = fs.readdirSync(folderPath);
+  const jsonFiles = files.filter(f => f.endsWith('.json') && !f.startsWith('.'));
+
+  if (jsonFiles.length > 0) {
+    // If multiple JSON files, prefer ones with "question" in the name
+    const questionFile = jsonFiles.find(f => f.toLowerCase().includes('question'));
+    return path.join(folderPath, questionFile || jsonFiles[0]);
+  }
+
   return null;
 }
 
@@ -433,6 +450,328 @@ function parseQuestionsFile(filePath) {
   }
 
   return questions;
+}
+
+// ============================================================================
+// VALIDATION OPERATIONS (No DB changes)
+// ============================================================================
+
+/**
+ * Validate a chapter's questions and images (no DB operations)
+ * Returns detailed report of all issues found
+ */
+function validateChapter(chapterPath, subject, chapterName) {
+  const report = {
+    subject,
+    chapter: chapterName,
+    path: chapterPath,
+    totalQuestions: 0,
+    validQuestions: 0,
+    issues: []
+  };
+
+  const jsonFile = findQuestionFile(chapterPath);
+  if (!jsonFile) {
+    report.issues.push({
+      type: 'MISSING_JSON',
+      severity: 'ERROR',
+      message: `No JSON file found in folder`
+    });
+    return report;
+  }
+
+  let questions;
+  try {
+    questions = parseQuestionsFile(jsonFile);
+  } catch (error) {
+    report.issues.push({
+      type: 'INVALID_JSON',
+      severity: 'ERROR',
+      message: `Failed to parse JSON: ${error.message}`
+    });
+    return report;
+  }
+
+  report.totalQuestions = questions.length;
+
+  if (questions.length === 0) {
+    report.issues.push({
+      type: 'EMPTY_FILE',
+      severity: 'WARNING',
+      message: 'No questions found in file'
+    });
+    return report;
+  }
+
+  // Validate each question
+  for (const { questionId, questionData } of questions) {
+    // 1. Validate required fields
+    const validation = validateQuestion(questionId, questionData);
+    if (!validation.valid) {
+      report.issues.push({
+        type: 'INVALID_QUESTION',
+        severity: 'ERROR',
+        questionId,
+        message: validation.errors.join(', ')
+      });
+      continue;
+    }
+
+    // 2. Check for missing images
+    if (questionData.has_image === true) {
+      const imageFileName = `${questionId}.svg`;
+      const imagePath = path.join(chapterPath, imageFileName);
+
+      if (!fs.existsSync(imagePath)) {
+        report.issues.push({
+          type: 'MISSING_IMAGE',
+          severity: 'ERROR',
+          questionId,
+          expectedPath: imagePath,
+          message: `Question has_image=true but image file not found: ${imageFileName}`
+        });
+        continue;
+      }
+
+      // Check if image file is not empty
+      const stats = fs.statSync(imagePath);
+      if (stats.size === 0) {
+        report.issues.push({
+          type: 'EMPTY_IMAGE',
+          severity: 'ERROR',
+          questionId,
+          message: `Image file is empty (0 bytes): ${imageFileName}`
+        });
+        continue;
+      }
+    }
+
+    // 3. Check for orphan images (image exists but has_image is false/missing)
+    const potentialImage = path.join(chapterPath, `${questionId}.svg`);
+    if (fs.existsSync(potentialImage) && !questionData.has_image) {
+      report.issues.push({
+        type: 'ORPHAN_IMAGE',
+        severity: 'WARNING',
+        questionId,
+        message: `Image file exists but has_image is not true - image won't be uploaded`
+      });
+    }
+
+    // 4. Validate MCQ options
+    if (questionData.question_type === 'mcq_single') {
+      if (!questionData.options || Object.keys(questionData.options).length < 2) {
+        report.issues.push({
+          type: 'INVALID_OPTIONS',
+          severity: 'ERROR',
+          questionId,
+          message: 'MCQ question must have at least 2 options'
+        });
+        continue;
+      }
+    }
+
+    // 5. Validate correct_answer matches options for MCQ
+    if (questionData.question_type === 'mcq_single' && questionData.options) {
+      const optionKeys = Array.isArray(questionData.options)
+        ? questionData.options.map((_, i) => String.fromCharCode(65 + i))
+        : Object.keys(questionData.options);
+
+      if (!optionKeys.includes(String(questionData.correct_answer))) {
+        report.issues.push({
+          type: 'INVALID_ANSWER',
+          severity: 'WARNING',
+          questionId,
+          message: `correct_answer "${questionData.correct_answer}" not in options: [${optionKeys.join(', ')}]`
+        });
+      }
+    }
+
+    report.validQuestions++;
+  }
+
+  return report;
+}
+
+/**
+ * Validate initial assessment folder
+ */
+function validateAssessment(folderPath) {
+  return validateChapter(folderPath, 'Assessment', 'InitialAssessment');
+}
+
+/**
+ * Run full validation and generate report
+ */
+function runValidation(rootDir, subjectsToProcess, structure) {
+  console.log('\n' + '='.repeat(60));
+  console.log('🔍 VALIDATION MODE - Checking for issues (no DB changes)');
+  console.log('='.repeat(60));
+
+  const allReports = [];
+  const summary = {
+    totalChapters: 0,
+    totalQuestions: 0,
+    validQuestions: 0,
+    errors: 0,
+    warnings: 0,
+    missingImages: [],
+    invalidQuestions: [],
+    otherIssues: []
+  };
+
+  // Validate subjects
+  for (const subject of subjectsToProcess) {
+    console.log(`\n📚 ${subject}`);
+
+    for (const chapter of structure.chapters[subject]) {
+      const report = validateChapter(chapter.path, subject, chapter.name);
+      allReports.push(report);
+      summary.totalChapters++;
+      summary.totalQuestions += report.totalQuestions;
+      summary.validQuestions += report.validQuestions;
+
+      const errorCount = report.issues.filter(i => i.severity === 'ERROR').length;
+      const warnCount = report.issues.filter(i => i.severity === 'WARNING').length;
+
+      if (errorCount > 0 || warnCount > 0) {
+        console.log(`   ❌ ${chapter.name}: ${report.totalQuestions} questions, ${errorCount} errors, ${warnCount} warnings`);
+      } else {
+        console.log(`   ✅ ${chapter.name}: ${report.totalQuestions} questions - OK`);
+      }
+
+      // Categorize issues
+      for (const issue of report.issues) {
+        if (issue.severity === 'ERROR') summary.errors++;
+        if (issue.severity === 'WARNING') summary.warnings++;
+
+        if (issue.type === 'MISSING_IMAGE') {
+          summary.missingImages.push({
+            subject,
+            chapter: chapter.name,
+            questionId: issue.questionId,
+            expectedPath: issue.expectedPath
+          });
+        } else if (issue.type === 'INVALID_QUESTION') {
+          summary.invalidQuestions.push({
+            subject,
+            chapter: chapter.name,
+            questionId: issue.questionId,
+            error: issue.message
+          });
+        } else {
+          summary.otherIssues.push({
+            subject,
+            chapter: chapter.name,
+            ...issue
+          });
+        }
+      }
+    }
+  }
+
+  // Validate assessment
+  if (structure.assessmentFolder) {
+    console.log(`\n📋 InitialAssessment`);
+    const report = validateAssessment(structure.assessmentFolder.path);
+    allReports.push(report);
+    summary.totalChapters++;
+    summary.totalQuestions += report.totalQuestions;
+    summary.validQuestions += report.validQuestions;
+
+    const errorCount = report.issues.filter(i => i.severity === 'ERROR').length;
+    const warnCount = report.issues.filter(i => i.severity === 'WARNING').length;
+
+    if (errorCount > 0 || warnCount > 0) {
+      console.log(`   ❌ InitialAssessment: ${report.totalQuestions} questions, ${errorCount} errors, ${warnCount} warnings`);
+    } else {
+      console.log(`   ✅ InitialAssessment: ${report.totalQuestions} questions - OK`);
+    }
+
+    for (const issue of report.issues) {
+      if (issue.severity === 'ERROR') summary.errors++;
+      if (issue.severity === 'WARNING') summary.warnings++;
+
+      if (issue.type === 'MISSING_IMAGE') {
+        summary.missingImages.push({
+          subject: 'Assessment',
+          chapter: 'InitialAssessment',
+          questionId: issue.questionId,
+          expectedPath: issue.expectedPath
+        });
+      } else if (issue.type === 'INVALID_QUESTION') {
+        summary.invalidQuestions.push({
+          subject: 'Assessment',
+          chapter: 'InitialAssessment',
+          questionId: issue.questionId,
+          error: issue.message
+        });
+      } else {
+        summary.otherIssues.push({
+          subject: 'Assessment',
+          chapter: 'InitialAssessment',
+          ...issue
+        });
+      }
+    }
+  }
+
+  // Print detailed report
+  console.log('\n' + '='.repeat(60));
+  console.log('📊 VALIDATION SUMMARY');
+  console.log('='.repeat(60));
+
+  console.log(`\nTotal chapters: ${summary.totalChapters}`);
+  console.log(`Total questions: ${summary.totalQuestions}`);
+  console.log(`Valid questions: ${summary.validQuestions}`);
+  console.log(`Errors: ${summary.errors}`);
+  console.log(`Warnings: ${summary.warnings}`);
+
+  // Missing images detail
+  if (summary.missingImages.length > 0) {
+    console.log('\n' + '-'.repeat(60));
+    console.log(`🖼️  MISSING IMAGES (${summary.missingImages.length}):`);
+    console.log('-'.repeat(60));
+    for (const img of summary.missingImages) {
+      console.log(`   ${img.subject}/${img.chapter}/${img.questionId}.svg`);
+    }
+  }
+
+  // Invalid questions detail
+  if (summary.invalidQuestions.length > 0) {
+    console.log('\n' + '-'.repeat(60));
+    console.log(`❌ INVALID QUESTIONS (${summary.invalidQuestions.length}):`);
+    console.log('-'.repeat(60));
+    for (const q of summary.invalidQuestions) {
+      console.log(`   ${q.subject}/${q.chapter}/${q.questionId}: ${q.error}`);
+    }
+  }
+
+  // Other issues
+  if (summary.otherIssues.length > 0) {
+    console.log('\n' + '-'.repeat(60));
+    console.log(`⚠️  OTHER ISSUES (${summary.otherIssues.length}):`);
+    console.log('-'.repeat(60));
+    for (const issue of summary.otherIssues) {
+      const prefix = issue.severity === 'ERROR' ? '❌' : '⚠️';
+      const location = issue.questionId
+        ? `${issue.subject}/${issue.chapter}/${issue.questionId}`
+        : `${issue.subject}/${issue.chapter}`;
+      console.log(`   ${prefix} ${location}: [${issue.type}] ${issue.message}`);
+    }
+  }
+
+  // Final verdict
+  console.log('\n' + '='.repeat(60));
+  if (summary.errors === 0) {
+    console.log('✅ VALIDATION PASSED - Ready for import!');
+    console.log('   Run without --validate to import');
+  } else {
+    console.log('❌ VALIDATION FAILED - Fix errors before importing');
+    console.log(`   ${summary.errors} error(s) must be fixed`);
+  }
+  console.log('='.repeat(60) + '\n');
+
+  return summary;
 }
 
 // ============================================================================
@@ -645,6 +984,7 @@ async function main() {
     const args = process.argv.slice(2);
     const options = {
       preview: args.includes('--preview'),
+      validate: args.includes('--validate'),
       skipImages: args.includes('--skip-images'),
       dir: null,
       subject: null
@@ -674,8 +1014,12 @@ async function main() {
       : path.join(process.cwd(), options.dir);
 
     console.log(`Root directory: ${rootDir}`);
-    console.log(`Mode: ${options.preview ? 'PREVIEW (no changes)' : 'IMPORT'}`);
-    console.log(`Skip images: ${options.skipImages ? 'Yes' : 'No'}`);
+    const modeDisplay = options.validate ? 'VALIDATE (check only)' :
+                        options.preview ? 'PREVIEW (no changes)' : 'IMPORT';
+    console.log(`Mode: ${modeDisplay}`);
+    if (!options.validate) {
+      console.log(`Skip images: ${options.skipImages ? 'Yes' : 'No'}`);
+    }
     console.log('='.repeat(60));
 
     // Discover folder structure
@@ -704,6 +1048,12 @@ async function main() {
         console.error(`   Available: ${structure.subjects.join(', ')}`);
         process.exit(1);
       }
+    }
+
+    // VALIDATE MODE - Just check for issues, no DB operations
+    if (options.validate) {
+      const summary = runValidation(rootDir, subjectsToProcess, structure);
+      process.exit(summary.errors > 0 ? 1 : 0);
     }
 
     // Import
@@ -760,6 +1110,7 @@ async function main() {
 
     if (options.preview) {
       console.log('\n💡 To actually import, run without --preview');
+      console.log('💡 To validate first (check for missing images), use --validate');
     }
 
     console.log('\n✅ Import complete!\n');
@@ -784,5 +1135,7 @@ if (require.main === module) {
 module.exports = {
   discoverFolders,
   importChapter,
-  importAssessment
+  importAssessment,
+  validateChapter,
+  runValidation
 };
