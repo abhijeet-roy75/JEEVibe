@@ -9,6 +9,7 @@ import '../../services/api_service.dart';
 import '../../services/subscription_service.dart';
 import '../../models/chapter_practice_history.dart';
 import '../../models/chapter_practice_models.dart';
+import '../../models/daily_quiz_question.dart' show SolutionStep;
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../providers/offline_provider.dart';
@@ -231,23 +232,54 @@ class _ChapterPracticeHistoryScreenState
 
       if (!mounted) return;
 
-      // Extract data from response (handles both nested 'data' and root level)
-      final sessionData = response['data'] ?? response;
+      // The API returns { success: true, session: {..., questions: [...]} }
+      final sessionJson = response['session'] as Map<String, dynamic>?;
+      if (sessionJson == null) {
+        throw Exception('Session data not found');
+      }
 
-      // Parse the data into proper model objects
-      final summary = sessionData['summary'] != null
-          ? PracticeSessionSummary.fromJson(sessionData)
-          : null;
+      // Parse session object
+      final sessionObj = ChapterPracticeSession.fromJson(sessionJson);
 
-      final results = sessionData['results'] != null
-          ? (sessionData['results'] as List<dynamic>)
-              .map((r) => PracticeQuestionResult.fromJson(r as Map<String, dynamic>))
-              .toList()
-          : <PracticeQuestionResult>[];
+      // Build results from questions in the session
+      final questions = sessionJson['questions'] as List<dynamic>? ?? [];
+      final results = questions.map((q) {
+        final questionMap = q as Map<String, dynamic>;
 
-      final sessionObj = sessionData['session'] != null
-          ? ChapterPracticeSession.fromJson(sessionData['session'] as Map<String, dynamic>)
-          : null;
+        // Handle correct_answer - could be String or Map
+        String correctAnswer = '';
+        final rawCorrectAnswer = questionMap['correct_answer'];
+        if (rawCorrectAnswer is String) {
+          correctAnswer = rawCorrectAnswer;
+        } else if (rawCorrectAnswer is Map) {
+          correctAnswer = rawCorrectAnswer['option_id']?.toString() ??
+                          rawCorrectAnswer['value']?.toString() ?? '';
+        }
+
+        // Handle student_answer - could be String or Map
+        String studentAnswer = '';
+        final rawStudentAnswer = questionMap['student_answer'];
+        if (rawStudentAnswer is String) {
+          studentAnswer = rawStudentAnswer;
+        } else if (rawStudentAnswer is Map) {
+          studentAnswer = rawStudentAnswer['option_id']?.toString() ??
+                          rawStudentAnswer['value']?.toString() ?? '';
+        }
+
+        return PracticeQuestionResult(
+          questionId: questionMap['question_id']?.toString() ?? '',
+          position: questionMap['position'] ?? 0,
+          questionText: questionMap['question_text']?.toString() ?? '',
+          questionTextHtml: questionMap['question_text_html']?.toString(),
+          options: _parseOptions(questionMap['options']),
+          studentAnswer: studentAnswer,
+          correctAnswer: correctAnswer,
+          isCorrect: questionMap['is_correct'] ?? false,
+          timeTakenSeconds: questionMap['time_taken_seconds'] ?? 0,
+          solutionText: questionMap['solution_text']?.toString(),
+          solutionSteps: _parseSolutionSteps(questionMap['solution_steps']),
+        );
+      }).toList();
 
       if (!mounted) return;
 
@@ -256,7 +288,7 @@ class _ChapterPracticeHistoryScreenState
         context,
         MaterialPageRoute(
           builder: (context) => ChapterPracticeReviewScreen(
-            summary: summary,
+            summary: null, // Summary not returned by this API
             results: results,
             session: sessionObj,
           ),
@@ -273,6 +305,22 @@ class _ChapterPracticeHistoryScreenState
         );
       }
     }
+  }
+
+  List<PracticeOption> _parseOptions(dynamic rawOptions) {
+    if (rawOptions == null || rawOptions is! List) return [];
+    return rawOptions
+        .where((o) => o != null && o is Map<String, dynamic>)
+        .map((o) => PracticeOption.fromJson(o as Map<String, dynamic>))
+        .toList();
+  }
+
+  List<SolutionStep> _parseSolutionSteps(dynamic rawSteps) {
+    if (rawSteps == null || rawSteps is! List) return [];
+    return rawSteps
+        .where((s) => s != null && s is Map<String, dynamic>)
+        .map((s) => SolutionStep.fromJson(s as Map<String, dynamic>))
+        .toList();
   }
 
   @override
