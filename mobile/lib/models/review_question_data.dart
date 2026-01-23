@@ -126,10 +126,14 @@ class ReviewQuestionData {
       correctAnswer: result.correctAnswer,
       isCorrect: result.isCorrect,
       timeTakenSeconds: result.timeTakenSeconds,
-      solutionText: result.solutionText,
+      solutionText: result.solutionText ?? result.explanation,
       solutionSteps: result.solutionSteps,
       subject: subject,
       chapter: chapter,
+      difficulty: result.difficulty,
+      keyInsight: result.keyInsight,
+      distractorAnalysis: result.distractorAnalysis,
+      commonMistakes: result.commonMistakes,
     );
   }
 }

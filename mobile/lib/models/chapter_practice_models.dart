@@ -512,6 +512,11 @@ class PracticeQuestionResult {
   final int timeTakenSeconds;
   final String? solutionText;
   final List<SolutionStep> solutionSteps;
+  final String? keyInsight;
+  final Map<String, String>? distractorAnalysis;
+  final List<String>? commonMistakes;
+  final String? explanation;
+  final String? difficulty;
 
   PracticeQuestionResult({
     required this.questionId,
@@ -525,6 +530,11 @@ class PracticeQuestionResult {
     required this.timeTakenSeconds,
     this.solutionText,
     this.solutionSteps = const [],
+    this.keyInsight,
+    this.distractorAnalysis,
+    this.commonMistakes,
+    this.explanation,
+    this.difficulty,
   });
 
   factory PracticeQuestionResult.fromJson(Map<String, dynamic> json) {
@@ -600,6 +610,42 @@ class PracticeQuestionResult {
                      json['solution_text']['value']?.toString();
     }
 
+    // Parse distractor_analysis map
+    Map<String, String>? distractorAnalysis;
+    if (json['distractor_analysis'] != null && json['distractor_analysis'] is Map) {
+      distractorAnalysis = Map<String, String>.from(
+        (json['distractor_analysis'] as Map).map(
+          (key, value) => MapEntry(key.toString(), value.toString()),
+        ),
+      );
+    }
+
+    // Parse common_mistakes list
+    List<String>? commonMistakes;
+    if (json['common_mistakes'] != null && json['common_mistakes'] is List) {
+      commonMistakes = (json['common_mistakes'] as List)
+          .map((m) => m.toString())
+          .toList();
+    }
+
+    // Parse key_insight
+    String? keyInsight;
+    if (json['key_insight'] is String) {
+      keyInsight = json['key_insight'];
+    } else if (json['key_insight'] is Map) {
+      keyInsight = json['key_insight']['text']?.toString() ??
+                   json['key_insight']['value']?.toString();
+    }
+
+    // Parse explanation
+    String? explanation;
+    if (json['explanation'] is String) {
+      explanation = json['explanation'];
+    } else if (json['explanation'] is Map) {
+      explanation = json['explanation']['text']?.toString() ??
+                    json['explanation']['value']?.toString();
+    }
+
     return PracticeQuestionResult(
       questionId: questionId,
       position: json['position'] ?? 0,
@@ -612,6 +658,11 @@ class PracticeQuestionResult {
       timeTakenSeconds: json['time_taken_seconds'] ?? 0,
       solutionText: solutionText,
       solutionSteps: solutionSteps,
+      keyInsight: keyInsight,
+      distractorAnalysis: distractorAnalysis,
+      commonMistakes: commonMistakes,
+      explanation: explanation,
+      difficulty: json['difficulty']?.toString(),
     );
   }
 }

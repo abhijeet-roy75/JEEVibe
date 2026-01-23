@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/chapter_practice_models.dart';
+import '../models/daily_quiz_question.dart' show SolutionStep;
 import '../services/api_service.dart';
 import '../services/chapter_practice_storage_service.dart';
 
@@ -186,7 +187,7 @@ class ChapterPracticeProvider extends ChangeNotifier {
         currentQuestion!.isCorrect = _lastAnswerResult!.isCorrect;
         currentQuestion!.timeTakenSeconds = timeTakenSeconds;
 
-        // Add to results
+        // Add to results with full solution data
         _results.add(PracticeQuestionResult(
           questionId: currentQuestion!.questionId,
           position: currentQuestion!.position,
@@ -199,6 +200,10 @@ class ChapterPracticeProvider extends ChangeNotifier {
           timeTakenSeconds: timeTakenSeconds,
           solutionText: _lastAnswerResult!.solutionText,
           solutionSteps: _lastAnswerResult!.solutionSteps,
+          keyInsight: _lastAnswerResult!.keyInsight,
+          distractorAnalysis: _lastAnswerResult!.distractorAnalysis,
+          commonMistakes: _lastAnswerResult!.commonMistakes,
+          explanation: _lastAnswerResult!.explanation,
         ));
 
         // Save progress locally
@@ -371,6 +376,32 @@ class ChapterPracticeProvider extends ChangeNotifier {
             orElse: () => _session!.questions.first,
           );
 
+          // Parse solution steps from saved data
+          List<SolutionStep> solutionSteps = [];
+          if (r['solution_steps'] != null && r['solution_steps'] is List) {
+            solutionSteps = (r['solution_steps'] as List)
+                .map((step) => SolutionStep.fromJson(step))
+                .toList();
+          }
+
+          // Parse distractor analysis
+          Map<String, String>? distractorAnalysis;
+          if (r['distractor_analysis'] != null && r['distractor_analysis'] is Map) {
+            distractorAnalysis = Map<String, String>.from(
+              (r['distractor_analysis'] as Map).map(
+                (key, value) => MapEntry(key.toString(), value.toString()),
+              ),
+            );
+          }
+
+          // Parse common mistakes
+          List<String>? commonMistakes;
+          if (r['common_mistakes'] != null && r['common_mistakes'] is List) {
+            commonMistakes = (r['common_mistakes'] as List)
+                .map((m) => m.toString())
+                .toList();
+          }
+
           _results.add(PracticeQuestionResult(
             questionId: questionId,
             position: r['position'] ?? 0,
@@ -381,6 +412,13 @@ class ChapterPracticeProvider extends ChangeNotifier {
             correctAnswer: r['correct_answer'] ?? '',
             isCorrect: r['is_correct'] ?? false,
             timeTakenSeconds: r['time_taken_seconds'] ?? 0,
+            solutionText: r['solution_text'] as String?,
+            solutionSteps: solutionSteps,
+            keyInsight: r['key_insight'] as String?,
+            distractorAnalysis: distractorAnalysis,
+            commonMistakes: commonMistakes,
+            explanation: r['explanation'] as String?,
+            difficulty: r['difficulty'] as String?,
           ));
         }
       }
