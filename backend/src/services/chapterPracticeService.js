@@ -341,6 +341,7 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
     // Query all questions for this chapter (more than needed for prioritization)
     let snapshot = await retryFirestoreOperation(async () => {
       return await db.collection('questions')
+        .where('active', '!=', false)
         .where('subject', '==', subject)
         .where('chapter', '==', chapterName)
         .limit(100)
@@ -365,6 +366,7 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
 
       snapshot = await retryFirestoreOperation(async () => {
         return await db.collection('questions')
+          .where('active', '!=', false)
           .where('subject', '==', subject)
           .where('chapter', '==', titleCaseChapter)
           .limit(100)
@@ -379,6 +381,7 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
 
       snapshot = await retryFirestoreOperation(async () => {
         return await db.collection('questions')
+          .where('active', '!=', false)
           .where('subject', '==', subject)
           .where('chapter', '==', lowerCaseChapter)
           .limit(100)
@@ -399,6 +402,7 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
 
         snapshot = await retryFirestoreOperation(async () => {
           return await db.collection('questions')
+            .where('active', '!=', false)
             .where('subject', '==', subjectVar)
             .where('chapter', '==', chapterName)
             .limit(100)

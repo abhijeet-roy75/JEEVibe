@@ -29,6 +29,7 @@ async function initializeMappings() {
 
         // Fetch only necessary fields to save memory and reduce OOM risk
         const snapshot = await db.collection('questions')
+            .where('active', '!=', false)
             .select('subject', 'chapter')
             .get();
 
