@@ -35,13 +35,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
   List<RecentSolution> _allSolutions = [];
   List<RecentSolution> _filteredSolutions = [];
   bool _isLoading = true;
-  String _selectedSubject = 'All';
-  Map<String, int> _stats = {
-    'All': 0,
-    'Physics': 0,
-    'Chemistry': 0,
-    'Math': 0,
-  };
+  String _selectedSubject = 'Physics';
 
   @override
   void initState() {
@@ -68,7 +62,6 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
               .toList();
           setState(() {
             _allSolutions = solutions;
-            _calculateStats();
             _filterSolutions();
             _isLoading = false;
           });
@@ -81,7 +74,6 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
 
       setState(() {
         _allSolutions = solutions;
-        _calculateStats();
         _filterSolutions();
         _isLoading = false;
       });
@@ -93,42 +85,16 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
     }
   }
 
-  void _calculateStats() {
-    int physics = 0;
-    int chemistry = 0;
-    int math = 0;
-
-    for (var s in _allSolutions) {
-      final subject = s.subject.toLowerCase();
-      if (subject.contains('phys')) {
-        physics++;
-      } else if (subject.contains('chem')) {
-        chemistry++;
-      } else if (subject.contains('math')) {
-        math++;
-      }
-    }
-
-    _stats = {
-      'All': _allSolutions.length,
-      'Physics': physics,
-      'Chemistry': chemistry,
-      'Math': math,
-    };
-  }
-
   void _filterSolutions() {
-    if (_selectedSubject == 'All') {
-      _filteredSolutions = List.from(_allSolutions);
-    } else {
-      _filteredSolutions = _allSolutions.where((s) {
-        final subject = s.subject.toLowerCase();
-        if (_selectedSubject == 'Physics') return subject.contains('phys');
-        if (_selectedSubject == 'Chemistry') return subject.contains('chem');
-        if (_selectedSubject == 'Math') return subject.contains('math');
-        return false;
-      }).toList();
-    }
+    _filteredSolutions = _allSolutions.where((s) {
+      final subject = s.subject.toLowerCase();
+      if (_selectedSubject == 'Physics') return subject.contains('phys');
+      if (_selectedSubject == 'Chemistry') return subject.contains('chem');
+      if (_selectedSubject == 'Mathematics' || _selectedSubject == 'Maths') {
+        return subject.contains('math');
+      }
+      return false;
+    }).toList();
   }
 
   void _onFilterChanged(String subject) {
@@ -299,8 +265,6 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
     return SubjectFilterBar(
       selectedSubject: _selectedSubject,
       onSubjectChanged: _onFilterChanged,
-      counts: _stats,
-      showCounts: true,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );
   }

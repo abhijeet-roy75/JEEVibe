@@ -453,7 +453,7 @@ Track your JEE prep with JEEVibe - Download from App Store''';
   static Future<bool> shareSubjectMasteryAsImage({
     required Uint8List imageBytes,
     required String subject,
-    required int percentile,
+    required int accuracy,
     required String status,
     Rect? sharePositionOrigin,
   }) async {
@@ -468,7 +468,7 @@ Track your JEE prep with JEEVibe - Download from App Store''';
       // Build share text
       final shareText = _buildSubjectMasteryShareText(
         subject: subject,
-        percentile: percentile,
+        accuracy: accuracy,
         status: status,
       );
 
@@ -502,7 +502,7 @@ Track your JEE prep with JEEVibe - Download from App Store''';
   /// Build the subject mastery share text
   static String _buildSubjectMasteryShareText({
     required String subject,
-    required int percentile,
+    required int accuracy,
     required String status,
   }) {
     String emoji;
@@ -534,7 +534,7 @@ Track your JEE prep with JEEVibe - Download from App Store''';
     }
 
     return '''$emoji *My $subject Mastery*
-📊 $percentile percentile
+📊 $accuracy% accuracy
 $statusEmoji Status: $status
 
 Master JEE with JEEVibe - Download from App Store''';

@@ -41,8 +41,7 @@ class _ChapterPracticeHistoryScreenState
   static const int _limit = 50; // Increased limit to load more for counts
   int? _historyDaysLimit;
   bool _isUnlimited = false;
-  String _selectedSubject = 'All';
-  Map<String, int> _subjectCounts = {};
+  String _selectedSubject = 'Physics';
 
   @override
   void initState() {
@@ -109,7 +108,6 @@ class _ChapterPracticeHistoryScreenState
         _allSessions.addAll(historyResponse.sessions);
         _hasMore = historyResponse.hasMore;
         _offset = _limit;
-        _calculateCounts();
         _filterSessions();
         _isLoading = false;
       });
@@ -121,42 +119,14 @@ class _ChapterPracticeHistoryScreenState
     }
   }
 
-  void _calculateCounts() {
-    int physics = 0;
-    int chemistry = 0;
-    int math = 0;
-
-    for (var session in _allSessions) {
-      final subject = session.subject.toLowerCase();
-      if (subject.contains('phys')) {
-        physics++;
-      } else if (subject.contains('chem')) {
-        chemistry++;
-      } else if (subject.contains('math')) {
-        math++;
-      }
-    }
-
-    _subjectCounts = {
-      'All': _allSessions.length,
-      'Physics': physics,
-      'Chemistry': chemistry,
-      'Mathematics': math,
-    };
-  }
-
   void _filterSessions() {
-    if (_selectedSubject == 'All') {
-      _filteredSessions = List.from(_allSessions);
-    } else {
-      _filteredSessions = _allSessions.where((session) {
-        final subject = session.subject.toLowerCase();
-        if (_selectedSubject == 'Physics') return subject.contains('phys');
-        if (_selectedSubject == 'Chemistry') return subject.contains('chem');
-        if (_selectedSubject == 'Mathematics') return subject.contains('math');
-        return false;
-      }).toList();
-    }
+    _filteredSessions = _allSessions.where((session) {
+      final subject = session.subject.toLowerCase();
+      if (_selectedSubject == 'Physics') return subject.contains('phys');
+      if (_selectedSubject == 'Chemistry') return subject.contains('chem');
+      if (_selectedSubject == 'Mathematics') return subject.contains('math');
+      return false;
+    }).toList();
   }
 
   Future<void> _loadMoreSessions() async {
@@ -189,7 +159,6 @@ class _ChapterPracticeHistoryScreenState
         _allSessions.addAll(historyResponse.sessions);
         _hasMore = historyResponse.hasMore;
         _offset += _limit;
-        _calculateCounts();
         _filterSessions();
         _isLoadingMore = false;
       });
@@ -438,8 +407,6 @@ class _ChapterPracticeHistoryScreenState
     return SubjectFilterBar(
       selectedSubject: _selectedSubject,
       onSubjectChanged: _onSubjectFilterChanged,
-      counts: _subjectCounts.isNotEmpty ? _subjectCounts : null,
-      showCounts: _subjectCounts.isNotEmpty,
     );
   }
 
@@ -546,9 +513,7 @@ class _ChapterPracticeHistoryScreenState
         Provider.of<SubscriptionService>(context, listen: false);
     final hasChapterPractice = subscriptionService.isChapterPracticeEnabled;
 
-    final message = _selectedSubject == 'All'
-        ? 'No chapters practiced yet'
-        : 'No $_selectedSubject chapters practiced yet';
+    final message = 'No $_selectedSubject chapters practiced yet';
 
     // Subtitle guides user to use the fixed footer button
     final subtitleText = hasChapterPractice

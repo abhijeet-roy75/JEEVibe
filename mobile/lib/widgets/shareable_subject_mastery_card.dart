@@ -138,7 +138,16 @@ class ShareableSubjectMasteryCard extends StatelessWidget {
   }
 
   Widget _buildOverallStats() {
-    final percentile = masteryDetails.overallPercentile.round();
+    // Calculate overall accuracy from chapters (not percentile)
+    int totalCorrect = 0;
+    int totalQuestions = 0;
+    for (final chapter in masteryDetails.chapters) {
+      totalCorrect += chapter.correct;
+      totalQuestions += chapter.total;
+    }
+    final accuracy = totalQuestions > 0
+        ? (totalCorrect / totalQuestions * 100).round()
+        : 0;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -152,20 +161,20 @@ class ShareableSubjectMasteryCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Percentile
+          // Accuracy (not percentile)
           Expanded(
             child: Column(
               children: [
                 Text(
-                  '$percentile',
+                  '$accuracy%',
                   style: TextStyle(
-                    fontSize: 32,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: _subjectColor,
                   ),
                 ),
                 Text(
-                  'Percentile',
+                  'Accuracy',
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.textMedium,
                   ),
@@ -351,9 +360,9 @@ class ShareableSubjectMasteryCard extends StatelessWidget {
   }
 
   Widget _buildTopChapters() {
-    // Show top 5 chapters sorted by percentile (highest first)
+    // Show top 5 chapters sorted by accuracy (highest first)
     final sortedChapters = List<ChapterMastery>.from(masteryDetails.chapters)
-      ..sort((a, b) => b.percentile.compareTo(a.percentile));
+      ..sort((a, b) => b.accuracy.compareTo(a.accuracy));
     final topChapters = sortedChapters.take(5).toList();
 
     if (topChapters.isEmpty) return const SizedBox.shrink();
@@ -405,7 +414,7 @@ class ShareableSubjectMasteryCard extends StatelessWidget {
           ),
         ),
         Text(
-          '${chapter.percentile.round()}%',
+          '${chapter.accuracy.round()}%',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
@@ -428,6 +437,10 @@ class ShareableSubjectMasteryCard extends StatelessWidget {
   }
 
   Widget _buildFooter() {
+    // Format timestamp
+    final now = DateTime.now();
+    final timestamp = '${now.day}/${now.month}/${now.year} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: const BoxDecoration(
@@ -435,29 +448,41 @@ class ShareableSubjectMasteryCard extends StatelessWidget {
           top: BorderSide(color: AppColors.borderLight, width: 1),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              gradient: AppColors.ctaGradient,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.rocket_launch, color: Colors.white, size: 14),
-                SizedBox(width: 6),
-                Text(
-                  'My Progress on JEEVibe',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: AppColors.ctaGradient,
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ],
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.rocket_launch, color: Colors.white, size: 14),
+                    SizedBox(width: 6),
+                    Text(
+                      'My Progress on JEEVibe',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            timestamp,
+            style: const TextStyle(
+              fontSize: 10,
+              color: AppColors.textLight,
             ),
           ),
         ],

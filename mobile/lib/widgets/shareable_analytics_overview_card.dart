@@ -219,7 +219,8 @@ class ShareableAnalyticsOverviewCard extends StatelessWidget {
 
   Widget _buildSubjectBar(SubjectProgress subject) {
     final displayName = _getSubjectDisplayName(subject.subject);
-    final percentile = subject.percentile.round();
+    // Use accuracy instead of percentile for sharing
+    final accuracy = subject.accuracy ?? 0;
 
     return Row(
       children: [
@@ -245,7 +246,7 @@ class ShareableAnalyticsOverviewCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(7),
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
-                widthFactor: (percentile / 100).clamp(0.0, 1.0),
+                widthFactor: (accuracy / 100).clamp(0.0, 1.0),
                 child: Container(
                   decoration: BoxDecoration(
                     color: subject.progressColor,
@@ -259,7 +260,7 @@ class ShareableAnalyticsOverviewCard extends StatelessWidget {
         SizedBox(
           width: 32,
           child: Text(
-            '$percentile%',
+            '$accuracy%',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -382,6 +383,10 @@ class ShareableAnalyticsOverviewCard extends StatelessWidget {
   }
 
   Widget _buildFooter() {
+    // Format timestamp
+    final now = DateTime.now();
+    final timestamp = '${now.day}/${now.month}/${now.year} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: const BoxDecoration(
@@ -389,29 +394,41 @@ class ShareableAnalyticsOverviewCard extends StatelessWidget {
           top: BorderSide(color: AppColors.borderLight, width: 1),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              gradient: AppColors.ctaGradient,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.rocket_launch, color: Colors.white, size: 14),
-                SizedBox(width: 6),
-                Text(
-                  'Tracked with JEEVibe',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: AppColors.ctaGradient,
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ],
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.rocket_launch, color: Colors.white, size: 14),
+                    SizedBox(width: 6),
+                    Text(
+                      'Tracked with JEEVibe',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            timestamp,
+            style: const TextStyle(
+              fontSize: 10,
+              color: AppColors.textLight,
             ),
           ),
         ],

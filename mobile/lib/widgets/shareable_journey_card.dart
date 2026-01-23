@@ -274,6 +274,10 @@ class ShareableJourneyCard extends StatelessWidget {
   }
 
   Widget _buildFooter() {
+    // Format timestamp
+    final now = DateTime.now();
+    final timestamp = '${now.day}/${now.month}/${now.year} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: const BoxDecoration(
@@ -281,29 +285,41 @@ class ShareableJourneyCard extends StatelessWidget {
           top: BorderSide(color: AppColors.borderLight, width: 1),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              gradient: AppColors.ctaGradient,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.rocket_launch, color: Colors.white, size: 14),
-                SizedBox(width: 6),
-                Text(
-                  'Join me on JEEVibe!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: AppColors.ctaGradient,
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ],
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.rocket_launch, color: Colors.white, size: 14),
+                    SizedBox(width: 6),
+                    Text(
+                      'Join me on JEEVibe!',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            timestamp,
+            style: const TextStyle(
+              fontSize: 10,
+              color: AppColors.textLight,
             ),
           ),
         ],

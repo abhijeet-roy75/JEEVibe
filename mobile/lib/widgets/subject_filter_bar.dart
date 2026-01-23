@@ -1,35 +1,31 @@
 /// SubjectFilterBar - Reusable subject filter component
 ///
-/// A compact horizontal filter bar for filtering by subject (All, Physics, Chemistry, Math).
-/// Shows icons and optional counts for each subject.
+/// A compact horizontal filter bar for filtering by subject (Physics, Chemistry, Maths).
+/// Matches the Analytics tab design with gradient selection.
 ///
 /// Example:
 /// ```dart
 /// SubjectFilterBar(
-///   selectedSubject: 'All',
+///   selectedSubject: 'Physics',
 ///   onSubjectChanged: (subject) => setState(() => _selectedSubject = subject),
-///   counts: {'All': 50, 'Physics': 20, 'Chemistry': 15, 'Mathematics': 15},
 /// )
 /// ```
 library;
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import 'subject_icon_widget.dart';
 
 class SubjectFilterBar extends StatelessWidget {
-  /// Currently selected subject
+  /// Currently selected subject ('Physics', 'Chemistry', or 'Mathematics')
   final String selectedSubject;
 
   /// Callback when a subject is selected
   final ValueChanged<String> onSubjectChanged;
 
-  /// Optional counts per subject. Keys should match subject names.
-  /// If null, counts will not be displayed.
+  /// Optional counts per subject (not displayed in new design, kept for compatibility)
   final Map<String, int>? counts;
 
-  /// Whether to show counts (only works if counts is provided)
+  /// Whether to show counts (kept for compatibility, not used in new design)
   final bool showCounts;
 
   /// Padding around the filter bar
@@ -40,170 +36,113 @@ class SubjectFilterBar extends StatelessWidget {
     required this.selectedSubject,
     required this.onSubjectChanged,
     this.counts,
-    this.showCounts = true,
+    this.showCounts = false,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
   });
 
-  static const List<String> _subjects = ['All', 'Physics', 'Chemistry', 'Mathematics'];
+  // Subject definitions with colors matching Analytics tab
+  static const List<_SubjectDef> _subjects = [
+    _SubjectDef('Physics', 'physics', Icons.bolt, AppColors.infoBlue),
+    _SubjectDef('Chemistry', 'chemistry', Icons.science, AppColors.successGreen),
+    _SubjectDef('Maths', 'mathematics', Icons.calculate, AppColors.primaryPurple),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final scrollController = ScrollController();
-
     return Container(
       padding: padding,
-      // Use RawGestureDetector to claim horizontal drags before TabBarView
-      child: RawGestureDetector(
-        gestures: <Type, GestureRecognizerFactory>{
-          // Claim horizontal drag gestures with high priority
-          HorizontalDragGestureRecognizer: GestureRecognizerFactoryWithHandlers<HorizontalDragGestureRecognizer>(
-            () => HorizontalDragGestureRecognizer(),
-            (HorizontalDragGestureRecognizer instance) {
-              instance
-                ..onStart = (_) {} // Claim the gesture
-                ..onUpdate = (details) {
-                  // Manually scroll the SingleChildScrollView
-                  scrollController.jumpTo(
-                    (scrollController.offset - details.delta.dx).clamp(
-                      0.0,
-                      scrollController.position.maxScrollExtent,
-                    ),
-                  );
-                }
-                ..onEnd = (_) {};
-            },
-          ),
-        },
-        child: SingleChildScrollView(
-          controller: scrollController,
-          scrollDirection: Axis.horizontal,
-          physics: const NeverScrollableScrollPhysics(), // Disable default scroll, we handle it manually
-          child: Row(
-            children: _subjects.map((subject) {
-              final isSelected = selectedSubject == subject ||
-                  (selectedSubject == 'Math' && subject == 'Mathematics');
-              final count = _getCount(subject);
-              final hasCount = counts != null && showCounts;
+      child: Row(
+        children: _subjects.map((subject) {
+          final isSelected = _isSubjectSelected(subject.value);
 
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: _SubjectFilterChip(
-                  subject: subject,
-                  isSelected: isSelected,
-                  count: hasCount ? count : null,
-                  onTap: () => onSubjectChanged(subject),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: _SubjectFilterChip(
+              label: subject.label,
+              value: subject.value,
+              icon: subject.icon,
+              color: subject.color,
+              isSelected: isSelected,
+              onTap: () => onSubjectChanged(subject.value == 'mathematics' ? 'Mathematics' : subject.label),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 
-  int _getCount(String subject) {
-    if (counts == null) return 0;
-
-    // Try exact match first
-    if (counts!.containsKey(subject)) {
-      return counts![subject]!;
+  bool _isSubjectSelected(String value) {
+    final selected = selectedSubject.toLowerCase();
+    if (value == 'mathematics') {
+      return selected == 'mathematics' || selected == 'maths' || selected == 'math';
     }
-
-    // Handle 'Math' vs 'Mathematics' mismatch
-    if (subject == 'Mathematics' && counts!.containsKey('Math')) {
-      return counts!['Math']!;
-    }
-    if (subject == 'Math' && counts!.containsKey('Mathematics')) {
-      return counts!['Mathematics']!;
-    }
-
-    return 0;
+    return selected == value;
   }
 }
 
+class _SubjectDef {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _SubjectDef(this.label, this.value, this.icon, this.color);
+}
+
 class _SubjectFilterChip extends StatelessWidget {
-  final String subject;
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
   final bool isSelected;
-  final int? count;
   final VoidCallback onTap;
 
   const _SubjectFilterChip({
-    required this.subject,
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
     required this.isSelected,
-    this.count,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final subjectColor = SubjectIconWidget.getColor(subject);
-    final subjectIcon = SubjectIconWidget.getIcon(subject);
-
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? subjectColor.withAlpha(25) : AppColors.surface,
+          gradient: isSelected ? AppColors.ctaGradient : null,
+          color: isSelected ? null : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? subjectColor : AppColors.borderDefault,
-            width: isSelected ? 1.5 : 1,
+            color: isSelected ? Colors.transparent : AppColors.borderDefault,
+            width: 1.5,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Subject icon
             Icon(
-              subjectIcon,
+              icon,
               size: 16,
-              color: isSelected ? subjectColor : AppColors.textSecondary,
+              color: isSelected ? Colors.white : color,
             ),
-            const SizedBox(width: 6),
-
-            // Subject label
+            const SizedBox(width: 4),
             Text(
-              _getDisplayLabel(subject),
+              label,
               style: TextStyle(
-                color: isSelected ? subjectColor : AppColors.textSecondary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? Colors.white : color,
+                fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
             ),
-
-            // Count badge (if provided)
-            if (count != null) ...[
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? subjectColor.withAlpha(40)
-                      : AppColors.textSecondary.withAlpha(25),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  count.toString(),
-                  style: TextStyle(
-                    color: isSelected ? subjectColor : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       ),
     );
-  }
-
-  String _getDisplayLabel(String subject) {
-    // Shorten "Mathematics" to "Math" for compact display
-    if (subject == 'Mathematics') return 'Math';
-    return subject;
   }
 }

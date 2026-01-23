@@ -56,7 +56,24 @@ class MasteryTabState extends State<MasteryTab> {
   Future<void> triggerShare([Rect? sharePositionOrigin]) async {
     if (_isLoading || _masteryDetails == null) return;
 
+    // Only share if there's actual data
+    if (_masteryDetails!.chapters.isEmpty) {
+      debugPrint('Cannot share mastery - no chapter data available');
+      return;
+    }
+
     try {
+      // Calculate overall accuracy from chapters (not percentile)
+      int totalCorrect = 0;
+      int totalQuestions = 0;
+      for (final chapter in _masteryDetails!.chapters) {
+        totalCorrect += chapter.correct;
+        totalQuestions += chapter.total;
+      }
+      final accuracy = totalQuestions > 0
+          ? (totalCorrect / totalQuestions * 100).round()
+          : 0;
+
       // Capture screenshot of shareable card
       final imageBytes = await _screenshotController.captureFromWidget(
         MediaQuery(
@@ -77,7 +94,7 @@ class MasteryTabState extends State<MasteryTab> {
       await ShareService.shareSubjectMasteryAsImage(
         imageBytes: imageBytes,
         subject: _masteryDetails!.subjectName,
-        percentile: _masteryDetails!.overallPercentile.round(),
+        accuracy: accuracy,
         status: _masteryDetails!.status.displayName,
         sharePositionOrigin: sharePositionOrigin,
       );
