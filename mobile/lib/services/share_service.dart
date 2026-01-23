@@ -3,11 +3,18 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'api_service.dart';
 
 class ShareService {
+  /// Format timestamp for use in share subjects/filenames
+  /// Returns format like "Jan 23 9-18 PM" (using hyphen instead of colon for filename safety)
+  static String _formatTimestampForFilename() {
+    final now = DateTime.now();
+    return DateFormat('MMM d h-mm a').format(now);
+  }
   /// Share solution via native share sheet
   /// Returns true if share was initiated successfully
   ///
@@ -43,9 +50,10 @@ class ShareService {
 
       // Share via native share sheet (use shareWithResult to get ShareResult)
       // sharePositionOrigin is required on iPad for the popover position
+      final timeStr = _formatTimestampForFilename();
       final result = await Share.shareWithResult(
         message,
-        subject: 'JEEVibe - $subject Solution',
+        subject: 'JEEVibe $subject Solution $timeStr',
         sharePositionOrigin: sharePositionOrigin,
       );
 
@@ -87,10 +95,12 @@ class ShareService {
       );
 
       // Share via native share sheet with image
+      // Include timestamp in subject for unique filenames when saving to Google Drive
+      final timeStr = _formatTimestampForFilename();
       final result = await Share.shareXFiles(
         [XFile(imagePath)],
         text: 'Solved with JEEVibe - Download from App Store',
-        subject: 'JEEVibe - $subject Solution',
+        subject: 'JEEVibe $subject Solution $timeStr',
         sharePositionOrigin: sharePositionOrigin,
       );
 
@@ -274,9 +284,10 @@ Solved with JEEVibe - Download from App Store''';
         nextMilestone: nextMilestone,
       );
 
+      final timeStr = _formatTimestampForFilename();
       final result = await Share.shareWithResult(
         message,
-        subject: 'My JEEVibe Journey',
+        subject: 'My JEEVibe Journey $timeStr',
         sharePositionOrigin: sharePositionOrigin,
       );
 
@@ -306,10 +317,12 @@ Solved with JEEVibe - Download from App Store''';
       await imageFile.writeAsBytes(imageBytes);
 
       // Share via native share sheet with image
+      // Include timestamp in subject for unique filenames when saving to Google Drive
+      final timeStr = _formatTimestampForFilename();
       final result = await Share.shareXFiles(
         [XFile(imagePath)],
         text: 'Join me on JEEVibe - Download from App Store',
-        subject: 'My JEEVibe Journey',
+        subject: 'My JEEVibe Journey $timeStr',
         sharePositionOrigin: sharePositionOrigin,
       );
 
@@ -402,10 +415,12 @@ Join me on JEEVibe - Download from App Store''';
       );
 
       // Share via native share sheet with image
+      // Include timestamp in subject for unique filenames when saving to Google Drive
+      final timeStr = _formatTimestampForFilename();
       final result = await Share.shareXFiles(
         [XFile(imagePath)],
         text: shareText,
-        subject: 'My JEE Progress on JEEVibe',
+        subject: 'My JEE Progress on JEEVibe $timeStr',
         sharePositionOrigin: sharePositionOrigin,
       );
 
@@ -473,10 +488,12 @@ Track your JEE prep with JEEVibe - Download from App Store''';
       );
 
       // Share via native share sheet with image
+      // Include timestamp in subject for unique filenames when saving to Google Drive
+      final timeStr = _formatTimestampForFilename();
       final result = await Share.shareXFiles(
         [XFile(imagePath)],
         text: shareText,
-        subject: 'My $subject Mastery on JEEVibe',
+        subject: 'My $subject Mastery on JEEVibe $timeStr',
         sharePositionOrigin: sharePositionOrigin,
       );
 
