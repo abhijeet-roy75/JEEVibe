@@ -119,11 +119,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: _buildQuickTips(),
                     ),
-                    const SizedBox(height: 32),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: _buildBackToDashboardButton(),
-                    ),
                     // Add extra padding for Android system navigation bar
                     SizedBox(height: 24 + MediaQuery.of(context).viewPadding.bottom),
                   ],
@@ -428,20 +423,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBackToDashboardButton() {
-    return GradientButton(
-      text: 'Back to Dashboard',
-      onPressed: () {
-        // Navigate to main home screen with bottom navigation
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-          (route) => false,
-        );
-      },
-      size: GradientButtonSize.large,
-      leadingIcon: Icons.home,
-    );
-  }
 
 
 

@@ -335,6 +335,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
                 builder: (context) => SolutionReviewScreen(
                   allSolutions: _filteredSolutions,
                   initialIndex: _filteredSolutions.indexOf(solution),
+                  isFromHistoryTab: widget.isInHistoryTab,
                 ),
               ),
             ).then((_) {

@@ -7,6 +7,7 @@ import '../../models/review_question_data.dart';
 import '../../models/ai_tutor_models.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/buttons/icon_button.dart';
 import '../../widgets/priya_avatar.dart';
 import '../../widgets/question_review/question_review_screen.dart';
 import '../../utils/text_preprocessor.dart';
@@ -117,10 +118,7 @@ class _ChapterPracticeReviewScreenState
               child: Column(
                 children: [
                   const SizedBox(height: 16),
-                  // Summary cards
-                  _buildSummaryCards(),
-                  const SizedBox(height: 16),
-                  // Filter buttons
+                  // Filter buttons (also show counts)
                   _buildFilterButtons(),
                   const SizedBox(height: 16),
                   // Question list
@@ -156,9 +154,9 @@ class _ChapterPracticeReviewScreenState
           padding: const EdgeInsets.all(24.0),
           child: Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+              AppIconButton.back(
                 onPressed: () => Navigator.of(context).pop(),
+                forGradientHeader: true,
               ),
               Expanded(
                 child: Column(

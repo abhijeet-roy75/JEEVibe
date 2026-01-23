@@ -293,9 +293,11 @@ class ShareableSolutionCard extends StatelessWidget {
   }
 
   Widget _buildFooter() {
-    // Format timestamp
+    // Format timestamp with 12-hour format and AM/PM
     final now = DateTime.now();
-    final timestamp = '${now.day}/${now.month}/${now.year} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;
+    final amPm = now.hour >= 12 ? 'PM' : 'AM';
+    final timestamp = '${now.day}/${now.month}/${now.year} $hour:${now.minute.toString().padLeft(2, '0')} $amPm';
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),

@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../widgets/buttons/icon_button.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/question_review/question_review_screen.dart';
 
@@ -214,10 +215,7 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 16),
-                  // Summary cards
-                  _buildSummaryCards(),
-                  const SizedBox(height: 16),
-                  // Filter buttons
+                  // Filter buttons (also show counts)
                   _buildFilterButtons(),
                   const SizedBox(height: 16),
                   // Question list
@@ -254,9 +252,9 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
           child: Row(
             children: [
               // Back button on left
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+              AppIconButton.back(
                 onPressed: () => Navigator.of(context).pop(),
+                forGradientHeader: true,
               ),
               // Message centered
               Expanded(
@@ -272,7 +270,7 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Go through your performance question by question',
+                      'Tap any question to review',
                       style: AppTextStyles.bodyWhite.copyWith(fontSize: 14),
                       textAlign: TextAlign.center,
                     ),

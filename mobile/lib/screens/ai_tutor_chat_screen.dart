@@ -1,12 +1,14 @@
-/// AI Tutor (Priya Ma'am) Chat Screen
-/// Main chat interface for conversing with the AI tutor
+// AI Tutor (Priya Ma'am) Chat Screen
+// Main chat interface for conversing with the AI tutor
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/ai_tutor_models.dart';
 import '../providers/ai_tutor_provider.dart';
 import '../widgets/app_header.dart';
+import '../widgets/buttons/icon_button.dart';
 import '../widgets/priya_avatar.dart';
+import '../theme/app_text_styles.dart';
 import '../widgets/ai_tutor/chat_bubble.dart';
 import '../widgets/ai_tutor/context_marker_widget.dart';
 import '../widgets/ai_tutor/chat_input_bar.dart';
@@ -217,13 +219,11 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: Consumer<AiTutorProvider>(
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: Consumer<AiTutorProvider>(
                 builder: (context, provider, _) {
                   // Show loading state for initial conversation load
                   if (provider.isLoadingConversation && provider.messages.isEmpty) {
@@ -267,55 +267,73 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildHeader() {
     return AppHeader(
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
+      leading: AppIconButton.back(
         onPressed: () => Navigator.of(context).pop(),
+        forGradientHeader: true,
       ),
-      title: Column(
-        children: [
-          Text(
-            'Priya Ma\'am',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Your AI Tutor',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.8),
-              fontSize: 12,
-            ),
-          ),
-        ],
+      title: Text(
+        'Priya Ma\'am',
+        style: AppTextStyles.headerWhite.copyWith(fontSize: 20),
       ),
-      trailing: PopupMenuButton<String>(
-        icon: const Icon(Icons.more_vert, color: Colors.white),
-        onSelected: (value) {
-          if (value == 'clear') {
-            _handleClearChat();
-          }
-        },
-        itemBuilder: (context) => [
-          const PopupMenuItem(
-            value: 'clear',
-            child: Row(
-              children: [
-                Icon(Icons.delete_outline, size: 20),
-                SizedBox(width: 8),
-                Text('Clear Chat'),
-              ],
-            ),
+      subtitle: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Text(
+          'Your AI Tutor',
+          style: AppTextStyles.bodyWhite.copyWith(
+            color: Colors.white.withValues(alpha: 0.9),
+            fontSize: 14,
           ),
-        ],
+          textAlign: TextAlign.center,
+        ),
+      ),
+      trailing: AppIconButton(
+        icon: Icons.more_vert,
+        onPressed: () => _showOptionsMenu(),
+        variant: AppIconButtonVariant.glass,
+        iconColor: Colors.white,
+      ),
+      bottomPadding: 16,
+    );
+  }
+
+  void _showOptionsMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.borderLight,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: AppColors.error),
+              title: const Text('Clear Chat'),
+              subtitle: const Text('Delete all messages'),
+              onTap: () {
+                Navigator.pop(context);
+                _handleClearChat();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
@@ -488,9 +506,9 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
               color: AppColors.error.withValues(alpha: 0.7),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Something went wrong',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,

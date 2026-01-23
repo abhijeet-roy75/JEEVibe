@@ -10,6 +10,7 @@ import '../../models/ai_tutor_models.dart';
 import '../../services/subscription_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../widgets/buttons/icon_button.dart';
 import '../../widgets/safe_svg_widget.dart';
 import '../../widgets/priya_avatar.dart';
 import '../../screens/ai_tutor_chat_screen.dart';
@@ -240,9 +241,9 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           child: Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+              AppIconButton.back(
                 onPressed: () => Navigator.of(context).pop(),
+                forGradientHeader: true,
               ),
               Expanded(
                 child: Column(

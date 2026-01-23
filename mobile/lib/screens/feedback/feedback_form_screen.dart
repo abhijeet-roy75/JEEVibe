@@ -1,12 +1,46 @@
-/// Feedback Form Screen
+// Feedback Form Screen
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/buttons/gradient_button.dart';
+import '../../widgets/buttons/icon_button.dart';
+import '../../widgets/app_header.dart';
 import '../../services/feedback_service.dart';
 import '../../services/firebase/auth_service.dart';
-import '../../services/firebase/firestore_user_service.dart';
+
+/// Maximum length for feedback description
+const int _maxDescriptionLength = 1000;
+
+/// Sanitize user input to prevent injection attacks
+/// Removes potentially dangerous characters and patterns
+String _sanitizeInput(String input) {
+  if (input.isEmpty) return input;
+
+  String sanitized = input;
+
+  // Remove any HTML/script tags
+  sanitized = sanitized.replaceAll(RegExp(r'<[^>]*>'), '');
+
+  // Remove common SQL injection patterns
+  sanitized = sanitized.replaceAll(RegExp(r'''['";]--'''), '');
+  sanitized = sanitized.replaceAll(RegExp(r'(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|CREATE)\b)', caseSensitive: false), '');
+
+  // Remove null bytes and other control characters (except newlines)
+  sanitized = sanitized.replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'), '');
+
+  // Trim excessive whitespace
+  sanitized = sanitized.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+  sanitized = sanitized.replaceAll(RegExp(r' {3,}'), '  ');
+
+  // Limit length
+  if (sanitized.length > _maxDescriptionLength) {
+    sanitized = sanitized.substring(0, _maxDescriptionLength);
+  }
+
+  return sanitized.trim();
+}
 
 class FeedbackFormScreen extends StatefulWidget {
   final String currentScreen;
@@ -63,7 +97,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
       await FeedbackService.submitFeedback(
         authToken: authToken,
         rating: _selectedRating,
-        description: _descriptionController.text.trim(),
+        description: _sanitizeInput(_descriptionController.text),
         currentScreen: widget.currentScreen,
         recentActivity: recentActivity,
       );
@@ -101,152 +135,158 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Share Feedback'),
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Text(
-              'We\'d love to hear from you!',
-              style: AppTextStyles.headerMedium.copyWith(
-                color: AppColors.textPrimary,
-              ),
+      body: Column(
+        children: [
+          // Standard gradient header
+          AppHeader(
+            leading: AppIconButton.back(
+              onPressed: () => Navigator.pop(context),
+              forGradientHeader: true,
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Your feedback helps us improve JEEVibe',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
-              ),
+            title: Text(
+              'Share Feedback',
+              style: AppTextStyles.headerWhite.copyWith(fontSize: 20),
             ),
-            const SizedBox(height: 32),
-
-            // Rating Section
-            Text(
-              'How would you rate your experience?',
-              style: AppTextStyles.labelLarge.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(5, (index) {
-                final rating = index + 1;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedRating = rating;
-                    });
-                  },
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: _selectedRating >= rating
-                          ? AppColors.primary
-                          : AppColors.borderLight,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.star,
-                      color: _selectedRating >= rating
-                          ? Colors.white
-                          : AppColors.textTertiary,
-                      size: 28,
-                    ),
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 32),
-
-            // Description Section
-            Text(
-              'Tell us more (optional)',
-              style: AppTextStyles.labelLarge.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _descriptionController,
-              maxLines: 6,
-              decoration: InputDecoration(
-                hintText: 'What did you like? What can we improve?',
-                hintStyle: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textTertiary,
+            subtitle: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Help us improve JEEVibe',
+                style: AppTextStyles.bodyWhite.copyWith(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 14,
                 ),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.borderDefault),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.borderDefault),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
-                ),
-              ),
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textPrimary,
+                textAlign: TextAlign.center,
               ),
             ),
-            const SizedBox(height: 32),
-
-            // Info text
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.cardLightPurple,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
+            bottomPadding: 16,
+          ),
+          // Content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.info_outline,
-                    color: AppColors.primary,
-                    size: 20,
+                  // Rating Section
+                  Text(
+                    'How would you rate your experience?',
+                    style: AppTextStyles.labelLarge.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Your feedback is automatically sent with context about your device and app version to help us debug issues faster.',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(5, (index) {
+                      final rating = index + 1;
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedRating = rating;
+                          });
+                        },
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: _selectedRating >= rating
+                                ? AppColors.primary
+                                : AppColors.borderLight,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.star,
+                            color: _selectedRating >= rating
+                                ? Colors.white
+                                : AppColors.textTertiary,
+                            size: 28,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 32),
+                  // Description Section
+                  Text(
+                    'Tell us more (optional)',
+                    style: AppTextStyles.labelLarge.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _descriptionController,
+                    maxLines: 6,
+                    maxLength: _maxDescriptionLength,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.deny(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]')),
+                    ],
+                    decoration: InputDecoration(
+                      hintText: 'What did you like? What can we improve?',
+                      hintStyle: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.borderDefault),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.borderDefault),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.primary, width: 2),
                       ),
                     ),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  // Info text
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardLightPurple,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.info_outline,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Your feedback is automatically sent with context about your device and app version to help us debug issues faster.',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  // Submit Button
+                  GradientButton(
+                    text: _isSubmitting ? 'Submitting...' : 'Submit Feedback',
+                    onPressed: _isSubmitting ? null : _submitFeedback,
+                    size: GradientButtonSize.large,
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
-
-            // Submit Button
-            GradientButton(
-              text: _isSubmitting ? 'Submitting...' : 'Submit Feedback',
-              onPressed: _isSubmitting ? null : _submitFeedback,
-              size: GradientButtonSize.large,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

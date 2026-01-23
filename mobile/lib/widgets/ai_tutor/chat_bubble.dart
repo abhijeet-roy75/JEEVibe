@@ -134,14 +134,17 @@ class ChatBubble extends StatelessWidget {
       height: 1.5,
     );
 
+    // Preprocess: Convert markdown to HTML for proper rendering
+    final processedContent = _preprocessMarkdown(content);
+
     // Split by double newlines (paragraphs) or numbered/bullet lists
     // Preserve structure while still handling LaTeX within each block
-    final paragraphs = _splitIntoParagraphs(content);
+    final paragraphs = _splitIntoParagraphs(processedContent);
 
     if (paragraphs.length == 1) {
       // Single paragraph - render normally
       return LaTeXWidget(
-        text: content,
+        text: processedContent,
         textStyle: textStyle,
         allowWrapping: true,
       );
@@ -170,6 +173,25 @@ class ChatBubble extends StatelessWidget {
         );
       }).toList(),
     );
+  }
+
+  /// Convert markdown formatting to HTML for proper rendering
+  String _preprocessMarkdown(String content) {
+    String processed = content;
+
+    // Convert **bold** to <strong>bold</strong>
+    processed = processed.replaceAllMapped(
+      RegExp(r'\*\*([^*]+)\*\*'),
+      (match) => '<strong>${match.group(1)}</strong>',
+    );
+
+    // Convert *italic* to <em>italic</em> (but not inside <strong> tags)
+    processed = processed.replaceAllMapped(
+      RegExp(r'(?<!\*)\*([^*]+)\*(?!\*)'),
+      (match) => '<em>${match.group(1)}</em>',
+    );
+
+    return processed;
   }
 
   /// Split content into paragraphs while preserving structure

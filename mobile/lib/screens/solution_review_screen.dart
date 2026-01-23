@@ -9,6 +9,7 @@ import '../widgets/chemistry_text.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
 import '../widgets/buttons/gradient_button.dart';
+import '../widgets/buttons/icon_button.dart';
 import '../widgets/offline/offline_banner.dart';
 import '../widgets/offline/cached_image_widget.dart';
 import '../theme/app_colors.dart';
@@ -28,11 +29,13 @@ import 'package:provider/provider.dart';
 class SolutionReviewScreen extends StatefulWidget {
   final List<RecentSolution> allSolutions;
   final int initialIndex;
+  final bool isFromHistoryTab;
 
   const SolutionReviewScreen({
     super.key,
     required this.allSolutions,
     this.initialIndex = 0,
+    this.isFromHistoryTab = false,
   });
 
   @override
@@ -141,8 +144,11 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
                     _buildFinalAnswer(solution),
                     const SizedBox(height: AppSpacing.space24),
                     _buildPriyaTip(solution),
-                    const SizedBox(height: AppSpacing.space24),
-                    _buildNavigationButtons(),
+                    // Only show "Back to Snap and Solve" when NOT coming from history tab
+                    if (!widget.isFromHistoryTab) ...[
+                      const SizedBox(height: AppSpacing.space24),
+                      _buildNavigationButtons(),
+                    ],
                     const SizedBox(height: AppSpacing.space32),
                   ],
                 ),
@@ -155,32 +161,37 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return AppHeaderWithIcon(
-      leadingIcon: Icons.arrow_back,
-      icon: Icons.auto_awesome,
-      title: 'Snap Solution',
-      subtitle: '${_currentSolution.topic} • ${_currentSolution.subject}',
-      iconColor: AppColors.primaryPurple,
-      iconSize: 48,
-      onClose: () {
-        bool found = false;
-        Navigator.of(context).popUntil((route) {
-          if (route.settings.name == '/snap_home') {
-            found = true;
-            return true;
+    return AppHeader(
+      gradient: AppColors.ctaGradient,
+      leading: AppIconButton.back(
+        onPressed: () {
+          // If coming from History tab, just pop back to the list
+          if (widget.isFromHistoryTab) {
+            Navigator.of(context).pop();
+            return;
           }
-          return route.isFirst;
-        });
 
-        if (!found) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => HomeScreen(),
-              settings: const RouteSettings(name: '/snap_home'),
-            ),
-          );
-        }
-      },
+          // Otherwise, navigate back to snap home
+          bool found = false;
+          Navigator.of(context).popUntil((route) {
+            if (route.settings.name == '/snap_home') {
+              found = true;
+              return true;
+            }
+            return route.isFirst;
+          });
+
+          if (!found) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => HomeScreen(),
+                settings: const RouteSettings(name: '/snap_home'),
+              ),
+            );
+          }
+        },
+        forGradientHeader: true,
+      ),
       trailing: IconButton(
         icon: Icon(
           Icons.share,
@@ -189,7 +200,36 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
         tooltip: 'Share on WhatsApp',
         onPressed: _isShareInProgress ? null : _handleShare,
       ),
-      gradient: AppColors.ctaGradient,
+      centerContent: Container(
+        width: 48,
+        height: 48,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.auto_awesome,
+          color: AppColors.primaryPurple,
+          size: 24,
+        ),
+      ),
+      title: Text(
+        'Snap Solution',
+        style: AppTextStyles.headerWhite.copyWith(fontSize: 20),
+        textAlign: TextAlign.center,
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Text(
+          '${_currentSolution.topic} • ${_currentSolution.subject}',
+          style: AppTextStyles.bodyWhite.copyWith(
+            color: Colors.white.withValues(alpha: 0.9),
+            fontSize: 13,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+      bottomPadding: 16,
     );
   }
 

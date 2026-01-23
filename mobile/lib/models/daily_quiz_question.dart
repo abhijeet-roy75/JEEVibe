@@ -247,25 +247,44 @@ class SolutionStep {
       return SolutionStep(description: json.toString());
     }
 
+    // Helper to safely extract string from potentially Map field
+    String? safeString(dynamic value) {
+      if (value is String) return value;
+      if (value is Map) {
+        return value['text']?.toString() ?? value['value']?.toString();
+      }
+      if (value != null) return value.toString();
+      return null;
+    }
+
     // Handle different field names for solution steps (backend inconsistency)
     String? text;
     if (json['description'] != null) {
-      text = json['description'] as String?;
+      text = safeString(json['description']);
     } else if (json['explanation'] != null) {
-      text = json['explanation'] as String?;
+      text = safeString(json['explanation']);
     } else if (json['step'] != null) {
-      text = json['step'] as String?;
+      text = safeString(json['step']);
     } else if (json['text'] != null) {
-      text = json['text'] as String?;
+      text = safeString(json['text']);
+    }
+
+    // Safely extract step number
+    int? stepNumber;
+    final rawStepNum = json['step_number'] ?? json['number'] ?? json['stepNumber'];
+    if (rawStepNum is int) {
+      stepNumber = rawStepNum;
+    } else if (rawStepNum != null) {
+      stepNumber = int.tryParse(rawStepNum.toString());
     }
 
     return SolutionStep(
-      stepNumber: json['step_number'] as int? ?? json['number'] as int? ?? json['stepNumber'] as int?,
-      description: text ?? json['description'] as String?,
-      explanation: json['explanation'] as String?,
-      formula: json['formula'] as String?,
-      calculation: json['calculation'] as String?,
-      result: json['result'] as String?,
+      stepNumber: stepNumber,
+      description: text ?? safeString(json['description']),
+      explanation: safeString(json['explanation']),
+      formula: safeString(json['formula']),
+      calculation: safeString(json['calculation']),
+      result: safeString(json['result']),
     );
   }
 
