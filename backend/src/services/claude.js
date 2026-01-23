@@ -18,6 +18,103 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY
 });
 
+/**
+ * Sanitize JSON string to fix LaTeX backslashes before parsing
+ *
+ * Problem: Claude returns JSON with LaTeX like \frac, \theta which contains
+ * sequences that look like invalid JSON escapes:
+ * - \f in \frac is interpreted as form-feed (valid escape but wrong)
+ * - \t in \theta, \tan is interpreted as tab (valid escape but wrong)
+ * - \n in \nabla is interpreted as newline (valid escape but wrong)
+ *
+ * Solution: Find and double-escape backslashes that are followed by LaTeX
+ * command names to ensure they're preserved as literal backslashes.
+ */
+function sanitizeJsonForLatex(jsonString) {
+  if (!jsonString || typeof jsonString !== 'string') {
+    return jsonString;
+  }
+
+  // Replace LaTeX commands that start with JSON escape characters
+  // We need to be careful to only match inside string values
+
+  // Common LaTeX patterns that conflict with JSON escapes:
+  // \frac, \forall (conflicts with \f form-feed)
+  // \theta, \tan, \tanh, \times, \text, \to (conflicts with \t tab)
+  // \nabla, \neq, \nu, \not, \ne, \neg (conflicts with \n newline)
+  // \rho, \rightarrow, \right, \Re (conflicts with \r carriage return)
+  // \beta, \bar, \binom, \begin, \big (conflicts with \b backspace)
+
+  let result = jsonString;
+
+  // Strategy: Match LaTeX-like patterns and ensure backslashes are escaped
+  // Pattern: backslash + letter that forms a LaTeX command (2+ letters following)
+
+  // Use a regex to find unescaped backslashes followed by LaTeX commands
+  // inside JSON strings (between quotes)
+
+  // Process character by character to handle string context properly
+  let output = '';
+  let i = 0;
+  let inString = false;
+
+  while (i < result.length) {
+    const char = result[i];
+
+    // Track string boundaries (but not escaped quotes)
+    if (char === '"' && (i === 0 || result[i - 1] !== '\\')) {
+      inString = !inString;
+      output += char;
+      i++;
+      continue;
+    }
+
+    // Handle backslashes inside strings
+    if (inString && char === '\\') {
+      const nextChar = result[i + 1];
+
+      // Check if this is already an escaped backslash
+      if (nextChar === '\\') {
+        // Already escaped, pass through both
+        output += '\\\\';
+        i += 2;
+        continue;
+      }
+
+      // Check if next char is a valid JSON escape that's likely a LaTeX command
+      // (e.g., \frac starts with \f which is a valid JSON escape)
+      if (['f', 't', 'n', 'r', 'b'].includes(nextChar)) {
+        // Look ahead to see if this is a LaTeX command (more letters follow)
+        let j = i + 2;
+        while (j < result.length && /[a-zA-Z]/.test(result[j])) {
+          j++;
+        }
+        const commandLength = j - (i + 1); // Length of potential command
+
+        if (commandLength >= 2) {
+          // This is likely a LaTeX command, escape the backslash
+          output += '\\\\';
+          i++;
+          continue;
+        }
+      }
+
+      // For other backslash sequences, check if it's a valid JSON escape
+      if (nextChar && !/["\\\/bfnrtu]/.test(nextChar)) {
+        // Not a valid JSON escape - need to escape the backslash
+        output += '\\\\';
+        i++;
+        continue;
+      }
+    }
+
+    output += char;
+    i++;
+  }
+
+  return output;
+}
+
 // Model configuration
 const CLAUDE_VISION_MODEL = 'claude-sonnet-4-20250514';  // Best for vision + complex reasoning
 const CLAUDE_TEXT_MODEL = 'claude-3-haiku-20240307';     // Fast and cost-effective for text
@@ -179,7 +276,9 @@ Respond with ONLY a valid JSON object, no other text.`;
       jsonContent = jsonMatch[1].trim();
     }
 
-    const solutionData = JSON.parse(jsonContent);
+    // Sanitize JSON to escape LaTeX backslashes that conflict with JSON escapes
+    const sanitizedJson = sanitizeJsonForLatex(jsonContent);
+    const solutionData = JSON.parse(sanitizedJson);
 
     // Validate solution response
     console.log('[Claude LaTeX Validation] Validating solution response...');
@@ -309,7 +408,9 @@ async function generateFollowUpQuestions(originalQuestion, solution, topic, diff
       jsonContent = jsonMatch[1].trim();
     }
 
-    const data = JSON.parse(jsonContent);
+    // Sanitize JSON to escape LaTeX backslashes that conflict with JSON escapes
+    const sanitizedJson = sanitizeJsonForLatex(jsonContent);
+    const data = JSON.parse(sanitizedJson);
 
     // Handle response format variations
     let questions = [];
@@ -469,16 +570,19 @@ Respond with ONLY this JSON object format (no markdown, no other text):
       jsonContent = jsonMatch[1].trim();
     }
 
+    // Sanitize JSON to escape LaTeX backslashes that conflict with JSON escapes
+    const sanitizedJson = sanitizeJsonForLatex(jsonContent);
+
     let data;
     try {
-      data = JSON.parse(jsonContent);
+      data = JSON.parse(sanitizedJson);
     } catch (parseError) {
       console.error(`JSON parse error for Q${questionNumber}:`, parseError);
       console.error('Content preview:', content.substring(0, 500));
 
       // Try to repair JSON
       try {
-        let repairedContent = jsonContent;
+        let repairedContent = sanitizedJson;
         const lastBrace = repairedContent.lastIndexOf('}');
         if (lastBrace > 0) {
           repairedContent = repairedContent.substring(0, lastBrace + 1);
@@ -489,7 +593,9 @@ Respond with ONLY this JSON object format (no markdown, no other text):
         const jsonExtract = content.match(/\{[\s\S]*\}/);
         if (jsonExtract) {
           try {
-            data = JSON.parse(jsonExtract[0]);
+            // Also sanitize extracted JSON
+            const sanitizedExtract = sanitizeJsonForLatex(jsonExtract[0]);
+            data = JSON.parse(sanitizedExtract);
             logger.info(`JSON extraction succeeded for Q${questionNumber}`);
           } catch (extractError) {
             logger.error(`All JSON repair attempts failed for Q${questionNumber}`);
