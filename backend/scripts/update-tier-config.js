@@ -3,12 +3,20 @@
  * Tier Config Update Script
  *
  * Updates the tier_config/active document in Firestore.
- * This is the source of truth for subscription tier limits and features.
+ * The Firestore document is the SINGLE SOURCE OF TRUTH for tier limits.
+ * tierConfigService.js has fallback defaults, but Firestore takes precedence.
+ *
+ * IMPORTANT: When updating tier limits, update BOTH:
+ *   1. This script (UPDATED_TIER_CONFIG)
+ *   2. tierConfigService.js (DEFAULT_TIER_CONFIG) - for fallback consistency
  *
  * Usage:
- *   node scripts/update-tier-config.js
+ *   cd backend && node scripts/update-tier-config.js
  *
- * This script will update the tier config to add chapter_practice_enabled field.
+ * Version History:
+ *   1.0.0 - Initial tier config
+ *   1.2.0 - Added chapter_practice_enabled for free tier
+ *   1.3.0 - Added max_devices (anti-abuse), ultra soft caps (50/25/100)
  */
 
 const admin = require('firebase-admin');
@@ -43,9 +51,10 @@ function initFirebase() {
   return admin.app();
 }
 
-// The updated tier configuration with chapter_practice_enabled for FREE tier
+// The updated tier configuration - MUST match tierConfigService.js DEFAULT_TIER_CONFIG
+// This is the source of truth for Firestore tier_config/active document
 const UPDATED_TIER_CONFIG = {
-  version: '1.2.0',
+  version: '1.3.0',  // Bumped for max_devices and ultra soft caps
   tiers: {
     free: {
       tier_id: 'free',
@@ -64,7 +73,8 @@ const UPDATED_TIER_CONFIG = {
         mock_tests_monthly: 1,
         pyq_years_access: 2,
         offline_enabled: false,
-        offline_solutions_limit: 0
+        offline_solutions_limit: 0,
+        max_devices: 1  // P0: Single session for all tiers (P1 will keep 1 for free)
       },
       features: {
         analytics_access: 'basic'
@@ -87,7 +97,8 @@ const UPDATED_TIER_CONFIG = {
         mock_tests_monthly: 5,
         pyq_years_access: 5,
         offline_enabled: true,
-        offline_solutions_limit: -1
+        offline_solutions_limit: -1,
+        max_devices: 1  // P0: Single session for all tiers (P1 will change to 2)
       },
       features: {
         analytics_access: 'full'
@@ -125,18 +136,21 @@ const UPDATED_TIER_CONFIG = {
       is_active: true,
       is_purchasable: true,
       limits: {
-        snap_solve_daily: -1,
-        daily_quiz_daily: -1,
-        solution_history_days: -1,
+        // Soft caps instead of truly unlimited (-1) to prevent bot abuse
+        // These are high enough that no legitimate user would hit them
+        snap_solve_daily: 50,           // Was -1, now 50/day
+        daily_quiz_daily: 25,           // Was -1, now 25/day
+        solution_history_days: 365,     // Was -1, now 1 year
         ai_tutor_enabled: true,
-        ai_tutor_messages_daily: -1,
+        ai_tutor_messages_daily: 100,   // Was -1, now 100/day
         chapter_practice_enabled: true,
-        chapter_practice_per_chapter: -1,
-        chapter_practice_weekly_per_subject: -1,  // Unlimited
-        mock_tests_monthly: -1,
-        pyq_years_access: -1,
+        chapter_practice_per_chapter: 50,     // Was -1, high cap
+        chapter_practice_weekly_per_subject: -1,  // Keep unlimited for weekly
+        mock_tests_monthly: 15,         // Was -1, now 15/month
+        pyq_years_access: -1,           // Keep unlimited for PYQ years
         offline_enabled: true,
-        offline_solutions_limit: -1
+        offline_solutions_limit: -1,    // Keep unlimited for offline
+        max_devices: 1  // P0: Single session for all tiers (P1 will change to 2)
       },
       features: {
         analytics_access: 'full'
@@ -224,10 +238,17 @@ async function updateTierConfig() {
 
   console.log('\nTier config updated successfully!');
   console.log('New version:', UPDATED_TIER_CONFIG.version);
-  console.log('\nNew chapter_practice_enabled values:');
-  console.log('  - free:', UPDATED_TIER_CONFIG.tiers.free.limits.chapter_practice_enabled);
-  console.log('  - pro:', UPDATED_TIER_CONFIG.tiers.pro.limits.chapter_practice_enabled);
-  console.log('  - ultra:', UPDATED_TIER_CONFIG.tiers.ultra.limits.chapter_practice_enabled);
+
+  console.log('\nmax_devices (anti-abuse):');
+  console.log('  - free:', UPDATED_TIER_CONFIG.tiers.free.limits.max_devices);
+  console.log('  - pro:', UPDATED_TIER_CONFIG.tiers.pro.limits.max_devices);
+  console.log('  - ultra:', UPDATED_TIER_CONFIG.tiers.ultra.limits.max_devices);
+
+  console.log('\nultra soft caps (anti-bot):');
+  console.log('  - snap_solve_daily:', UPDATED_TIER_CONFIG.tiers.ultra.limits.snap_solve_daily);
+  console.log('  - daily_quiz_daily:', UPDATED_TIER_CONFIG.tiers.ultra.limits.daily_quiz_daily);
+  console.log('  - ai_tutor_messages_daily:', UPDATED_TIER_CONFIG.tiers.ultra.limits.ai_tutor_messages_daily);
+  console.log('  - mock_tests_monthly:', UPDATED_TIER_CONFIG.tiers.ultra.limits.mock_tests_monthly);
 
   console.log('\nDone!');
   process.exit(0);

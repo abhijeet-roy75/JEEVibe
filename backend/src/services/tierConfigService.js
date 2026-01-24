@@ -38,7 +38,7 @@ const DEFAULT_TIER_CONFIG = {
         pyq_years_access: 2,
         offline_enabled: false,
         offline_solutions_limit: 0,
-        max_devices: 1  // Single device for free tier
+        max_devices: 1  // P0: Single session for all tiers (P1 will keep 1 for free)
       },
       features: {
         analytics_access: 'basic'
@@ -62,7 +62,7 @@ const DEFAULT_TIER_CONFIG = {
         pyq_years_access: 5,
         offline_enabled: true,
         offline_solutions_limit: -1,
-        max_devices: 2  // Phone + tablet for paying users
+        max_devices: 1  // P0: Single session for all tiers (P1 will change to 2)
       },
       features: {
         analytics_access: 'full'
@@ -114,7 +114,7 @@ const DEFAULT_TIER_CONFIG = {
         pyq_years_access: -1,           // Keep unlimited for PYQ years
         offline_enabled: true,
         offline_solutions_limit: -1,    // Keep unlimited for offline
-        max_devices: 2  // Same as Pro
+        max_devices: 1  // P0: Single session for all tiers (P1 will change to 2)
       },
       features: {
         analytics_access: 'full'
