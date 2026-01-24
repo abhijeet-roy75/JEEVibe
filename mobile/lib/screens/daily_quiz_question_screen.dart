@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/daily_quiz_question.dart';
 import '../providers/daily_quiz_provider.dart';
+import '../services/quiz_storage_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/priya_avatar.dart';
@@ -88,7 +89,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
 
   Future<void> _initializeQuiz() async {
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
-    
+
     // Set quiz in provider if not already set
     if (provider.currentQuiz == null || provider.currentQuiz!.quizId != widget.quiz.quizId) {
       provider.setQuiz(widget.quiz);
@@ -100,7 +101,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         () => provider.startQuiz(),
         showDialog: false,
       );
-      
+
       if (mounted) {
         setState(() {
           _quizInitialized = true;
@@ -108,6 +109,31 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         _startTimer();
       }
     } catch (e) {
+      final errorMessage = e.toString().toLowerCase();
+
+      // Handle QUIZ_NOT_FOUND error - quiz was deleted/expired on server
+      // but local storage still has stale state
+      if (errorMessage.contains('not found') || errorMessage.contains('quiz_not_found')) {
+        // Clear stale local storage
+        final storageService = QuizStorageService();
+        await storageService.initialize();
+        await storageService.clearQuizState();
+        provider.reset();
+
+        if (mounted) {
+          // Show user-friendly message and go back to regenerate
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Quiz expired. Generating a new one...'),
+              backgroundColor: AppColors.primaryPurple,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          Navigator.of(context).pop(); // Go back to loading screen which will generate new quiz
+        }
+        return;
+      }
+
       if (mounted) {
         ErrorHandler.showErrorSnackBar(
           context,
