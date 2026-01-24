@@ -14,7 +14,6 @@ import '../../models/subscription_models.dart';
 import 'daily_quiz_history_screen.dart';
 import 'chapter_practice_history_screen.dart';
 import 'mock_test_history_screen.dart';
-import 'pyq_history_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   final int initialTabIndex;
@@ -48,10 +47,6 @@ class _HistoryScreenState extends State<HistoryScreen>
     _HistoryTab(
       label: 'Mock Tests',
       icon: Icons.assignment_outlined,
-    ),
-    _HistoryTab(
-      label: 'PYQ',
-      icon: Icons.history_edu_outlined,
     ),
   ];
 
@@ -94,7 +89,6 @@ class _HistoryScreenState extends State<HistoryScreen>
                         const ChapterPracticeHistoryScreen(),
                         const AllSolutionsScreen(isInHistoryTab: true),
                         const MockTestHistoryScreen(),
-                        const PyqHistoryScreen(),
                       ],
                     ),
                   ),
