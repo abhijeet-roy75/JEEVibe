@@ -196,7 +196,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           widget.featureName != null
               ? 'Upgrade to get more ${widget.featureName} and unlock your potential'
               : _isUltraSelected
-                  ? 'Get unlimited access with AI Tutor support'
+                  ? 'Get maximum access with AI Tutor support'
                   : 'Upgrade to Pro for enhanced features',
           textAlign: TextAlign.center,
           style: const TextStyle(
@@ -398,11 +398,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
           const SizedBox(height: 8),
 
           // Features - different values for Pro vs Ultra
+          // Ultra tier has soft caps (50/25/100) instead of truly unlimited
           _buildFeatureRow(
             Icons.camera_alt_outlined,
             'Snap & Solve',
             '5/day',
-            _isUltraSelected ? 'Unlimited' : '10/day',
+            _isUltraSelected ? '50/day' : '10/day',
             tierColor,
             tierBgColor,
           ),
@@ -410,7 +411,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             Icons.quiz_outlined,
             'Daily Quizzes',
             '1/day',
-            _isUltraSelected ? 'Unlimited' : '10/day',
+            _isUltraSelected ? '25/day' : '10/day',
             tierColor,
             tierBgColor,
           ),
@@ -418,7 +419,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             Icons.school_outlined,
             'AI Tutor (Priya Ma\'am)',
             'No',
-            _isUltraSelected ? 'Yes' : 'No',
+            _isUltraSelected ? '100/day' : 'No',
             tierColor,
             tierBgColor,
             highlight: _isUltraSelected, // Highlight this for Ultra
@@ -440,10 +441,18 @@ class _PaywallScreenState extends State<PaywallScreen> {
             tierBgColor,
           ),
           _buildFeatureRow(
+            Icons.assignment_outlined,
+            'Mock Tests',
+            '1/month',
+            _isUltraSelected ? '15/month' : '5/month',
+            tierColor,
+            tierBgColor,
+          ),
+          _buildFeatureRow(
             Icons.history_outlined,
             'Solution History',
             '7 days',
-            _isUltraSelected ? '90 days' : '30 days',
+            _isUltraSelected ? '1 year' : '30 days',
             tierColor,
             tierBgColor,
           ),

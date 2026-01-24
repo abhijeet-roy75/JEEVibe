@@ -1,7 +1,7 @@
 name: jeevibe_mobile
 description: JEEVibe Snap & Solve POC - iOS Flutter App
 publish_to: 'none'
-version: 1.0.1+68
+version: 1.0.1+69
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

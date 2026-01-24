@@ -19,6 +19,7 @@ import 'services/offline/connectivity_service.dart';
 import 'services/offline/database_service.dart';
 import 'services/offline/image_cache_service.dart';
 import 'services/offline/sync_service.dart';
+import 'services/api_service.dart';
 import 'providers/app_state_provider.dart';
 import 'providers/offline_provider.dart';
 import 'providers/user_profile_provider.dart';
@@ -193,16 +194,83 @@ class JEEVibeApp extends StatefulWidget {
 class _JEEVibeAppState extends State<JEEVibeApp> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool _isLockScreenShown = false;
+  bool _isSessionExpiredDialogShown = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Register session expiry callback for API service
+    ApiService.onSessionExpired = _handleSessionExpired;
+  }
+
+  /// Handle session expiry by showing a dialog and forcing logout
+  void _handleSessionExpired(String code, String message) {
+    // Prevent showing multiple dialogs
+    if (_isSessionExpiredDialogShown) return;
+    _isSessionExpiredDialogShown = true;
+
+    final context = _navigatorKey.currentContext;
+    if (context == null) {
+      _isSessionExpiredDialogShown = false;
+      return;
+    }
+
+    // Show dialog after current frame to avoid build issues
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        _isSessionExpiredDialogShown = false;
+        return;
+      }
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Session Expired'),
+          content: Text(
+            code == 'SESSION_EXPIRED'
+                ? 'You have been logged in on another device. Please sign in again to continue using this device.'
+                : message,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                _isSessionExpiredDialogShown = false;
+
+                // Force logout
+                try {
+                  final authService = Provider.of<AuthService>(context, listen: false);
+                  await authService.signOut();
+
+                  // Clear PIN
+                  final pinService = PinService();
+                  await pinService.clearPin();
+                } catch (e) {
+                  debugPrint('Error during force logout: $e');
+                }
+
+                // Navigate to welcome screen
+                _navigatorKey.currentState?.pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const WelcomeScreen()),
+                  (route) => false,
+                );
+              },
+              child: const Text('Sign In Again'),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    // Clean up session expiry callback to prevent memory leaks
+    ApiService.onSessionExpired = null;
     super.dispose();
   }
 

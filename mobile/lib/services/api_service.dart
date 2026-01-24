@@ -8,6 +8,10 @@ import '../models/assessment_question.dart';
 import '../models/assessment_response.dart';
 import '../models/daily_quiz_question.dart';
 import '../utils/performance_tracker.dart';
+import 'firebase/auth_service.dart';
+
+/// Callback type for session expiry notifications
+typedef SessionExpiredCallback = void Function(String code, String message);
 
 class ApiService {
   // Backend URL
@@ -17,12 +21,61 @@ class ApiService {
   static const String baseUrl = 'https://jeevibe-thzi.onrender.com';
   // static const String baseUrl = 'http://localhost:3000'; // For local development
   // static const String baseUrl = 'http://192.168.5.81:3000'; // For real device testing
-  
+
+  // ============================================================================
+  // SESSION MANAGEMENT
+  // ============================================================================
+
+  /// Callback to notify app when session expires (set from main.dart or app widget)
+  static SessionExpiredCallback? onSessionExpired;
+
+  /// Check if a response indicates session expiry and notify the app
+  /// Returns true if session expired and was handled, false otherwise
+  static bool _checkSessionExpiry(http.Response response) {
+    if (response.statusCode == 401) {
+      try {
+        final jsonData = jsonDecode(response.body);
+        final code = jsonData['code'] as String?;
+
+        // Check for session-related error codes
+        if (code == 'SESSION_EXPIRED' ||
+            code == 'SESSION_TOKEN_MISSING' ||
+            code == 'SESSION_EXPIRED_AGE' ||
+            code == 'NO_ACTIVE_SESSION') {
+          final message = jsonData['error'] as String? ?? 'Session expired';
+
+          // Notify the app
+          if (onSessionExpired != null) {
+            onSessionExpired!(code!, message);
+          }
+
+          return true;
+        }
+      } catch (e) {
+        // Not a JSON response or parsing failed - not a session error
+      }
+    }
+    return false;
+  }
+
+  /// Get authentication headers including session token
+  static Future<Map<String, String>> getAuthHeaders(String authToken) async {
+    final sessionToken = await AuthService.getSessionToken();
+    final deviceId = await AuthService.getDeviceId();
+
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $authToken',
+      if (sessionToken != null) 'x-session-token': sessionToken,
+      'x-device-id': deviceId,
+    };
+  }
+
   /// Get valid authentication token with automatic refresh
   /// Handles token expiration and refresh automatically
   static Future<String> _getValidToken(dynamic authService) async {
     var token = await authService.getIdToken();
-    
+
     // If token is null, try to refresh
     if (token == null) {
       final user = authService.currentUser;
@@ -35,11 +88,11 @@ class ApiService {
         }
       }
     }
-    
+
     if (token == null) {
       throw Exception('Authentication required. Please sign in again.');
     }
-    
+
     return token;
   }
   
@@ -85,8 +138,9 @@ class ApiService {
         Uri.parse('$baseUrl/api/solve'),
       );
 
-      // Add authentication header
-      request.headers['Authorization'] = 'Bearer $authToken';
+      // Add authentication headers including session token
+      final authHeaders = await getAuthHeaders(authToken);
+      request.headers.addAll(authHeaders);
 
       // Add image file with explicit content type
       tracker.step('Reading image file');
@@ -195,12 +249,10 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+      final headers = await getAuthHeaders(authToken);
       final response = await http.post(
         Uri.parse('$baseUrl/api/generate-single-question'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
-        },
+        headers: headers,
         body: json.encode({
           'recognizedQuestion': recognizedQuestion,
           'solution': solution,
@@ -209,6 +261,11 @@ class ApiService {
           'questionNumber': questionNumber,
         }),
       ).timeout(const Duration(seconds: 60));
+
+      // Check for session expiry
+      if (_checkSessionExpiry(response)) {
+        throw Exception('Session expired. Please sign in again.');
+      }
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -251,12 +308,10 @@ class ApiService {
     required String difficulty,
   }) async {
     try {
+      final headers = await getAuthHeaders(authToken);
       final response = await http.post(
         Uri.parse('$baseUrl/api/generate-practice-questions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
-        },
+        headers: headers,
         body: json.encode({
           'recognizedQuestion': recognizedQuestion,
           'solution': solution,
@@ -264,6 +319,11 @@ class ApiService {
           'difficulty': difficulty,
         }),
       ).timeout(const Duration(seconds: 60));
+
+      // Check for session expiry
+      if (_checkSessionExpiry(response)) {
+        throw Exception('Session expired. Please sign in again.');
+      }
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -317,12 +377,10 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.post(
           Uri.parse('$baseUrl/api/snap-practice/questions'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
           body: json.encode({
             'subject': subject,
             'topic': topic,
@@ -333,6 +391,11 @@ class ApiService {
             if (solution != null) 'solution': solution,
           }),
         ).timeout(const Duration(seconds: 30));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -396,12 +459,10 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.post(
           Uri.parse('$baseUrl/api/snap-practice/complete'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
           body: json.encode({
             'subject': subject,
             'topic': topic,
@@ -411,6 +472,11 @@ class ApiService {
             if (source != null) 'source': source,
           }),
         ).timeout(const Duration(seconds: 30));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -458,13 +524,16 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.get(
           Uri.parse('$baseUrl/api/subscriptions/status'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -511,13 +580,16 @@ class ApiService {
           url += '&lastDocId=$lastDocId';
         }
 
+        final headers = await getAuthHeaders(authToken);
         final response = await http.get(
           Uri.parse(url),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 30));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -542,13 +614,16 @@ class ApiService {
     required String authToken,
   }) async {
     try {
+      final headers = await getAuthHeaders(authToken);
       final response = await http.get(
         Uri.parse('$baseUrl/api/assessment/questions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
-        },
+        headers: headers,
       ).timeout(const Duration(seconds: 60));
+
+      // Check for session expiry
+      if (_checkSessionExpiry(response)) {
+        throw Exception('Session expired. Please sign in again.');
+      }
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -589,16 +664,19 @@ class ApiService {
     required List<AssessmentResponse> responses,
   }) async {
     try {
+      final headers = await getAuthHeaders(authToken);
       final response = await http.post(
         Uri.parse('$baseUrl/api/assessment/submit'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
-        },
+        headers: headers,
         body: json.encode({
           'responses': responses.map((r) => r.toJson()).toList(),
         }),
       ).timeout(const Duration(seconds: 30));
+
+      // Check for session expiry
+      if (_checkSessionExpiry(response)) {
+        throw Exception('Session expired. Please sign in again.');
+      }
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -658,13 +736,16 @@ class ApiService {
     required String userId,
   }) async {
     try {
+      final headers = await getAuthHeaders(authToken);
       final response = await http.get(
         Uri.parse('$baseUrl/api/assessment/results/$userId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
-        },
+        headers: headers,
       ).timeout(const Duration(seconds: 10));
+
+      // Check for session expiry
+      if (_checkSessionExpiry(response)) {
+        throw Exception('Session expired. Please sign in again.');
+      }
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -730,13 +811,16 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.get(
           Uri.parse('$baseUrl/api/daily-quiz/generate'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 60));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -778,16 +862,19 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.post(
           Uri.parse('$baseUrl/api/daily-quiz/start'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
           body: json.encode({
             'quiz_id': quizId,
           }),
         ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode != 200) {
           final errorData = json.decode(response.body);
@@ -815,12 +902,10 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.post(
           Uri.parse('$baseUrl/api/daily-quiz/submit-answer'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
           body: json.encode({
             'quiz_id': quizId,
             'question_id': questionId,
@@ -828,6 +913,11 @@ class ApiService {
             'time_taken_seconds': timeTakenSeconds,
           }),
         ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -863,16 +953,19 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.post(
           Uri.parse('$baseUrl/api/daily-quiz/complete'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
           body: json.encode({
             'quiz_id': quizId,
           }),
         ).timeout(const Duration(seconds: 30));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -905,13 +998,16 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.get(
           Uri.parse('$baseUrl/api/daily-quiz/result/$quizId'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 30));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -943,13 +1039,16 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.get(
           Uri.parse('$baseUrl/api/daily-quiz/summary'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -988,13 +1087,16 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.get(
           Uri.parse('$baseUrl/api/daily-quiz/progress'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -1051,13 +1153,16 @@ class ApiService {
         final uri = Uri.parse('$baseUrl/api/daily-quiz/history')
             .replace(queryParameters: queryParams);
 
+        final headers = await getAuthHeaders(authToken);
         final response = await http.get(
           uri,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -1102,14 +1207,17 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.post(
           Uri.parse('$baseUrl/api/feedback'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
           body: json.encode(feedbackData),
         ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           final jsonData = json.decode(response.body);
@@ -1152,14 +1260,17 @@ class ApiService {
           if (questionCount != null) 'question_count': questionCount,
         };
 
+        final headers = await getAuthHeaders(authToken);
         final response = await http.post(
           Uri.parse('$baseUrl/api/chapter-practice/generate'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
           body: json.encode(body),
         ).timeout(const Duration(seconds: 60));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -1195,12 +1306,10 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.post(
           Uri.parse('$baseUrl/api/chapter-practice/submit-answer'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
           body: json.encode({
             'session_id': sessionId,
             'question_id': questionId,
@@ -1208,6 +1317,11 @@ class ApiService {
             'time_taken_seconds': timeTakenSeconds,
           }),
         ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -1240,16 +1354,19 @@ class ApiService {
   ) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.post(
           Uri.parse('$baseUrl/api/chapter-practice/complete'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
           body: json.encode({
             'session_id': sessionId,
           }),
         ).timeout(const Duration(seconds: 30));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -1282,13 +1399,16 @@ class ApiService {
   ) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.get(
           Uri.parse('$baseUrl/api/chapter-practice/session/$sessionId'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -1326,13 +1446,16 @@ class ApiService {
           url += '?chapter_key=$chapterKey';
         }
 
+        final headers = await getAuthHeaders(authToken);
         final response = await http.get(
           Uri.parse(url),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -1370,13 +1493,16 @@ class ApiService {
           url += '?chapter_key=$chapterKey';
         }
 
+        final headers = await getAuthHeaders(authToken);
         final response = await http.get(
           Uri.parse(url),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -1431,13 +1557,16 @@ class ApiService {
         final uri = Uri.parse('$baseUrl/api/chapter-practice/history')
             .replace(queryParameters: queryParams);
 
+        final headers = await getAuthHeaders(authToken);
         final response = await http.get(
           uri,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           final jsonData = json.decode(response.body);
@@ -1486,13 +1615,16 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.get(
           Uri.parse('$baseUrl/api/ai-tutor/conversation?limit=$limit'),
-          headers: {
-            'Authorization': 'Bearer $authToken',
-            'Content-Type': 'application/json',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 30));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           return json.decode(response.body);
@@ -1527,14 +1659,17 @@ class ApiService {
           if (contextId != null) 'contextId': contextId,
         };
 
+        final headers = await getAuthHeaders(authToken);
         final response = await http.post(
           Uri.parse('$baseUrl/api/ai-tutor/inject-context'),
-          headers: {
-            'Authorization': 'Bearer $authToken',
-            'Content-Type': 'application/json',
-          },
+          headers: headers,
           body: json.encode(body),
         ).timeout(const Duration(seconds: 60));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           return json.decode(response.body);
@@ -1562,14 +1697,17 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.post(
           Uri.parse('$baseUrl/api/ai-tutor/message'),
-          headers: {
-            'Authorization': 'Bearer $authToken',
-            'Content-Type': 'application/json',
-          },
+          headers: headers,
           body: json.encode({'message': message}),
         ).timeout(const Duration(seconds: 90));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           return json.decode(response.body);
@@ -1599,13 +1737,16 @@ class ApiService {
   }) async {
     return _retryRequest(() async {
       try {
+        final headers = await getAuthHeaders(authToken);
         final response = await http.delete(
           Uri.parse('$baseUrl/api/ai-tutor/conversation'),
-          headers: {
-            'Authorization': 'Bearer $authToken',
-            'Content-Type': 'application/json',
-          },
+          headers: headers,
         ).timeout(const Duration(seconds: 30));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
 
         if (response.statusCode == 200) {
           return;
@@ -1638,12 +1779,10 @@ class ApiService {
     required String topic,
   }) async {
     try {
+      final headers = await getAuthHeaders(authToken);
       final response = await http.post(
         Uri.parse('$baseUrl/api/share/log'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
-        },
+        headers: headers,
         body: json.encode({
           'solutionId': solutionId,
           'shareType': shareType,
@@ -1653,6 +1792,7 @@ class ApiService {
         }),
       ).timeout(const Duration(seconds: 10));
 
+      // Note: Don't check session expiry for fire-and-forget operations
       if (response.statusCode != 200 && response.statusCode != 201) {
         print('Share log failed with status: ${response.statusCode}');
       }

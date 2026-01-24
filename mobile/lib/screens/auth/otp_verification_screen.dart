@@ -105,7 +105,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         verificationId: _currentVerificationId!,
         smsCode: otp,
       );
-      
+
       if (mounted) {
         // Hide keyboard and remove focus before awaiting async checks
         try {
@@ -116,7 +116,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           // Ignore
         }
         FocusScope.of(context).unfocus();
-        
+
+        // Create server-side session for single-device enforcement
+        // This invalidates any existing session on other devices
+        try {
+          await authService.createSession();
+          debugPrint('Session created successfully');
+        } catch (e) {
+          // Log but don't block login - session will be created on next API call
+          debugPrint('Warning: Failed to create session: $e');
+        }
+
         // Smart Login Logic: Check if user already has a profile
         bool hasProfile = false;
         try {
