@@ -5,6 +5,7 @@ import '../../services/firebase/auth_service.dart';
 import '../../services/firebase/firestore_user_service.dart';
 import '../../services/subscription_service.dart';
 import '../../providers/offline_provider.dart';
+import '../../services/quiz_storage_service.dart';
 import '../../models/user_profile.dart';
 import '../../models/subscription_models.dart';
 import '../../theme/app_colors.dart';
@@ -372,6 +373,14 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
     // Clear subscription cache
     SubscriptionService().clearCache();
+
+    // Clear quiz state (prevent old quiz from being used by new user)
+    try {
+      final quizStorageService = QuizStorageService();
+      await quizStorageService.clearQuizState();
+    } catch (e) {
+      debugPrint('Error clearing quiz state: $e');
+    }
 
     await authService.signOut();
 
