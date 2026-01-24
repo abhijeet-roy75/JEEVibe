@@ -148,7 +148,7 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'x-session-token', 'x-device-id'],
 };
 
 app.use(cors(corsOptions));
@@ -250,6 +250,9 @@ app.use('/api/share', shareRouter);
 const adminRouter = require('./routes/admin');
 app.use('/api/admin', adminRouter);
 
+const authRouter = require('./routes/auth');
+app.use('/api/auth', authRouter);
+
 // Test endpoints (only in development)
 if (process.env.NODE_ENV !== 'production') {
   const testFirebaseRouter = require('./routes/test-firebase');
@@ -315,6 +318,13 @@ app.get('/', (req, res) => {
         complete: 'POST /api/chapter-practice/complete',
         session: 'GET /api/chapter-practice/session/:sessionId',
         active: 'GET /api/chapter-practice/active'
+      },
+      auth: {
+        createSession: 'POST /api/auth/session',
+        getSession: 'GET /api/auth/session',
+        logout: 'POST /api/auth/logout',
+        listDevices: 'GET /api/auth/devices (P1)',
+        removeDevice: 'DELETE /api/auth/devices/:deviceId (P1)'
       }
     }
   });

@@ -37,7 +37,8 @@ const DEFAULT_TIER_CONFIG = {
         mock_tests_monthly: 1,
         pyq_years_access: 2,
         offline_enabled: false,
-        offline_solutions_limit: 0
+        offline_solutions_limit: 0,
+        max_devices: 1  // Single device for free tier
       },
       features: {
         analytics_access: 'basic'
@@ -60,7 +61,8 @@ const DEFAULT_TIER_CONFIG = {
         mock_tests_monthly: 5,
         pyq_years_access: 5,
         offline_enabled: true,
-        offline_solutions_limit: -1
+        offline_solutions_limit: -1,
+        max_devices: 2  // Phone + tablet for paying users
       },
       features: {
         analytics_access: 'full'
@@ -98,18 +100,21 @@ const DEFAULT_TIER_CONFIG = {
       is_active: true,
       is_purchasable: true,
       limits: {
-        snap_solve_daily: -1,
-        daily_quiz_daily: -1,
-        solution_history_days: -1,
+        // Soft caps instead of truly unlimited (-1) to prevent bot abuse
+        // These are high enough that no legitimate user would hit them
+        snap_solve_daily: 50,           // Was -1, now 50/day
+        daily_quiz_daily: 25,           // Was -1, now 25/day
+        solution_history_days: 365,     // Was -1, now 1 year
         ai_tutor_enabled: true,
-        ai_tutor_messages_daily: -1,
+        ai_tutor_messages_daily: 100,   // Was -1, now 100/day
         chapter_practice_enabled: true,
-        chapter_practice_per_chapter: -1,
-        chapter_practice_weekly_per_subject: -1,
-        mock_tests_monthly: -1,
-        pyq_years_access: -1,
+        chapter_practice_per_chapter: 50,     // Was -1, high cap
+        chapter_practice_weekly_per_subject: -1,  // Keep unlimited for weekly
+        mock_tests_monthly: 15,         // Was -1, now 15/month
+        pyq_years_access: -1,           // Keep unlimited for PYQ years
         offline_enabled: true,
-        offline_solutions_limit: -1
+        offline_solutions_limit: -1,    // Keep unlimited for offline
+        max_devices: 2  // Same as Pro
       },
       features: {
         analytics_access: 'full'
