@@ -367,7 +367,7 @@ async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds =
     // Query questions for this chapter
     logger.info('Querying Firestore for questions', { chapterKey, subject, chapter: chapterFromKey });
     let questionsRef = db.collection('questions')
-      .where('active', '!=', false)
+      .where('active', '==', true)
       .where('subject', '==', subject)
       .where('chapter', '==', chapterFromKey)
       .orderBy('irt_parameters.discrimination_a', 'desc')
@@ -387,7 +387,7 @@ async function selectQuestionsForChapter(chapterKey, theta, excludeQuestionIds =
 
       logger.info('Trying Title Case chapter name fallback', { chapterKey, titleCaseChapter });
       questionsRef = db.collection('questions')
-        .where('active', '!=', false)
+        .where('active', '==', true)
         .where('subject', '==', subject)
         .where('chapter', '==', titleCaseChapter)
         .limit(MAX_CANDIDATES);
@@ -523,7 +523,7 @@ async function selectAnyAvailableQuestions(excludeQuestionIds = new Set(), limit
 
     // Query all questions, limited by count
     const questionsRef = db.collection('questions')
-      .where('active', '!=', false)
+      .where('active', '==', true)
       .limit(limit * 3); // Get more to account for exclusions
 
     logger.info('Executing fallback Firestore query', { limit: limit * 3 });

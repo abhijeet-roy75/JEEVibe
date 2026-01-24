@@ -246,7 +246,7 @@ async function checkQuestionAccuracyAnomalies() {
     // Get all active questions with accuracy data
     const questionsSnapshot = await retryFirestoreOperation(async () => {
       return await db.collection('questions')
-        .where('active', '!=', false)
+        .where('active', '==', true)
         .where('total_attempts', '>=', 10) // Only check questions with enough data
         .limit(500)
         .get();

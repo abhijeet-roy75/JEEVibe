@@ -190,7 +190,7 @@ async function selectEasyQuestions(chapterKey, theta, excludeQuestionIds, count)
     const chapter = parts.slice(1).join(' ').replace(/_/g, ' ');
 
     const questionsRef = db.collection('questions')
-      .where('active', '!=', false)
+      .where('active', '==', true)
       .where('subject', '==', subject)
       .where('chapter', '==', chapter)
       .where('irt_parameters.difficulty_b', '<=', EASY_DIFFICULTY_MAX)
@@ -234,7 +234,7 @@ async function selectMediumQuestions(chapterKey, theta, excludeQuestionIds, coun
     const chapter = parts.slice(1).join(' ').replace(/_/g, ' ');
 
     const questionsRef = db.collection('questions')
-      .where('active', '!=', false)
+      .where('active', '==', true)
       .where('subject', '==', subject)
       .where('chapter', '==', chapter)
       .where('irt_parameters.difficulty_b', '>', EASY_DIFFICULTY_MAX)
