@@ -86,6 +86,17 @@
       ]
     },
     {
+      "comment": "Question selection with active filter - required for != operator",
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "active", "order": "ASCENDING" },
+        { "fieldPath": "subject", "order": "ASCENDING" },
+        { "fieldPath": "chapter", "order": "ASCENDING" },
+        { "fieldPath": "irt_parameters.discrimination_a", "order": "DESCENDING" }
+      ]
+    },
+    {
       "comment": "Question lookup by identifiers",
       "collectionGroup": "questions",
       "queryScope": "COLLECTION",

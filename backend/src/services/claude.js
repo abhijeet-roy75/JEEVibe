@@ -243,7 +243,7 @@ Respond with ONLY a valid JSON object, no other text.`;
 
     const response = await claudeVisionBreaker.fire({
       model: CLAUDE_VISION_MODEL,
-      max_tokens: 2500,
+      max_tokens: 4000, // Increased from 2500 to allow complete step-by-step solutions
       system: systemPrompt,
       messages: [
         {
@@ -541,7 +541,7 @@ Respond with ONLY this JSON object format (no markdown, no other text):
 
     const response = await claudeTextBreaker.fire({
       model: CLAUDE_TEXT_MODEL,
-      max_tokens: 2500,
+      max_tokens: 4000, // Increased from 2500 to allow complete step-by-step solutions
       system: BASE_PROMPT_TEMPLATE + '\n\nYou MUST respond with ONLY a valid JSON object, no markdown code blocks or other text.',
       messages: [
         {
