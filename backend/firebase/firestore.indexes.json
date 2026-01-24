@@ -329,6 +329,23 @@
         { "fieldPath": "acknowledged", "order": "ASCENDING" },
         { "fieldPath": "timestamp", "order": "DESCENDING" }
       ]
+    },
+    {
+      "comment": "Alert Service: DAU calculation - quizzes by generated_at date range",
+      "collectionGroup": "quizzes",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "generated_at", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "Alert Service: Question accuracy anomalies - active questions by total_attempts",
+      "collectionGroup": "questions",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "active", "order": "ASCENDING" },
+        { "fieldPath": "total_attempts", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
