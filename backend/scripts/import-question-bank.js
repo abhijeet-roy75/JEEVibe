@@ -366,7 +366,9 @@ async function processQuestion(questionId, questionData) {
     tags: questionData.tags || [],
     metadata: questionData.metadata || {},
     distractor_analysis: questionData.distractor_analysis || null,
-    
+    common_mistakes: questionData.common_mistakes || null,
+    key_insight: questionData.key_insight || null,
+
     // Usage Statistics (initialize to zero)
     usage_stats: {
       times_shown: 0,
