@@ -39,6 +39,7 @@ const {
 
 const { checkFeatureAccess, getTierLimits } = require('../services/tierConfigService');
 const { incrementUsage, getUsage } = require('../services/usageTrackingService');
+const { getEffectiveTier } = require('../services/subscriptionService');
 
 // ============================================================================
 // VALIDATION MIDDLEWARE
@@ -93,8 +94,8 @@ router.get('/available', authenticateUser, async (req, res) => {
   try {
     const userId = req.userId;
 
-    // Check tier access
-    const userTier = req.userTier || 'free';
+    // Check tier access - fetch actual user tier
+    const userTier = await getEffectiveTier(userId);
     const limits = await getTierLimits(userTier);
     const monthlyLimit = limits.mock_tests_monthly;
 
@@ -200,8 +201,8 @@ router.post('/start', authenticateUser, async (req, res) => {
     const userId = req.userId;
     const { template_id } = req.body;
 
-    // Check tier access
-    const userTier = req.userTier || 'free';
+    // Check tier access - fetch actual user tier
+    const userTier = await getEffectiveTier(userId);
     const limits = await getTierLimits(userTier);
     const monthlyLimit = limits.mock_tests_monthly;
 
