@@ -619,11 +619,11 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // App Logo
+              // App Logo - using 240 version for better quality
               Image.asset(
-                'assets/images/JEEVibeLogo.png',
-                width: 120,
-                height: 120,
+                'assets/images/JEEVibeLogo_240.png',
+                width: 150,
+                height: 150,
                 errorBuilder: (context, error, stackTrace) {
                   // Fallback if logo not found
                   return Container(
