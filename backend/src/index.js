@@ -253,6 +253,9 @@ app.use('/api/admin', adminRouter);
 const authRouter = require('./routes/auth');
 app.use('/api/auth', authRouter);
 
+const mockTestsRouter = require('./routes/mockTests');
+app.use('/api/mock-tests', mockTestsRouter);
+
 // Test endpoints (only in development)
 if (process.env.NODE_ENV !== 'production') {
   const testFirebaseRouter = require('./routes/test-firebase');
@@ -325,6 +328,17 @@ app.get('/', (req, res) => {
         logout: 'POST /api/auth/logout',
         listDevices: 'GET /api/auth/devices (P1)',
         removeDevice: 'DELETE /api/auth/devices/:deviceId (P1)'
+      },
+      mockTests: {
+        available: 'GET /api/mock-tests/available',
+        active: 'GET /api/mock-tests/active',
+        start: 'POST /api/mock-tests/start',
+        saveAnswer: 'POST /api/mock-tests/save-answer',
+        clearAnswer: 'POST /api/mock-tests/clear-answer',
+        submit: 'POST /api/mock-tests/submit',
+        abandon: 'POST /api/mock-tests/abandon',
+        history: 'GET /api/mock-tests/history',
+        results: 'GET /api/mock-tests/:testId/results'
       }
     }
   });
