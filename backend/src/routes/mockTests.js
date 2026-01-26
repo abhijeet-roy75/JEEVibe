@@ -95,11 +95,11 @@ router.get('/available', authenticateUser, async (req, res) => {
     const userId = req.userId;
 
     // Check tier access - fetch actual user tier
-    const userTier = await getEffectiveTier(userId);
-    const limits = await getTierLimits(userTier);
+    const userTierInfo = await getEffectiveTier(userId);
+    const limits = await getTierLimits(userTierInfo.tier);
     const monthlyLimit = limits.mock_tests_monthly;
 
-    console.log('[MockTest /available] userId:', userId, 'tier:', JSON.stringify(userTier), 'monthlyLimit:', monthlyLimit);
+    console.log('[MockTest /available] userId:', userId, 'tier:', userTierInfo.tier, 'source:', userTierInfo.source, 'monthlyLimit:', monthlyLimit);
 
     // Get usage
     const usage = await getUsage(userId, 'mock_tests');
@@ -205,8 +205,8 @@ router.post('/start', authenticateUser, async (req, res) => {
     const { template_id } = req.body;
 
     // Check tier access - fetch actual user tier
-    const userTier = await getEffectiveTier(userId);
-    const limits = await getTierLimits(userTier);
+    const userTierInfo = await getEffectiveTier(userId);
+    const limits = await getTierLimits(userTierInfo.tier);
     const monthlyLimit = limits.mock_tests_monthly;
 
     // Check usage
