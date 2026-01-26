@@ -127,9 +127,9 @@ router.get('/available', authenticateUser, async (req, res) => {
       data: {
         templates: templatesWithStatus,
         usage: {
-          used: usage.count,
+          used: usage.used,
           limit: monthlyLimit,
-          remaining: monthlyLimit === -1 ? -1 : Math.max(0, monthlyLimit - usage.count)
+          remaining: monthlyLimit === -1 ? -1 : Math.max(0, monthlyLimit - usage.used)
         }
       }
     });
@@ -208,7 +208,7 @@ router.post('/start', authenticateUser, async (req, res) => {
 
     // Check usage
     const usage = await getUsage(userId, 'mock_tests');
-    if (monthlyLimit !== -1 && usage.count >= monthlyLimit) {
+    if (monthlyLimit !== -1 && usage.used >= monthlyLimit) {
       return res.status(403).json({
         success: false,
         error: 'Monthly limit reached',

@@ -18,8 +18,12 @@ const { getTierLimits, isUnlimited } = require('./tierConfigService');
 const USAGE_TYPE_MAP = {
   snap_solve: 'snap_solve_daily',
   daily_quiz: 'daily_quiz_daily',
-  ai_tutor: 'ai_tutor_messages_daily'
+  ai_tutor: 'ai_tutor_messages_daily',
+  mock_tests: 'mock_tests_monthly'
 };
+
+// Usage types that are tracked monthly instead of daily
+const MONTHLY_USAGE_TYPES = new Set(['mock_tests']);
 
 /**
  * Get the date key for today in IST timezone (UTC+5:30)
@@ -36,6 +40,15 @@ function getTodayDateKey() {
   });
   // en-CA locale gives YYYY-MM-DD format
   return formatter.format(new Date());
+}
+
+/**
+ * Get the month key for current month in IST timezone
+ * @returns {string} Month string in YYYY-MM format
+ */
+function getCurrentMonthKey() {
+  const dateKey = getTodayDateKey();
+  return dateKey.substring(0, 7); // YYYY-MM
 }
 
 /**
@@ -65,7 +78,9 @@ function getNextMidnightIST() {
  * @returns {Promise<Object>} Usage info { used, limit, remaining, resets_at, is_unlimited }
  */
 async function getUsage(userId, usageType) {
-  const dateKey = getTodayDateKey();
+  const isMonthly = MONTHLY_USAGE_TYPES.has(usageType);
+  const dateKey = isMonthly ? getCurrentMonthKey() : getTodayDateKey();
+  const collection = isMonthly ? 'monthly_usage' : 'daily_usage';
   const limitKey = USAGE_TYPE_MAP[usageType] || `${usageType}_daily`;
 
   try {
@@ -87,7 +102,7 @@ async function getUsage(userId, usageType) {
     }
 
     // Get current usage count
-    const usageRef = db.collection('users').doc(userId).collection('daily_usage').doc(dateKey);
+    const usageRef = db.collection('users').doc(userId).collection(collection).doc(dateKey);
     const usageDoc = await retryFirestoreOperation(async () => {
       return await usageRef.get();
     });
@@ -100,7 +115,7 @@ async function getUsage(userId, usageType) {
       used,
       limit,
       remaining,
-      resets_at: getNextMidnightIST().toISOString(),
+      resets_at: isMonthly ? null : getNextMidnightIST().toISOString(),
       is_unlimited: false,
       tier: tierInfo.tier
     };
@@ -142,7 +157,9 @@ async function canUse(userId, usageType) {
  * @returns {Promise<Object>} { allowed, used, limit, remaining, ... }
  */
 async function incrementUsage(userId, usageType) {
-  const dateKey = getTodayDateKey();
+  const isMonthly = MONTHLY_USAGE_TYPES.has(usageType);
+  const dateKey = isMonthly ? getCurrentMonthKey() : getTodayDateKey();
+  const collection = isMonthly ? 'monthly_usage' : 'daily_usage';
   const limitKey = USAGE_TYPE_MAP[usageType] || `${usageType}_daily`;
 
   try {
@@ -155,7 +172,7 @@ async function incrementUsage(userId, usageType) {
     if (isUnlimited(limit)) {
       // Still track usage for analytics, but always allow
       await retryFirestoreOperation(async () => {
-        const usageRef = db.collection('users').doc(userId).collection('daily_usage').doc(dateKey);
+        const usageRef = db.collection('users').doc(userId).collection(collection).doc(dateKey);
         await usageRef.set({
           [usageType]: admin.firestore.FieldValue.increment(1),
           last_updated: admin.firestore.FieldValue.serverTimestamp()
@@ -174,7 +191,7 @@ async function incrementUsage(userId, usageType) {
     }
 
     // Check and increment in transaction
-    const usageRef = db.collection('users').doc(userId).collection('daily_usage').doc(dateKey);
+    const usageRef = db.collection('users').doc(userId).collection(collection).doc(dateKey);
 
     let result;
     await retryFirestoreOperation(async () => {
@@ -190,7 +207,7 @@ async function incrementUsage(userId, usageType) {
             used: currentUsed,
             limit,
             remaining: 0,
-            resets_at: getNextMidnightIST().toISOString(),
+            resets_at: isMonthly ? null : getNextMidnightIST().toISOString(),
             is_unlimited: false,
             tier: tierInfo.tier
           };
@@ -208,7 +225,7 @@ async function incrementUsage(userId, usageType) {
           used: currentUsed + 1,
           limit,
           remaining: limit - currentUsed - 1,
-          resets_at: getNextMidnightIST().toISOString(),
+          resets_at: isMonthly ? null : getNextMidnightIST().toISOString(),
           is_unlimited: false,
           tier: tierInfo.tier
         };
@@ -260,10 +277,12 @@ async function getAllUsage(userId) {
  * @returns {Promise<boolean>} Whether decrement was successful
  */
 async function decrementUsage(userId, usageType) {
-  const dateKey = getTodayDateKey();
+  const isMonthly = MONTHLY_USAGE_TYPES.has(usageType);
+  const dateKey = isMonthly ? getCurrentMonthKey() : getTodayDateKey();
+  const collection = isMonthly ? 'monthly_usage' : 'daily_usage';
 
   try {
-    const usageRef = db.collection('users').doc(userId).collection('daily_usage').doc(dateKey);
+    const usageRef = db.collection('users').doc(userId).collection(collection).doc(dateKey);
 
     await retryFirestoreOperation(async () => {
       await db.runTransaction(async (transaction) => {
