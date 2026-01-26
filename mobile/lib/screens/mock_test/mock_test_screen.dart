@@ -617,7 +617,6 @@ class _MockTestScreenState extends State<MockTestScreen> {
                     ? GradientButton(
                         text: 'Submit',
                         size: GradientButtonSize.medium,
-                        variant: GradientButtonVariant.success,
                         trailingIcon: Icons.check,
                         onPressed: () => _showSubmitDialog(),
                       )
