@@ -1,6 +1,7 @@
 /// Error Handler Utility
 /// Provides centralized error handling with retry mechanisms
 import 'package:flutter/material.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
@@ -18,9 +19,19 @@ class ErrorHandler {
     while (attempts < maxRetries) {
       try {
         return await operation();
-      } catch (e) {
+      } catch (e, stackTrace) {
         lastError = e is Exception ? e : Exception(e.toString());
         attempts++;
+
+        // Report to Crashlytics on final attempt failure
+        if (attempts >= maxRetries) {
+          FirebaseCrashlytics.instance.recordError(
+            e,
+            stackTrace,
+            reason: 'Operation failed after $maxRetries attempts',
+            fatal: false,
+          );
+        }
 
         if (attempts < maxRetries) {
           await Future.delayed(delay * attempts); // Exponential backoff
@@ -135,8 +146,16 @@ class ErrorHandler {
         operation: operation,
         maxRetries: maxRetries,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
       final errorMessage = getErrorMessage(e);
+
+      // Report to Crashlytics
+      FirebaseCrashlytics.instance.recordError(
+        e,
+        stackTrace,
+        reason: 'API error: $errorMessage',
+        fatal: false,
+      );
 
       if (showDialog) {
         await showErrorDialog(
@@ -161,5 +180,20 @@ class ErrorHandler {
       rethrow;
     }
   }
+
+  /// Report a non-fatal error to Crashlytics
+  static void reportError(
+    dynamic error,
+    StackTrace? stackTrace, {
+    String? reason,
+  }) {
+    FirebaseCrashlytics.instance.recordError(
+      error,
+      stackTrace,
+      reason: reason,
+      fatal: false,
+    );
+  }
+}
 }
 

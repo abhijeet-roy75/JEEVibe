@@ -8,6 +8,7 @@ import 'providers/ai_tutor_provider.dart';
 import 'providers/chapter_practice_provider.dart';
 import 'providers/mock_test_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'firebase_options.dart';
 
 // Services
@@ -55,11 +56,21 @@ Future<void> _initializeScreenProtection() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Initialize Firebase Crashlytics
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+  // Pass all uncaught asynchronous errors to Crashlytics
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
 
   // Initialize connectivity service for offline detection
   // Use forceReinit: true to handle hot restart properly
@@ -118,17 +129,6 @@ void main() async {
   
   // Note: print() cannot be overridden in Dart as it's a top-level function
   // SVG warnings from flutter_svg package will still appear but are harmless
-  
-  // Handle errors
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-    debugPrint('Flutter Error: ${details.exception}');
-  };
-  
-  PlatformDispatcher.instance.onError = (error, stack) {
-    debugPrint('Platform Error: $error');
-    return true;
-  };
   
   // Create services
   final storageService = StorageService();

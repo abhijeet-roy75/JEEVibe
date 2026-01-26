@@ -166,13 +166,23 @@
       ]
     },
     {
-      "comment": "Review questions: incorrect responses by student",
+      "comment": "Review questions: incorrect responses by student (DESC for recent first)",
       "collectionGroup": "responses",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "student_id", "order": "ASCENDING" },
         { "fieldPath": "is_correct", "order": "ASCENDING" },
         { "fieldPath": "answered_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Review questions: incorrect responses by student with date range filter (ASC for >= queries)",
+      "collectionGroup": "responses",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "student_id", "order": "ASCENDING" },
+        { "fieldPath": "is_correct", "order": "ASCENDING" },
+        { "fieldPath": "answered_at", "order": "ASCENDING" }
       ]
     },
     {

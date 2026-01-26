@@ -62,9 +62,12 @@ async function createSession(userId, deviceInfo) {
 
   await retryFirestoreOperation(async () => {
     // This REPLACES any existing session (single session enforcement)
-    await db.collection('users').doc(userId).update({
-      'auth.active_session': sessionData
-    });
+    // Use set with merge to create document if it doesn't exist
+    await db.collection('users').doc(userId).set({
+      auth: {
+        active_session: sessionData
+      }
+    }, { merge: true });
   });
 
   logger.info('Session created', {
@@ -150,9 +153,14 @@ async function updateLastActive(userId, session) {
 
     // Only update if last_active_at is older than debounce threshold
     if (!lastActive || lastActive < debounceThreshold) {
-      await db.collection('users').doc(userId).update({
-        'auth.active_session.last_active_at': admin.firestore.FieldValue.serverTimestamp()
-      });
+      // Use set with merge to handle non-existent documents
+      await db.collection('users').doc(userId).set({
+        auth: {
+          active_session: {
+            last_active_at: admin.firestore.FieldValue.serverTimestamp()
+          }
+        }
+      }, { merge: true });
     }
   } catch (error) {
     // Non-critical error, just log it
@@ -170,9 +178,12 @@ async function updateLastActive(userId, session) {
  */
 async function clearSession(userId) {
   await retryFirestoreOperation(async () => {
-    await db.collection('users').doc(userId).update({
-      'auth.active_session': admin.firestore.FieldValue.delete()
-    });
+    // Use set with merge to handle non-existent documents
+    await db.collection('users').doc(userId).set({
+      auth: {
+        active_session: admin.firestore.FieldValue.delete()
+      }
+    }, { merge: true });
   });
 
   logger.info('Session cleared (logout)', { userId });

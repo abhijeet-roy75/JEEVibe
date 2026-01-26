@@ -91,15 +91,6 @@ router.post('/session', authenticateUser, async (req, res, next) => {
       stack: error.stack
     });
 
-    // Check for specific Firestore errors
-    if (error.code === 5 || error.message?.includes('NOT_FOUND')) {
-      return res.status(404).json({
-        success: false,
-        error: 'User profile not found. Please complete signup first.',
-        requestId
-      });
-    }
-
     next(error);
   }
 });

@@ -74,16 +74,22 @@ function validateAnswer(questionData, studentAnswer) {
     } else if (questionData.correct_answer_exact) {
       // Exact match with tolerance
       const correctAnswer = parseFloat(questionData.correct_answer_exact);
-      
+
       if (isNaN(correctAnswer)) {
-        throw new Error(
-          `Question ${questionId} has invalid correct_answer_exact: ${questionData.correct_answer_exact}`
-        );
+        // Log the error for admin to fix, but don't block the user
+        logger.error('Question has invalid correct_answer_exact - marking as incorrect', {
+          questionId,
+          correct_answer_exact: questionData.correct_answer_exact,
+          note: 'Admin must fix this question data in Firestore'
+        });
+
+        // Mark as incorrect and continue (don't throw error that blocks user)
+        isCorrect = false;
+      } else {
+        // Tolerance: 0.01 or 1% (whichever is larger)
+        const tolerance = Math.max(0.01, Math.abs(correctAnswer) * 0.01);
+        isCorrect = Math.abs(studentAnswerNum - correctAnswer) <= tolerance;
       }
-      
-      // Tolerance: 0.01 or 1% (whichever is larger)
-      const tolerance = Math.max(0.01, Math.abs(correctAnswer) * 0.01);
-      isCorrect = Math.abs(studentAnswerNum - correctAnswer) <= tolerance;
       
     } else {
       // Fallback to correct_answer

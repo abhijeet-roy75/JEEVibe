@@ -146,7 +146,7 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       // Check if error is quota-related - redirect to paywall instead of showing error
       final errorMessage = e.toString().toLowerCase();
       if (_isQuotaError(errorMessage)) {
@@ -162,6 +162,13 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
         }
         return;
       }
+
+      // Report non-quota errors to Crashlytics
+      ErrorHandler.reportError(
+        e,
+        stackTrace,
+        reason: 'Daily Quiz generation failed',
+      );
 
       if (mounted) {
         // Check if error is network-related
