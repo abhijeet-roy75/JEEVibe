@@ -15,6 +15,7 @@ enum TutorContextType {
   quiz,
   analytics,
   general,
+  mockTest,
 }
 
 /// Model for a chat message

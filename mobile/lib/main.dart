@@ -6,6 +6,7 @@ import 'package:screen_protector/screen_protector.dart';
 import 'providers/daily_quiz_provider.dart';
 import 'providers/ai_tutor_provider.dart';
 import 'providers/chapter_practice_provider.dart';
+import 'providers/mock_test_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -178,6 +179,13 @@ void main() async {
 
         // Offline Mode Provider
         ChangeNotifierProvider(create: (_) => OfflineProvider()),
+
+        // Mock Test State
+        ChangeNotifierProxyProvider<AuthService, MockTestProvider>(
+          create: (_) => MockTestProvider(AuthService()),
+          update: (_, authService, previous) =>
+            previous ?? MockTestProvider(authService),
+        ),
       ],
       child: const JEEVibeApp(),
     ),

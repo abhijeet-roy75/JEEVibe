@@ -442,7 +442,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           ),
           _buildFeatureRow(
             Icons.assignment_outlined,
-            'Mock Tests',
+            'JEE Simulations',
             '1/month',
             _isUltraSelected ? '15/month' : '5/month',
             tierColor,
