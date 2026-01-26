@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'storage_service.dart';
 import 'api_service.dart';
 import '../models/snap_data_model.dart';
+import '../config/logging_config.dart';
 
 class SnapCounterService {
   final StorageService _storage;
@@ -244,7 +245,7 @@ class SnapCounterService {
   }
 
   void debugPrint(String message) {
-    if (kDebugMode) {
+    if (kDebugMode && LoggingConfig.verboseServiceLogs) {
       print('[SnapCounterService] $message');
     }
   }

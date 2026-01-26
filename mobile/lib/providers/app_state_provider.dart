@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../services/storage_service.dart';
 import '../services/snap_counter_service.dart';
 import '../models/snap_data_model.dart';
+import '../config/logging_config.dart';
 
 import '../services/firebase/auth_service.dart';
 
@@ -244,7 +245,7 @@ class AppStateProvider extends ChangeNotifier {
   }
 
   void debugPrint(String message) {
-    if (kDebugMode) {
+    if (kDebugMode && LoggingConfig.verboseProviderLogs) {
       print('[AppStateProvider] $message');
     }
   }

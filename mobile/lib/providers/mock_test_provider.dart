@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../models/mock_test_models.dart';
 import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
+import '../config/logging_config.dart';
 
 class MockTestProvider extends ChangeNotifier {
   final AuthService _authService;
@@ -100,7 +101,9 @@ class MockTestProvider extends ChangeNotifier {
       if (token == null) throw Exception('Authentication required');
 
       final data = await ApiService.getMockTestsAvailable(authToken: token);
-      debugPrint('[MockTest] loadTemplates raw response: $data');
+      if (LoggingConfig.logApiPayloads) {
+        debugPrint('[MockTest] loadTemplates raw response: $data');
+      }
 
       if (_disposed) return;
 
@@ -109,11 +112,10 @@ class MockTestProvider extends ChangeNotifier {
           .toList();
 
       if (data['usage'] != null) {
-        debugPrint('[MockTest] usage JSON: ${data['usage']}');
         _usage = MockTestUsage.fromJson(data['usage'] as Map<String, dynamic>);
-        debugPrint('[MockTest] parsed usage: used=${_usage!.used}, limit=${_usage!.limit}, remaining=${_usage!.remaining}, hasUnlimited=${_usage!.hasUnlimited}');
-      } else {
-        debugPrint('[MockTest] usage is null in response');
+        if (LoggingConfig.verboseProviderLogs) {
+          debugPrint('[MockTest] usage: used=${_usage!.used}, limit=${_usage!.limit}, remaining=${_usage!.remaining}');
+        }
       }
 
       _isLoadingTemplates = false;
