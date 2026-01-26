@@ -99,8 +99,11 @@ router.get('/available', authenticateUser, async (req, res) => {
     const limits = await getTierLimits(userTier);
     const monthlyLimit = limits.mock_tests_monthly;
 
+    console.log('[MockTest /available] userId:', userId, 'tier:', JSON.stringify(userTier), 'monthlyLimit:', monthlyLimit);
+
     // Get usage
     const usage = await getUsage(userId, 'mock_tests');
+    console.log('[MockTest /available] usage:', JSON.stringify(usage));
 
     // Get available templates
     const templates = await getAvailableTemplates();

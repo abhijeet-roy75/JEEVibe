@@ -89,6 +89,8 @@ async function getUsage(userId, usageType) {
     const limits = await getTierLimits(tierInfo.tier);
     const limit = limits[limitKey] ?? 0;
 
+    console.log(`[getUsage] type=${usageType}, isMonthly=${isMonthly}, dateKey=${dateKey}, collection=${collection}, limitKey=${limitKey}, tier=${tierInfo.tier}, tierSource=${tierInfo.source}, limit=${limit}`);
+
     // Check if unlimited
     if (isUnlimited(limit)) {
       return {
