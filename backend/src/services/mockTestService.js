@@ -719,9 +719,9 @@ async function updateUserStatsFromMockTest(userId, result, questions) {
       avg_score: 0,
       avg_percentile: 0,
       subject_accuracy: {
-        Physics: { correct: 0, total: 0 },
-        Chemistry: { correct: 0, total: 0 },
-        Mathematics: { correct: 0, total: 0 }
+        physics: { correct: 0, total: 0 },
+        chemistry: { correct: 0, total: 0 },
+        mathematics: { correct: 0, total: 0 }
       }
     };
 
@@ -732,30 +732,47 @@ async function updateUserStatsFromMockTest(userId, result, questions) {
     mockTestStats.best_percentile = Math.max(mockTestStats.best_percentile, result.percentile);
     mockTestStats.avg_score = mockTestStats.total_score / mockTestStats.total_tests;
 
-    // Update subject accuracy
+    // Update subject accuracy (using lowercase keys for consistency)
     for (const [subject, scores] of Object.entries(result.subject_scores)) {
-      mockTestStats.subject_accuracy[subject].correct += scores.correct;
-      mockTestStats.subject_accuracy[subject].total += scores.total;
+      const subjectKey = subject.toLowerCase();
+
+      // Ensure the subject key exists
+      if (!mockTestStats.subject_accuracy[subjectKey]) {
+        mockTestStats.subject_accuracy[subjectKey] = { correct: 0, total: 0 };
+      }
+
+      mockTestStats.subject_accuracy[subjectKey].correct += scores.correct;
+      mockTestStats.subject_accuracy[subjectKey].total += scores.total;
     }
 
     // Calculate global analytics counters
     // Count all attempted questions (answered + marked for review)
     const attemptedCount = result.correct_count + result.incorrect_count;
 
-    // Update user document with mock test stats AND global analytics counters
+    // Calculate theta updates (before writing to avoid race condition)
+    const thetaUpdates = await calculateThetaUpdates(userId, result, questions, userData);
+
+    // CRITICAL: Single atomic update to prevent race conditions
+    // Combining both mock test stats AND theta updates in one operation
     await retryFirestoreOperation(async () => {
       await userRef.update({
+        // Mock test stats
         mock_test_stats: mockTestStats,
         last_mock_test_at: FieldValue.serverTimestamp(),
-        // Increment global analytics counters (shown in Overview tab)
+
+        // Global analytics counters (shown in Overview tab)
         total_questions_solved: FieldValue.increment(attemptedCount),
         total_questions_correct: FieldValue.increment(result.correct_count),
-        total_questions_incorrect: FieldValue.increment(result.incorrect_count)
+        total_questions_incorrect: FieldValue.increment(result.incorrect_count),
+
+        // Theta updates (calculated above)
+        theta_by_chapter: thetaUpdates.thetaByChapter,
+        theta_by_subject: thetaUpdates.subjectThetas,
+        subject_accuracy: thetaUpdates.subjectAccuracy,
+        overall_theta: thetaUpdates.overallTheta,
+        theta_updated_at: FieldValue.serverTimestamp()
       });
     });
-
-    // Update theta based on performance
-    await updateThetaFromMockTest(userId, result, questions, userData);
 
     logger.info('User stats updated from mock test', {
       userId,
@@ -773,132 +790,138 @@ async function updateUserStatsFromMockTest(userId, result, questions) {
 }
 
 /**
- * Update theta values based on mock test performance
- * Uses chapter-level accuracy to adjust theta
+ * Calculate theta updates based on mock test performance
+ * Pure calculation function - does not write to database
+ * Returns theta updates to be applied atomically with stats updates
  */
-async function updateThetaFromMockTest(userId, result, questions, userData) {
-  try {
-    // Group results by chapter
-    const chapterPerformance = {};
+async function calculateThetaUpdates(userId, result, questions, userData) {
+  // Group results by chapter
+  const chapterPerformance = {};
 
-    for (const qResult of result.question_results) {
-      const question = questions.find(q => q.question_number === qResult.question_number);
-      if (!question?.chapter_key) continue;
+  for (const qResult of result.question_results) {
+    const question = questions.find(q => q.question_number === qResult.question_number);
+    if (!question?.chapter_key) continue;
 
-      const chapterKey = question.chapter_key;
-      if (!chapterPerformance[chapterKey]) {
-        chapterPerformance[chapterKey] = {
-          correct: 0,
-          total: 0,
-          difficulties: []
-        };
-      }
-
-      chapterPerformance[chapterKey].total++;
-      if (qResult.is_correct) {
-        chapterPerformance[chapterKey].correct++;
-      }
-
-      const difficulty = question.irt_parameters?.difficulty_b || 0.9;
-      chapterPerformance[chapterKey].difficulties.push(difficulty);
-    }
-
-    // Current theta data
-    const thetaByChapter = userData.theta_by_chapter || {};
-
-    // Update each chapter's theta based on performance
-    for (const [chapterKey, perf] of Object.entries(chapterPerformance)) {
-      if (perf.total < 2) continue; // Need at least 2 questions
-
-      const accuracy = perf.correct / perf.total;
-      const avgDifficulty = perf.difficulties.reduce((a, b) => a + b, 0) / perf.difficulties.length;
-
-      // Current chapter theta
-      const currentTheta = thetaByChapter[chapterKey]?.theta || 0;
-      const currentSE = thetaByChapter[chapterKey]?.se || 0.5;
-      const currentCount = thetaByChapter[chapterKey]?.questions_answered || 0;
-
-      // Simple theta adjustment based on accuracy vs expected
-      // If accuracy > 70% and avgDifficulty was at or above theta, increase theta
-      // If accuracy < 50% and avgDifficulty was at or below theta, decrease theta
-      let thetaDelta = 0;
-      const expectedAccuracy = 0.5 + (currentTheta - avgDifficulty) * 0.1;
-
-      if (accuracy > expectedAccuracy + 0.2) {
-        thetaDelta = 0.1 * (accuracy - expectedAccuracy);
-      } else if (accuracy < expectedAccuracy - 0.2) {
-        thetaDelta = 0.1 * (accuracy - expectedAccuracy);
-      }
-
-      // Bound new theta
-      const newTheta = Math.max(-3, Math.min(3, currentTheta + thetaDelta));
-      const newSE = Math.max(0.15, currentSE * 0.95); // Reduce SE slightly
-
-      thetaByChapter[chapterKey] = {
-        theta: parseFloat(newTheta.toFixed(3)),
-        se: parseFloat(newSE.toFixed(3)),
-        questions_answered: currentCount + perf.total,
-        last_updated: new Date().toISOString()
+    const chapterKey = question.chapter_key;
+    if (!chapterPerformance[chapterKey]) {
+      chapterPerformance[chapterKey] = {
+        correct: 0,
+        total: 0,
+        difficulties: []
       };
     }
 
-    // Recalculate subject and overall theta
-    const subjectThetas = {};
-    for (const subject of ['Physics', 'Chemistry', 'Mathematics']) {
-      const subjectTheta = calculateSubjectTheta(thetaByChapter, subject.toLowerCase());
-      subjectThetas[subject.toLowerCase()] = subjectTheta;
+    chapterPerformance[chapterKey].total++;
+    if (qResult.is_correct) {
+      chapterPerformance[chapterKey].correct++;
     }
 
-    const overallTheta = calculateWeightedOverallTheta(subjectThetas);
-
-    // Calculate subject accuracy from mock test results
-    const subjectAccuracy = userData.subject_accuracy || {
-      physics: { correct: 0, total: 0, accuracy: 0 },
-      chemistry: { correct: 0, total: 0, accuracy: 0 },
-      mathematics: { correct: 0, total: 0, accuracy: 0 }
-    };
-
-    // Update subject accuracy with mock test results
-    for (const [subject, scores] of Object.entries(result.subject_scores)) {
-      const subjectKey = subject.toLowerCase();
-      const currentCorrect = subjectAccuracy[subjectKey]?.correct || 0;
-      const currentTotal = subjectAccuracy[subjectKey]?.total || 0;
-
-      const newCorrect = currentCorrect + scores.correct;
-      const newTotal = currentTotal + scores.total;
-
-      subjectAccuracy[subjectKey] = {
-        correct: newCorrect,
-        total: newTotal,
-        accuracy: newTotal > 0 ? Math.round((newCorrect / newTotal) * 100) : 0
-      };
-    }
-
-    // Update user document
-    const userRef = db.collection('users').doc(userId);
-    await retryFirestoreOperation(async () => {
-      await userRef.update({
-        theta_by_chapter: thetaByChapter,
-        theta_by_subject: subjectThetas,
-        subject_accuracy: subjectAccuracy,
-        overall_theta: overallTheta,
-        theta_updated_at: FieldValue.serverTimestamp()
-      });
-    });
-
-    logger.info('Theta updated from mock test', {
-      userId,
-      chaptersUpdated: Object.keys(chapterPerformance).length,
-      overallTheta
-    });
-
-  } catch (error) {
-    logger.error('Failed to update theta from mock test', {
-      userId,
-      error: error.message
-    });
-    // Don't throw - theta update is not critical
+    const difficulty = question.irt_parameters?.difficulty_b || 0.9;
+    chapterPerformance[chapterKey].difficulties.push(difficulty);
   }
+
+  // Current theta data
+  const thetaByChapter = userData.theta_by_chapter || {};
+
+  // Update each chapter's theta based on performance
+  for (const [chapterKey, perf] of Object.entries(chapterPerformance)) {
+    if (perf.total < 2) continue; // Need at least 2 questions
+
+    const accuracy = perf.correct / perf.total;
+    const avgDifficulty = perf.difficulties.reduce((a, b) => a + b, 0) / perf.difficulties.length;
+
+    // Current chapter theta
+    const currentTheta = thetaByChapter[chapterKey]?.theta || 0;
+    const currentSE = thetaByChapter[chapterKey]?.se || 0.5;
+    const currentCount = thetaByChapter[chapterKey]?.questions_answered || 0;
+
+    // Simple theta adjustment based on accuracy vs expected
+    // If accuracy > 70% and avgDifficulty was at or above theta, increase theta
+    // If accuracy < 50% and avgDifficulty was at or below theta, decrease theta
+    let thetaDelta = 0;
+    const expectedAccuracy = 0.5 + (currentTheta - avgDifficulty) * 0.1;
+
+    if (accuracy > expectedAccuracy + 0.2) {
+      thetaDelta = 0.1 * (accuracy - expectedAccuracy);
+    } else if (accuracy < expectedAccuracy - 0.2) {
+      thetaDelta = 0.1 * (accuracy - expectedAccuracy);
+    }
+
+    // Bound new theta
+    const newTheta = Math.max(-3, Math.min(3, currentTheta + thetaDelta));
+    const newSE = Math.max(0.15, currentSE * 0.95); // Reduce SE slightly
+
+    thetaByChapter[chapterKey] = {
+      theta: parseFloat(newTheta.toFixed(3)),
+      se: parseFloat(newSE.toFixed(3)),
+      questions_answered: currentCount + perf.total,
+      last_updated: new Date().toISOString()
+    };
+  }
+
+  // Recalculate subject and overall theta
+  const subjectThetas = {};
+  for (const subject of ['Physics', 'Chemistry', 'Mathematics']) {
+    const subjectTheta = calculateSubjectTheta(thetaByChapter, subject.toLowerCase());
+    subjectThetas[subject.toLowerCase()] = subjectTheta;
+  }
+
+  const overallTheta = calculateWeightedOverallTheta(subjectThetas);
+
+  // Calculate subject accuracy from mock test results with validation
+  const subjectAccuracy = userData.subject_accuracy || {
+    physics: { correct: 0, total: 0, accuracy: 0 },
+    chemistry: { correct: 0, total: 0, accuracy: 0 },
+    mathematics: { correct: 0, total: 0, accuracy: 0 }
+  };
+
+  // Valid subjects for JEE mock tests
+  const validSubjects = ['Physics', 'Chemistry', 'Mathematics'];
+
+  // Update subject accuracy with mock test results
+  for (const [subject, scores] of Object.entries(result.subject_scores)) {
+    // Validation: Check if subject is valid
+    if (!validSubjects.includes(subject)) {
+      logger.warn(`Unexpected subject in mock test results: ${subject}`, { userId });
+      continue;
+    }
+
+    const subjectKey = subject.toLowerCase();
+
+    // Ensure subject key exists in subjectAccuracy
+    if (!subjectAccuracy[subjectKey]) {
+      subjectAccuracy[subjectKey] = { correct: 0, total: 0, accuracy: 0 };
+    }
+
+    // Safe access with defaults
+    const currentCorrect = Number(subjectAccuracy[subjectKey]?.correct || 0);
+    const currentTotal = Number(subjectAccuracy[subjectKey]?.total || 0);
+    const scoreCorrect = Number(scores?.correct || 0);
+    const scoreTotal = Number(scores?.total || 0);
+
+    const newCorrect = currentCorrect + scoreCorrect;
+    const newTotal = currentTotal + scoreTotal;
+
+    subjectAccuracy[subjectKey] = {
+      correct: newCorrect,
+      total: newTotal,
+      accuracy: newTotal > 0 ? Math.round((newCorrect / newTotal) * 100) : 0
+    };
+  }
+
+  logger.info('Theta calculated from mock test', {
+    userId,
+    chaptersUpdated: Object.keys(chapterPerformance).length,
+    overallTheta
+  });
+
+  // Return all calculated updates (no database writes)
+  return {
+    thetaByChapter,
+    subjectThetas,
+    subjectAccuracy,
+    overallTheta
+  };
 }
 
 // ============================================================================
