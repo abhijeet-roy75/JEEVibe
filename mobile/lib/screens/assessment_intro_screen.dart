@@ -915,10 +915,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     return Consumer<MockTestProvider>(
       builder: (context, mockTestProvider, child) {
         final usage = mockTestProvider.usage;
-        debugPrint('[MockTest] Card builder: usage=$usage, isUnlocked=$isUnlocked');
-        if (usage != null) {
-          debugPrint('[MockTest] Card: used=${usage.used}, limit=${usage.limit}, remaining=${usage.remaining}, hasUnlimited=${usage.hasUnlimited}');
-        }
+        // Mock test card rendered (verbose logging disabled)
 
         // Determine subtitle text based on unlock and usage state
         String subtitleText;

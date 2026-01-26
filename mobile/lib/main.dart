@@ -518,13 +518,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       userProfile = results[0] as UserProfile?;
       authToken = results[1] as String?;
 
-      if (authToken != null) {
-        print('');
-        print('========== AUTH TOKEN FOR TESTING ==========');
-        print(authToken);
-        print('=============================================');
-        print('');
-      }
+      // Auth token obtained successfully (removed logging for security)
     } catch (e) {
       print('Error in parallel initialization: $e');
       userProfile = null;

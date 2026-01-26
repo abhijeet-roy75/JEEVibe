@@ -142,21 +142,7 @@ class MasteryTabState extends State<MasteryTab> {
         _masteryCache[_selectedSubject] = masteryDetails;
         _timelineCache[_selectedSubject] = accuracyTimeline;
 
-        debugPrint('[MasteryTab] Loaded mastery details for $_selectedSubject:');
-        debugPrint('  - Overall percentile: ${masteryDetails.overallPercentile}');
-        debugPrint('  - Chapters tested: ${masteryDetails.chaptersTested}');
-        debugPrint('  - Chapters count: ${masteryDetails.chapters.length}');
-        debugPrint('  - Accuracy timeline points: ${accuracyTimeline.dataPoints}');
-        if (masteryDetails.chapters.isNotEmpty) {
-          debugPrint('  - First chapter: ${masteryDetails.chapters.first.chapterName} (${masteryDetails.chapters.first.percentile}%)');
-          // Debug subtopics
-          for (final chapter in masteryDetails.chapters) {
-            debugPrint('  - ${chapter.chapterName}: ${chapter.subtopics.length} subtopics');
-            for (final st in chapter.subtopics) {
-              debugPrint('      - ${st.name}: ${st.correct}/${st.total} (${st.accuracy}%)');
-            }
-          }
-        }
+        // Mastery details loaded successfully (verbose logging disabled)
         setState(() {
           _masteryDetails = masteryDetails;
           _accuracyTimeline = accuracyTimeline;
