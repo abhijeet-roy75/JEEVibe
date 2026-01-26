@@ -765,6 +765,11 @@ async function updateUserStatsFromMockTest(userId, result, questions) {
         total_questions_correct: FieldValue.increment(result.correct_count),
         total_questions_incorrect: FieldValue.increment(result.incorrect_count),
 
+        // Cumulative stats (consistent with Daily Quiz and Chapter Practice)
+        'cumulative_stats.total_questions_correct': FieldValue.increment(result.correct_count),
+        'cumulative_stats.total_questions_attempted': FieldValue.increment(attemptedCount),
+        'cumulative_stats.last_updated': FieldValue.serverTimestamp(),
+
         // Theta updates (calculated above)
         theta_by_chapter: thetaUpdates.thetaByChapter,
         theta_by_subject: thetaUpdates.subjectThetas,
