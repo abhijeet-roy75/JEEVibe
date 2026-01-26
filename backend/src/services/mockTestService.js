@@ -738,11 +738,19 @@ async function updateUserStatsFromMockTest(userId, result, questions) {
       mockTestStats.subject_accuracy[subject].total += scores.total;
     }
 
-    // Update user document
+    // Calculate global analytics counters
+    // Count all attempted questions (answered + marked for review)
+    const attemptedCount = result.correct_count + result.incorrect_count;
+
+    // Update user document with mock test stats AND global analytics counters
     await retryFirestoreOperation(async () => {
       await userRef.update({
         mock_test_stats: mockTestStats,
-        last_mock_test_at: FieldValue.serverTimestamp()
+        last_mock_test_at: FieldValue.serverTimestamp(),
+        // Increment global analytics counters (shown in Overview tab)
+        total_questions_solved: FieldValue.increment(attemptedCount),
+        total_questions_correct: FieldValue.increment(result.correct_count),
+        total_questions_incorrect: FieldValue.increment(result.incorrect_count)
       });
     });
 
@@ -843,12 +851,36 @@ async function updateThetaFromMockTest(userId, result, questions, userData) {
 
     const overallTheta = calculateWeightedOverallTheta(subjectThetas);
 
+    // Calculate subject accuracy from mock test results
+    const subjectAccuracy = userData.subject_accuracy || {
+      physics: { correct: 0, total: 0, accuracy: 0 },
+      chemistry: { correct: 0, total: 0, accuracy: 0 },
+      mathematics: { correct: 0, total: 0, accuracy: 0 }
+    };
+
+    // Update subject accuracy with mock test results
+    for (const [subject, scores] of Object.entries(result.subject_scores)) {
+      const subjectKey = subject.toLowerCase();
+      const currentCorrect = subjectAccuracy[subjectKey]?.correct || 0;
+      const currentTotal = subjectAccuracy[subjectKey]?.total || 0;
+
+      const newCorrect = currentCorrect + scores.correct;
+      const newTotal = currentTotal + scores.total;
+
+      subjectAccuracy[subjectKey] = {
+        correct: newCorrect,
+        total: newTotal,
+        accuracy: newTotal > 0 ? Math.round((newCorrect / newTotal) * 100) : 0
+      };
+    }
+
     // Update user document
     const userRef = db.collection('users').doc(userId);
     await retryFirestoreOperation(async () => {
       await userRef.update({
         theta_by_chapter: thetaByChapter,
         theta_by_subject: subjectThetas,
+        subject_accuracy: subjectAccuracy,
         overall_theta: overallTheta,
         theta_updated_at: FieldValue.serverTimestamp()
       });
