@@ -115,6 +115,14 @@ class MockTestStats {
     if (value is String) return double.tryParse(value) ?? 0.9;
     return 0.9;
   }
+
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
 }
 
 /// Mock Test Question
@@ -184,8 +192,8 @@ class MockTestQuestion {
     }
 
     return MockTestQuestion(
-      questionNumber: json['question_number'] as int? ?? 0,
-      sectionIndex: json['section_index'] as int? ?? 0,
+      questionNumber: _parseInt(json['question_number']),
+      sectionIndex: _parseInt(json['section_index']),
       questionId: json['question_id'] as String? ?? '',
       questionType: json['question_type'] as String? ?? 'mcq_single',
       subject: json['subject'] as String? ?? '',
@@ -194,8 +202,8 @@ class MockTestQuestion {
       questionTextHtml: json['question_text_html'] as String?,
       imageUrl: json['image_url'] as String?,
       options: options,
-      marksCorrect: json['marks_correct'] as int? ?? 4,
-      marksIncorrect: json['marks_incorrect'] as int? ?? -1,
+      marksCorrect: _parseInt(json['marks_correct']) == 0 ? 4 : _parseInt(json['marks_correct']),
+      marksIncorrect: _parseInt(json['marks_incorrect']) == 0 ? -1 : _parseInt(json['marks_incorrect']),
       correctAnswer: json['correct_answer'] as String?,
       solutionText: json['solution_text'] as String?,
       solutionSteps: solutionSteps,
