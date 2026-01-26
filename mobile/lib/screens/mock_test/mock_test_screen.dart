@@ -294,11 +294,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
                 const SizedBox(height: 16),
                 // Question text - prefer HTML, fallback to plain text
                 _buildQuestionText(question),
-                // Question image
-                Builder(builder: (_) {
-                  debugPrint('[MockTest] Q${provider.currentQuestionIndex + 1} hasImage=${question.hasImage}, imageUrl=${question.imageUrl}');
-                  return const SizedBox.shrink();
-                }),
+                // Question image (debug logging removed - was causing spam on every rebuild)
                 if (question.hasImage) ...[
                   const SizedBox(height: 16),
                   ClipRRect(
