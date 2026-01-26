@@ -77,57 +77,56 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.backgroundGradient,
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _error != null
-                        ? _buildErrorView()
-                        : _result != null
-                            ? _buildResultsView()
-                            : const Center(child: Text('No results')),
-              ),
-            ],
+      backgroundColor: AppColors.backgroundLight,
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                    ? _buildErrorView()
+                    : _result != null
+                        ? _buildResultsView()
+                        : const Center(child: Text('No results')),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         gradient: AppColors.ctaGradient,
       ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
-            onPressed: () => Navigator.of(context).popUntil(
-              (route) => route.isFirst || route.settings.name == '/mock-tests',
-            ),
-          ),
-          const Expanded(
-            child: Text(
-              'Test Results',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(context).popUntil(
+                  (route) => route.isFirst || route.settings.name == '/mock-tests',
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
+              const Expanded(
+                child: Text(
+                  'Test Results',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(width: 48), // Balance the close button
+            ],
           ),
-          const SizedBox(width: 48), // Balance the close button
-        ],
+        ),
       ),
     );
   }
@@ -420,8 +419,13 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
@@ -577,7 +581,7 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
         _buildActionButton(
           icon: Icons.rate_review,
           iconColor: Colors.white,
-          label: 'Review Questions (${result.correct + result.incorrect + result.unattempted})',
+          label: 'Review Questions',
           backgroundColor: AppColors.primaryPurple,
           onTap: () {
             Navigator.push(
@@ -629,26 +633,17 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Row(
-                  children: [
-                    Icon(icon, color: iconColor, size: 20),
-                    const SizedBox(width: 12),
-                    Text(
-                      label,
-                      style: TextStyle(
-                        color: effectiveTextColor,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: effectiveTextColor.withOpacity(0.7),
-                  size: 16,
+                Icon(icon, color: iconColor, size: 20),
+                const SizedBox(width: 12),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: effectiveTextColor,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),

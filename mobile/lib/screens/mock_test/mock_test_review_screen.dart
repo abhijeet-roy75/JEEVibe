@@ -31,8 +31,8 @@ class MockTestReviewScreen extends StatefulWidget {
 
 class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
   Map<String, dynamic>? _testResult;
-  String _currentFilter = 'all';
-  String _currentSubject = 'all'; // Subject filter
+  String _currentFilter = 'all'; // Default to showing all questions
+  String _currentSubject = 'physics'; // Subject filter - default to first subject
   bool _isLoading = true;
   String? _error;
 
@@ -80,14 +80,10 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
   List<dynamic> get _allQuestions => _testResult?['questions'] ?? [];
 
   List<dynamic> get _filteredQuestions {
-    var questions = _allQuestions;
-
-    // Filter by subject
-    if (_currentSubject != 'all') {
-      questions = questions
-          .where((q) => (q['subject'] as String?)?.toLowerCase() == _currentSubject.toLowerCase())
-          .toList();
-    }
+    // Filter by subject (always apply since we removed "All")
+    var questions = _allQuestions
+        .where((q) => (q['subject'] as String?)?.toLowerCase() == _currentSubject.toLowerCase())
+        .toList();
 
     // Filter by result
     switch (_currentFilter) {
@@ -106,13 +102,18 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
     }
   }
 
-  int get _totalQuestions => _allQuestions.length;
-  int get _correctCount => _allQuestions.where((q) => q['is_correct'] == true).length;
-  int get _wrongCount => _allQuestions
+  // Get questions for current subject filter
+  List<dynamic> get _subjectFilteredQuestions => _allQuestions
+      .where((q) => (q['subject'] as String?)?.toLowerCase() == _currentSubject.toLowerCase())
+      .toList();
+
+  int get _totalQuestions => _subjectFilteredQuestions.length;
+  int get _correctCount => _subjectFilteredQuestions.where((q) => q['is_correct'] == true).length;
+  int get _wrongCount => _subjectFilteredQuestions
       .where((q) => q['is_correct'] == false && q['user_answer'] != null && q['user_answer'] != '')
       .length;
   int get _unattemptedCount =>
-      _allQuestions.where((q) => q['user_answer'] == null || q['user_answer'] == '').length;
+      _subjectFilteredQuestions.where((q) => q['user_answer'] == null || q['user_answer'] == '').length;
 
   String _formatTime(int seconds) {
     final minutes = seconds ~/ 60;
@@ -137,6 +138,14 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
       default:
         return 'Moderate';
     }
+  }
+
+  int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 
   Color _getSubjectColor(String? subject) {
@@ -314,19 +323,20 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
   Widget _buildSubjectFilter() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildSubjectChip('All', 'all', null),
-            const SizedBox(width: 8),
-            _buildSubjectChip('Physics', 'physics', AppColors.subjectPhysics),
-            const SizedBox(width: 8),
-            _buildSubjectChip('Chemistry', 'chemistry', AppColors.subjectChemistry),
-            const SizedBox(width: 8),
-            _buildSubjectChip('Mathematics', 'mathematics', AppColors.subjectMathematics),
-          ],
-        ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildSubjectChip('Physics', 'physics', AppColors.subjectPhysics),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildSubjectChip('Chemistry', 'chemistry', AppColors.subjectChemistry),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildSubjectChip('Math', 'mathematics', AppColors.subjectMathematics),
+          ),
+        ],
       ),
     );
   }
@@ -336,7 +346,7 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
     return GestureDetector(
       onTap: () => setState(() => _currentSubject = value),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
               ? (color ?? AppColors.primaryPurple)
@@ -349,16 +359,22 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (value != 'all') ...[
-              SubjectIconWidget(subject: label, size: 16),
-              const SizedBox(width: 6),
+              SubjectIconWidget(subject: label, size: 14),
+              const SizedBox(width: 4),
             ],
-            Text(
-              label,
-              style: AppTextStyles.labelMedium.copyWith(
-                color: isSelected ? Colors.white : (color ?? AppColors.primaryPurple),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            Flexible(
+              child: Text(
+                label,
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: isSelected ? Colors.white : (color ?? AppColors.primaryPurple),
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 13,
+                ),
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
             ),
           ],
@@ -399,33 +415,30 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: _buildFilterButton(
-                  label: '$_correctCount',
+                  label: '✓ ($_correctCount)',
                   isSelected: _currentFilter == 'correct',
-                  icon: Icons.check,
-                  iconColor: AppColors.successGreen,
                   backgroundColor: _currentFilter == 'correct' ? AppColors.successGreen : null,
+                  textColor: _currentFilter == 'correct' ? Colors.white : AppColors.textDark,
                   onTap: () => setState(() => _currentFilter = 'correct'),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildFilterButton(
-                  label: '$_wrongCount',
+                  label: '× ($_wrongCount)',
                   isSelected: _currentFilter == 'wrong',
-                  icon: Icons.close,
-                  iconColor: AppColors.errorRed,
                   backgroundColor: _currentFilter == 'wrong' ? AppColors.errorRed : null,
+                  textColor: _currentFilter == 'wrong' ? Colors.white : AppColors.textDark,
                   onTap: () => setState(() => _currentFilter = 'wrong'),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _buildFilterButton(
-                  label: '$_unattemptedCount',
+                  label: '− ($_unattemptedCount)',
                   isSelected: _currentFilter == 'unattempted',
-                  icon: Icons.remove_circle_outline,
-                  iconColor: AppColors.textLight,
                   backgroundColor: _currentFilter == 'unattempted' ? AppColors.textMedium : null,
+                  textColor: _currentFilter == 'unattempted' ? Colors.white : AppColors.textDark,
                   onTap: () => setState(() => _currentFilter = 'unattempted'),
                 ),
               ),
@@ -442,10 +455,11 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
     IconData? icon,
     Color? iconColor,
     Color? backgroundColor,
+    Color? textColor,
     required VoidCallback onTap,
   }) {
     final bgColor = backgroundColor ?? (isSelected ? AppColors.primaryPurple : AppColors.borderGray);
-    final textColor = isSelected ? Colors.white : AppColors.textDark;
+    final finalTextColor = textColor ?? (isSelected ? Colors.white : AppColors.textDark);
 
     return InkWell(
       onTap: onTap,
@@ -463,14 +477,14 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
               Icon(
                 icon,
                 size: 16,
-                color: isSelected ? Colors.white : iconColor ?? textColor,
+                color: isSelected ? Colors.white : iconColor ?? finalTextColor,
               ),
               const SizedBox(width: 4),
             ],
             Text(
               label,
               style: AppTextStyles.bodySmall.copyWith(
-                color: textColor,
+                color: finalTextColor,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
@@ -545,12 +559,12 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
     final isCorrect = question['is_correct'] as bool? ?? false;
     final userAnswer = question['user_answer']?.toString() ?? '';
     final isUnattempted = userAnswer.isEmpty;
-    final questionNumber = question['question_number'] as int? ?? (index + 1);
+    final questionNumber = _parseInt(question['question_number']) ?? (index + 1);
     final subject = question['subject'] as String? ?? 'Unknown';
     final chapter = question['chapter'] as String? ?? '';
     final questionText = question['question_text'] as String? ?? '';
-    final timeTaken = question['time_spent'] as int? ?? 0;
-    final correctAnswer = question['correct_answer'] as String? ?? '';
+    final timeTaken = _parseInt(question['time_spent']) ?? 0;
+    final correctAnswer = question['correct_answer']?.toString() ?? '';
     final difficulty = question['difficulty'] as String?;
     final questionType = question['question_type'] as String? ?? 'mcq';
 

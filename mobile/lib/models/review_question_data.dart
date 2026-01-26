@@ -50,12 +50,22 @@ class ReviewQuestionData {
     this.questionType,
   });
 
+  /// Safe integer parsing helper
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
   /// Create from Daily Quiz API response (Map<String, dynamic>)
   factory ReviewQuestionData.fromDailyQuizMap(Map<String, dynamic> json) {
     // Parse options
     List<ReviewOptionData> options = [];
     if (json['options'] != null && json['options'] is List) {
       options = (json['options'] as List)
+          .where((opt) => opt is Map<String, dynamic>)
           .map((opt) => ReviewOptionData.fromMap(opt as Map<String, dynamic>))
           .toList();
     }
@@ -142,12 +152,26 @@ class ReviewQuestionData {
   /// The question map comes from the backend's getTestResults which merges
   /// template questions with user responses
   factory ReviewQuestionData.fromMockTestQuestion(Map<String, dynamic> json) {
-    // Parse options
+    // Parse options - handle both Map format and String format
     List<ReviewOptionData> options = [];
     if (json['options'] != null && json['options'] is List) {
-      options = (json['options'] as List)
-          .map((opt) => ReviewOptionData.fromMap(opt as Map<String, dynamic>))
-          .toList();
+      final optionsList = json['options'] as List;
+      for (int i = 0; i < optionsList.length; i++) {
+        final opt = optionsList[i];
+        if (opt is Map<String, dynamic>) {
+          options.add(ReviewOptionData.fromMap(opt));
+        } else if (opt is String) {
+          // Convert string to ReviewOptionData with generated option_id (A, B, C, D)
+          final optionId = String.fromCharCode(65 + i); // 65 is 'A' in ASCII
+          options.add(ReviewOptionData(
+            optionId: optionId,
+            text: opt,
+            html: null,
+          ));
+        } else {
+          print('[ReviewQuestionData] Skipping invalid option type: ${opt.runtimeType}, value: $opt');
+        }
+      }
     }
 
     // Parse solution steps
@@ -177,7 +201,7 @@ class ReviewQuestionData {
     }
 
     // Question number is 1-indexed in mock tests, position is 0-indexed
-    final questionNumber = json['question_number'] as int? ?? 1;
+    final questionNumber = _parseInt(json['question_number']) ?? 1;
 
     return ReviewQuestionData(
       questionId: json['question_id'] as String? ?? '',
@@ -186,9 +210,9 @@ class ReviewQuestionData {
       questionTextHtml: json['question_text_html'] as String?,
       options: options,
       studentAnswer: (json['user_answer'] ?? json['student_answer'] ?? '').toString(),
-      correctAnswer: json['correct_answer'] as String? ?? '',
+      correctAnswer: (json['correct_answer'] ?? '').toString(),
       isCorrect: json['is_correct'] as bool? ?? false,
-      timeTakenSeconds: json['time_spent'] as int? ?? json['time_taken_seconds'] as int?,
+      timeTakenSeconds: _parseInt(json['time_spent']) ?? _parseInt(json['time_taken_seconds']),
       solutionText: json['solution_text'] as String?,
       solutionSteps: solutionSteps,
       subject: json['subject'] as String?,
