@@ -45,7 +45,7 @@ class _HistoryScreenState extends State<HistoryScreen>
       icon: Icons.camera_alt_outlined,
     ),
     _HistoryTab(
-      label: 'Mock Tests',
+      label: 'Simulations',
       icon: Icons.assignment_outlined,
     ),
   ];

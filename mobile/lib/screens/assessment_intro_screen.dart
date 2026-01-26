@@ -40,6 +40,8 @@ import '../widgets/shareable_journey_card.dart';
 import 'subscription/paywall_screen.dart';
 import 'chapter_practice/chapter_practice_loading_screen.dart';
 import 'chapter_practice/chapter_picker_screen.dart';
+import 'mock_test/mock_test_home_screen.dart';
+import '../providers/mock_test_provider.dart';
 
 class AssessmentIntroScreen extends StatefulWidget {
   /// When true, the screen is embedded in bottom navigation
@@ -227,6 +229,12 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
 
         // Note: Subscription status is already fetched at app startup in main.dart
         // Using cached data to avoid duplicate API calls
+
+        // Load mock test templates to get usage data for the card
+        if (mounted) {
+          final mockTestProvider = context.read<MockTestProvider>();
+          mockTestProvider.loadTemplates();
+        }
       }
 
       if (mounted) {
@@ -377,6 +385,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                     // Focus Areas card (always show)
                     const SizedBox(height: 16),
                     _buildFocusAreasCard(),
+                    const SizedBox(height: 16),
+                    // Mock Test Card
+                    _buildMockTestCard(),
                     const SizedBox(height: 24),
                     // Snap & Solve Card
                     _buildSnapSolveCard(),
@@ -911,6 +922,135 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMockTestCard() {
+    final isUnlocked = _isAssessmentCompleted;
+
+    return Consumer<MockTestProvider>(
+      builder: (context, mockTestProvider, child) {
+        final usage = mockTestProvider.usage;
+        debugPrint('[MockTest] Card builder: usage=$usage, isUnlocked=$isUnlocked');
+        if (usage != null) {
+          debugPrint('[MockTest] Card: used=${usage.used}, limit=${usage.limit}, remaining=${usage.remaining}, hasUnlimited=${usage.hasUnlimited}');
+        }
+
+        // Determine subtitle text based on unlock and usage state
+        String subtitleText;
+        if (!isUnlocked) {
+          subtitleText = '🔒 Complete assessment to unlock';
+        } else if (usage == null) {
+          subtitleText = 'Full JEE Main simulation';
+        } else if (usage.hasUnlimited) {
+          subtitleText = 'Unlimited tests';
+        } else {
+          subtitleText = '${usage.remaining} tests remaining';
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 15,
+                  offset: const Offset(0, 6),
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.ctaGradient,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.assignment,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'JEE Main Simulation',
+                            style: AppTextStyles.headerSmall.copyWith(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            subtitleText,
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: isUnlocked
+                                  ? AppColors.primaryPurple
+                                  : AppColors.textLight,
+                              fontWeight: isUnlocked
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDetailChip('✏️ 90 questions'),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _buildDetailChip('⏱️ 3 hours'),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: _buildDetailChip('📊 300 marks'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                GradientButton(
+                  text: 'Start Simulation',
+                  onPressed: isUnlocked
+                      ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const MockTestHomeScreen(),
+                            ),
+                          ).then((_) {
+                            // Refresh data when returning
+                            _loadData();
+                          });
+                        }
+                      : null,
+                  isDisabled: !isUnlocked,
+                  size: GradientButtonSize.large,
+                  trailingIcon: Icons.arrow_forward,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

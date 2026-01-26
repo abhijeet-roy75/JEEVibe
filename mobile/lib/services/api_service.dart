@@ -1801,5 +1801,349 @@ class ApiService {
       // Don't rethrow - this is a fire-and-forget operation
     }
   }
+
+  // ==========================================================================
+  // MOCK TEST APIs
+  // ==========================================================================
+
+  /// Get available mock test templates
+  static Future<Map<String, dynamic>> getMockTestsAvailable({
+    required String authToken,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/mock-tests/available'),
+          headers: headers,
+        ).timeout(const Duration(seconds: 30));
+
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData['data'] as Map<String, dynamic>;
+          }
+          throw Exception(jsonData['error'] ?? 'Failed to fetch mock tests');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to fetch mock tests');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
+
+  /// Get active mock test (for resuming)
+  static Future<Map<String, dynamic>?> getActiveMockTest({
+    required String authToken,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/mock-tests/active'),
+          headers: headers,
+        ).timeout(const Duration(seconds: 30));
+
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData['data'] as Map<String, dynamic>?;
+          }
+          throw Exception(jsonData['error'] ?? 'Failed to fetch active test');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to fetch active test');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
+
+  /// Start a new mock test
+  static Future<Map<String, dynamic>> startMockTest({
+    required String authToken,
+    String? templateId,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final body = <String, dynamic>{};
+        if (templateId != null) {
+          body['template_id'] = templateId;
+        }
+
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/mock-tests/start'),
+          headers: headers,
+          body: json.encode(body),
+        ).timeout(const Duration(seconds: 60));
+
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData['data'] as Map<String, dynamic>;
+          }
+          throw Exception(jsonData['error'] ?? 'Failed to start mock test');
+        } else if (response.statusCode == 403) {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['message'] ?? 'Monthly limit reached');
+        } else if (response.statusCode == 429) {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['message'] ?? 'Please wait before starting another test');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to start mock test');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
+
+  /// Save answer for a mock test question
+  static Future<Map<String, dynamic>> saveMockTestAnswer({
+    required String authToken,
+    required String testId,
+    required int questionNumber,
+    String? answer,
+    bool markedForReview = false,
+    int timeSpentSeconds = 0,
+  }) async {
+    try {
+      final headers = await getAuthHeaders(authToken);
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/mock-tests/save-answer'),
+        headers: headers,
+        body: json.encode({
+          'test_id': testId,
+          'question_number': questionNumber,
+          'answer': answer,
+          'marked_for_review': markedForReview,
+          'time_spent_seconds': timeSpentSeconds,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      if (_checkSessionExpiry(response)) {
+        throw Exception('Session expired. Please sign in again.');
+      }
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['success'] == true) {
+          return jsonData['data'] as Map<String, dynamic>;
+        }
+        throw Exception(jsonData['error'] ?? 'Failed to save answer');
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to save answer');
+      }
+    } on SocketException {
+      throw Exception('No internet connection. Please check your network and try again.');
+    } on http.ClientException {
+      throw Exception('Network error. Please try again.');
+    }
+  }
+
+  /// Clear answer for a mock test question
+  static Future<void> clearMockTestAnswer({
+    required String authToken,
+    required String testId,
+    required int questionNumber,
+  }) async {
+    try {
+      final headers = await getAuthHeaders(authToken);
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/mock-tests/clear-answer'),
+        headers: headers,
+        body: json.encode({
+          'test_id': testId,
+          'question_number': questionNumber,
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      if (_checkSessionExpiry(response)) {
+        throw Exception('Session expired. Please sign in again.');
+      }
+
+      if (response.statusCode == 200) {
+        return;
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to clear answer');
+      }
+    } on SocketException {
+      throw Exception('No internet connection. Please check your network and try again.');
+    } on http.ClientException {
+      throw Exception('Network error. Please try again.');
+    }
+  }
+
+  /// Submit mock test and get results
+  static Future<Map<String, dynamic>> submitMockTest({
+    required String authToken,
+    required String testId,
+    Map<int, Map<String, dynamic>>? finalResponses,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final body = <String, dynamic>{
+          'test_id': testId,
+        };
+        if (finalResponses != null) {
+          body['final_responses'] = finalResponses;
+        }
+
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/mock-tests/submit'),
+          headers: headers,
+          body: json.encode(body),
+        ).timeout(const Duration(seconds: 60));
+
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData['data'] as Map<String, dynamic>;
+          }
+          throw Exception(jsonData['error'] ?? 'Failed to submit test');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to submit test');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
+
+  /// Abandon mock test
+  static Future<void> abandonMockTest({
+    required String authToken,
+    required String testId,
+  }) async {
+    try {
+      final headers = await getAuthHeaders(authToken);
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/mock-tests/abandon'),
+        headers: headers,
+        body: json.encode({
+          'test_id': testId,
+        }),
+      ).timeout(const Duration(seconds: 30));
+
+      if (_checkSessionExpiry(response)) {
+        throw Exception('Session expired. Please sign in again.');
+      }
+
+      if (response.statusCode == 200) {
+        return;
+      } else {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['error'] ?? 'Failed to abandon test');
+      }
+    } on SocketException {
+      throw Exception('No internet connection. Please check your network and try again.');
+    } on http.ClientException {
+      throw Exception('Network error. Please try again.');
+    }
+  }
+
+  /// Get mock test history
+  static Future<Map<String, dynamic>> getMockTestHistory({
+    required String authToken,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/mock-tests/history'),
+          headers: headers,
+        ).timeout(const Duration(seconds: 30));
+
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData['data'] as Map<String, dynamic>;
+          }
+          throw Exception(jsonData['error'] ?? 'Failed to fetch history');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to fetch history');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
+
+  /// Get detailed results for a completed test
+  static Future<Map<String, dynamic>> getMockTestResults({
+    required String authToken,
+    required String testId,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/mock-tests/$testId/results'),
+          headers: headers,
+        ).timeout(const Duration(seconds: 30));
+
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData['data'] as Map<String, dynamic>;
+          }
+          throw Exception(jsonData['error'] ?? 'Failed to fetch results');
+        } else if (response.statusCode == 404) {
+          throw Exception('Test not found');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to fetch results');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
 }
 

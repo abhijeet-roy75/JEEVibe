@@ -4,6 +4,7 @@
 /// Daily Quiz and Chapter Practice review screens.
 import 'daily_quiz_question.dart' show SolutionStep;
 import 'chapter_practice_models.dart' show PracticeQuestionResult, PracticeOption;
+import 'mock_test_models.dart' show MockTestQuestion, MockTestOption;
 
 /// Common data model for reviewing questions
 class ReviewQuestionData {
@@ -134,6 +135,70 @@ class ReviewQuestionData {
       keyInsight: result.keyInsight,
       distractorAnalysis: result.distractorAnalysis,
       commonMistakes: result.commonMistakes,
+    );
+  }
+
+  /// Create from Mock Test question with results
+  /// The question map comes from the backend's getTestResults which merges
+  /// template questions with user responses
+  factory ReviewQuestionData.fromMockTestQuestion(Map<String, dynamic> json) {
+    // Parse options
+    List<ReviewOptionData> options = [];
+    if (json['options'] != null && json['options'] is List) {
+      options = (json['options'] as List)
+          .map((opt) => ReviewOptionData.fromMap(opt as Map<String, dynamic>))
+          .toList();
+    }
+
+    // Parse solution steps
+    List<SolutionStep> solutionSteps = [];
+    if (json['solution_steps'] != null && json['solution_steps'] is List) {
+      solutionSteps = (json['solution_steps'] as List)
+          .map((step) => SolutionStep.fromJson(step))
+          .toList();
+    }
+
+    // Parse distractor analysis
+    Map<String, String>? distractorAnalysis;
+    if (json['distractor_analysis'] != null && json['distractor_analysis'] is Map) {
+      distractorAnalysis = Map<String, String>.from(
+        (json['distractor_analysis'] as Map).map(
+          (key, value) => MapEntry(key.toString(), value.toString()),
+        ),
+      );
+    }
+
+    // Parse common mistakes
+    List<String>? commonMistakes;
+    if (json['common_mistakes'] != null && json['common_mistakes'] is List) {
+      commonMistakes = (json['common_mistakes'] as List)
+          .map((m) => m.toString())
+          .toList();
+    }
+
+    // Question number is 1-indexed in mock tests, position is 0-indexed
+    final questionNumber = json['question_number'] as int? ?? 1;
+
+    return ReviewQuestionData(
+      questionId: json['question_id'] as String? ?? '',
+      position: questionNumber - 1,
+      questionText: json['question_text'] as String? ?? '',
+      questionTextHtml: json['question_text_html'] as String?,
+      options: options,
+      studentAnswer: (json['user_answer'] ?? json['student_answer'] ?? '').toString(),
+      correctAnswer: json['correct_answer'] as String? ?? '',
+      isCorrect: json['is_correct'] as bool? ?? false,
+      timeTakenSeconds: json['time_spent'] as int? ?? json['time_taken_seconds'] as int?,
+      solutionText: json['solution_text'] as String?,
+      solutionSteps: solutionSteps,
+      subject: json['subject'] as String?,
+      chapter: json['chapter'] as String?,
+      difficulty: json['difficulty'] as String?,
+      imageUrl: json['image_url'] as String?,
+      keyInsight: json['key_insight'] as String?,
+      distractorAnalysis: distractorAnalysis,
+      commonMistakes: commonMistakes,
+      questionType: json['question_type'] as String?,
     );
   }
 }
