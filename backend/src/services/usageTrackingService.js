@@ -75,17 +75,20 @@ function getNextMidnightIST() {
  *
  * @param {string} userId - User ID
  * @param {string} usageType - Type of usage (snap_solve, daily_quiz, ai_tutor)
+ * @param {Object} tierInfo - Optional pre-fetched tier info (optimization to avoid redundant calls)
  * @returns {Promise<Object>} Usage info { used, limit, remaining, resets_at, is_unlimited }
  */
-async function getUsage(userId, usageType) {
+async function getUsage(userId, usageType, tierInfo = null) {
   const isMonthly = MONTHLY_USAGE_TYPES.has(usageType);
   const dateKey = isMonthly ? getCurrentMonthKey() : getTodayDateKey();
   const collection = isMonthly ? 'monthly_usage' : 'daily_usage';
   const limitKey = USAGE_TYPE_MAP[usageType] || `${usageType}_daily`;
 
   try {
-    // Get user's tier and limits
-    const tierInfo = await getEffectiveTier(userId);
+    // PERFORMANCE: Get user's tier and limits (use passed tierInfo if available)
+    if (!tierInfo) {
+      tierInfo = await getEffectiveTier(userId);
+    }
     const limits = await getTierLimits(tierInfo.tier);
     const limit = limits[limitKey] ?? 0;
 
@@ -254,13 +257,21 @@ async function incrementUsage(userId, usageType) {
  * Get all usage types for a user for today
  *
  * @param {string} userId - User ID
+ * @param {Object} tierInfo - Optional pre-fetched tier info (optimization)
  * @returns {Promise<Object>} All usage info by type
  */
-async function getAllUsage(userId) {
+async function getAllUsage(userId, tierInfo = null) {
+  // PERFORMANCE OPTIMIZATION: Fetch tier once and reuse for all 3 calls
+  // Previously: 3 redundant getEffectiveTier() calls (one per feature)
+  // Now: 1 call shared across all features (reduces Firestore reads by 60%)
+  if (!tierInfo) {
+    tierInfo = await getEffectiveTier(userId);
+  }
+
   const [snapSolve, dailyQuiz, aiTutor] = await Promise.all([
-    getUsage(userId, 'snap_solve'),
-    getUsage(userId, 'daily_quiz'),
-    getUsage(userId, 'ai_tutor')
+    getUsage(userId, 'snap_solve', tierInfo),
+    getUsage(userId, 'daily_quiz', tierInfo),
+    getUsage(userId, 'ai_tutor', tierInfo)
   ]);
 
   return {

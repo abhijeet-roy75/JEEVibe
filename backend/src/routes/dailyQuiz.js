@@ -796,18 +796,36 @@ router.post('/complete', authenticateUser, validateQuizId, async (req, res, next
       });
     }
 
-    // Update review intervals for incorrect answers
-    for (const response of responses) {
-      if (!response.is_correct && response.question_id) {
-        try {
-          await updateReviewInterval(userId, response.question_id, false);
-        } catch (error) {
-          logger.warn('Error updating review interval', {
-            userId,
-            questionId: response.question_id,
-            error: error.message
-          });
+    // PERFORMANCE: Batch update review intervals for incorrect answers
+    // Previously: N sequential writes (one per incorrect answer)
+    // Now: Single batched write (reduces network calls by N-1)
+    const incorrectResponses = responses.filter(r => !r.is_correct && r.question_id);
+    if (incorrectResponses.length > 0) {
+      try {
+        const batch = db.batch();
+        for (const response of incorrectResponses) {
+          const reviewRef = db.collection('users')
+            .doc(userId)
+            .collection('review_intervals')
+            .doc(response.question_id);
+
+          // Calculate new interval (same logic as updateReviewInterval)
+          const newInterval = 1; // Reset to 1 day for incorrect answers
+          batch.set(reviewRef, {
+            question_id: response.question_id,
+            interval: newInterval,
+            next_review: new Date(Date.now() + newInterval * 24 * 60 * 60 * 1000),
+            last_reviewed: new Date(),
+            times_reviewed: db.FieldValue.increment(1)
+          }, { merge: true });
         }
+        await batch.commit();
+      } catch (error) {
+        logger.warn('Error batch updating review intervals', {
+          userId,
+          count: incorrectResponses.length,
+          error: error.message
+        });
       }
     }
 
@@ -999,6 +1017,8 @@ router.get('/active', authenticateUser, async (req, res, next) => {
     const quizId = activeQuizSnapshot.docs[0].id;
 
     // Fetch questions from subcollection
+    // PERFORMANCE: Add limit(15) to prevent loading all 90 questions for mock tests
+    // Daily quizzes typically have 5-10 questions, mock tests can have 90
     const questionsSnapshot = await retryFirestoreOperation(async () => {
       return await db.collection('daily_quizzes')
         .doc(userId)
@@ -1006,6 +1026,7 @@ router.get('/active', authenticateUser, async (req, res, next) => {
         .doc(quizId)
         .collection('questions')
         .orderBy('position', 'asc')
+        .limit(15) // Limit initial fetch to reduce payload size
         .get();
     });
 

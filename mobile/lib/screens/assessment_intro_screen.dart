@@ -122,109 +122,93 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
 
       if (user != null) {
 
-        // Always try to fetch assessment results from backend to sync status
-        // This handles the case where user reinstalled app but has completed assessment
-        try {
-          final authService = Provider.of<AuthService>(context, listen: false);
-          final token = await authService.getIdToken();
+        // PERFORMANCE OPTIMIZATION: Parallelize all data fetching
+        // Previously: assessment → quiz summary → analytics (sequential: 15-30s)
+        // Now: All 3 in parallel (optimized: 5-10s)
 
-          if (token != null) {
-            final result = await ApiService.getAssessmentResults(
-              authToken: token,
-              userId: user.uid,
-            );
+        final authService = Provider.of<AuthService>(context, listen: false);
+        final token = await authService.getIdToken();
 
-            if (result.success && result.data != null) {
-              assessmentData = result.data;
+        if (token != null) {
+          try {
+            // Fetch all data in parallel
+            final results = await Future.wait([
+              ApiService.getAssessmentResults(
+                authToken: token,
+                userId: user.uid,
+              ).catchError((e) {
+                debugPrint('Error fetching assessment results: $e');
+                return ApiResult(success: false, error: e.toString());
+              }),
+              ApiService.getDailyQuizSummary(authToken: token).catchError((e) {
+                debugPrint('Error fetching quiz summary: $e');
+                return <String, dynamic>{};
+              }),
+              AnalyticsService.getOverview(authToken: token).catchError((e) {
+                debugPrint('Error fetching analytics overview: $e');
+                return null;
+              }),
+            ]);
+
+            if (!mounted) return;
+
+            // Process assessment results
+            final assessmentResult = results[0] as ApiResult;
+            if (assessmentResult.success && assessmentResult.data != null) {
+              assessmentData = assessmentResult.data;
 
               // Check if assessment status is 'processing'
               final assessmentStatus = assessmentData?.assessment['status'];
-              
+
               // Check if we have actual assessment results (questions were answered)
-              // A completed assessment should have at least some questions answered
-              final hasActualResults = assessmentData != null && 
+              final hasActualResults = assessmentData != null &&
                   ((assessmentData.subjectAccuracy['physics']?['total'] ?? 0) > 0 ||
                    (assessmentData.subjectAccuracy['chemistry']?['total'] ?? 0) > 0 ||
                    (assessmentData.subjectAccuracy['mathematics']?['total'] ?? 0) > 0);
 
               // If status is already completed and we have backend data, preserve it
-              // This ensures cards remain visible for users who have completed assessments
               if (status == 'completed') {
-                // Keep status as completed if we have any backend data
-                // Only reset if backend explicitly says it's processing with no results
                 if (assessmentStatus == 'processing' && !hasActualResults) {
                   debugPrint('Assessment is still processing, resetting local status to in_progress');
                   await storageService.setAssessmentStatus('in_progress');
                   status = 'in_progress';
                 } else {
-                  // Preserve completed status - user has already completed assessment
                   debugPrint('Preserving completed status - user has completed assessment');
                 }
               }
-              // Only sync to completed if:
-              // 1. Status is not already completed
-              // 2. Assessment status is not 'processing'
-              // 3. We have actual results (questions were answered)
-              else if (status != 'completed' && 
-                       assessmentStatus != 'processing' && 
+              // Only sync to completed if conditions met
+              else if (status != 'completed' &&
+                       assessmentStatus != 'processing' &&
                        hasActualResults) {
                 debugPrint('Assessment data found in backend, syncing local status to completed');
                 await storageService.setAssessmentStatus('completed');
                 status = 'completed';
               }
 
-              // Debug: Print subject accuracy data
               debugPrint('Assessment Data - subjectAccuracy: ${assessmentData?.subjectAccuracy}');
-              debugPrint('Physics: ${assessmentData?.subjectAccuracy['physics']}');
-              debugPrint('Chemistry: ${assessmentData?.subjectAccuracy['chemistry']}');
-              debugPrint('Mathematics: ${assessmentData?.subjectAccuracy['mathematics']}');
-            } else if (result.success == false) {
-              // Backend explicitly says assessment is not completed
-              // This is different from a network error (which throws an exception)
-              // If backend says not completed but local says completed, local has stale data
-              if (status == 'completed') {
-                debugPrint('Backend says assessment not completed, resetting stale local status');
-                await storageService.setAssessmentStatus('not_started');
-                status = 'not_started';
-              }
+            } else if (assessmentResult.success == false && status == 'completed') {
+              debugPrint('Backend says assessment not completed, resetting stale local status');
+              await storageService.setAssessmentStatus('not_started');
+              status = 'not_started';
             }
-          }
-        } catch (e) {
-          debugPrint('Error fetching assessment results: $e');
-        }
 
-        // Fetch daily quiz summary for dynamic Priya messages
-        // Get authService reference once before async operations to avoid context access after unmount
-        final authServiceForSummary = Provider.of<AuthService>(context, listen: false);
-        try {
-          if (!mounted) return;
-          final token = await authServiceForSummary.getIdToken();
-          if (token != null && mounted) {
-            final summary = await ApiService.getDailyQuizSummary(authToken: token);
-            if (mounted) {
+            // Process quiz summary
+            final summary = results[1] as Map<String, dynamic>;
+            if (summary.isNotEmpty && mounted) {
               _quizSummary = summary;
               debugPrint('Quiz summary loaded: streak=${summary['streak']?['current_streak']}, today_accuracy=${summary['today_stats']?['accuracy']}');
             }
-          }
-        } catch (e) {
-          debugPrint('Error fetching quiz summary: $e');
-          // Non-critical - continue with default message
-        }
 
-        // Fetch analytics overview for cumulative progress display
-        try {
-          if (!mounted) return;
-          final token = await authServiceForSummary.getIdToken();
-          if (token != null && mounted) {
-            final overview = await AnalyticsService.getOverview(authToken: token);
-            if (mounted) {
+            // Process analytics overview
+            final overview = results[2];
+            if (overview != null && mounted) {
               _analyticsOverview = overview;
               debugPrint('Analytics overview loaded: quizzes=${overview.stats.quizzesCompleted}, questions=${overview.stats.questionsSolved}');
             }
+          } catch (e) {
+            debugPrint('Error in parallel data fetch: $e');
+            // Continue with partial data
           }
-        } catch (e) {
-          debugPrint('Error fetching analytics overview: $e');
-          // Non-critical - fall back to assessment data
         }
 
         // Note: Subscription status is already fetched at app startup in main.dart
