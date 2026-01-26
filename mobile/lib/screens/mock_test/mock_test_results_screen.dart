@@ -6,10 +6,12 @@ import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/subject_icon_widget.dart';
+import '../../widgets/buttons/gradient_button.dart';
 import '../../models/mock_test_models.dart';
 import '../../services/api_service.dart';
 import '../../services/firebase/auth_service.dart';
 import 'mock_test_review_screen.dart';
+import '../main_navigation_screen.dart';
 
 class MockTestResultsScreen extends StatefulWidget {
   final String testId;
@@ -491,38 +493,32 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
   Widget _buildActions() {
     return Column(
       children: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MockTestReviewScreen(testId: widget.testId),
-                ),
-              );
-            },
-            icon: const Icon(Icons.visibility),
-            label: const Text('Review Answers'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-          ),
+        // Review Questions button (primary action)
+        GradientButton(
+          text: 'Review Questions',
+          leadingIcon: Icons.visibility,
+          size: GradientButtonSize.large,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MockTestReviewScreen(testId: widget.testId),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).popUntil(
-              (route) => route.isFirst,
-            ),
-            icon: const Icon(Icons.home),
-            label: const Text('Back to Home'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-          ),
+        // Back to Dashboard button (secondary action)
+        GradientButton(
+          text: 'Back to Dashboard',
+          leadingIcon: Icons.home,
+          size: GradientButtonSize.large,
+          onPressed: () {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+              (route) => false,
+            );
+          },
         ),
       ],
     );
