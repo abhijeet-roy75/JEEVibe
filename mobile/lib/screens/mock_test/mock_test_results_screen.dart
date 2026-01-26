@@ -273,7 +273,7 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
             child: Column(
               children: [
                 Text(
-                  '${result.accuracy.toStringAsFixed(1)}%',
+                  '${_parseAccuracy(result.accuracy)}%',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -298,52 +298,75 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
   Widget _buildPercentileCard(MockTestResult result) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        gradient: LinearGradient(
+          colors: [
+            AppColors.success.withOpacity(0.1),
+            AppColors.success.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(
+          color: AppColors.success.withOpacity(0.3),
+          width: 1.5,
+        ),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.trending_up,
-                color: AppColors.success,
-                size: 28,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${result.percentile.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.success,
-                ),
-              ),
-              const Text(
-                '%ile',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.success,
-                ),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.trending_up,
+              color: AppColors.success,
+              size: 28,
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'NTA Percentile (based on JEE Main 2026 data)',
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondary,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      result.percentile.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.success,
+                        height: 1.0,
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 2, left: 4),
+                      child: Text(
+                        'Percentile',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'NTA Percentile (JEE Main 2026)',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -391,7 +414,7 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
     IconData icon,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
@@ -405,25 +428,36 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 6),
           Text(
             value,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
+          const SizedBox(height: 2),
           Text(
             label,
             style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.textSecondary,
+              fontSize: 12,
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _parseAccuracy(String accuracy) {
+    try {
+      final value = double.parse(accuracy);
+      return value.toStringAsFixed(1);
+    } catch (e) {
+      return accuracy;
+    }
   }
 
   Widget _buildSubjectBreakdown(MockTestResult result) {
