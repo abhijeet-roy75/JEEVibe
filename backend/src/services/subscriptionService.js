@@ -16,7 +16,7 @@
 const { db, admin } = require('../config/firebase');
 const logger = require('../utils/logger');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
-const { getTierLimits, getTierFeatures } = require('./tierConfigService');
+const { getTierLimits, getTierFeatures, getTierLimitsAndFeatures } = require('./tierConfigService');
 
 // ============================================================================
 // TIER CACHE (Performance optimization)
@@ -259,7 +259,6 @@ async function getSubscriptionStatus(userId, tierInfo = null) {
   }
 
   // PERFORMANCE: Use combined function to get both limits and features in one call
-  const { getTierLimitsAndFeatures } = require('./tierConfigService');
   const { limits, features } = await getTierLimitsAndFeatures(tierInfo.tier);
 
   return {
