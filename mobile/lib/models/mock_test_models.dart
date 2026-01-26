@@ -214,6 +214,14 @@ class MockTestQuestion {
   bool get isMcq => questionType == 'mcq_single' || questionType == 'mcq';
   bool get isNumerical => questionType == 'numerical' || questionType == 'integer';
   bool get hasImage => imageUrl != null && imageUrl!.isNotEmpty;
+
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
 }
 
 /// Solution Step
