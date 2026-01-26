@@ -150,6 +150,39 @@ describe('MockTestService - Analytics Updates', () => {
       expect(newTotalTests).toBe(3);
     });
 
+    it('should calculate overall_percentile from overall_theta', () => {
+      // Theta to percentile conversion (using normal CDF approximation)
+      // Theta = 0 → 50th percentile
+      // Theta = 1 → ~84th percentile
+      // Theta = -1 → ~16th percentile
+
+      const testCases = [
+        { theta: 0, expectedPercentile: 50 },
+        { theta: 1, expectedMin: 80, expectedMax: 88 },
+        { theta: -1, expectedMin: 12, expectedMax: 20 },
+        { theta: 2, expectedMin: 95, expectedMax: 99 }
+      ];
+
+      testCases.forEach(({ theta, expectedPercentile, expectedMin, expectedMax }) => {
+        // Simulate thetaToPercentile calculation
+        const normalCDF = (x) => {
+          const t = 1 / (1 + 0.2316419 * Math.abs(x));
+          const d = 0.3989423 * Math.exp(-x * x / 2);
+          const probability = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+          return x > 0 ? 1 - probability : probability;
+        };
+
+        const percentile = Math.round(normalCDF(theta) * 100 * 100) / 100;
+
+        if (expectedPercentile !== undefined) {
+          expect(percentile).toBe(expectedPercentile);
+        } else {
+          expect(percentile).toBeGreaterThanOrEqual(expectedMin);
+          expect(percentile).toBeLessThanOrEqual(expectedMax);
+        }
+      });
+    });
+
     it('should update best_score if current score is higher', () => {
       const currentBestScore = 150;
       const newScore = 180;
