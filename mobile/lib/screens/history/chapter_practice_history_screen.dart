@@ -448,8 +448,14 @@ class _ChapterPracticeHistoryScreenState
     );
   }
 
-  bool get _showUpgradeBanner =>
-      !_isUnlimited && !_hasMore && _filteredSessions.isNotEmpty;
+  bool get _showUpgradeBanner {
+    // Don't show upgrade banner for Ultra tier (highest tier, 365 days history)
+    final subscriptionService =
+        Provider.of<SubscriptionService>(context, listen: false);
+    final isUltra = subscriptionService.status?.subscription.isUltra ?? false;
+
+    return !_isUnlimited && !_hasMore && _filteredSessions.isNotEmpty && !isUltra;
+  }
 
   Widget _buildLoadingState() {
     return const Center(
