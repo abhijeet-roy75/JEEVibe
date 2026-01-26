@@ -507,7 +507,13 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
           print('Error getting auth token: $e');
           return null;
         }),
-      ]);
+      ]).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          print('Profile/token fetch timed out after 10 seconds');
+          return [null, null]; // Return nulls on timeout
+        },
+      );
 
       userProfile = results[0] as UserProfile?;
       authToken = results[1] as String?;
@@ -564,7 +570,13 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
           }),
           // Pre-initialize offline provider (will update offlineEnabled after subscription fetch)
           Future.value(null), // Placeholder, will init after we get offlineEnabled
-        ]);
+        ]).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            print('Subscription fetch timed out after 10 seconds');
+            return [null, null]; // Return nulls on timeout
+          },
+        );
 
         final subscriptionStatus = results[0];
         offlineEnabled = subscriptionStatus?.limits.offlineEnabled ?? false;
@@ -574,6 +586,11 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
           user.uid,
           offlineEnabled: offlineEnabled,
           authToken: authToken,
+        ).timeout(
+          const Duration(seconds: 5),
+          onTimeout: () {
+            print('Offline provider initialization timed out after 5 seconds');
+          },
         );
 
         // Trigger automatic sync for Pro/Ultra users if online
