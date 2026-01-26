@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../../widgets/latex_widget.dart' show LaTeXWidget;
+import '../../widgets/latex_widget.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/offline/cached_image_widget.dart';
 import '../../providers/mock_test_provider.dart';
@@ -447,16 +447,12 @@ class _MockTestScreenState extends State<MockTestScreen> {
     );
   }
 
-  /// Build question text using Html widget for HTML content,
-  /// LaTeXWidget for LaTeX content, or plain Text as fallback.
+  /// Build question text using Html widget for HTML content or LaTeXWidget for plain text with LaTeX.
   Widget _buildQuestionText(MockTestQuestion question) {
-    final htmlText = question.questionTextHtml;
-    final plainText = question.questionText;
-
-    // Prefer HTML rendering (same approach as daily quiz)
-    if (htmlText != null && htmlText.isNotEmpty) {
+    // Prefer HTML rendering - Html widget handles LaTeX in HTML automatically
+    if (question.questionTextHtml != null && question.questionTextHtml!.isNotEmpty) {
       return Html(
-        data: htmlText,
+        data: question.questionTextHtml!,
         style: {
           'body': Style(
             margin: Margins.zero,
@@ -472,9 +468,15 @@ class _MockTestScreenState extends State<MockTestScreen> {
       );
     }
 
-    // Fallback to plain text with LaTeX support
-    if (plainText.isNotEmpty) {
-      return LaTeXWidget(text: plainText);
+    // Fallback to LaTeXWidget for plain text (may contain LaTeX with $ delimiters)
+    if (question.questionText.isNotEmpty) {
+      return LaTeXWidget(
+        text: question.questionText,
+        textStyle: AppTextStyles.bodyMedium.copyWith(
+          fontSize: 16,
+          height: 1.6,
+        ),
+      );
     }
 
     return Text(
@@ -486,7 +488,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
     );
   }
 
-  /// Build option text using Html or LaTeX widget
+  /// Build option text using Html widget for HTML content or LaTeXWidget for plain text with LaTeX.
   Widget _buildOptionText(QuestionOption option) {
     if (option.html != null && option.html!.isNotEmpty) {
       return Html(
@@ -506,11 +508,14 @@ class _MockTestScreenState extends State<MockTestScreen> {
       );
     }
 
-    if (option.text.isNotEmpty) {
-      return LaTeXWidget(text: option.text);
-    }
-
-    return Text(option.text, style: AppTextStyles.bodyMedium);
+    // Fallback to LaTeXWidget for plain text (may contain LaTeX with $ delimiters)
+    return LaTeXWidget(
+      text: option.text,
+      textStyle: AppTextStyles.bodyMedium.copyWith(
+        fontSize: 15,
+        height: 1.5,
+      ),
+    );
   }
 
   /// Build question image - uses _NetworkSvgImage for SVGs, CachedImageWidget for raster
