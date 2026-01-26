@@ -138,7 +138,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 userId: user.uid,
               ).catchError((e) {
                 debugPrint('Error fetching assessment results: $e');
-                return ApiResult(success: false, error: e.toString());
+                return AssessmentResult(success: false, error: e.toString());
               }),
               ApiService.getDailyQuizSummary(authToken: token).catchError((e) {
                 debugPrint('Error fetching quiz summary: $e');
@@ -153,7 +153,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             if (!mounted) return;
 
             // Process assessment results
-            final assessmentResult = results[0] as ApiResult;
+            final assessmentResult = results[0] as AssessmentResult;
             if (assessmentResult.success && assessmentResult.data != null) {
               assessmentData = assessmentResult.data;
 
@@ -200,7 +200,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             }
 
             // Process analytics overview
-            final overview = results[2];
+            final overview = results[2] as AnalyticsOverview?;
             if (overview != null && mounted) {
               _analyticsOverview = overview;
               debugPrint('Analytics overview loaded: quizzes=${overview.stats.quizzesCompleted}, questions=${overview.stats.questionsSolved}');

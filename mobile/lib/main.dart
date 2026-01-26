@@ -25,6 +25,7 @@ import 'services/api_service.dart';
 import 'providers/app_state_provider.dart';
 import 'providers/offline_provider.dart';
 import 'providers/user_profile_provider.dart';
+import 'models/user_profile.dart';
 
 // Screens
 import 'screens/auth/welcome_screen.dart'; // The new Auth Wrapper
