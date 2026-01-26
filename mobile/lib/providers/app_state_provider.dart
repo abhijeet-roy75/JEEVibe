@@ -27,13 +27,37 @@ class AppStateProvider extends ChangeNotifier {
   bool _isInitialized = false;
   bool _isLoading = false;
 
-  // Getters
-  int get snapsUsed => _snapsUsed;
-  int get snapLimit => _snapLimit;
-  int get snapsRemaining => _snapLimit == -1 ? -1 : (_snapLimit - _snapsUsed);
-  bool get hasSeenWelcome => _hasSeenWelcome;
-  List<RecentSolution> get recentSolutions => _recentSolutions;
-  UserStats get stats => _stats;
+  // Getters with lazy initialization
+  int get snapsUsed {
+    _ensureInitialized();
+    return _snapsUsed;
+  }
+
+  int get snapLimit {
+    _ensureInitialized();
+    return _snapLimit;
+  }
+
+  int get snapsRemaining {
+    _ensureInitialized();
+    return _snapLimit == -1 ? -1 : (_snapLimit - _snapsUsed);
+  }
+
+  bool get hasSeenWelcome {
+    _ensureInitialized();
+    return _hasSeenWelcome;
+  }
+
+  List<RecentSolution> get recentSolutions {
+    _ensureInitialized();
+    return _recentSolutions;
+  }
+
+  UserStats get stats {
+    _ensureInitialized();
+    return _stats;
+  }
+
   bool get isInitialized => _isInitialized;
   bool get isLoading => _isLoading;
   bool get canTakeSnap {
@@ -60,7 +84,15 @@ class AppStateProvider extends ChangeNotifier {
     return '${snapsRemaining}/${_snapLimit} snaps remaining';
   }
 
-  /// Initialize the provider (call on app launch)
+  /// Ensure provider is initialized before accessing data
+  /// Called automatically by getters - lazy initialization pattern
+  void _ensureInitialized() {
+    if (!_isInitialized && !_isLoading) {
+      initialize();
+    }
+  }
+
+  /// Initialize the provider (called lazily on first access)
   Future<void> initialize() async {
     if (_isInitialized) return;
 
@@ -70,20 +102,26 @@ class AppStateProvider extends ChangeNotifier {
     try {
       await _storage.initialize();
       await _snapCounter.initialize();
-      
+
       // Load local state first for immediate UI
       await _loadState();
-      
-      // Sync with backend if authenticated
+
+      // PERFORMANCE: Backend sync now deferred to avoid blocking app startup
+      // Sync happens in background after initial load
       if (_authService != null && _authService!.isAuthenticated) {
         final token = await _authService!.getIdToken();
         if (token != null) {
-          await _snapCounter.syncWithBackend(token);
-          // Reload state after sync
-          await _loadState();
+          // Sync in background without blocking
+          _snapCounter.syncWithBackend(token).then((_) async {
+            // Reload state after sync completes
+            await _loadState();
+            notifyListeners();
+          }).catchError((e) {
+            debugPrint('Error syncing with backend: $e');
+          });
         }
       }
-      
+
       _isInitialized = true;
     } catch (e) {
       debugPrint('Error initializing AppStateProvider: $e');

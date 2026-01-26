@@ -50,10 +50,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     _currentIndex = widget.initialIndex.clamp(0, 3);
     // Only mark the initial tab as visited
     _visitedTabs = {_currentIndex};
-    // Load user profile into centralized provider
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<UserProfileProvider>().loadProfile();
-    });
+    // PERFORMANCE: Profile already loaded in AppInitializer - no need to reload
+    // Profile will auto-refresh if user navigates to profile screen
   }
 
   void _onTabSelected(int index) {
