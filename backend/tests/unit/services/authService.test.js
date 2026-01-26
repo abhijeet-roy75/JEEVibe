@@ -40,6 +40,7 @@ jest.mock('../../../src/config/firebase', () => {
         doc: jest.fn(() => ({
           get: mockGet,
           update: mockUpdate,
+          set: mockUpdate, // Use same mock for set() method
         })),
       })),
     },
@@ -150,23 +151,27 @@ describe('authService', () => {
 
       expect(db.collection).toHaveBeenCalledWith('users');
       expect(mockUpdate).toHaveBeenCalledWith({
-        'auth.active_session': expect.objectContaining({
-          token: expect.stringMatching(/^sess_/),
-          device_id: 'device-abc',
-          device_name: 'Test Device',
-          ip_address: '10.0.0.1',
-        }),
-      });
+        auth: {
+          active_session: expect.objectContaining({
+            token: expect.stringMatching(/^sess_/),
+            device_id: 'device-abc',
+            device_name: 'Test Device',
+            ip_address: '10.0.0.1',
+          }),
+        },
+      }, { merge: true });
     });
 
     test('uses "Unknown Device" when deviceName not provided', async () => {
       await createSession('user-123', { deviceId: 'device-1' });
 
       expect(mockUpdate).toHaveBeenCalledWith({
-        'auth.active_session': expect.objectContaining({
-          device_name: 'Unknown Device',
-        }),
-      });
+        auth: {
+          active_session: expect.objectContaining({
+            device_name: 'Unknown Device',
+          }),
+        },
+      }, { merge: true });
     });
 
     test('logs session creation', async () => {
@@ -300,8 +305,12 @@ describe('authService', () => {
       await updateLastActive('user-123', session);
 
       expect(mockUpdate).toHaveBeenCalledWith({
-        'auth.active_session.last_active_at': expect.anything(),
-      });
+        auth: {
+          active_session: {
+            last_active_at: expect.anything(),
+          },
+        },
+      }, { merge: true });
     });
 
     test('does not update when last_active_at is recent (within debounce)', async () => {
@@ -348,8 +357,10 @@ describe('authService', () => {
 
       expect(db.collection).toHaveBeenCalledWith('users');
       expect(mockUpdate).toHaveBeenCalledWith({
-        'auth.active_session': expect.anything(),
-      });
+        auth: {
+          active_session: expect.anything(),
+        },
+      }, { merge: true });
     });
 
     test('logs session clear (logout)', async () => {

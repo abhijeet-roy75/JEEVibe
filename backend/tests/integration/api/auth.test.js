@@ -54,6 +54,7 @@ jest.mock('../../../src/config/firebase', () => {
         doc: jest.fn(() => ({
           get: mockGet,
           update: mockUpdate,
+          set: mockUpdate, // Use same mock for set() method
         })),
       })),
     },
@@ -150,9 +151,8 @@ describe('Auth API', () => {
       expect(response.body.error).toBe('deviceId is required');
     });
 
-    test('returns 404 if user profile not found (Firestore NOT_FOUND)', async () => {
-      mockUpdate.mockRejectedValueOnce({ code: 5, message: 'NOT_FOUND' });
-
+    test('creates session even if user document does not exist (uses set with merge)', async () => {
+      // With .set({ merge: true }), this should succeed even if document doesn't exist
       const response = await request(app)
         .post('/api/auth/session')
         .set('Authorization', 'Bearer test-token')
@@ -160,8 +160,9 @@ describe('Auth API', () => {
           deviceId: 'device-123',
         });
 
-      expect(response.status).toBe(404);
-      expect(response.body.error).toContain('User profile not found');
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.sessionToken).toMatch(/^sess_[a-f0-9]{64}$/);
     });
 
     test('stores session data with correct fields', async () => {
@@ -175,7 +176,7 @@ describe('Auth API', () => {
         });
 
       expect(lastUpdate).toBeTruthy();
-      const sessionData = lastUpdate['auth.active_session'];
+      const sessionData = lastUpdate.auth?.active_session || lastUpdate['auth.active_session'];
       expect(sessionData.device_id).toBe('my-device');
       expect(sessionData.device_name).toBe('Pixel 8');
       expect(sessionData.token).toMatch(/^sess_/);
