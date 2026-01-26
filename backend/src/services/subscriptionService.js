@@ -249,12 +249,18 @@ async function getEffectiveTier(userId, options = {}) {
  * Includes tier info, limits, features, and usage
  *
  * @param {string} userId - User ID
+ * @param {Object} tierInfo - Optional pre-fetched tier info (optimization)
  * @returns {Promise<Object>} Full subscription status
  */
-async function getSubscriptionStatus(userId) {
-  const tierInfo = await getEffectiveTier(userId);
-  const limits = await getTierLimits(tierInfo.tier);
-  const features = await getTierFeatures(tierInfo.tier);
+async function getSubscriptionStatus(userId, tierInfo = null) {
+  // PERFORMANCE: Use passed tierInfo if available to avoid redundant call
+  if (!tierInfo) {
+    tierInfo = await getEffectiveTier(userId);
+  }
+
+  // PERFORMANCE: Use combined function to get both limits and features in one call
+  const { getTierLimitsAndFeatures } = require('./tierConfigService');
+  const { limits, features } = await getTierLimitsAndFeatures(tierInfo.tier);
 
   return {
     ...tierInfo,

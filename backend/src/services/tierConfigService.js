@@ -238,6 +238,21 @@ async function getTierFeatures(tierId) {
 }
 
 /**
+ * PERFORMANCE: Get both limits and features in a single call
+ * Reduces redundant getTierById() calls when both are needed
+ *
+ * @param {string} tierId - Tier ID (free, pro, ultra)
+ * @returns {Promise<Object>} { limits, features }
+ */
+async function getTierLimitsAndFeatures(tierId) {
+  const tier = await getTierById(tierId);
+  return {
+    limits: tier?.limits || DEFAULT_TIER_CONFIG.tiers.free.limits,
+    features: tier?.features || DEFAULT_TIER_CONFIG.tiers.free.features
+  };
+}
+
+/**
  * Get all purchasable plans
  * @returns {Promise<Array>} List of purchasable tiers with pricing
  */
@@ -336,6 +351,7 @@ module.exports = {
   getTierById,
   getTierLimits,
   getTierFeatures,
+  getTierLimitsAndFeatures, // PERFORMANCE: Combined function
   getPurchasablePlans,
   initializeDefaultConfig,
   invalidateCache,
