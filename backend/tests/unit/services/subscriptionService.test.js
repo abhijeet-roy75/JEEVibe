@@ -66,6 +66,15 @@ jest.mock('../../../src/services/tierConfigService', () => ({
   getTierFeatures: jest.fn(() => Promise.resolve({
     analytics_access: 'basic',
   })),
+  getTierLimitsAndFeatures: jest.fn(() => Promise.resolve({
+    limits: {
+      snap_solve_daily: 5,
+      daily_quiz_daily: 1,
+    },
+    features: {
+      analytics_access: 'basic',
+    },
+  })),
 }));
 
 // Mock logger
