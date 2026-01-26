@@ -190,59 +190,104 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
   Widget _buildScoreCard(MockTestResult result) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: AppColors.ctaGradient,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            color: AppColors.primary.withOpacity(0.2),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
+      child: Row(
         children: [
-          const Text(
-            'Your Score',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
+          // Score section
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Your Score',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${result.score}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        height: 1.0,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4, bottom: 6),
+                      child: Text(
+                        '/ ${result.maxScore}',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.timer_outlined,
+                      color: Colors.white70,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      result.formattedTime,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            '${result.score}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 64,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            'out of ${result.maxScore}',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 16),
+          // Accuracy badge
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(
-              'Time: ${result.formattedTime}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-              ),
+            child: Column(
+              children: [
+                Text(
+                  '${result.accuracy.toStringAsFixed(1)}%',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Text(
+                  'Accuracy',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -491,14 +536,16 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
   }
 
   Widget _buildActions() {
+    final result = _result!;
     return Column(
       children: [
-        // Review Questions button (primary action)
-        GradientButton(
-          text: 'Review Questions',
-          leadingIcon: Icons.visibility,
-          size: GradientButtonSize.large,
-          onPressed: () {
+        // Review Questions button (primary action - solid purple)
+        _buildActionButton(
+          icon: Icons.rate_review,
+          iconColor: Colors.white,
+          label: 'Review Questions (${result.correct + result.incorrect + result.unattempted})',
+          backgroundColor: AppColors.primaryPurple,
+          onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -508,7 +555,7 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
           },
         ),
         const SizedBox(height: 12),
-        // Back to Dashboard button (secondary action)
+        // Back to Dashboard button (secondary action - gradient)
         GradientButton(
           text: 'Back to Dashboard',
           leadingIcon: Icons.home,
@@ -521,6 +568,59 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required Color backgroundColor,
+    required VoidCallback onTap,
+    Color? textColor,
+  }) {
+    final effectiveTextColor = textColor ?? Colors.white;
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(icon, color: iconColor, size: 20),
+                    const SizedBox(width: 12),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: effectiveTextColor,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: effectiveTextColor.withOpacity(0.7),
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
