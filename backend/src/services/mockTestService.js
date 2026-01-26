@@ -534,7 +534,7 @@ function calculateScore(questions, responses) {
       question_id: question.question_id,
       subject: question.subject,
       question_type: question.question_type,
-      user_answer: userAnswer,
+      user_answer: userAnswer ?? null, // Convert undefined to null for Firestore
       correct_answer: correctAnswer,
       is_correct: status === 'correct',
       marks_obtained: marks,
@@ -610,8 +610,14 @@ async function submitMockTest(userId, testId, finalResponses = {}, isAutoSubmit 
     throw new Error('Test already submitted');
   }
 
-  // Merge final responses
-  const allResponses = { ...testData.responses, ...finalResponses };
+  // Merge final responses and clean undefined values (Firestore doesn't accept undefined)
+  const mergedResponses = { ...testData.responses, ...finalResponses };
+  const allResponses = Object.fromEntries(
+    Object.entries(mergedResponses).map(([key, value]) => [
+      key,
+      value?.answer !== undefined ? value : { ...value, answer: null }
+    ])
+  );
 
   // Load template with correct answers
   const template = await loadTemplateWithQuestions(testData.template_id);
