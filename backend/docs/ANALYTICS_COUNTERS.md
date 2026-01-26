@@ -128,6 +128,7 @@ All features update these **user document** fields in Firestore:
   theta_by_subject: { /* recalculated */ },
   subject_accuracy: { /* updated with mock test results */ },
   overall_theta: /* weighted average */,
+  overall_percentile: /* calculated from theta */,
   theta_updated_at: FieldValue.serverTimestamp()
 }
 ```
@@ -152,6 +153,7 @@ All features update these **user document** fields in Firestore:
 {
   theta_by_chapter: { /* updated with 0.4x multiplier */ },
   theta_by_subject: { /* recalculated */ },
+  subject_accuracy: { /* updated per subject */ },
   overall_theta: /* weighted average */,
   overall_percentile: /* calculated from theta */,
   total_questions_solved: FieldValue.increment(totalQuestions),
@@ -216,7 +218,7 @@ subject_accuracy: {
 - Daily Quiz: Via `calculateSubjectAndOverallThetaUpdate()` (Line 757)
 - Chapter Practice: Via `calculateSubjectAndOverallThetaUpdate()` (Line 971)
 - Mock Tests: Direct calculation with validation (Lines 872-910)
-- Snap & Solve: ⚠️ **TO BE ADDED** (currently doesn't update subject_accuracy)
+- Snap & Solve: Via `calculateSubjectAndOverallThetaUpdate()` (Line 964) ✅
 
 ---
 
@@ -237,33 +239,29 @@ The mobile app's **Analytics Overview** tab displays:
 ✅ All features update `total_questions_solved`
 ✅ All features update `cumulative_stats` (added to Mock Tests)
 ✅ All features update `theta_by_chapter`, `theta_by_subject`, `overall_theta`
-✅ All features update `subject_accuracy` (except Snap Practice - needs fix)
-⚠️ Only Mock Tests updates `total_questions_incorrect` (intentional?)
-⚠️ Mock Tests doesn't update `overall_percentile` (should it?)
-⚠️ Mock Tests doesn't track time (`total_time_spent_minutes`)
+✅ All features update `subject_accuracy` (fixed - added to Snap & Solve)
+✅ All features update `overall_percentile` (fixed - added to Mock Tests)
+⚠️ Only Mock Tests updates `total_questions_incorrect` (intentional - reflects marking scheme)
+⚠️ Mock Tests doesn't track time (`total_time_spent_minutes`) (intentional - timed test)
 
 ---
 
-## Remaining Inconsistencies
+## Design Decisions
 
-### 1. Snap & Solve - Missing subject_accuracy Update
-**Issue**: Snap practice doesn't update `subject_accuracy` field
-**Impact**: Subject progress cards in Analytics don't include snap practice performance
-**Fix**: Add subject_accuracy update in `/backend/src/routes/solve.js` around Line 965
+### 1. total_questions_incorrect - Mock Tests Only ✅
+**Decision**: Intentionally limited to Mock Tests
+**Rationale**:
+- Mock tests use JEE Main marking scheme (+4/-1/0)
+- Daily Quiz and Chapter Practice focus on learning, not scoring
+- Incorrect count is meaningful only in exam simulation context
+- Other features track cumulative_stats.total_questions_attempted - total_questions_correct for incorrect count if needed
 
-### 2. Mock Tests - Missing overall_percentile Update
-**Issue**: Mock tests update `overall_theta` but not `overall_percentile`
-**Impact**: Percentile may be stale after mock test completion
-**Fix**: Add `overall_percentile` calculation after Line 882:
-```javascript
-const overallPercentile = thetaToPercentile(overallTheta);
-// Then include in update at Line 772
-```
-
-### 3. total_questions_incorrect - Only in Mock Tests
-**Issue**: Only mock tests increment this counter
-**Impact**: Counter doesn't reflect daily quiz, chapter practice, or snap practice errors
-**Decision needed**: Should this be global or mock-test-only?
+### 2. total_time_spent_minutes - Not tracked in Mock Tests ✅
+**Decision**: Intentionally excluded from Mock Tests
+**Rationale**:
+- Mock tests are fixed-duration (3 hours)
+- Time tracking is for adaptive learning features (quiz, practice)
+- Mock test time is recorded in session data, not user-level stats
 
 ---
 
@@ -271,6 +269,7 @@ const overallPercentile = thetaToPercentile(overallTheta);
 
 - **v1.0** (Jan 26, 2026): Initial documentation
 - **v1.1** (Jan 26, 2026): Added cumulative_stats to Mock Tests for consistency
+- **v1.2** (Jan 26, 2026): Added overall_percentile to Mock Tests, subject_accuracy to Snap & Solve
 
 ---
 

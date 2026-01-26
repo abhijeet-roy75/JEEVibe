@@ -961,6 +961,7 @@ router.post('/snap-practice/complete',
           return await userRef.update({
             theta_by_chapter: updatedThetaByChapter,
             theta_by_subject: subjectAndOverallUpdate.theta_by_subject,
+            subject_accuracy: subjectAndOverallUpdate.subject_accuracy,
             overall_theta: subjectAndOverallUpdate.overall_theta,
             overall_percentile: subjectAndOverallUpdate.overall_percentile,
             total_questions_solved: admin.firestore.FieldValue.increment(totalQuestions),

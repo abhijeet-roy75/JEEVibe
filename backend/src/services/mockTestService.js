@@ -21,7 +21,8 @@ const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
 const {
   calculateSubjectTheta,
-  calculateWeightedOverallTheta
+  calculateWeightedOverallTheta,
+  thetaToPercentile
 } = require('./thetaCalculationService');
 
 // ============================================================================
@@ -775,6 +776,7 @@ async function updateUserStatsFromMockTest(userId, result, questions) {
         theta_by_subject: thetaUpdates.subjectThetas,
         subject_accuracy: thetaUpdates.subjectAccuracy,
         overall_theta: thetaUpdates.overallTheta,
+        overall_percentile: thetaUpdates.overallPercentile,
         theta_updated_at: FieldValue.serverTimestamp()
       });
     });
@@ -872,6 +874,7 @@ async function calculateThetaUpdates(userId, result, questions, userData) {
   }
 
   const overallTheta = calculateWeightedOverallTheta(subjectThetas);
+  const overallPercentile = thetaToPercentile(overallTheta);
 
   // Calculate subject accuracy from mock test results with validation
   const subjectAccuracy = userData.subject_accuracy || {
@@ -917,7 +920,8 @@ async function calculateThetaUpdates(userId, result, questions, userData) {
   logger.info('Theta calculated from mock test', {
     userId,
     chaptersUpdated: Object.keys(chapterPerformance).length,
-    overallTheta
+    overallTheta,
+    overallPercentile
   });
 
   // Return all calculated updates (no database writes)
@@ -925,7 +929,8 @@ async function calculateThetaUpdates(userId, result, questions, userData) {
     thetaByChapter,
     subjectThetas,
     subjectAccuracy,
-    overallTheta
+    overallTheta,
+    overallPercentile
   };
 }
 
