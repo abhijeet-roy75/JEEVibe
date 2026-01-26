@@ -74,7 +74,7 @@ const validateSaveAnswer = [
   body('question_number')
     .isInt({ min: 1, max: 90 }).withMessage('question_number must be between 1 and 90'),
   body('answer')
-    .optional()
+    .optional({ nullable: true })
     .isString().withMessage('answer must be a string'),
   body('marked_for_review')
     .optional()
