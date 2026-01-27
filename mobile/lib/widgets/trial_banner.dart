@@ -14,8 +14,10 @@ class TrialBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subscriptionService = Provider.of<SubscriptionService>(context);
-    final status = subscriptionService.status;
+    return Consumer<SubscriptionService>(
+      builder: (context, subscriptionService, child) {
+        print('TrialBanner: build() called');
+        final status = subscriptionService.status;
 
     print('TrialBanner: status = ${status != null}');
     if (status != null) {
@@ -125,6 +127,8 @@ class TrialBanner extends StatelessWidget {
           ],
         ),
       ),
+    );
+      },
     );
   }
 }

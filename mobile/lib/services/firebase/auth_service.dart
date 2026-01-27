@@ -5,6 +5,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../push_notification_service.dart';
 
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -235,8 +236,26 @@ class AuthService extends ChangeNotifier {
 
   // Sign out - clears both server session and local data
   Future<void> signOut() async {
+    // Get auth token before signing out (for API calls)
+    String? authToken;
+    try {
+      authToken = await currentUser?.getIdToken();
+    } catch (e) {
+      debugPrint('Error getting auth token for logout: $e');
+    }
+
     // Clear server-side session first (fire and forget)
     await logoutSession();
+
+    // Clear FCM token (fire and forget)
+    if (authToken != null) {
+      try {
+        final pushService = PushNotificationService();
+        await pushService.clearToken(authToken);
+      } catch (e) {
+        debugPrint('Error clearing FCM token: $e');
+      }
+    }
 
     // Clear local session token
     await clearSessionToken();

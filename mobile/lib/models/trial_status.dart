@@ -79,4 +79,16 @@ class TrialStatus {
     if (isUrgent) return 'Upgrade';
     return 'Learn More';
   }
+
+  /// Convert to JSON for debugging
+  Map<String, dynamic> toJson() {
+    return {
+      'tier_id': tierId,
+      'started_at': startedAt.toIso8601String(),
+      'ends_at': endsAt.toIso8601String(),
+      'days_remaining': daysRemaining,
+      'is_active': isActive,
+      'is_urgent': isUrgent,
+    };
+  }
 }

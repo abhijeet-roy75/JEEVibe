@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_text_styles.dart';
 import '../../models/subscription_models.dart';
 import '../../services/subscription_service.dart';
+import '../../widgets/app_header.dart';
 
 /// Paywall Screen
 ///
@@ -74,26 +76,48 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: AppColors.textPrimary),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
+      extendBodyBehindAppBar: true,
+      appBar: null,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 16),
+          : Column(
+              children: [
+                // Standard header
+                AppHeader(
+                  showGradient: true,
+                  gradient: AppColors.ctaGradient,
+                  leading: GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white24,
+                      ),
+                      child: const Icon(Icons.close, color: Colors.white, size: 20),
+                    ),
+                  ),
+                  title: Text(
+                    'Upgrade',
+                    style: AppTextStyles.headerWhite.copyWith(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                // Scrollable content
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 16),
 
-                    // Hero section
-                    _buildHeroSection(),
+                          // Hero section
+                          _buildHeroSection(),
 
                     const SizedBox(height: 24),
 
@@ -117,13 +141,16 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Coming soon notice
-                    _buildComingSoonNotice(),
+                          // Coming soon notice
+                          _buildComingSoonNotice(),
 
-                    const SizedBox(height: 48),
-                  ],
+                          const SizedBox(height: 48),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
     );
   }

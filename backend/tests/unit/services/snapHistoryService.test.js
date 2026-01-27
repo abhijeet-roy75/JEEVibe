@@ -7,7 +7,7 @@
  */
 
 // Mock Firebase before requiring the service
-jest.mock('../../../src/config/firebase', () => {
+jest.mock('../../../../src/config/firebase', () => {
   const mockSnaps = [
     { id: 'snap1', timestamp: { toDate: () => new Date() }, subject: 'physics' },
     { id: 'snap2', timestamp: { toDate: () => new Date(Date.now() - 5 * 24 * 60 * 60 * 1000) }, subject: 'chemistry' },
@@ -62,18 +62,18 @@ jest.mock('../../../src/config/firebase', () => {
 });
 
 // Mock firestoreRetry
-jest.mock('../../../src/utils/firestoreRetry', () => ({
+jest.mock('../../../../src/utils/firestoreRetry', () => ({
   retryFirestoreOperation: jest.fn((fn) => fn()),
 }));
 
 // Mock logger
-jest.mock('../../../src/utils/logger', () => ({
+jest.mock('../../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
 }));
 
-const { getSnapHistory } = require('../../../src/services/snapHistoryService');
+const { getSnapHistory } = require('../../../../src/services/snapHistoryService');
 
 describe('snapHistoryService', () => {
   beforeEach(() => {

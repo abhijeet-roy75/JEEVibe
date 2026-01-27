@@ -7,7 +7,7 @@
  */
 
 // Mock Firebase before importing the service
-jest.mock('../../../src/config/firebase', () => ({
+jest.mock('../../../../src/config/firebase', () => ({
   db: {
     collection: jest.fn(() => ({
       doc: jest.fn(() => ({
@@ -33,7 +33,7 @@ jest.mock('../../../src/config/firebase', () => ({
   },
 }));
 
-jest.mock('../../../src/utils/logger', () => ({
+jest.mock('../../../../src/utils/logger', () => ({
   info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
@@ -43,7 +43,7 @@ jest.mock('../../../src/utils/logger', () => ({
 const {
   calculateChapterThetaUpdate,
   calculateSubjectAndOverallThetaUpdate,
-} = require('../../../src/services/thetaUpdateService');
+} = require('../../../../src/services/thetaUpdateService');
 
 describe('Theta Calculation Service - Pure Functions', () => {
   describe('calculateChapterThetaUpdate', () => {

@@ -17,18 +17,18 @@ jest.mock('openai', () => {
   }));
 });
 
-jest.mock('../../../src/utils/logger', () => ({
+jest.mock('../../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn()
 }));
 
-jest.mock('../../../src/services/aiTutorContextService', () => ({
+jest.mock('../../../../src/services/aiTutorContextService', () => ({
   buildContext: jest.fn(),
   getStudentProfile: jest.fn()
 }));
 
-jest.mock('../../../src/services/tutorConversationService', () => ({
+jest.mock('../../../../src/services/tutorConversationService', () => ({
   getOrCreateConversation: jest.fn(),
   addUserMessage: jest.fn(),
   addAssistantMessage: jest.fn(),
@@ -40,11 +40,11 @@ jest.mock('../../../src/services/tutorConversationService', () => ({
   updateTokenUsage: jest.fn()
 }));
 
-jest.mock('../../../src/services/latex-validator', () => ({
+jest.mock('../../../../src/services/latex-validator', () => ({
   validateAndNormalizeLaTeX: jest.fn((text) => text)
 }));
 
-jest.mock('../../../src/prompts/ai_tutor_prompts', () => ({
+jest.mock('../../../../src/prompts/ai_tutor_prompts', () => ({
   AI_TUTOR_SYSTEM_PROMPT: 'System prompt template {{STUDENT_CONTEXT}} {{CURRENT_CONTEXT}}',
   buildStudentContext: jest.fn(() => 'Student context string'),
   buildCurrentContext: jest.fn(() => 'Current context string'),
@@ -52,8 +52,8 @@ jest.mock('../../../src/prompts/ai_tutor_prompts', () => ({
   getQuickActions: jest.fn(() => [{ label: 'Test action', prompt: 'Test prompt' }])
 }));
 
-const logger = require('../../../src/utils/logger');
-const { buildContext, getStudentProfile } = require('../../../src/services/aiTutorContextService');
+const logger = require('../../../../src/utils/logger');
+const { buildContext, getStudentProfile } = require('../../../../src/services/aiTutorContextService');
 const {
   getOrCreateConversation,
   addUserMessage,
@@ -63,9 +63,9 @@ const {
   getMostRecentContext,
   clearConversation,
   getConversationWithMessages
-} = require('../../../src/services/tutorConversationService');
-const { validateAndNormalizeLaTeX } = require('../../../src/services/latex-validator');
-const { getQuickActions } = require('../../../src/prompts/ai_tutor_prompts');
+} = require('../../../../src/services/tutorConversationService');
+const { validateAndNormalizeLaTeX } = require('../../../../src/services/latex-validator');
+const { getQuickActions } = require('../../../../src/prompts/ai_tutor_prompts');
 
 const {
   sendMessage,
@@ -73,7 +73,7 @@ const {
   getConversation,
   resetConversation,
   generateWelcomeMessage
-} = require('../../../src/services/aiTutorService');
+} = require('../../../../src/services/aiTutorService');
 
 describe('AI Tutor Service', () => {
   beforeEach(() => {

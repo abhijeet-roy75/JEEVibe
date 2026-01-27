@@ -254,6 +254,11 @@ const JEE_CHAPTER_WEIGHTS = {
   "physics_dual_nature_of_radiation": 0.6,    // Full chapter name
   "physics_electronic_devices": 0.4,          // Variant of semiconductors
   "physics_optics": 0.8,                      // Combined optics
+  "physics_kinetic_theory_of_gases": 0.6,     // Full name variant of kinetic_theory
+  "physics_oscillations_waves": 0.8,          // Combined oscillations and waves
+  "physics_transformers": 0.4,                // Transformers (low-medium priority)
+  "physics_eddy_currents": 0.4,               // Eddy currents (low-medium priority)
+  "physics_experimental_skills": 0.4,         // Experimental skills and measurements
 
   // Chemistry (~27 chapters) - Original format
   "chemistry_atomic_structure": 0.8,
@@ -294,7 +299,10 @@ const JEE_CHAPTER_WEIGHTS = {
   "chemistry_carboxylic_acids_derivatives": 0.8, // Full chapter name
   "chemistry_haloalkanes_and_haloarenes": 0.8, // With "and"
   "chemistry_classification_periodicity": 0.6, // Full chapter name
+  "chemistry_classification_and_periodicity": 0.6, // With "and" variant
   "chemistry_purification_characterization": 0.6, // Purification chapter
+  "chemistry_basic_concepts": 0.8,             // Mole concept, stoichiometry (important foundation)
+  "chemistry_principles_of_practical_chemistry": 0.4, // Practical chemistry, significant figures
 
   // Mathematics (~22 chapters) - Original format
   "mathematics_sets_relations": 0.6,
@@ -328,7 +336,11 @@ const JEE_CHAPTER_WEIGHTS = {
   "mathematics_integral_calculus_indefinite": 1.0,        // Indefinite integrals
   "mathematics_integral_calculus_definite_area": 0.8,     // Definite integrals + area
   "mathematics_conic_sections_ellipse_hyperbola": 1.0,    // Full chapter name
-  "mathematics_vector_algebra": 1.0                       // Variant of vectors
+  "mathematics_conic_sections_parabola": 1.0,             // Parabola-specific conic sections
+  "mathematics_parabola": 1.0,                            // Parabola standalone
+  "mathematics_vector_algebra": 1.0,                      // Variant of vectors
+  "mathematics_threedimensional_geometry": 0.8,           // Full name variant of 3d_geometry
+  "mathematics_inverse_trigonometry": 0.6                 // Inverse trigonometric functions
 };
 
 // ============================================================================

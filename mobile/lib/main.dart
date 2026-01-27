@@ -9,6 +9,7 @@ import 'providers/chapter_practice_provider.dart';
 import 'providers/mock_test_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firebase_options.dart';
 
 // Services
@@ -22,6 +23,7 @@ import 'services/offline/database_service.dart';
 import 'services/offline/image_cache_service.dart';
 import 'services/offline/sync_service.dart';
 import 'services/api_service.dart';
+import 'services/push_notification_service.dart';
 import 'providers/app_state_provider.dart';
 import 'providers/offline_provider.dart';
 import 'providers/user_profile_provider.dart';
@@ -72,6 +74,9 @@ void main() async {
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     return true;
   };
+
+  // Register background message handler for push notifications
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   // Initialize connectivity service for offline detection
   // Use forceReinit: true to handle hot restart properly
@@ -550,7 +555,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       profileProvider.updateProfile(userProfile);
     }
 
-    // Step 2: Parallelize subscription fetch and offline provider initialization
+    // Step 2: Parallelize subscription fetch, offline provider initialization, and push notification setup
     if (mounted && authToken != null) {
       final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);
       bool offlineEnabled = false;
@@ -558,7 +563,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       try {
         // Fetch subscription status and initialize offline provider in parallel
         final results = await Future.wait([
-          SubscriptionService().fetchStatus(authToken).catchError((e) {
+          SubscriptionService().fetchStatus(authToken, forceRefresh: true).catchError((e) {
             print('Error fetching subscription status: $e');
             return null;
           }),
@@ -586,6 +591,11 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
             print('Offline provider initialization timed out after 5 seconds');
           },
         );
+
+        // Initialize push notifications (non-blocking)
+        PushNotificationService().initialize(authToken).catchError((e) {
+          print('Error initializing push notifications: $e');
+        });
 
         // Trigger automatic sync for Pro/Ultra users if online
         if (offlineEnabled && mounted) {

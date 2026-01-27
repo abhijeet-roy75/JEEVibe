@@ -91,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('HomeScreen: build() called');
     return Scaffold(
       body: Column(
         children: [

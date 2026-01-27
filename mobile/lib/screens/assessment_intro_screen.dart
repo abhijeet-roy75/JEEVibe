@@ -11,6 +11,7 @@ import '../widgets/app_header.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/buttons/gradient_button.dart';
 import '../widgets/offline/offline_banner.dart';
+import '../widgets/trial_banner.dart';
 import '../services/storage_service.dart';
 import '../services/firebase/firestore_user_service.dart';
 import '../services/firebase/auth_service.dart';
@@ -347,6 +348,8 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           children: [
             // Offline banner (shows when offline)
             const OfflineBanner(),
+            // Trial banner (shows when trial is urgent)
+            const TrialBanner(),
             // Header with logo, title, profile
             _buildHeader(),
             // Scrollable content

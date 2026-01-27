@@ -46,11 +46,14 @@ class SubscriptionService extends ChangeNotifier {
   /// Fetch subscription status from API
   Future<SubscriptionStatus?> fetchStatus(String authToken,
       {bool forceRefresh = false}) async {
+    debugPrint('SubscriptionService.fetchStatus called with token: ${authToken.substring(0, 20)}...');
+
     // Store previous source to detect trial expiry
     final previousSource = _cachedStatus?.subscription.source;
 
     // Return cached if valid and not forcing refresh
     if (_isCacheValid && !forceRefresh) {
+      debugPrint('SubscriptionService: Using cached status');
       return _cachedStatus;
     }
 
@@ -59,6 +62,7 @@ class SubscriptionService extends ChangeNotifier {
     notifyListeners();
 
     try {
+      debugPrint('SubscriptionService: Fetching from API...');
       final response = await http.get(
         Uri.parse('${ApiService.baseUrl}/api/subscriptions/status'),
         headers: {
@@ -67,12 +71,19 @@ class SubscriptionService extends ChangeNotifier {
         },
       ).timeout(const Duration(seconds: 10));
 
+      debugPrint('SubscriptionService: Response status = ${response.statusCode}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        debugPrint('SubscriptionService: Response data = ${data.toString()}');
+
         if (data['success'] == true) {
           _cachedStatus = SubscriptionStatus.fromJson(data['data']);
           _lastFetchTime = DateTime.now();
           _errorMessage = null;
+
+          debugPrint('SubscriptionService: Status cached - tier=${_cachedStatus?.subscription.tier}, source=${_cachedStatus?.subscription.source}');
+          debugPrint('SubscriptionService: Trial info = ${_cachedStatus?.subscription.trial?.toJson()}');
 
           // Detect trial expiry
           final currentSource = _cachedStatus?.subscription.source;
@@ -82,12 +93,15 @@ class SubscriptionService extends ChangeNotifier {
           }
         } else {
           _errorMessage = data['error'] ?? 'Failed to fetch subscription status';
+          debugPrint('SubscriptionService: API error = $_errorMessage');
         }
       } else {
         _errorMessage = 'Server error: ${response.statusCode}';
+        debugPrint('SubscriptionService: Server error = $_errorMessage, body = ${response.body}');
       }
     } catch (e) {
       _errorMessage = 'Network error: ${e.toString()}';
+      debugPrint('SubscriptionService: Network error = $e');
       // Don't clear cache on network error - use stale data
     } finally {
       _isLoading = false;

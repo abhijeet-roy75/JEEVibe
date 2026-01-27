@@ -15,7 +15,7 @@ const mockUserData = {
 
 const mockSubscriptionData = {};
 
-jest.mock('../../../src/config/firebase', () => {
+jest.mock('../../../../src/config/firebase', () => {
   return {
     db: {
       collection: jest.fn(() => ({
@@ -53,12 +53,12 @@ jest.mock('../../../src/config/firebase', () => {
 });
 
 // Mock firestoreRetry
-jest.mock('../../../src/utils/firestoreRetry', () => ({
+jest.mock('../../../../src/utils/firestoreRetry', () => ({
   retryFirestoreOperation: jest.fn((fn) => fn()),
 }));
 
 // Mock tierConfigService
-jest.mock('../../../src/services/tierConfigService', () => ({
+jest.mock('../../../../src/services/tierConfigService', () => ({
   getTierLimits: jest.fn(() => Promise.resolve({
     snap_solve_daily: 5,
     daily_quiz_daily: 1,
@@ -78,14 +78,14 @@ jest.mock('../../../src/services/tierConfigService', () => ({
 }));
 
 // Mock logger
-jest.mock('../../../src/utils/logger', () => ({
+jest.mock('../../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
 }));
 
-const { db } = require('../../../src/config/firebase');
-const { getEffectiveTier, getSubscriptionStatus, clearTierCache } = require('../../../src/services/subscriptionService');
+const { db } = require('../../../../src/config/firebase');
+const { getEffectiveTier, getSubscriptionStatus, clearTierCache } = require('../../../../src/services/subscriptionService');
 
 describe('subscriptionService', () => {
   beforeEach(() => {
