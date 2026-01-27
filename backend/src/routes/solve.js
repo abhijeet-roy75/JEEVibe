@@ -1040,7 +1040,8 @@ router.post('/snap-practice/complete',
               question_id: r.question_id || null
             })),
             theta_update: thetaUpdateInfo,
-            created_at: admin.firestore.FieldValue.serverTimestamp()
+            created_at: admin.firestore.FieldValue.serverTimestamp(),
+            completed_at: admin.firestore.FieldValue.serverTimestamp() // For weekly activity tracking
           });
       });
 
