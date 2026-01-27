@@ -212,6 +212,12 @@ async function getReviewQuestions(userId, limit = MAX_REVIEW_QUESTIONS) {
     const questionIds = topCandidates.map(c => c.question_id);
     const questionRefs = questionIds.map(id => db.collection('questions').doc(id));
 
+    // Check if we have any questions to fetch (getAll() requires at least 1 argument)
+    if (questionRefs.length === 0) {
+      logger.info('No review questions available', { userId });
+      return [];
+    }
+
     const questionDocs = await retryFirestoreOperation(async () => {
       return await db.getAll(...questionRefs);
     });

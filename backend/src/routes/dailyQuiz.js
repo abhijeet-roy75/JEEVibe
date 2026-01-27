@@ -816,7 +816,7 @@ router.post('/complete', authenticateUser, validateQuizId, async (req, res, next
             interval: newInterval,
             next_review: new Date(Date.now() + newInterval * 24 * 60 * 60 * 1000),
             last_reviewed: new Date(),
-            times_reviewed: db.FieldValue.increment(1)
+            times_reviewed: admin.firestore.FieldValue.increment(1)
           }, { merge: true });
         }
         await batch.commit();
