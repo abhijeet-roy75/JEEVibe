@@ -57,9 +57,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       final auth = Provider.of<AuthService>(context, listen: false);
       final firestore = Provider.of<FirestoreUserService>(context, listen: false);
       if (auth.currentUser != null) {
-        debugPrint('ProfileViewScreen: Loading profile for UID: ${auth.currentUser!.uid}');
         final profile = await firestore.getUserProfile(auth.currentUser!.uid);
-        debugPrint('ProfileViewScreen: Profile loaded successfully: ${profile != null}');
         if (mounted) {
           setState(() {
             _profile = profile;
@@ -67,11 +65,9 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
           });
         }
       } else {
-        debugPrint('ProfileViewScreen: No authenticated user found');
         if (mounted) setState(() => _isLoading = false);
       }
     } catch (e) {
-      debugPrint('ProfileViewScreen: Error loading profile: $e');
       if (mounted) setState(() => _isLoading = false);
     }
   }

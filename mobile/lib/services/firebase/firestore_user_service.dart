@@ -121,9 +121,7 @@ class FirestoreUserService {
   // Get User Profile
   Future<UserProfile?> getUserProfile(String uid) async {
     try {
-      print('FirestoreUserService: Fetching profile for UID: $uid');
       final token = await _getAuthToken();
-      print('FirestoreUserService: Got auth token: ${token.substring(0, 20)}...');
 
       final response = await http.get(
         Uri.parse('$baseUrl/api/users/profile'),
@@ -133,16 +131,12 @@ class FirestoreUserService {
         },
       ).timeout(const Duration(seconds: 30));
 
-      print('FirestoreUserService: Response status: ${response.statusCode}');
-      print('FirestoreUserService: Response body: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
-
       // Check if response is HTML instead of JSON (server unavailable/waking up)
       _checkForHtmlResponse(response);
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         if (jsonData['success'] == true && jsonData['data'] != null) {
-          print('FirestoreUserService: Profile data found, parsing...');
           final data = jsonData['data'] as Map<String, dynamic>;
 
           // Convert ISO date strings back to DateTime for UserProfile
@@ -159,34 +153,25 @@ class FirestoreUserService {
             }
           });
 
-          print('FirestoreUserService: Profile parsed successfully');
           return UserProfile.fromMap(profileData, data['uid'] ?? uid);
         }
-        print('FirestoreUserService: No profile data in response');
         return null;
       } else if (response.statusCode == 404) {
-        print('FirestoreUserService: Profile not found (404)');
         // Profile not found
         return null;
       } else {
         final errorData = json.decode(response.body);
-        print('FirestoreUserService: Error response: ${errorData['error']}');
         throw Exception(errorData['error'] ?? 'Failed to fetch user profile');
       }
     } on ServerUnavailableException {
-      print('FirestoreUserService: Server unavailable');
       throw Exception('Server is temporarily unavailable. Please try again in a moment.');
-    } on SocketException catch (e) {
-      print('FirestoreUserService: Network error: $e');
+    } on SocketException {
       throw Exception('No internet connection. Please check your network and try again.');
-    } on http.ClientException catch (e) {
-      print('FirestoreUserService: Client error: $e');
+    } on http.ClientException {
       throw Exception('Network error. Please try again.');
-    } on FormatException catch (e) {
-      print('FirestoreUserService: Format error: $e');
+    } on FormatException {
       throw Exception('Server is temporarily unavailable. Please try again in a moment.');
     } catch (e) {
-      print('FirestoreUserService: Unexpected error: $e');
       if (e is Exception && e.toString().contains('Server is temporarily')) {
         rethrow;
       }
