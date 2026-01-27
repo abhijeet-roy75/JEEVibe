@@ -17,6 +17,17 @@ class TrialBanner extends StatelessWidget {
     final subscriptionService = Provider.of<SubscriptionService>(context);
     final status = subscriptionService.status;
 
+    print('TrialBanner: status = ${status != null}');
+    if (status != null) {
+      print('TrialBanner: isOnTrial = ${status.subscription.isOnTrial}');
+      print('TrialBanner: source = ${status.subscription.source}');
+      print('TrialBanner: trial = ${status.subscription.trial}');
+      if (status.subscription.trial != null) {
+        print('TrialBanner: trial.isUrgent = ${status.subscription.trial!.isUrgent}');
+        print('TrialBanner: trial.daysRemaining = ${status.subscription.trial!.daysRemaining}');
+      }
+    }
+
     // Don't show if no subscription status or not on trial
     if (status == null || !status.subscription.isOnTrial) {
       return const SizedBox.shrink();
