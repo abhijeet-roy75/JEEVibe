@@ -318,6 +318,18 @@ function normalizeQuestion(id, data) {
     if (isNaN(q.irt_parameters.guessing_c)) q.irt_parameters.guessing_c = 0.25;
   }
 
+  // 3. Include explanation fields for review screens
+  // These fields are needed for "Why You Got This Wrong" and detailed explanations
+  if (data.key_insight) {
+    q.key_insight = data.key_insight;
+  }
+  if (data.distractor_analysis) {
+    q.distractor_analysis = data.distractor_analysis;
+  }
+  if (data.common_mistakes) {
+    q.common_mistakes = data.common_mistakes;
+  }
+
   return q;
 }
 
