@@ -5,7 +5,7 @@
  */
 
 // Mock Firebase before requiring the service
-jest.mock('../../../../src/config/firebase', () => {
+jest.mock('../../../src/config/firebase', () => {
   const mockBatch = {
     set: jest.fn(),
     commit: jest.fn(() => Promise.resolve()),
@@ -124,12 +124,12 @@ jest.mock('../../../../src/config/firebase', () => {
 });
 
 // Mock retry utility
-jest.mock('../../../../src/utils/firestoreRetry', () => ({
+jest.mock('../../../src/utils/firestoreRetry', () => ({
   retryFirestoreOperation: jest.fn((fn) => fn()),
 }));
 
 // Mock chapter mapping service
-jest.mock('../../../../src/services/chapterMappingService', () => ({
+jest.mock('../../../src/services/chapterMappingService', () => ({
   getDatabaseNames: jest.fn((chapterKey) => {
     if (chapterKey === 'physics_kinematics') {
       return Promise.resolve({ subject: 'Physics', chapter: 'Kinematics' });
@@ -139,7 +139,7 @@ jest.mock('../../../../src/services/chapterMappingService', () => ({
 }));
 
 // Mock question selection service
-jest.mock('../../../../src/services/questionSelectionService', () => ({
+jest.mock('../../../src/services/questionSelectionService', () => ({
   normalizeQuestion: jest.fn((id, data) => ({
     question_id: id,
     ...data,
@@ -147,7 +147,7 @@ jest.mock('../../../../src/services/questionSelectionService', () => ({
 }));
 
 // Mock logger
-jest.mock('../../../../src/utils/logger', () => ({
+jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
@@ -163,7 +163,7 @@ const {
   DEFAULT_QUESTION_COUNT,
   MAX_QUESTION_COUNT,
   DIFFICULTY_BANDS,
-} = require('../../../../src/services/chapterPracticeService');
+} = require('../../../src/services/chapterPracticeService');
 
 describe('Chapter Practice Service', () => {
   beforeEach(() => {

@@ -7,7 +7,7 @@ const request = require('supertest');
 const express = require('express');
 
 // Mock all dependencies before requiring the router
-jest.mock('../../../../src/middleware/auth', () => ({
+jest.mock('../../../src/middleware/auth', () => ({
   authenticateUser: jest.fn((req, res, next) => {
     req.userId = 'user123';
     req.requestId = 'req123';
@@ -19,7 +19,7 @@ jest.mock('../../../../src/middleware/auth', () => ({
 const requireFeatureCalls = [];
 const checkUsageLimitCalls = [];
 
-jest.mock('../../../../src/middleware/featureGate', () => ({
+jest.mock('../../../src/middleware/featureGate', () => ({
   requireFeature: jest.fn((feature) => {
     requireFeatureCalls.push(feature);
     return (req, res, next) => next();
@@ -33,14 +33,14 @@ jest.mock('../../../../src/middleware/featureGate', () => ({
   })
 }));
 
-jest.mock('../../../../src/utils/logger', () => ({
+jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn()
 }));
 
 // Mock ApiError to work like a real error class with status
-jest.mock('../../../../src/middleware/errorHandler', () => ({
+jest.mock('../../../src/middleware/errorHandler', () => ({
   ApiError: class ApiError extends Error {
     constructor(status, message, code, details) {
       super(message);
@@ -51,7 +51,7 @@ jest.mock('../../../../src/middleware/errorHandler', () => ({
   }
 }));
 
-jest.mock('../../../../src/services/aiTutorService', () => ({
+jest.mock('../../../src/services/aiTutorService', () => ({
   sendMessage: jest.fn(),
   injectContext: jest.fn(),
   getConversation: jest.fn(),
@@ -59,17 +59,17 @@ jest.mock('../../../../src/services/aiTutorService', () => ({
   generateWelcomeMessage: jest.fn()
 }));
 
-jest.mock('../../../../src/services/tutorConversationService', () => ({
+jest.mock('../../../src/services/tutorConversationService', () => ({
   hasConversation: jest.fn()
 }));
 
-jest.mock('../../../../src/prompts/ai_tutor_prompts', () => ({
+jest.mock('../../../src/prompts/ai_tutor_prompts', () => ({
   getQuickActions: jest.fn(() => [
     { id: 'action1', label: 'Action 1', prompt: 'Prompt 1' }
   ])
 }));
 
-jest.mock('../../../../src/services/contentModerationService', () => ({
+jest.mock('../../../src/services/contentModerationService', () => ({
   // moderateMessage is a middleware factory that returns an async middleware
   moderateMessage: jest.fn(() => async (req, res, next) => {
     req.moderationAnalysis = {
@@ -91,21 +91,21 @@ jest.mock('../../../../src/services/contentModerationService', () => ({
   }
 }));
 
-const { authenticateUser } = require('../../../../src/middleware/auth');
-const { requireFeature, checkUsageLimit } = require('../../../../src/middleware/featureGate');
-const logger = require('../../../../src/utils/logger');
+const { authenticateUser } = require('../../../src/middleware/auth');
+const { requireFeature, checkUsageLimit } = require('../../../src/middleware/featureGate');
+const logger = require('../../../src/utils/logger');
 const {
   sendMessage,
   injectContext,
   getConversation,
   resetConversation,
   generateWelcomeMessage
-} = require('../../../../src/services/aiTutorService');
-const { hasConversation } = require('../../../../src/services/tutorConversationService');
-const { getQuickActions } = require('../../../../src/prompts/ai_tutor_prompts');
+} = require('../../../src/services/aiTutorService');
+const { hasConversation } = require('../../../src/services/tutorConversationService');
+const { getQuickActions } = require('../../../src/prompts/ai_tutor_prompts');
 
 // Import router after mocks
-const aiTutorRouter = require('../../../../src/routes/aiTutor');
+const aiTutorRouter = require('../../../src/routes/aiTutor');
 
 // Create Express app with router
 const app = express();

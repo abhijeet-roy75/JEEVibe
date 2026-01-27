@@ -33,7 +33,7 @@ const mockUpdate = jest.fn((data) => {
 });
 
 // Mock Firebase
-jest.mock('../../../../src/config/firebase', () => {
+jest.mock('../../../src/config/firebase', () => {
   return {
     db: {
       collection: jest.fn(() => ({
@@ -56,12 +56,12 @@ jest.mock('../../../../src/config/firebase', () => {
 });
 
 // Mock firestoreRetry
-jest.mock('../../../../src/utils/firestoreRetry', () => ({
+jest.mock('../../../src/utils/firestoreRetry', () => ({
   retryFirestoreOperation: jest.fn((fn) => fn()),
 }));
 
 // Mock logger
-jest.mock('../../../../src/utils/logger', () => ({
+jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
@@ -75,9 +75,9 @@ const {
   clearSession,
   getSessionInfo,
   SESSION_MAX_AGE_DAYS
-} = require('../../../../src/services/authService');
+} = require('../../../src/services/authService');
 
-const { db, admin } = require('../../../../src/config/firebase');
+const { db, admin } = require('../../../src/config/firebase');
 
 describe('authService', () => {
   beforeEach(() => {
@@ -175,7 +175,7 @@ describe('authService', () => {
     });
 
     test('logs session creation', async () => {
-      const logger = require('../../../../src/utils/logger');
+      const logger = require('../../../src/utils/logger');
 
       await createSession('user-123', {
         deviceId: 'device-1',
@@ -337,7 +337,7 @@ describe('authService', () => {
     });
 
     test('handles errors gracefully (non-critical)', async () => {
-      const logger = require('../../../../src/utils/logger');
+      const logger = require('../../../src/utils/logger');
       mockUpdate.mockRejectedValueOnce(new Error('Network error'));
 
       const session = {
@@ -364,7 +364,7 @@ describe('authService', () => {
     });
 
     test('logs session clear (logout)', async () => {
-      const logger = require('../../../../src/utils/logger');
+      const logger = require('../../../src/utils/logger');
 
       await clearSession('user-123');
 

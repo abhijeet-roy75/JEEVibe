@@ -9,7 +9,7 @@
  */
 
 // Mock Firebase before requiring the service
-jest.mock('../../../../src/config/firebase', () => {
+jest.mock('../../../src/config/firebase', () => {
   const mockTransaction = {
     get: jest.fn(),
     set: jest.fn(),
@@ -59,12 +59,12 @@ jest.mock('../../../../src/config/firebase', () => {
 });
 
 // Mock firestoreRetry
-jest.mock('../../../../src/utils/firestoreRetry', () => ({
+jest.mock('../../../src/utils/firestoreRetry', () => ({
   retryFirestoreOperation: jest.fn((fn) => fn()),
 }));
 
 // Mock subscriptionService
-jest.mock('../../../../src/services/subscriptionService', () => ({
+jest.mock('../../../src/services/subscriptionService', () => ({
   getEffectiveTier: jest.fn(() => Promise.resolve({
     tier: 'free',
     source: 'default',
@@ -73,7 +73,7 @@ jest.mock('../../../../src/services/subscriptionService', () => ({
 }));
 
 // Mock tierConfigService
-jest.mock('../../../../src/services/tierConfigService', () => ({
+jest.mock('../../../src/services/tierConfigService', () => ({
   getTierLimits: jest.fn((tier) => {
     const limits = {
       free: { snap_solve_daily: 5, daily_quiz_daily: 1 },
@@ -86,15 +86,15 @@ jest.mock('../../../../src/services/tierConfigService', () => ({
 }));
 
 // Mock logger
-jest.mock('../../../../src/utils/logger', () => ({
+jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
 }));
 
-const { getTodayDateKey, getNextMidnightIST, getUsage, canUse, incrementUsage } = require('../../../../src/services/usageTrackingService');
-const { getEffectiveTier } = require('../../../../src/services/subscriptionService');
-const { getTierLimits, isUnlimited } = require('../../../../src/services/tierConfigService');
+const { getTodayDateKey, getNextMidnightIST, getUsage, canUse, incrementUsage } = require('../../../src/services/usageTrackingService');
+const { getEffectiveTier } = require('../../../src/services/subscriptionService');
+const { getTierLimits, isUnlimited } = require('../../../src/services/tierConfigService');
 
 describe('usageTrackingService', () => {
   beforeEach(() => {
@@ -239,7 +239,7 @@ describe('usageTrackingService', () => {
     });
 
     test('rejects increment when limit reached', async () => {
-      const { db } = require('../../../../src/config/firebase');
+      const { db } = require('../../../src/config/firebase');
 
       // Mock transaction to return usage at limit
       db.runTransaction.mockImplementation(async (callback) => {
@@ -267,8 +267,8 @@ describe('usageTrackingService', () => {
 
   describe('decrementUsage', () => {
     test('decrements usage for rollback', async () => {
-      const { db } = require('../../../../src/config/firebase');
-      const { decrementUsage } = require('../../../../src/services/usageTrackingService');
+      const { db } = require('../../../src/config/firebase');
+      const { decrementUsage } = require('../../../src/services/usageTrackingService');
 
       // Mock transaction to return usage > 0
       db.runTransaction.mockImplementation(async (callback) => {
@@ -288,8 +288,8 @@ describe('usageTrackingService', () => {
     });
 
     test('does not decrement below zero', async () => {
-      const { db } = require('../../../../src/config/firebase');
-      const { decrementUsage } = require('../../../../src/services/usageTrackingService');
+      const { db } = require('../../../src/config/firebase');
+      const { decrementUsage } = require('../../../src/services/usageTrackingService');
 
       // Mock transaction to return usage = 0
       db.runTransaction.mockImplementation(async (callback) => {

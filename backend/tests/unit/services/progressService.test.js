@@ -6,7 +6,7 @@
  */
 
 // Mock Firebase
-jest.mock('../../../../src/config/firebase', () => ({
+jest.mock('../../../src/config/firebase', () => ({
   db: {
     collection: jest.fn(),
   },
@@ -23,18 +23,18 @@ jest.mock('../../../../src/config/firebase', () => ({
   },
 }));
 
-jest.mock('../../../../src/utils/logger', () => ({
+jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
 }));
 
-jest.mock('../../../../src/utils/firestoreRetry', () => ({
+jest.mock('../../../src/utils/firestoreRetry', () => ({
   retryFirestoreOperation: jest.fn((fn) => fn()),
 }));
 
-const { getCumulativeStats, getChapterStatus } = require('../../../../src/services/progressService');
-const { db } = require('../../../../src/config/firebase');
+const { getCumulativeStats, getChapterStatus } = require('../../../src/services/progressService');
+const { db } = require('../../../src/config/firebase');
 
 describe('Progress Service - Cumulative Stats', () => {
   describe('getCumulativeStats (Optimized)', () => {

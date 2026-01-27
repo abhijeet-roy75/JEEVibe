@@ -5,7 +5,7 @@
  */
 
 // Mock Firebase before importing the service
-jest.mock('../../../../src/config/firebase', () => ({
+jest.mock('../../../src/config/firebase', () => ({
   db: {
     collection: jest.fn(() => ({
       doc: jest.fn(() => ({
@@ -31,14 +31,14 @@ jest.mock('../../../../src/config/firebase', () => ({
   },
 }));
 
-jest.mock('../../../../src/utils/logger', () => ({
+jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
 }));
 
 // Import the service (after mocks)
-const questionSelectionService = require('../../../../src/services/questionSelectionService');
+const questionSelectionService = require('../../../src/services/questionSelectionService');
 
 describe('Question Selection Service', () => {
   describe('IRT Probability Calculation', () => {

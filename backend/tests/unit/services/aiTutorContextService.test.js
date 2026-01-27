@@ -8,7 +8,7 @@ const mockGet = jest.fn();
 const mockQuestionsGet = jest.fn();
 
 // Mock Firebase before requiring the service
-jest.mock('../../../../src/config/firebase', () => {
+jest.mock('../../../src/config/firebase', () => {
   // Create a chainable mock for nested collections with all Firestore methods
   const createChainableMock = (getMock) => ({
     get: getMock,
@@ -42,11 +42,11 @@ jest.mock('../../../../src/config/firebase', () => {
   };
 });
 
-jest.mock('../../../../src/utils/firestoreRetry', () => ({
+jest.mock('../../../src/utils/firestoreRetry', () => ({
   retryFirestoreOperation: jest.fn((fn) => fn())
 }));
 
-jest.mock('../../../../src/utils/logger', () => ({
+jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
@@ -54,7 +54,7 @@ jest.mock('../../../../src/utils/logger', () => ({
 }));
 
 // Mock analyticsService
-jest.mock('../../../../src/services/analyticsService', () => ({
+jest.mock('../../../src/services/analyticsService', () => ({
   calculateFocusAreas: jest.fn(() => Promise.resolve([
     { chapter_name: 'Kinematics', chapter_key: 'physics_kinematics', subject_name: 'Physics', percentile: 30, reason: 'low_performance' }
   ])),
@@ -63,7 +63,7 @@ jest.mock('../../../../src/services/analyticsService', () => ({
   getChapterDisplayNameAsync: jest.fn()
 }));
 
-const logger = require('../../../../src/utils/logger');
+const logger = require('../../../src/utils/logger');
 
 const {
   buildSolutionContext,
@@ -72,7 +72,7 @@ const {
   buildGeneralContext,
   buildContext,
   getStudentProfile
-} = require('../../../../src/services/aiTutorContextService');
+} = require('../../../src/services/aiTutorContextService');
 
 describe('AI Tutor Context Service', () => {
   beforeEach(() => {
