@@ -378,7 +378,12 @@ async function processQuestion(questionId, questionData) {
       accuracy_rate: null,
       last_shown: null
     },
-    
+
+    // Lifecycle management
+    active: true, // Set to false to archive without deleting
+    archived_at: null,
+    archived_reason: null,
+
     // Creation metadata
     created_date: questionData.created_date 
       ? admin.firestore.Timestamp.fromDate(new Date(questionData.created_date))
