@@ -530,7 +530,10 @@ function transformDatabaseQuestionToFollowUp(dbQuestion) {
     priyaMaamNote: priyaNote,
     source: 'database',
     questionId: dbQuestion.question_id,
-    questionType: dbQuestion.question_type || 'mcq_single' // 'mcq_single' or 'numerical'
+    questionType: dbQuestion.question_type || 'mcq_single', // 'mcq_single' or 'numerical'
+    // Include common mistakes and distractor analysis for "Why You Got This Wrong" section
+    commonMistakes: dbQuestion.common_mistakes || [],
+    distractorAnalysis: dbQuestion.distractor_analysis || {}
   };
 }
 
