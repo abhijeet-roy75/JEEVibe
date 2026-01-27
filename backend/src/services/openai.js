@@ -130,7 +130,13 @@ OUTPUT FORMAT (strict JSON):
       "Step 3: ..."
     ],
     "finalAnswer": "Clear statement of answer with units",
-    "priyaMaamTip": "Encouraging/strategic tip in Priya's voice"
+    "priyaMaamTip": "Encouraging/strategic tip in Priya's voice",
+    "commonMistakes": [
+      "Common mistake 1 students make in this type of problem",
+      "Common mistake 2 that leads to wrong answers",
+      "Common mistake 3 to avoid"
+    ],
+    "keyTakeaway": "One-sentence key insight or formula to remember for similar problems"
   }
 }`;
 
@@ -415,6 +421,16 @@ async function generateFollowUpQuestions(originalQuestion, solution, topic, diff
         }
       }
 
+      // Normalize common mistakes (array of strings)
+      if (Array.isArray(normalized.commonMistakes)) {
+        normalized.commonMistakes = normalized.commonMistakes.map(mistake => normalizeLaTeX(mistake));
+      }
+
+      // Normalize key takeaway (string)
+      if (normalized.keyTakeaway) {
+        normalized.keyTakeaway = normalizeLaTeX(normalized.keyTakeaway);
+      }
+
       return normalized;
     });
 
@@ -500,12 +516,18 @@ OUTPUT FORMAT (strict JSON object):
     "D": "Option D"
   },
   "correctAnswer": "A|B|C|D",
-      "explanation": {
-        "approach": "Comprehensive strategy explanation (3-5 sentences explaining the overall approach, key concepts involved, and why this method works)",
-        "steps": ["Detailed step 1 with calculations and reasoning (2-3 sentences)", "Detailed step 2 with calculations and reasoning (2-3 sentences)", "Continue with all necessary steps, each with clear explanations"],
-        "finalAnswer": "Final answer with units and brief verification"
-      },
-  "priyaMaamNote": "Encouraging tip"
+  "explanation": {
+    "approach": "Comprehensive strategy explanation (3-5 sentences explaining the overall approach, key concepts involved, and why this method works)",
+    "steps": ["Detailed step 1 with calculations and reasoning (2-3 sentences)", "Detailed step 2 with calculations and reasoning (2-3 sentences)", "Continue with all necessary steps, each with clear explanations"],
+    "finalAnswer": "Final answer with units and brief verification"
+  },
+  "priyaMaamNote": "Encouraging tip",
+  "commonMistakes": [
+    "Common mistake 1 students make in this type of problem",
+    "Common mistake 2 that leads to wrong answers",
+    "Common mistake 3 to avoid"
+  ],
+  "keyTakeaway": "One-sentence key insight or formula to remember for similar problems"
 }
 
 Generate Question ${questionNumber} NOW in strict JSON object format.`;
@@ -612,8 +634,10 @@ Generate Question ${questionNumber} NOW in strict JSON object format.`;
       }
     };
 
-    // Normalize question text
+    // Normalize question text and remove any "Q##" prefix
     if (data.question) {
+      // Remove "Q##" or "Q#" prefix (e.g., "Q23", "Q1", "Q2", etc.)
+      data.question = data.question.replace(/^Q\d+\.?\s*/i, '').trim();
       data.question = normalizeLaTeX(data.question);
     }
 
@@ -635,6 +659,16 @@ Generate Question ${questionNumber} NOW in strict JSON object format.`;
       if (data.explanation.finalAnswer) {
         data.explanation.finalAnswer = normalizeLaTeX(data.explanation.finalAnswer);
       }
+    }
+
+    // Normalize common mistakes (array of strings)
+    if (Array.isArray(data.commonMistakes)) {
+      data.commonMistakes = data.commonMistakes.map(mistake => normalizeLaTeX(mistake));
+    }
+
+    // Normalize key takeaway (string)
+    if (data.keyTakeaway) {
+      data.keyTakeaway = normalizeLaTeX(data.keyTakeaway);
     }
 
     console.log(`Successfully parsed and normalized question ${questionNumber}`);

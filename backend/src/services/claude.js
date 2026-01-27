@@ -460,6 +460,14 @@ async function generateFollowUpQuestions(originalQuestion, solution, topic, diff
           normalized.explanation.finalAnswer = normalizeLaTeX(normalized.explanation.finalAnswer);
         }
       }
+      // Normalize common mistakes (array of strings)
+      if (Array.isArray(normalized.commonMistakes)) {
+        normalized.commonMistakes = normalized.commonMistakes.map(mistake => normalizeLaTeX(mistake));
+      }
+      // Normalize key takeaway (string)
+      if (normalized.keyTakeaway) {
+        normalized.keyTakeaway = normalizeLaTeX(normalized.keyTakeaway);
+      }
       return normalized;
     });
 
@@ -536,7 +544,13 @@ Respond with ONLY this JSON object format (no markdown, no other text):
     "steps": ["Step 1 with reasoning", "Step 2 with reasoning"],
     "finalAnswer": "Final answer with units"
   },
-  "priyaMaamNote": "Encouraging tip"
+  "priyaMaamNote": "Encouraging tip",
+  "commonMistakes": [
+    "Common mistake 1 students make in this type of problem",
+    "Common mistake 2 that leads to wrong answers",
+    "Common mistake 3 to avoid"
+  ],
+  "keyTakeaway": "One-sentence key insight or formula to remember for similar problems"
 }`;
 
     const response = await claudeTextBreaker.fire({
@@ -623,6 +637,8 @@ Respond with ONLY this JSON object format (no markdown, no other text):
     };
 
     if (data.question) {
+      // Remove "Q##" or "Q#" prefix (e.g., "Q23", "Q1", "Q2", etc.)
+      data.question = data.question.replace(/^Q\d+\.?\s*/i, '').trim();
       data.question = normalizeLaTeX(data.question);
     }
     if (data.options) {
@@ -640,6 +656,14 @@ Respond with ONLY this JSON object format (no markdown, no other text):
       if (data.explanation.finalAnswer) {
         data.explanation.finalAnswer = normalizeLaTeX(data.explanation.finalAnswer);
       }
+    }
+    // Normalize common mistakes (array of strings)
+    if (Array.isArray(data.commonMistakes)) {
+      data.commonMistakes = data.commonMistakes.map(mistake => normalizeLaTeX(mistake));
+    }
+    // Normalize key takeaway (string)
+    if (data.keyTakeaway) {
+      data.keyTakeaway = normalizeLaTeX(data.keyTakeaway);
     }
 
     console.log(`Successfully parsed and normalized question ${questionNumber} from Claude`);

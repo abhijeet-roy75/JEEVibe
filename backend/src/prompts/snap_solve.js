@@ -91,7 +91,13 @@ DO NOT USE:
         "steps": ["Detailed step 1 with calculations and reasoning (2-3 sentences)", "Detailed step 2 with calculations and reasoning (2-3 sentences)", "Continue with all necessary steps, each with clear explanations"],
         "finalAnswer": "Final answer with units and brief verification"
       },
-      "priyaMaamNote": "Encouraging tip"
+      "priyaMaamNote": "Encouraging tip",
+      "commonMistakes": [
+        "Common mistake 1 students make in this type of problem",
+        "Common mistake 2 that leads to wrong answers",
+        "Common mistake 3 to avoid"
+      ],
+      "keyTakeaway": "One-sentence key insight or formula to remember for similar problems"
     },
     {
       "question": "Question 2 text with Unicode like ∫₀¹ f(x) dx",
@@ -107,7 +113,13 @@ DO NOT USE:
         "steps": ["Detailed step 1 with calculations and reasoning (2-3 sentences)", "Detailed step 2 with calculations and reasoning (2-3 sentences)", "Continue with all necessary steps, each with clear explanations"],
         "finalAnswer": "Final answer with units and brief verification"
       },
-      "priyaMaamNote": "Encouraging tip"
+      "priyaMaamNote": "Encouraging tip",
+      "commonMistakes": [
+        "Common mistake 1 students make in this type of problem",
+        "Common mistake 2 that leads to wrong answers",
+        "Common mistake 3 to avoid"
+      ],
+      "keyTakeaway": "One-sentence key insight or formula to remember for similar problems"
     },
     {
       "question": "Question 3 text with Unicode like H₂SO₄ + 2NaOH → Na₂SO₄ + 2H₂O",
@@ -123,7 +135,13 @@ DO NOT USE:
         "steps": ["Detailed step 1 with calculations and reasoning (2-3 sentences)", "Detailed step 2 with calculations and reasoning (2-3 sentences)", "Continue with all necessary steps, each with clear explanations"],
         "finalAnswer": "Final answer with units and brief verification"
       },
-      "priyaMaamNote": "Encouraging tip"
+      "priyaMaamNote": "Encouraging tip",
+      "commonMistakes": [
+        "Common mistake 1 students make in this type of problem",
+        "Common mistake 2 that leads to wrong answers",
+        "Common mistake 3 to avoid"
+      ],
+      "keyTakeaway": "One-sentence key insight or formula to remember for similar problems"
     }
   ]
 }
