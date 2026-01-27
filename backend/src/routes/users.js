@@ -220,7 +220,9 @@ router.post('/profile',
       });
 
       // Initialize trial for new users (non-blocking)
-      if (!userDoc.exists && firestoreData.phoneNumber) {
+      // Check if user doesn't have trial yet (not just if doc doesn't exist)
+      const userData = userDoc.exists ? userDoc.data() : {};
+      if (!userData.trial && firestoreData.phoneNumber) {
         try {
           const { initializeTrial } = require('../services/trialService');
           await initializeTrial(userId, firestoreData.phoneNumber);
