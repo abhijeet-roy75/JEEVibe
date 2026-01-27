@@ -1,0 +1,89 @@
+/**
+ * Adjust trial days remaining for testing
+ *
+ * Usage: node scripts/adjust-trial-days.js <userId> <daysRemaining>
+ * Example: node scripts/adjust-trial-days.js 1lZKaW1ZXTdRSpQ1nybk2hw8Anw2 5
+ */
+
+const { db, admin } = require('../src/config/firebase');
+
+async function adjustTrialDays(userId, daysRemaining) {
+  if (!userId || daysRemaining === undefined) {
+    console.error('Usage: node scripts/adjust-trial-days.js <userId> <daysRemaining>');
+    console.error('Example: node scripts/adjust-trial-days.js abc123 5');
+    process.exit(1);
+  }
+
+  const days = parseInt(daysRemaining);
+  if (isNaN(days) || days < 0 || days > 90) {
+    console.error('Days must be a number between 0 and 90');
+    process.exit(1);
+  }
+
+  try {
+    console.log(`\n⏰ Adjusting trial for user: ${userId}`);
+    console.log(`   Setting to: ${days} days remaining\n`);
+
+    // Get user
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      console.log('❌ User not found');
+      process.exit(1);
+    }
+
+    const userData = userDoc.data();
+
+    if (!userData.trial) {
+      console.log('❌ User does not have a trial');
+      process.exit(1);
+    }
+
+    // Calculate new end date
+    const now = new Date();
+    const newEndsAt = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+    const endsAtTimestamp = admin.firestore.Timestamp.fromDate(newEndsAt);
+
+    // Update trial
+    await db.collection('users').doc(userId).update({
+      'trial.ends_at': endsAtTimestamp,
+      'trial.is_active': days > 0,
+      updated_at: admin.firestore.Timestamp.now()
+    });
+
+    console.log('✅ Trial adjusted successfully!');
+    console.log(`   Days remaining: ${days} days`);
+    console.log(`   New end date: ${newEndsAt.toISOString()}`);
+    console.log(`   Trial active: ${days > 0}`);
+
+    // Show notification stage
+    console.log('\n📱 Notification Stage:');
+    if (days <= 0) {
+      console.log('   🔴 EXPIRED - Trial expired dialog should show');
+    } else if (days <= 2) {
+      console.log('   🔴 CRITICAL - Red banner with "Last day" or "2 days left"');
+    } else if (days <= 5) {
+      console.log('   🟠 URGENT - Orange banner should appear on home screen');
+    } else if (days <= 23) {
+      console.log('   🔵 ACTIVE - No banner (not urgent yet)');
+    } else {
+      console.log('   ✅ NEW - Trial just started');
+    }
+
+    // Show what notifications would be sent
+    console.log('\n📧 Expected Notifications:');
+    if (days === 23) console.log('   ✉️  Week 1 email should be sent');
+    if (days === 5) console.log('   ✉️  5-day urgency email + push');
+    if (days === 2) console.log('   ✉️  2-day urgency email + push');
+    if (days === 0) console.log('   ✉️  Trial expired email + push + dialog');
+
+    console.log('\n💡 Hot reload your app to see the changes!');
+
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    process.exit(1);
+  }
+}
+
+const [userId, daysRemaining] = process.argv.slice(2);
+adjustTrialDays(userId, daysRemaining);

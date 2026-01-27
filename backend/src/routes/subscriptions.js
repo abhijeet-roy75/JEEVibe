@@ -114,7 +114,8 @@ router.get('/status', authenticateUser, async (req, res, next) => {
               tier_id: status.tier,
               days_remaining: tierInfo.days_remaining || 0,
               ends_at: status.expires_at,
-              started_at: tierInfo.trial_started_at?.toDate?.()?.toISOString() || tierInfo.trial_started_at
+              started_at: tierInfo.trial_started_at?.toDate?.()?.toISOString() || tierInfo.trial_started_at,
+              is_active: true
             }
           })
         },
