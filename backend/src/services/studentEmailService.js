@@ -843,8 +843,10 @@ async function sendTrialEmail(userId, userData, daysRemaining) {
  * @returns {Promise<Object>} { subject, html, text }
  */
 async function generateTrialEmailContent(userId, userData, daysRemaining) {
-  const name = userData.displayName || userData.name || 'Student';
-  const firstName = name.split(' ')[0];
+  // Use firstName from user profile, fallback to email prefix or 'Student'
+  const firstName = userData.firstName ||
+                    (userData.email ? userData.email.split('@')[0] : null) ||
+                    'Student';
 
   // Email templates based on days remaining
   const templates = {

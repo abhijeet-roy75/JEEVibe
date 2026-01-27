@@ -324,10 +324,50 @@ router.patch('/profile/last-active', authenticateUser, async (req, res, next) =>
 });
 
 /**
+ * POST /api/users/fcm-token
+ *
+ * Save or clear FCM token for push notifications
+ *
+ * Request body: { fcm_token: string | null }
+ * Authentication: Required (Bearer token in Authorization header)
+ */
+router.post('/fcm-token', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const { fcm_token } = req.body;
+
+    const userRef = db.collection('users').doc(userId);
+    await retryFirestoreOperation(async () => {
+      return await userRef.update({
+        fcm_token: fcm_token || admin.firestore.FieldValue.delete(),
+        fcm_token_updated_at: admin.firestore.FieldValue.serverTimestamp()
+      });
+    });
+
+    // Invalidate cache
+    delCache(CacheKeys.userProfile(userId));
+
+    logger.info('FCM token updated', {
+      requestId: req.id,
+      userId,
+      hasToken: !!fcm_token
+    });
+
+    res.json({
+      success: true,
+      message: fcm_token ? 'FCM token saved' : 'FCM token cleared',
+      requestId: req.id,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * PATCH /api/users/profile/complete
- * 
+ *
  * Mark profile as completed
- * 
+ *
  * Authentication: Required (Bearer token in Authorization header)
  */
 router.patch('/profile/complete', authenticateUser, async (req, res, next) => {
