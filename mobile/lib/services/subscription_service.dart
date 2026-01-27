@@ -46,6 +46,9 @@ class SubscriptionService extends ChangeNotifier {
   /// Fetch subscription status from API
   Future<SubscriptionStatus?> fetchStatus(String authToken,
       {bool forceRefresh = false}) async {
+    // Store previous source to detect trial expiry
+    final previousSource = _cachedStatus?.subscription.source;
+
     // Return cached if valid and not forcing refresh
     if (_isCacheValid && !forceRefresh) {
       return _cachedStatus;
@@ -70,6 +73,13 @@ class SubscriptionService extends ChangeNotifier {
           _cachedStatus = SubscriptionStatus.fromJson(data['data']);
           _lastFetchTime = DateTime.now();
           _errorMessage = null;
+
+          // Detect trial expiry
+          final currentSource = _cachedStatus?.subscription.source;
+          if (previousSource == SubscriptionSource.trial &&
+              currentSource == SubscriptionSource.defaultTier) {
+            _onTrialExpired();
+          }
         } else {
           _errorMessage = data['error'] ?? 'Failed to fetch subscription status';
         }
@@ -85,6 +95,12 @@ class SubscriptionService extends ChangeNotifier {
     }
 
     return _cachedStatus;
+  }
+
+  /// Called when trial expires (changes from trial to default tier)
+  void _onTrialExpired() {
+    // The dialog will be shown by the UI layer listening to this change
+    debugPrint('SubscriptionService: Trial expired detected');
   }
 
   /// Check if user can use a feature (without blocking)

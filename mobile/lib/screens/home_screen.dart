@@ -19,6 +19,7 @@ import '../providers/offline_provider.dart';
 import '../widgets/buttons/gradient_button.dart';
 import '../widgets/buttons/icon_button.dart';
 import '../widgets/offline/offline_banner.dart';
+import '../widgets/trial_banner.dart';
 import '../models/snap_data_model.dart';
 import '../models/subscription_models.dart';
 import '../services/storage_service.dart';
@@ -95,6 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // Offline banner at the very top
           const OfflineBanner(),
+          // Trial banner (shows when trial is active and urgent)
+          const TrialBanner(),
           _buildHeader(),
           Expanded(
             child: Container(

@@ -2,6 +2,8 @@
 ///
 /// Data models for the tier/subscription system.
 
+import 'trial_status.dart';
+
 // Usage type enum for tracking different feature usages
 enum UsageType {
   snapSolve,
@@ -173,6 +175,7 @@ class SubscriptionInfo {
   final String? overrideReason;
   final String? subscriptionId;
   final String? planType;
+  final TrialStatus? trial;
 
   SubscriptionInfo({
     required this.tier,
@@ -183,6 +186,7 @@ class SubscriptionInfo {
     this.overrideReason,
     this.subscriptionId,
     this.planType,
+    this.trial,
   });
 
   factory SubscriptionInfo.fromJson(Map<String, dynamic> json) {
@@ -195,6 +199,7 @@ class SubscriptionInfo {
       overrideReason: json['override']?['reason'],
       subscriptionId: json['subscription_id'],
       planType: json['plan_type'],
+      trial: json['trial'] != null ? TrialStatus.fromJson(json['trial']) : null,
     );
   }
 
@@ -227,6 +232,8 @@ class SubscriptionInfo {
   bool get isUltra => tier == SubscriptionTier.ultra;
   bool get isPaid => isPro || isUltra;
   bool get isBetaTester => source == SubscriptionSource.override;
+  bool get isOnTrial => source == SubscriptionSource.trial;
+  bool get showTrialBanner => isOnTrial && (trial?.isUrgent ?? false);
 }
 
 /// Weekly chapter practice usage for a single subject
