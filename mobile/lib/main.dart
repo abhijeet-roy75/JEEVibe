@@ -37,6 +37,9 @@ import 'screens/main_navigation_screen.dart'; // Main navigation with bottom nav
 // Services
 import 'services/firebase/pin_service.dart';
 
+// Global navigator key for navigation and in-app notifications
+final GlobalKey<NavigatorState> globalNavigatorKey = GlobalKey<NavigatorState>();
+
 /// Initialize screenshot and screen recording prevention
 /// This applies globally to the entire app
 Future<void> _initializeScreenProtection() async {
@@ -207,7 +210,6 @@ class JEEVibeApp extends StatefulWidget {
 }
 
 class _JEEVibeAppState extends State<JEEVibeApp> with WidgetsBindingObserver {
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool _isLockScreenShown = false;
   bool _isSessionExpiredDialogShown = false;
 
@@ -226,7 +228,7 @@ class _JEEVibeAppState extends State<JEEVibeApp> with WidgetsBindingObserver {
     if (_isSessionExpiredDialogShown) return;
     _isSessionExpiredDialogShown = true;
 
-    final context = _navigatorKey.currentContext;
+    final context = globalNavigatorKey.currentContext;
     if (context == null) {
       _isSessionExpiredDialogShown = false;
       return;
@@ -268,7 +270,7 @@ class _JEEVibeAppState extends State<JEEVibeApp> with WidgetsBindingObserver {
                 }
 
                 // Navigate to welcome screen
-                _navigatorKey.currentState?.pushAndRemoveUntil(
+                globalNavigatorKey.currentState?.pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const WelcomeScreen()),
                   (route) => false,
                 );
@@ -300,7 +302,7 @@ class _JEEVibeAppState extends State<JEEVibeApp> with WidgetsBindingObserver {
     // Only lock if not already showing lock screen
     if (_isLockScreenShown) return;
 
-    final context = _navigatorKey.currentContext;
+    final context = globalNavigatorKey.currentContext;
     if (context == null) return;
 
     // Access providers via context or instances if available
@@ -319,7 +321,7 @@ class _JEEVibeAppState extends State<JEEVibeApp> with WidgetsBindingObserver {
             _isLockScreenShown = true;
           });
           
-          _navigatorKey.currentState?.push(
+          globalNavigatorKey.currentState?.push(
             MaterialPageRoute(
               builder: (context) => PinVerificationScreen(
                 isUnlockMode: true,
@@ -343,7 +345,7 @@ class _JEEVibeAppState extends State<JEEVibeApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: _navigatorKey,
+      navigatorKey: globalNavigatorKey,
       title: 'JEEVibe',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -593,7 +595,10 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
         );
 
         // Initialize push notifications (non-blocking)
-        PushNotificationService().initialize(authToken).catchError((e) {
+        PushNotificationService().initialize(
+          authToken,
+          navigatorKey: globalNavigatorKey,
+        ).catchError((e) {
           print('Error initializing push notifications: $e');
         });
 

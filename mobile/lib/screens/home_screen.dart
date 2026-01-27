@@ -93,42 +93,52 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     print('HomeScreen: build() called');
     return Scaffold(
-      body: Column(
+      body: Stack(
         children: [
-          // Offline banner at the very top
-          const OfflineBanner(),
-          // Trial banner (shows when trial is active and urgent)
-          const TrialBanner(),
-          _buildHeader(),
-          Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: AppColors.backgroundGradient,
-              ),
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 24),
-                    _buildActionButtons(),
-                    const SizedBox(height: 24),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: _buildPriyaMaamCard(),
+          // Main content
+          Column(
+            children: [
+              // Offline banner at the very top
+              const OfflineBanner(),
+              _buildHeader(),
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: AppColors.backgroundGradient,
+                  ),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 24),
+                        _buildActionButtons(),
+                        const SizedBox(height: 24),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: _buildPriyaMaamCard(),
+                        ),
+                        const SizedBox(height: 24),
+                        _buildRecentSolutions(),
+                        const SizedBox(height: 24),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: _buildQuickTips(),
+                        ),
+                        // Add extra padding for Android system navigation bar
+                        SizedBox(height: 24 + MediaQuery.of(context).viewPadding.bottom),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                    _buildRecentSolutions(),
-                    const SizedBox(height: 24),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: _buildQuickTips(),
-                    ),
-                    // Add extra padding for Android system navigation bar
-                    SizedBox(height: 24 + MediaQuery.of(context).viewPadding.bottom),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
+          ),
+          // Trial banner overlays on top of header
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: TrialBanner(),
           ),
         ],
       ),

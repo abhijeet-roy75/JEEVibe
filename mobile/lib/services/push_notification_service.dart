@@ -19,13 +19,15 @@ class PushNotificationService {
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   String? _currentToken;
+  GlobalKey<NavigatorState>? _navigatorKey;
 
   /// Get current FCM token (if available)
   String? get currentToken => _currentToken;
 
   /// Initialize push notifications
   /// Call this after user logs in
-  Future<void> initialize(String authToken) async {
+  Future<void> initialize(String authToken, {GlobalKey<NavigatorState>? navigatorKey}) async {
+    _navigatorKey = navigatorKey;
     try {
       debugPrint('PushNotificationService: Initializing...');
 
@@ -142,15 +144,96 @@ class PushNotificationService {
   void _showTrialNotificationBanner(RemoteNotification? notification, int daysRemaining) {
     if (notification == null) return;
 
-    // This would typically use a global scaffold messenger key
-    // For now, just log it - the UI layer can implement this
-    debugPrint('PushNotificationService: Should show trial banner = ${notification.title}');
+    debugPrint('PushNotificationService: Showing in-app trial banner = ${notification.title}');
+
+    // Get scaffold messenger context
+    final context = _navigatorKey?.currentContext;
+    if (context == null) {
+      debugPrint('PushNotificationService: No context available for snackbar');
+      return;
+    }
+
+    // Show in-app snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              notification.title ?? '',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.white,
+              ),
+            ),
+            if (notification.body != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                notification.body!,
+                style: const TextStyle(fontSize: 14, color: Colors.white),
+              ),
+            ],
+          ],
+        ),
+        backgroundColor: daysRemaining <= 2 ? Colors.red : Colors.orange,
+        duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'Upgrade',
+          textColor: Colors.white,
+          onPressed: () {
+            // Navigate to paywall
+            // Navigator.push(context, MaterialPageRoute(builder: (_) => PaywallScreen()));
+          },
+        ),
+      ),
+    );
   }
 
   /// Show generic notification banner (in-app)
   void _showGenericNotificationBanner(RemoteNotification? notification) {
     if (notification == null) return;
-    debugPrint('PushNotificationService: Should show generic banner = ${notification.title}');
+
+    debugPrint('PushNotificationService: Showing in-app generic banner = ${notification.title}');
+
+    // Get scaffold messenger context
+    final context = _navigatorKey?.currentContext;
+    if (context == null) {
+      debugPrint('PushNotificationService: No context available for snackbar');
+      return;
+    }
+
+    // Show in-app snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              notification.title ?? '',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.white,
+              ),
+            ),
+            if (notification.body != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                notification.body!,
+                style: const TextStyle(fontSize: 14, color: Colors.white),
+              ),
+            ],
+          ],
+        ),
+        backgroundColor: Colors.blue,
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   /// Clear FCM token (on logout)
