@@ -354,6 +354,544 @@ if (userData.trial?.is_active) {
 
 ---
 
+## Backend Test Files
+
+### Test Files to Create
+
+#### 1. `backend/test/services/trialService.test.js` (~200 lines)
+
+**Test Coverage: >85% target**
+
+```javascript
+const { initializeTrial, checkTrialEligibility, expireTrial, sendTrialNotification } = require('../../src/services/trialService');
+
+describe('trialService', () => {
+  describe('initializeTrial', () => {
+    it('should create trial for eligible new user', async () => {
+      // Test: New user with new phone gets 30-day trial
+      const userId = 'test123';
+      const phoneNumber = '+919876543210';
+
+      const result = await initializeTrial(userId, phoneNumber);
+
+      expect(result).toBeDefined();
+      expect(result.tier_id).toBe('pro');
+      // Verify Firestore document created
+      // Verify ends_at = now + 30 days
+    });
+
+    it('should reject if phone already used for trial', async () => {
+      // Test: Same phone number tries to get second trial
+      const userId = 'test456';
+      const phoneNumber = '+919876543210'; // Already used
+
+      const result = await initializeTrial(userId, phoneNumber);
+
+      expect(result).toBeNull();
+      // Verify no trial created in Firestore
+    });
+
+    it('should reject if user already has trial', async () => {
+      // Test: User tries to create duplicate trial
+      const userId = 'test123'; // Already has trial
+      const phoneNumber = '+919999999999';
+
+      const result = await initializeTrial(userId, phoneNumber);
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle trials disabled via config', async () => {
+      // Test: Trial config enabled = false
+      // Mock trialConfig.enabled = false
+
+      const result = await initializeTrial('user', '+919999999999');
+
+      expect(result).toBeNull();
+    });
+
+    it('should not throw error if Firestore write fails', async () => {
+      // Test: Non-blocking error handling
+      // Mock Firestore to throw error
+
+      await expect(initializeTrial('user', '+919999999999')).resolves.not.toThrow();
+    });
+  });
+
+  describe('checkTrialEligibility', () => {
+    it('should return eligible for new phone number', async () => {
+      const result = await checkTrialEligibility('newUser', '+919111111111');
+
+      expect(result.isEligible).toBe(true);
+    });
+
+    it('should return ineligible for duplicate phone', async () => {
+      // Setup: Create user with trial using phone
+      await initializeTrial('user1', '+919222222222');
+
+      const result = await checkTrialEligibility('user2', '+919222222222');
+
+      expect(result.isEligible).toBe(false);
+      expect(result.reason).toBe('phone_already_used');
+    });
+
+    it('should return ineligible if user already has trial', async () => {
+      // Setup: User already has trial
+      const userId = 'existingUser';
+      await initializeTrial(userId, '+919333333333');
+
+      const result = await checkTrialEligibility(userId, '+919444444444');
+
+      expect(result.isEligible).toBe(false);
+      expect(result.reason).toBe('user_already_has_trial');
+    });
+  });
+
+  describe('expireTrial', () => {
+    it('should set is_active to false', async () => {
+      // Setup: Create active trial
+      const userId = 'trialUser';
+      await initializeTrial(userId, '+919555555555');
+
+      await expireTrial(userId);
+
+      // Verify: trial.is_active = false in Firestore
+      const userDoc = await db.collection('users').doc(userId).get();
+      expect(userDoc.data().trial.is_active).toBe(false);
+    });
+
+    it('should invalidate tier cache', async () => {
+      // Test: Cache invalidation called
+      const userId = 'cacheUser';
+      const invalidateSpy = jest.spyOn(subscriptionService, 'invalidateTierCache');
+
+      await expireTrial(userId);
+
+      expect(invalidateSpy).toHaveBeenCalledWith(userId);
+    });
+
+    it('should log trial_expired analytics event', async () => {
+      // Test: Analytics event logged
+      const userId = 'analyticsUser';
+      const logEventSpy = jest.spyOn(analytics, 'logEvent');
+
+      await expireTrial(userId);
+
+      expect(logEventSpy).toHaveBeenCalledWith('trial_expired', expect.any(Object));
+    });
+  });
+
+  describe('sendTrialNotification', () => {
+    it('should send email notification', async () => {
+      const userId = 'emailUser';
+      const daysRemaining = 5;
+
+      const result = await sendTrialNotification(userId, daysRemaining, ['email']);
+
+      expect(result.success).toBe(true);
+      expect(result.results.email).toBeDefined();
+    });
+
+    it('should not send duplicate notifications', async () => {
+      // Setup: Mark day_5 as already sent
+      const userId = 'dupUser';
+
+      // First call
+      await sendTrialNotification(userId, 5, ['email']);
+
+      // Second call (should skip)
+      const result = await sendTrialNotification(userId, 5, ['email']);
+
+      expect(result.success).toBe(false);
+      expect(result.reason).toBe('already_sent');
+    });
+
+    it('should send both email and push when specified', async () => {
+      const userId = 'multiChannelUser';
+
+      const result = await sendTrialNotification(userId, 2, ['email', 'push']);
+
+      expect(result.results.email).toBeDefined();
+      expect(result.results.push).toBeDefined();
+    });
+
+    it('should update notifications_sent field', async () => {
+      const userId = 'trackingUser';
+
+      await sendTrialNotification(userId, 5, ['email']);
+
+      const userDoc = await db.collection('users').doc(userId).get();
+      expect(userDoc.data().trial.notifications_sent.day_5).toBeDefined();
+    });
+  });
+});
+```
+
+#### 2. `backend/test/services/trialConfigService.test.js` (~100 lines)
+
+**Test Coverage: >90% target**
+
+```javascript
+const { getTrialConfig, invalidateCache } = require('../../src/services/trialConfigService');
+
+describe('trialConfigService', () => {
+  it('should return cached config within TTL', async () => {
+    // First call - fetches from Firestore
+    const config1 = await getTrialConfig();
+
+    // Second call within 5 minutes - returns cache
+    const config2 = await getTrialConfig();
+
+    expect(config2).toEqual(config1);
+    // Verify Firestore only called once
+  });
+
+  it('should fetch from Firestore after cache expires', async () => {
+    await getTrialConfig();
+
+    // Fast-forward time by 6 minutes
+    jest.advanceTimersByTime(6 * 60 * 1000);
+
+    await getTrialConfig();
+
+    // Verify Firestore called twice
+  });
+
+  it('should fallback to defaults if Firestore fails', async () => {
+    // Mock Firestore to throw error
+    jest.spyOn(db.collection('trial_config').doc('active'), 'get').mockRejectedValue(new Error('Firestore error'));
+
+    const config = await getTrialConfig();
+
+    expect(config.enabled).toBe(true);
+    expect(config.duration_days).toBe(30);
+  });
+
+  it('should invalidate cache when requested', async () => {
+    const config1 = await getTrialConfig();
+
+    invalidateCache();
+
+    const config2 = await getTrialConfig();
+
+    // Verify Firestore fetched again
+  });
+});
+```
+
+#### 3. `backend/test/services/trialProcessingService.test.js` (~150 lines)
+
+**Test Coverage: >80% target**
+
+```javascript
+const { processAllTrials } = require('../../src/services/trialProcessingService');
+
+describe('trialProcessingService', () => {
+  it('should expire trials with days_remaining <= 0', async () => {
+    // Setup: Create trial that expired yesterday
+    const userId = 'expiredUser';
+    await createTrialWithDaysRemaining(userId, -1);
+
+    const results = await processAllTrials();
+
+    expect(results.trials_expired).toBe(1);
+    // Verify trial.is_active = false
+  });
+
+  it('should send notifications at correct milestones', async () => {
+    // Setup: Users at day 23, 5, 2 remaining
+    await createTrialWithDaysRemaining('user1', 23);
+    await createTrialWithDaysRemaining('user2', 5);
+    await createTrialWithDaysRemaining('user3', 2);
+
+    const results = await processAllTrials();
+
+    expect(results.notifications_sent).toBe(3);
+  });
+
+  it('should not send duplicate notifications', async () => {
+    // Setup: User already received day_5 notification
+    const userId = 'notifiedUser';
+    await createTrialWithDaysRemaining(userId, 5);
+    await markNotificationSent(userId, 'day_5');
+
+    const results = await processAllTrials();
+
+    expect(results.notifications_sent).toBe(0);
+  });
+
+  it('should handle batch processing of 1000+ users', async () => {
+    // Setup: Create 1500 active trials
+    for (let i = 0; i < 1500; i++) {
+      await createTrialWithDaysRemaining(`user${i}`, 10);
+    }
+
+    const results = await processAllTrials();
+
+    // Should process first 1000, skip rest
+    expect(results.trials_processed).toBeLessThanOrEqual(1000);
+  });
+
+  it('should continue processing after error', async () => {
+    // Setup: Create trials, one will fail
+    await createTrialWithDaysRemaining('goodUser1', 5);
+    await createTrialWithDaysRemaining('badUser', 5); // Will throw error
+    await createTrialWithDaysRemaining('goodUser2', 5);
+
+    const results = await processAllTrials();
+
+    // Should process 2 out of 3
+    expect(results.notifications_sent).toBe(2);
+    expect(results.errors.length).toBe(1);
+  });
+
+  it('should complete within 5-minute timeout', async () => {
+    // Setup: Create many trials
+    for (let i = 0; i < 500; i++) {
+      await createTrialWithDaysRemaining(`user${i}`, 5);
+    }
+
+    const startTime = Date.now();
+    await processAllTrials();
+    const duration = Date.now() - startTime;
+
+    expect(duration).toBeLessThan(5 * 60 * 1000);
+  });
+});
+```
+
+#### 4. `backend/test/routes/users.test.js` (~100 lines)
+
+**Test Coverage: Focus on trial initialization in signup flow**
+
+```javascript
+describe('POST /api/users/profile', () => {
+  it('should initialize trial for new user', async () => {
+    const response = await request(app)
+      .post('/api/users/profile')
+      .send({
+        userId: 'newUser123',
+        name: 'Test User',
+        email: 'test@example.com',
+        phoneNumber: '+919876543210',
+        targetYear: 2025
+      });
+
+    expect(response.status).toBe(200);
+
+    // Verify trial created in Firestore
+    const userDoc = await db.collection('users').doc('newUser123').get();
+    expect(userDoc.data().trial).toBeDefined();
+    expect(userDoc.data().trial.tier_id).toBe('pro');
+  });
+
+  it('should not initialize trial for existing user', async () => {
+    // Setup: User already exists
+    await createUser('existingUser', { name: 'Existing' });
+
+    const response = await request(app)
+      .post('/api/users/profile')
+      .send({
+        userId: 'existingUser',
+        name: 'Updated Name'
+      });
+
+    expect(response.status).toBe(200);
+
+    // Verify no trial created
+    const userDoc = await db.collection('users').doc('existingUser').get();
+    expect(userDoc.data().trial).toBeUndefined();
+  });
+
+  it('should succeed even if trial initialization fails', async () => {
+    // Mock trial service to throw error
+    jest.spyOn(trialService, 'initializeTrial').mockRejectedValue(new Error('Trial error'));
+
+    const response = await request(app)
+      .post('/api/users/profile')
+      .send({
+        userId: 'errorUser',
+        name: 'Error Test',
+        phoneNumber: '+919999999999'
+      });
+
+    expect(response.status).toBe(200);
+    // User created without trial
+  });
+});
+```
+
+#### 5. `backend/test/routes/subscriptions.test.js` (~100 lines)
+
+**Test Coverage: Trial info in subscription status endpoint**
+
+```javascript
+describe('GET /api/subscriptions/status', () => {
+  it('should return trial info for users on trial', async () => {
+    // Setup: User with active trial
+    const userId = 'trialUser';
+    await createUserWithTrial(userId, { daysRemaining: 15 });
+
+    const response = await request(app)
+      .get('/api/subscriptions/status')
+      .set('Authorization', `Bearer ${getToken(userId)}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.subscription.source).toBe('trial');
+    expect(response.body.subscription.tier).toBe('pro');
+    expect(response.body.trial).toBeDefined();
+    expect(response.body.trial.days_remaining).toBe(15);
+  });
+
+  it('should return trial: null for users without trial', async () => {
+    // Setup: Regular free user
+    const userId = 'freeUser';
+    await createUser(userId, { tier: 'free' });
+
+    const response = await request(app)
+      .get('/api/subscriptions/status')
+      .set('Authorization', `Bearer ${getToken(userId)}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.subscription.tier).toBe('free');
+    expect(response.body.trial).toBeNull();
+  });
+
+  it('should prioritize trial over default tier', async () => {
+    // Setup: User with active trial (no paid subscription)
+    const userId = 'trialOnlyUser';
+    await createUserWithTrial(userId, { daysRemaining: 20 });
+
+    const response = await request(app)
+      .get('/api/subscriptions/status')
+      .set('Authorization', `Bearer ${getToken(userId)}`);
+
+    expect(response.body.subscription.source).toBe('trial');
+    expect(response.body.subscription.tier).toBe('pro');
+  });
+
+  it('should prioritize paid subscription over trial', async () => {
+    // Setup: User with both paid subscription AND trial
+    const userId = 'paidUser';
+    await createUserWithTrial(userId, { daysRemaining: 10 });
+    await createPaidSubscription(userId, 'ultra');
+
+    const response = await request(app)
+      .get('/api/subscriptions/status')
+      .set('Authorization', `Bearer ${getToken(userId)}`);
+
+    expect(response.body.subscription.source).toBe('paid');
+    expect(response.body.subscription.tier).toBe('ultra');
+  });
+});
+```
+
+### Test Setup & Configuration
+
+#### Test Dependencies (`package.json`)
+
+```json
+{
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "@firebase/testing": "^0.20.11",
+    "firebase-admin": "^12.0.0"
+  },
+  "scripts": {
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --ci --coverage --maxWorkers=2"
+  }
+}
+```
+
+#### Jest Configuration (`jest.config.js`)
+
+```javascript
+module.exports = {
+  testEnvironment: 'node',
+  coverageDirectory: 'coverage',
+  collectCoverageFrom: [
+    'src/**/*.js',
+    '!src/index.js',
+    '!src/**/*.test.js'
+  ],
+  coverageThresholds: {
+    global: {
+      branches: 75,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    },
+    './src/services/trialService.js': {
+      branches: 85,
+      functions: 90,
+      lines: 90
+    }
+  },
+  setupFilesAfterEnv: ['<rootDir>/test/setup.js']
+};
+```
+
+#### Test Setup File (`test/setup.js`)
+
+```javascript
+const admin = require('firebase-admin');
+const { initializeTestEnvironment } = require('@firebase/testing');
+
+let testEnv;
+
+beforeAll(async () => {
+  // Initialize Firebase test environment
+  testEnv = await initializeTestEnvironment({
+    projectId: 'test-project'
+  });
+});
+
+afterAll(async () => {
+  await testEnv.cleanup();
+});
+
+afterEach(async () => {
+  // Clear Firestore between tests
+  await testEnv.clearFirestore();
+});
+
+// Mock helpers
+global.createUser = async (userId, data) => {
+  return testEnv.firestore().collection('users').doc(userId).set(data);
+};
+
+global.createTrialWithDaysRemaining = async (userId, days) => {
+  const now = new Date();
+  const endsAt = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+  return testEnv.firestore().collection('users').doc(userId).set({
+    trial: {
+      tier_id: 'pro',
+      started_at: admin.firestore.Timestamp.fromDate(now),
+      ends_at: admin.firestore.Timestamp.fromDate(endsAt),
+      is_active: true,
+      notifications_sent: {}
+    }
+  });
+};
+```
+
+### Test Coverage Targets
+
+| Component | Target Coverage | Priority |
+|-----------|----------------|----------|
+| `trialService.js` | >85% | CRITICAL |
+| `trialConfigService.js` | >90% | HIGH |
+| `trialProcessingService.js` | >80% | CRITICAL |
+| `users.js` (trial init) | >85% | HIGH |
+| `subscriptions.js` (trial status) | >85% | HIGH |
+| Overall backend | >80% | REQUIRED |
+
+---
+
 ## Mobile Implementation
 
 ### New Files to Create
@@ -713,6 +1251,492 @@ dependencies:
 
 ---
 
+## Mobile Test Files
+
+### Test Files to Create
+
+#### 1. `mobile/test/models/trial_status_test.dart` (~100 lines)
+
+**Test Coverage: >95% target**
+
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:jeevibe/models/trial_status.dart';
+
+void main() {
+  group('TrialStatus', () => {
+    test('should parse valid trial JSON', () {
+      final json = {
+        'tier_id': 'pro',
+        'started_at': '2024-01-01T00:00:00Z',
+        'ends_at': '2024-01-31T00:00:00Z',
+        'days_remaining': 15
+      };
+
+      final trialStatus = TrialStatus.fromJson(json);
+
+      expect(trialStatus.tierId, 'pro');
+      expect(trialStatus.daysRemaining, 15);
+      expect(trialStatus.startedAt, DateTime.parse('2024-01-01T00:00:00Z'));
+      expect(trialStatus.endsAt, DateTime.parse('2024-01-31T00:00:00Z'));
+    });
+
+    test('should handle null trial JSON', () {
+      final trialStatus = TrialStatus.fromJson(null);
+
+      expect(trialStatus.daysRemaining, 0);
+      expect(trialStatus.isExpired, true);
+    });
+
+    test('should handle missing tier_id with default', () {
+      final json = {
+        'started_at': '2024-01-01T00:00:00Z',
+        'ends_at': '2024-01-31T00:00:00Z',
+        'days_remaining': 10
+      };
+
+      final trialStatus = TrialStatus.fromJson(json);
+
+      expect(trialStatus.tierId, 'pro'); // Default value
+    });
+
+    test('isUrgent should be true when days <= 5', () {
+      final trialStatus = TrialStatus(
+        tierId: 'pro',
+        startedAt: DateTime.now().subtract(Duration(days: 25)),
+        endsAt: DateTime.now().add(Duration(days: 5)),
+        daysRemaining: 5
+      );
+
+      expect(trialStatus.isUrgent, true);
+    });
+
+    test('isUrgent should be false when days > 5', () {
+      final trialStatus = TrialStatus(
+        tierId: 'pro',
+        startedAt: DateTime.now().subtract(Duration(days: 20)),
+        endsAt: DateTime.now().add(Duration(days: 10)),
+        daysRemaining: 10
+      );
+
+      expect(trialStatus.isUrgent, false);
+    });
+
+    test('isExpired should be true when days <= 0', () {
+      final trialStatus = TrialStatus(
+        tierId: 'pro',
+        startedAt: DateTime.now().subtract(Duration(days: 31)),
+        endsAt: DateTime.now().subtract(Duration(days: 1)),
+        daysRemaining: 0
+      );
+
+      expect(trialStatus.isExpired, true);
+    });
+
+    test('isLastDay should be true when days <= 1', () {
+      final trialStatus = TrialStatus(
+        tierId: 'pro',
+        startedAt: DateTime.now().subtract(Duration(days: 29)),
+        endsAt: DateTime.now().add(Duration(days: 1)),
+        daysRemaining: 1
+      );
+
+      expect(trialStatus.isLastDay, true);
+    });
+
+    group('urgencyColor', () {
+      test('should return red when days <= 2', () {
+        final trialStatus = TrialStatus(
+          tierId: 'pro',
+          startedAt: DateTime.now(),
+          endsAt: DateTime.now(),
+          daysRemaining: 2
+        );
+
+        expect(trialStatus.urgencyColor, Colors.red);
+      });
+
+      test('should return orange when days <= 5', () {
+        final trialStatus = TrialStatus(
+          tierId: 'pro',
+          startedAt: DateTime.now(),
+          endsAt: DateTime.now(),
+          daysRemaining: 4
+        );
+
+        expect(trialStatus.urgencyColor, Colors.orange);
+      });
+
+      test('should return blue when days > 5', () {
+        final trialStatus = TrialStatus(
+          tierId: 'pro',
+          startedAt: DateTime.now(),
+          endsAt: DateTime.now(),
+          daysRemaining: 10
+        );
+
+        expect(trialStatus.urgencyColor, Colors.blue);
+      });
+    });
+
+    group('bannerText', () {
+      test('should show "Last day" when days = 1', () {
+        final trialStatus = TrialStatus(
+          tierId: 'pro',
+          startedAt: DateTime.now(),
+          endsAt: DateTime.now(),
+          daysRemaining: 1
+        );
+
+        expect(trialStatus.bannerText, 'Last day of Pro trial!');
+      });
+
+      test('should show days count when days <= 5', () {
+        final trialStatus = TrialStatus(
+          tierId: 'pro',
+          startedAt: DateTime.now(),
+          endsAt: DateTime.now(),
+          daysRemaining: 3
+        );
+
+        expect(trialStatus.bannerText, '3 days left in Pro trial');
+      });
+
+      test('should show "Pro Trial •" when days > 5', () {
+        final trialStatus = TrialStatus(
+          tierId: 'pro',
+          startedAt: DateTime.now(),
+          endsAt: DateTime.now(),
+          daysRemaining: 15
+        );
+
+        expect(trialStatus.bannerText, 'Pro Trial • 15 days remaining');
+      });
+    });
+  });
+}
+```
+
+#### 2. `mobile/test/widgets/trial_banner_test.dart` (~120 lines)
+
+**Test Coverage: Widget rendering and visibility logic**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:jeevibe/widgets/trial_banner.dart';
+import 'package:jeevibe/services/subscription_service.dart';
+
+void main() {
+  group('TrialBanner', () {
+    testWidgets('should show banner when trial is urgent', (tester) async {
+      final mockStatus = SubscriptionStatus(
+        subscription: SubscriptionInfo(
+          tier: SubscriptionTier.pro,
+          source: SubscriptionSource.trial,
+          trial: TrialStatus(
+            tierId: 'pro',
+            startedAt: DateTime.now().subtract(Duration(days: 25)),
+            endsAt: DateTime.now().add(Duration(days: 5)),
+            daysRemaining: 5
+          )
+        )
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Provider<SubscriptionService>.value(
+            value: MockSubscriptionService(status: mockStatus),
+            child: Scaffold(body: TrialBanner()),
+          ),
+        ),
+      );
+
+      expect(find.byType(TrialBanner), findsOneWidget);
+      expect(find.text('5 days left in Pro trial'), findsOneWidget);
+      expect(find.text('Upgrade'), findsOneWidget);
+    });
+
+    testWidgets('should hide banner when not on trial', (tester) async {
+      final mockStatus = SubscriptionStatus(
+        subscription: SubscriptionInfo(
+          tier: SubscriptionTier.free,
+          source: SubscriptionSource.defaultTier,
+          trial: null
+        )
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Provider<SubscriptionService>.value(
+            value: MockSubscriptionService(status: mockStatus),
+            child: Scaffold(body: TrialBanner()),
+          ),
+        ),
+      );
+
+      expect(find.byType(Container), findsNothing);
+      expect(find.text('Upgrade'), findsNothing);
+    });
+
+    testWidgets('should hide banner when trial not urgent (>5 days)', (tester) async {
+      final mockStatus = SubscriptionStatus(
+        subscription: SubscriptionInfo(
+          tier: SubscriptionTier.pro,
+          source: SubscriptionSource.trial,
+          trial: TrialStatus(
+            tierId: 'pro',
+            startedAt: DateTime.now().subtract(Duration(days: 10)),
+            endsAt: DateTime.now().add(Duration(days: 20)),
+            daysRemaining: 20
+          )
+        )
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Provider<SubscriptionService>.value(
+            value: MockSubscriptionService(status: mockStatus),
+            child: Scaffold(body: TrialBanner()),
+          ),
+        ),
+      );
+
+      expect(find.byType(Container), findsNothing);
+    });
+
+    testWidgets('should show orange color when days <= 5', (tester) async {
+      final mockStatus = SubscriptionStatus(
+        subscription: SubscriptionInfo(
+          tier: SubscriptionTier.pro,
+          source: SubscriptionSource.trial,
+          trial: TrialStatus(
+            tierId: 'pro',
+            startedAt: DateTime.now(),
+            endsAt: DateTime.now(),
+            daysRemaining: 4
+          )
+        )
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Provider<SubscriptionService>.value(
+            value: MockSubscriptionService(status: mockStatus),
+            child: Scaffold(body: TrialBanner()),
+          ),
+        ),
+      );
+
+      final container = tester.widget<Container>(find.byType(Container));
+      final decoration = container.decoration as BoxDecoration;
+      final gradient = decoration.gradient as LinearGradient;
+
+      expect(gradient.colors.first, Colors.orange.withOpacity(0.9));
+    });
+
+    testWidgets('should show red color when days <= 2', (tester) async {
+      final mockStatus = SubscriptionStatus(
+        subscription: SubscriptionInfo(
+          tier: SubscriptionTier.pro,
+          source: SubscriptionSource.trial,
+          trial: TrialStatus(
+            tierId: 'pro',
+            startedAt: DateTime.now(),
+            endsAt: DateTime.now(),
+            daysRemaining: 2
+          )
+        )
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Provider<SubscriptionService>.value(
+            value: MockSubscriptionService(status: mockStatus),
+            child: Scaffold(body: TrialBanner()),
+          ),
+        ),
+      );
+
+      final container = tester.widget<Container>(find.byType(Container));
+      final decoration = container.decoration as BoxDecoration;
+      final gradient = decoration.gradient as LinearGradient;
+
+      expect(gradient.colors.first, Colors.red.withOpacity(0.9));
+    });
+
+    testWidgets('should navigate to paywall on upgrade tap', (tester) async {
+      final mockStatus = SubscriptionStatus(
+        subscription: SubscriptionInfo(
+          tier: SubscriptionTier.pro,
+          source: SubscriptionSource.trial,
+          trial: TrialStatus(
+            tierId: 'pro',
+            startedAt: DateTime.now(),
+            endsAt: DateTime.now(),
+            daysRemaining: 5
+          )
+        )
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Provider<SubscriptionService>.value(
+            value: MockSubscriptionService(status: mockStatus),
+            child: Scaffold(body: TrialBanner()),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Upgrade'));
+      await tester.pumpAndSettle();
+
+      // Verify navigation to PaywallScreen
+      expect(find.byType(PaywallScreen), findsOneWidget);
+    });
+  });
+}
+```
+
+#### 3. `mobile/test/services/subscription_service_test.dart` (~100 lines)
+
+**Test Coverage: Trial expiry detection**
+
+```dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
+import 'package:jeevibe/services/subscription_service.dart';
+
+void main() {
+  group('SubscriptionService', () {
+    test('should detect trial expiry on status change', () async {
+      final mockApi = MockApiService();
+      final subscriptionService = SubscriptionService(api: mockApi);
+
+      // First call: User on trial
+      when(mockApi.getSubscriptionStatus()).thenAnswer((_) async =>
+        SubscriptionStatus(
+          subscription: SubscriptionInfo(
+            tier: SubscriptionTier.pro,
+            source: SubscriptionSource.trial,
+            trial: TrialStatus(daysRemaining: 1)
+          )
+        )
+      );
+
+      await subscriptionService.checkSubscriptionStatus();
+
+      // Second call: Trial expired
+      when(mockApi.getSubscriptionStatus()).thenAnswer((_) async =>
+        SubscriptionStatus(
+          subscription: SubscriptionInfo(
+            tier: SubscriptionTier.free,
+            source: SubscriptionSource.defaultTier,
+            trial: null
+          )
+        )
+      );
+
+      await subscriptionService.checkSubscriptionStatus();
+
+      // Verify dialog shown
+      verify(subscriptionService.showTrialExpiredDialog()).called(1);
+    });
+
+    test('should not show dialog if source unchanged', () async {
+      final mockApi = MockApiService();
+      final subscriptionService = SubscriptionService(api: mockApi);
+
+      // Both calls: User on free tier
+      when(mockApi.getSubscriptionStatus()).thenAnswer((_) async =>
+        SubscriptionStatus(
+          subscription: SubscriptionInfo(
+            tier: SubscriptionTier.free,
+            source: SubscriptionSource.defaultTier,
+            trial: null
+          )
+        )
+      );
+
+      await subscriptionService.checkSubscriptionStatus();
+      await subscriptionService.checkSubscriptionStatus();
+
+      // Verify dialog NOT shown
+      verifyNever(subscriptionService.showTrialExpiredDialog());
+    });
+
+    test('should not show dialog when upgrading to paid', () async {
+      final mockApi = MockApiService();
+      final subscriptionService = SubscriptionService(api: mockApi);
+
+      // First call: User on trial
+      when(mockApi.getSubscriptionStatus()).thenAnswer((_) async =>
+        SubscriptionStatus(
+          subscription: SubscriptionInfo(
+            tier: SubscriptionTier.pro,
+            source: SubscriptionSource.trial
+          )
+        )
+      );
+
+      await subscriptionService.checkSubscriptionStatus();
+
+      // Second call: User upgraded to paid
+      when(mockApi.getSubscriptionStatus()).thenAnswer((_) async =>
+        SubscriptionStatus(
+          subscription: SubscriptionInfo(
+            tier: SubscriptionTier.pro,
+            source: SubscriptionSource.paid
+          )
+        )
+      );
+
+      await subscriptionService.checkSubscriptionStatus();
+
+      // Verify dialog NOT shown (user upgraded!)
+      verifyNever(subscriptionService.showTrialExpiredDialog());
+    });
+  });
+}
+```
+
+### Test Dependencies (`pubspec.yaml`)
+
+```yaml
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mockito: ^5.4.2
+  build_runner: ^2.4.6
+```
+
+### Test Coverage Targets
+
+| Component | Target Coverage | Priority |
+|-----------|----------------|----------|
+| `trial_status.dart` | >95% | HIGH |
+| `trial_banner.dart` | >85% | MEDIUM |
+| `subscription_service.dart` (trial detection) | >85% | HIGH |
+| Overall mobile | >75% | RECOMMENDED |
+
+### Running Tests
+
+```bash
+# Backend tests
+cd backend
+npm test                    # Run all tests
+npm run test:watch          # Watch mode
+npm run test:ci             # CI mode with coverage
+
+# Mobile tests
+cd mobile
+flutter test                # Run all tests
+flutter test --coverage     # Generate coverage report
+```
+
+---
+
 ## Firebase Messaging Platform Configuration
 
 ### iOS Setup
@@ -965,7 +1989,7 @@ POST /api/subscriptions/admin/test-trial-notification
 
 ## Critical Files Summary
 
-### Backend (8 files)
+### Backend Implementation (8 files)
 
 | File | Type | Lines | Description |
 |------|------|-------|-------------|
@@ -978,7 +2002,17 @@ POST /api/subscriptions/admin/test-trial-notification
 | `backend/src/services/studentEmailService.js` | MODIFY | 150 | Add trial email templates |
 | `backend/src/services/subscriptionService.js` | MODIFY | 15 | Import expireTrialAsync |
 
-### Mobile (8 files)
+### Backend Tests (5 files, ~650 lines)
+
+| File | Type | Lines | Coverage Target |
+|------|------|-------|-----------------|
+| `backend/test/services/trialService.test.js` | NEW | 200+ | >85% |
+| `backend/test/services/trialConfigService.test.js` | NEW | 100+ | >90% |
+| `backend/test/services/trialProcessingService.test.js` | NEW | 150+ | >80% |
+| `backend/test/routes/users.test.js` | NEW | 100+ | >85% |
+| `backend/test/routes/subscriptions.test.js` | NEW | 100+ | >85% |
+
+### Mobile Implementation (8 files)
 
 | File | Type | Lines | Description |
 |------|------|-------|-------------|
@@ -990,6 +2024,14 @@ POST /api/subscriptions/admin/test-trial-notification
 | `mobile/lib/screens/home_screen.dart` | MODIFY | 1 | Add banner at line 97 |
 | `mobile/lib/services/subscription_service.dart` | MODIFY | 30 | Detect trial expiry |
 | `mobile/pubspec.yaml` | MODIFY | 1 | Add firebase_messaging |
+
+### Mobile Tests (3 files, ~320 lines)
+
+| File | Type | Lines | Coverage Target |
+|------|------|-------|-----------------|
+| `mobile/test/models/trial_status_test.dart` | NEW | 100+ | >95% |
+| `mobile/test/widgets/trial_banner_test.dart` | NEW | 120+ | >85% |
+| `mobile/test/services/subscription_service_test.dart` | NEW | 100+ | >85% |
 
 ### Configuration (2 documents)
 
@@ -1045,20 +2087,26 @@ POST /api/subscriptions/admin/test-trial-notification
 
 **Total Implementation Time:** 3-4 weeks (2 engineers)
 
-- Backend: 1.5 weeks
-- Mobile: 1.5 weeks
-- Testing & QA: 1 week (overlapping)
+- Backend implementation: 1.5 weeks
+- Backend tests: 2-3 days
+- Mobile implementation: 1.5 weeks
+- Mobile tests: 2-3 days
+- Integration & QA: 1 week (overlapping)
 
-**Lines of Code:** ~2,500 total
-- Backend: ~1,200 LOC
-- Mobile: ~1,000 LOC
-- Tests: ~300 LOC
+**Lines of Code:** ~3,500 total
+- Backend implementation: ~1,200 LOC
+- Backend tests: ~650 LOC
+- Mobile implementation: ~1,000 LOC
+- Mobile tests: ~320 LOC
+- Config/setup: ~150 LOC
 
 ---
 
 ## Notes
 
 - **Good News:** `getEffectiveTier()` already checks for trials (lines 210-226)! Only needs minor import update.
+- **Testing Included:** Comprehensive test suite with >80% coverage for critical services ensures reliability.
+- **Backwards Compatible:** Existing users unaffected, only new signups get trials. No data migration required.
 - **Firebase Cloud Messaging (FCM):** Completely FREE with unlimited push notifications. No cost for sending trial notifications.
 - **cron-job.org:** Using external cron service saves ₹580/month vs Render.com paid cron, plus provides better monitoring.
 - **Critical:** Always invalidate tier cache after trial state changes
@@ -1066,5 +2114,6 @@ POST /api/subscriptions/admin/test-trial-notification
 - **Compliance:** Trial terms must be clear in signup flow (legal requirement)
 - **Monitoring:** Set up alerts for trial expiry errors and low conversion rates
 - **Cost Estimate:** Monthly notification costs ~₹300-400 (email only), push notifications are FREE via FCM
+- **Test-Driven:** Write tests alongside implementation for faster debugging and confidence in deployment
 
-This plan provides a complete, production-ready implementation that integrates seamlessly with JEEVibe's existing architecture.
+This plan provides a complete, production-ready, well-tested implementation that integrates seamlessly with JEEVibe's existing architecture.
