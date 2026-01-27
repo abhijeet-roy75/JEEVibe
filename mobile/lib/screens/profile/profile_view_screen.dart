@@ -412,10 +412,66 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
         : _profile == null
           ? Scaffold(
               backgroundColor: AppColors.backgroundWhite,
-              body: Center(
-                child: Text(
-                  'Profile not found',
-                  style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textLight),
+              body: SafeArea(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.person_off_outlined,
+                        size: 64,
+                        color: AppColors.textLight,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Profile not found',
+                        style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textLight),
+                      ),
+                      const SizedBox(height: 32),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(AppRadius.md),
+                            gradient: const LinearGradient(
+                              colors: [AppColors.errorRed, AppColors.errorRedLight],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            boxShadow: AppShadows.buttonShadow,
+                          ),
+                          child: ElevatedButton(
+                            onPressed: _signOut,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.md),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.logout, size: 20, color: Colors.white),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Sign Out & Retry',
+                                  style: AppTextStyles.labelMedium.copyWith(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             )
