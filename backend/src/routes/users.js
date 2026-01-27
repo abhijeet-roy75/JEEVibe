@@ -218,7 +218,22 @@ router.post('/profile',
       await retryFirestoreOperation(async () => {
         return await userRef.set(firestoreData, { merge: true });
       });
-      
+
+      // Initialize trial for new users (non-blocking)
+      if (!userDoc.exists && firestoreData.phoneNumber) {
+        try {
+          const { initializeTrial } = require('../services/trialService');
+          await initializeTrial(userId, firestoreData.phoneNumber);
+        } catch (error) {
+          // Don't fail signup if trial initialization fails
+          logger.error('Failed to initialize trial', {
+            userId,
+            error: error.message,
+            requestId: req.id
+          });
+        }
+      }
+
       // Fetch updated profile to return
       const updatedDoc = await retryFirestoreOperation(async () => {
         return await userRef.get();

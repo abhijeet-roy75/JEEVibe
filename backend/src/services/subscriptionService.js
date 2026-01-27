@@ -212,16 +212,25 @@ async function getEffectiveTier(userId, options = {}) {
       const trialEnd = userData.trial.ends_at?.toDate ? userData.trial.ends_at.toDate() : new Date(userData.trial.ends_at);
 
       if (trialEnd > now) {
+        const daysRemaining = Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24));
+
         logger.info('User has active trial', {
           userId,
-          ends_at: trialEnd.toISOString()
+          ends_at: trialEnd.toISOString(),
+          days_remaining: daysRemaining
         });
 
         return cacheAndReturn({
-          tier: 'pro',
+          tier: userData.trial.tier_id || 'pro',
           source: 'trial',
-          expires_at: trialEnd.toISOString()
+          expires_at: trialEnd.toISOString(),
+          trial_started_at: userData.trial.started_at,
+          days_remaining: daysRemaining
         });
+      } else {
+        // Trial expired - trigger async downgrade
+        const { expireTrialAsync } = require('./trialService');
+        expireTrialAsync(userId);
       }
     }
 

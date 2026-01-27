@@ -421,6 +421,62 @@ router.get('/check-alerts', verifyCronRequest, async (req, res) => {
 });
 
 /**
+ * POST /api/cron/process-trials
+ *
+ * Daily job to process active trials:
+ * - Check for expired trials and downgrade users
+ * - Send notifications at configured milestones (day 23, 5, 2, 0)
+ *
+ * Schedule: Daily at 2:00 AM IST (20:30 UTC)
+ *
+ * Authentication: Requires CRON_SECRET
+ */
+router.post('/process-trials', verifyCronRequest, async (req, res) => {
+  try {
+    logger.info('Trial processing job started', {
+      requestId: req.id,
+      source: req.headers['user-agent'] || 'unknown'
+    });
+
+    const { processAllTrials } = require('../services/trialProcessingService');
+
+    // Run with 5-minute timeout
+    const results = await withTimeout(
+      processAllTrials(),
+      300000, // 5 minutes
+      'Trial processing timed out'
+    );
+
+    logger.info('Trial processing job completed', {
+      requestId: req.id,
+      results
+    });
+
+    res.json({
+      success: true,
+      message: 'Trial processing completed',
+      results,
+      requestId: req.id
+    });
+  } catch (error) {
+    const isTimeout = error.message.includes('timed out');
+
+    logger.error('Error in trial processing job', {
+      error: error.message,
+      stack: error.stack,
+      requestId: req.id
+    });
+
+    res.status(isTimeout ? 504 : 500).json({
+      success: false,
+      error: isTimeout ? 'Trial processing timed out' : 'Failed to process trials',
+      message: error.message,
+      requestId: req.id
+    });
+  }
+});
+
+/**
  * GET /api/cron/health
  *
  * Health check for cron service

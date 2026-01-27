@@ -767,11 +767,267 @@ async function sendAllWeeklyEmails() {
   }
 }
 
+// ============================================================================
+// TRIAL EMAILS
+// ============================================================================
+
+/**
+ * Send trial notification email to user
+ *
+ * @param {string} userId - User ID
+ * @param {Object} userData - User data
+ * @param {number} daysRemaining - Days remaining in trial
+ * @returns {Promise<Object>} { success, emailId, reason }
+ */
+async function sendTrialEmail(userId, userData, daysRemaining) {
+  try {
+    // Check if Resend is configured
+    if (!resend) {
+      logger.warn('Resend not configured, skipping trial email', { userId });
+      return { success: false, reason: 'Resend not configured' };
+    }
+
+    // Check if user has email
+    if (!userData.email) {
+      return { success: false, reason: 'No email address' };
+    }
+
+    // Check if user opted out of emails
+    if (userData.emailPreferences?.dailyProgress === false) {
+      return { success: false, reason: 'User opted out' };
+    }
+
+    // Generate email content
+    const emailContent = await generateTrialEmailContent(userId, userData, daysRemaining);
+
+    // Send email via Resend
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: userData.email,
+      subject: emailContent.subject,
+      html: emailContent.html,
+      text: emailContent.text
+    });
+
+    if (error) {
+      logger.error('Failed to send trial email', {
+        userId,
+        email: userData.email,
+        error: error.message
+      });
+      return { success: false, reason: error.message };
+    }
+
+    logger.info('Trial email sent successfully', {
+      userId,
+      days_remaining: daysRemaining,
+      email_id: data?.id
+    });
+
+    return { success: true, emailId: data?.id };
+  } catch (error) {
+    logger.error('Error sending trial email', {
+      userId,
+      error: error.message
+    });
+    return { success: false, reason: error.message };
+  }
+}
+
+/**
+ * Generate trial email content based on days remaining
+ *
+ * @param {string} userId - User ID
+ * @param {Object} userData - User data
+ * @param {number} daysRemaining - Days remaining in trial
+ * @returns {Promise<Object>} { subject, html, text }
+ */
+async function generateTrialEmailContent(userId, userData, daysRemaining) {
+  const name = userData.displayName || userData.name || 'Student';
+  const firstName = name.split(' ')[0];
+
+  // Email templates based on days remaining
+  const templates = {
+    23: {
+      subject: `🎯 Week 1 Complete - Keep Going, ${firstName}!`,
+      emoji: '🎯',
+      headline: 'Week 1 Complete - Keep Going!',
+      message: `You're doing great! You have <strong>23 days left</strong> in your Pro trial.`,
+      cta: 'Continue Learning',
+      ctaUrl: `https://app.jeevibe.com`,
+      tips: [
+        'Daily quizzes help reinforce concepts',
+        'Use Snap & Solve for quick doubt clearing',
+        'Practice makes perfect - solve more questions!'
+      ]
+    },
+    5: {
+      subject: `⏰ Only 5 Days Left in Your Pro Trial, ${firstName}`,
+      emoji: '⏰',
+      headline: 'Only 5 Days Left in Your Pro Trial',
+      message: `Don't lose access to your Pro features! You have <strong>5 days</strong> remaining. Upgrade now for just <strong>₹199/month</strong>.`,
+      cta: 'Upgrade to Pro',
+      ctaUrl: `https://app.jeevibe.com/upgrade`,
+      features: [
+        '10 daily Snap & Solve',
+        '10 daily quiz questions',
+        'Offline mode',
+        '5 mock tests per month',
+        '30-day solution history'
+      ]
+    },
+    2: {
+      subject: `⚠️ Trial Ending in 2 Days - Act Now, ${firstName}!`,
+      emoji: '⚠️',
+      headline: 'Trial Ending in 2 Days!',
+      message: `Last chance to keep your Pro features! Your trial ends in <strong>2 days</strong>. Upgrade now for just <strong>₹199/month</strong>.`,
+      cta: 'Upgrade Now',
+      ctaUrl: `https://app.jeevibe.com/upgrade`,
+      urgency: 'Don\'t lose your 10 daily snaps, offline access, and 5 monthly mock tests!',
+      features: [
+        '10 daily Snap & Solve',
+        '10 daily quiz questions',
+        'Offline mode',
+        '5 mock tests per month'
+      ]
+    },
+    0: {
+      subject: `Your Trial Has Ended - Special Offer Inside, ${firstName} 🎁`,
+      emoji: '🎁',
+      headline: 'Your Trial Has Ended',
+      message: `Your Pro trial has ended. But don't worry - we have a <strong>special offer</strong> just for you!`,
+      cta: 'Claim Your Discount',
+      ctaUrl: `https://app.jeevibe.com/upgrade?code=TRIAL2PRO`,
+      discount: {
+        code: 'TRIAL2PRO',
+        percent: 20,
+        validDays: 7
+      },
+      message2: 'Get <strong>20% off</strong> with code <strong>TRIAL2PRO</strong> (valid for 7 days)'
+    }
+  };
+
+  const template = templates[daysRemaining] || templates[0];
+
+  // Generate HTML email
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+    .emoji { font-size: 48px; margin-bottom: 10px; }
+    .headline { font-size: 24px; font-weight: bold; margin: 0; }
+    .content { padding: 30px; }
+    .message { font-size: 16px; margin-bottom: 20px; }
+    .features { background: #f8f9fa; border-radius: 8px; padding: 20px; margin: 20px 0; }
+    .features ul { margin: 10px 0; padding-left: 20px; }
+    .features li { margin: 8px 0; }
+    .cta-button { display: inline-block; background: #667eea; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0; }
+    .cta-button:hover { background: #5568d3; }
+    .discount-box { background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+    .discount-code { font-size: 24px; font-weight: bold; color: #856404; letter-spacing: 2px; margin: 10px 0; }
+    .urgency { background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0; }
+    .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="emoji">${template.emoji}</div>
+      <h1 class="headline">${template.headline}</h1>
+    </div>
+
+    <div class="content">
+      <p>Hi ${firstName},</p>
+      <div class="message">${template.message}</div>
+
+      ${template.urgency ? `<div class="urgency">${template.urgency}</div>` : ''}
+
+      ${template.features ? `
+        <div class="features">
+          <strong>Pro Features:</strong>
+          <ul>
+            ${template.features.map(f => `<li>${f}</li>`).join('')}
+          </ul>
+        </div>
+      ` : ''}
+
+      ${template.tips ? `
+        <div class="features">
+          <strong>Tips for Success:</strong>
+          <ul>
+            ${template.tips.map(t => `<li>${t}</li>`).join('')}
+          </ul>
+        </div>
+      ` : ''}
+
+      ${template.discount ? `
+        <div class="discount-box">
+          <strong>🎁 Special Offer</strong>
+          <div class="discount-code">${template.discount.code}</div>
+          <p>Get ${template.discount.percent}% off - Valid for ${template.discount.validDays} days</p>
+        </div>
+      ` : ''}
+
+      ${template.message2 ? `<div class="message">${template.message2}</div>` : ''}
+
+      <center>
+        <a href="${template.ctaUrl}" class="cta-button">${template.cta}</a>
+      </center>
+
+      <p style="margin-top: 30px;">Keep up the great work! We're rooting for you.</p>
+      <p>Team JEEVibe</p>
+    </div>
+
+    <div class="footer">
+      <p>You're receiving this email because you're using JEEVibe.</p>
+      <p><a href="https://jeevibe.com">Visit Website</a> | <a href="https://app.jeevibe.com/settings">Manage Preferences</a></p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  // Generate plain text version
+  const text = `
+Hi ${firstName},
+
+${template.headline}
+
+${template.message.replace(/<[^>]*>/g, '')}
+
+${template.features ? `Pro Features:\n${template.features.map(f => `- ${f}`).join('\n')}` : ''}
+
+${template.tips ? `Tips for Success:\n${template.tips.map(t => `- ${t}`).join('\n')}` : ''}
+
+${template.discount ? `Special Offer: Get ${template.discount.percent}% off with code ${template.discount.code} (valid for ${template.discount.validDays} days)` : ''}
+
+${template.cta}: ${template.ctaUrl}
+
+Keep up the great work! We're rooting for you.
+
+Team JEEVibe
+  `;
+
+  return {
+    subject: template.subject,
+    html: html.trim(),
+    text: text.trim()
+  };
+}
+
 module.exports = {
   sendDailyEmail,
   sendWeeklyEmail,
   sendAllDailyEmails,
   sendAllWeeklyEmails,
   generateDailyEmailContent,
-  generateWeeklyEmailContent
+  generateWeeklyEmailContent,
+  sendTrialEmail,
+  generateTrialEmailContent
 };

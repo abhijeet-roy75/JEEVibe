@@ -107,6 +107,15 @@ router.get('/status', authenticateUser, async (req, res, next) => {
           ...(status.subscription_id && {
             subscription_id: status.subscription_id,
             plan_type: status.plan_type
+          }),
+          // Trial info (if user is on trial)
+          ...(status.source === 'trial' && tierInfo.trial_started_at && {
+            trial: {
+              tier_id: status.tier,
+              days_remaining: tierInfo.days_remaining || 0,
+              ends_at: status.expires_at,
+              started_at: tierInfo.trial_started_at?.toDate?.()?.toISOString() || tierInfo.trial_started_at
+            }
           })
         },
         limits: status.limits,
