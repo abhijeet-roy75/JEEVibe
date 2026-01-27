@@ -247,6 +247,15 @@ class _ChapterPracticeHistoryScreenState
           timeTakenSeconds: questionMap['time_taken_seconds'] ?? 0,
           solutionText: questionMap['solution_text']?.toString(),
           solutionSteps: _parseSolutionSteps(questionMap['solution_steps']),
+          keyInsight: questionMap['key_insight']?.toString(),
+          distractorAnalysis: questionMap['distractor_analysis'] != null
+              ? Map<String, String>.from(questionMap['distractor_analysis'] as Map)
+              : null,
+          commonMistakes: questionMap['common_mistakes'] != null
+              ? List<String>.from(questionMap['common_mistakes'] as List)
+              : null,
+          explanation: questionMap['explanation']?.toString(),
+          difficulty: questionMap['difficulty']?.toString(),
         );
       }).toList();
 
