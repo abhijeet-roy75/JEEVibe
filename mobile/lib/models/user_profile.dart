@@ -56,6 +56,17 @@ class UserProfile {
   }
 
   factory UserProfile.fromMap(Map<String, dynamic> map, String uid) {
+    // Helper to safely parse timestamps, using current time as fallback
+    DateTime parseTimestamp(dynamic value, DateTime fallback) {
+      if (value == null) return fallback;
+      if (value is Timestamp) return value.toDate();
+      // Handle case where it might already be a DateTime (shouldn't happen, but defensive)
+      if (value is DateTime) return value;
+      return fallback;
+    }
+
+    final now = DateTime.now();
+
     return UserProfile(
       uid: uid,
       phoneNumber: map['phoneNumber'] ?? '',
@@ -68,8 +79,8 @@ class UserProfile {
       targetExam: map['targetExam'],
       dreamBranch: map['dreamBranch'],
       studySetup: List<String>.from(map['studySetup'] ?? []),
-      createdAt: (map['createdAt'] as Timestamp).toDate(),
-      lastActive: (map['lastActive'] as Timestamp).toDate(),
+      createdAt: parseTimestamp(map['createdAt'], now),
+      lastActive: parseTimestamp(map['lastActive'], now),
     );
   }
 }
