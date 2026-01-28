@@ -10,6 +10,14 @@ class ServerUnavailableException implements Exception {
   const ServerUnavailableException();
 }
 
+/// Exception thrown when a user profile doesn't exist in the database (404)
+class ProfileNotFoundException implements Exception {
+  final String message;
+  const ProfileNotFoundException([this.message = 'User profile not found']);
+  @override
+  String toString() => message;
+}
+
 class FirestoreUserService {
   // Backend URL - same as ApiService (Singapore region)
   static const String baseUrl = 'https://jeevibe-thzi.onrender.com';
@@ -157,8 +165,8 @@ class FirestoreUserService {
         }
         return null;
       } else if (response.statusCode == 404) {
-        // Profile not found
-        return null;
+        // Profile doesn't exist - throw specific exception
+        throw const ProfileNotFoundException();
       } else {
         final errorData = json.decode(response.body);
         throw Exception(errorData['error'] ?? 'Failed to fetch user profile');

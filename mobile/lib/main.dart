@@ -16,7 +16,7 @@ import 'firebase_options.dart';
 import 'services/storage_service.dart';
 import 'services/snap_counter_service.dart';
 import 'services/firebase/auth_service.dart';
-import 'services/firebase/firestore_user_service.dart';
+import 'services/firebase/firestore_user_service.dart' show FirestoreUserService, ProfileNotFoundException;
 import 'services/subscription_service.dart';
 import 'services/offline/connectivity_service.dart';
 import 'services/offline/database_service.dart';
@@ -33,6 +33,7 @@ import 'models/subscription_models.dart';
 // Screens
 import 'screens/auth/welcome_screen.dart'; // The new Auth Wrapper
 import 'screens/auth/pin_verification_screen.dart'; // PIN verification
+import 'screens/onboarding/onboarding_step1_screen.dart'; // Onboarding for new users
 import 'screens/assessment_intro_screen.dart'; // Home dashboard (used in bottom nav)
 import 'screens/main_navigation_screen.dart'; // Main navigation with bottom nav
 // Services
@@ -529,9 +530,17 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
     UserProfile? userProfile;
     String? authToken;
 
+    bool profileNotFound = false;
+
     try {
       final results = await Future.wait([
         firestoreService.getUserProfile(user.uid).catchError((e) {
+          if (e is ProfileNotFoundException) {
+            // Profile doesn't exist - mark it and rethrow to handle separately
+            profileNotFound = true;
+            throw e;
+          }
+          // Network error or other issue - log and return null
           print('Error checking profile: $e');
           return null; // null = couldn't check
         }),
@@ -551,6 +560,10 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       authToken = results[1] as String?;
 
       // Auth token obtained successfully (removed logging for security)
+    } on ProfileNotFoundException {
+      // Profile doesn't exist - this is a new user who needs onboarding
+      print('Profile not found - redirecting to onboarding');
+      profileNotFound = true;
     } catch (e) {
       print('Error in parallel initialization: $e');
       userProfile = null;
@@ -569,11 +582,48 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       return;
     }
 
-    // Only sign out if we CONFIRMED profile doesn't exist (not on network error)
+    // If profile doesn't exist, redirect to onboarding (new user flow)
+    if (profileNotFound) {
+      if (mounted) {
+        setState(() {
+          _targetScreen = const OnboardingStep1Screen();
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
+    // If profile fetch failed due to network error, show error
     if (userProfile == null) {
-      // Could be network error or genuinely no profile
-      // Don't sign out immediately - let user continue and handle later
-      print('Warning: Could not load profile, continuing with limited data');
+      if (mounted) {
+        setState(() {
+          _targetScreen = Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  const Text('Could not load your profile'),
+                  const Text('Please check your internet connection'),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _isLoading = true;
+                        _checkLoginStatus();
+                      });
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+          _isLoading = false;
+        });
+      }
+      return;
     }
 
     // Pre-populate UserProfileProvider with fetched profile to avoid duplicate fetch
