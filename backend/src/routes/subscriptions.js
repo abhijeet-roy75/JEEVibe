@@ -15,6 +15,7 @@ const { authenticateUser } = require('../middleware/auth');
 const { adminLimiter } = require('../middleware/rateLimiter');
 const logger = require('../utils/logger');
 const { db, admin } = require('../config/firebase');
+const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 
 const { getSubscriptionStatus, grantOverride, revokeOverride, getEffectiveTier } = require('../services/subscriptionService');
 const { getAllUsage } = require('../services/usageTrackingService');
@@ -77,7 +78,9 @@ router.get('/status', authenticateUser, async (req, res, next) => {
     const tierInfo = await getEffectiveTier(userId);
 
     // Fetch user document to get trial data (even if expired)
-    const userDoc = await db.collection('users').doc(userId).get();
+    const userDoc = await retryFirestoreOperation(async () => {
+      return await db.collection('users').doc(userId).get();
+    });
     const userData = userDoc.exists ? userDoc.data() : null;
 
     // Get subscription status, usage, and weekly chapter practice usage in parallel

@@ -108,6 +108,11 @@ jest.mock('../../../src/services/tierConfigService', () => ({
 
 // Mock subscriptionService
 jest.mock('../../../src/services/subscriptionService', () => ({
+  getEffectiveTier: jest.fn(() => Promise.resolve({
+    tier: 'free',
+    source: 'default',
+    expires_at: null,
+  })),
   getSubscriptionStatus: jest.fn(() => Promise.resolve({
     tier: 'free',
     source: 'default',
@@ -131,6 +136,11 @@ jest.mock('../../../src/services/usageTrackingService', () => ({
     daily_quiz: { used: 0, limit: 1, remaining: 1, is_unlimited: false, resets_at: new Date().toISOString() },
     ai_tutor: { used: 0, limit: 0, remaining: 0, is_unlimited: false, resets_at: new Date().toISOString() },
   })),
+}));
+
+// Mock weeklyChapterPracticeService
+jest.mock('../../../src/services/weeklyChapterPracticeService', () => ({
+  getWeeklyUsage: jest.fn(() => Promise.resolve(null)),
 }));
 
 // Mock logger
