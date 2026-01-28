@@ -171,6 +171,9 @@ class FirestoreUserService {
         final errorData = json.decode(response.body);
         throw Exception(errorData['error'] ?? 'Failed to fetch user profile');
       }
+    } on ProfileNotFoundException {
+      // Rethrow ProfileNotFoundException so it can be caught separately
+      rethrow;
     } on ServerUnavailableException {
       throw Exception('Server is temporarily unavailable. Please try again in a moment.');
     } on SocketException {
