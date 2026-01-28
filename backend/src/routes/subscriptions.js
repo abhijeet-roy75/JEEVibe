@@ -76,6 +76,10 @@ router.get('/status', authenticateUser, async (req, res, next) => {
     // Now: Called once and passed to all functions (60% reduction in Firestore reads)
     const tierInfo = await getEffectiveTier(userId);
 
+    // Fetch user document to get trial data (even if expired)
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.exists ? userDoc.data() : null;
+
     // Get subscription status, usage, and weekly chapter practice usage in parallel
     const [status, usage, chapterPracticeWeekly] = await Promise.all([
       getSubscriptionStatus(userId, tierInfo),
@@ -108,7 +112,7 @@ router.get('/status', authenticateUser, async (req, res, next) => {
             subscription_id: status.subscription_id,
             plan_type: status.plan_type
           }),
-          // Trial info (if user is on trial)
+          // Trial info (always include if trial exists, even if expired)
           ...(status.source === 'trial' && tierInfo.trial_started_at && {
             trial: {
               tier_id: status.tier,
@@ -116,6 +120,16 @@ router.get('/status', authenticateUser, async (req, res, next) => {
               ends_at: status.expires_at,
               started_at: tierInfo.trial_started_at?.toDate?.()?.toISOString() || tierInfo.trial_started_at,
               is_active: true
+            }
+          }),
+          // Include expired trial data for dialog triggering
+          ...(status.source !== 'trial' && userData?.trial && {
+            trial: {
+              tier_id: userData.trial.tier_id || 'pro',
+              days_remaining: 0,
+              ends_at: userData.trial.ends_at?.toDate?.()?.toISOString() || null,
+              started_at: userData.trial.started_at?.toDate?.()?.toISOString() || null,
+              is_active: false
             }
           })
         },

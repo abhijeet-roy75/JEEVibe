@@ -37,6 +37,9 @@ import 'screens/main_navigation_screen.dart'; // Main navigation with bottom nav
 // Services
 import 'services/firebase/pin_service.dart';
 
+// Widgets
+import 'widgets/trial_expired_dialog.dart';
+
 // Global navigator key for navigation and in-app notifications
 final GlobalKey<NavigatorState> globalNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -371,6 +374,7 @@ class AppInitializer extends StatefulWidget {
 class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObserver {
   bool _isLoading = true;
   Widget? _targetScreen;
+  bool _hasShownTrialExpiredDialog = false;
 
   @override
   void initState() {
@@ -643,6 +647,36 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       setState(() {
         _isLoading = false;
       });
+
+      // Check if trial has expired and show dialog
+      _checkAndShowTrialExpiredDialog();
+    }
+  }
+
+  /// Check if trial expired and show dialog once
+  Future<void> _checkAndShowTrialExpiredDialog() async {
+    if (_hasShownTrialExpiredDialog) return;
+
+    // Wait for widget tree to be built
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (!mounted) return;
+
+    final subscriptionService = Provider.of<SubscriptionService>(context, listen: false);
+    final status = subscriptionService.status;
+
+    // Check if trial expired
+    // When trial expires, user moves to free tier but trial data persists
+    if (status != null &&
+        status.subscription.tier == SubscriptionTier.free &&
+        status.subscription.trial != null &&
+        status.subscription.trial!.isExpired) {
+
+      _hasShownTrialExpiredDialog = true;
+
+      if (mounted) {
+        TrialExpiredDialog.show(context);
+      }
     }
   }
 
