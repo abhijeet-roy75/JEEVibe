@@ -1,3 +1,11 @@
+// Mock Firebase before importing the service
+jest.mock('../../../src/config/firebase', () => ({
+  db: {},
+  admin: {},
+  storage: {},
+  initializeFirebase: jest.fn(),
+}));
+
 const { generateTrialEmailContent } = require('../../../src/services/studentEmailService');
 
 describe('studentEmailService - Trial Emails', () => {
