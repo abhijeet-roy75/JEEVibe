@@ -312,12 +312,13 @@ router.get('/profile/exists', authenticateUser, async (req, res, next) => {
 router.patch('/profile/last-active', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     const userRef = db.collection('users').doc(userId);
     await retryFirestoreOperation(async () => {
-      return await userRef.update({
+      // Use set with merge to handle non-existent documents
+      return await userRef.set({
         lastActive: admin.firestore.FieldValue.serverTimestamp()
-      });
+      }, { merge: true });
     });
     
     // Invalidate cache
