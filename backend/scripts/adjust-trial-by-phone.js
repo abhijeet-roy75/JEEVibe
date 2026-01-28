@@ -55,16 +55,23 @@ async function adjustTrialByPhone(phoneNumber, daysRemaining) {
     const endsAtTimestamp = admin.firestore.Timestamp.fromDate(newEndsAt);
 
     // Update trial
+    // Keep is_active: true even for 0 days so cron job can process it
+    // The cron job will detect expiry and handle it properly
+    // Clear notifications_sent for the current milestone so it can be resent
+    const notificationKey = `day_${days}`;
     await db.collection('users').doc(userId).update({
       'trial.ends_at': endsAtTimestamp,
-      'trial.is_active': days > 0,
+      'trial.is_active': true,
+      'trial.expired_at': admin.firestore.FieldValue.delete(), // Clear expired_at if resetting
+      [`trial.notifications_sent.${notificationKey}`]: admin.firestore.FieldValue.delete(),
       updated_at: admin.firestore.Timestamp.now()
     });
 
     console.log('✅ Trial adjusted successfully!');
     console.log(`   Days remaining: ${days} days`);
     console.log(`   New end date: ${newEndsAt.toISOString()}`);
-    console.log(`   Trial active: ${days > 0}`);
+    console.log(`   Trial active: true (for cron processing)`);
+    console.log(`   Cleared notification: day_${days}`);
 
     // Show notification stage
     console.log('\n📱 Notification Stage:');
