@@ -20,6 +20,7 @@ import '../widgets/daily_quiz/subject_progress_widget.dart';
 import '../widgets/offline/offline_banner.dart';
 import '../providers/daily_quiz_provider.dart';
 import '../providers/offline_provider.dart';
+import '../providers/user_profile_provider.dart';
 import '../utils/error_handler.dart';
 import 'daily_quiz_loading_screen.dart';
 import 'analytics_screen.dart';
@@ -41,7 +42,6 @@ class DailyQuizHomeScreen extends StatefulWidget {
 }
 
 class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
-  UserProfile? _userProfile;
   UserState _userState = UserState.newUserDay1;
   AssessmentData? _assessmentData;
   bool _isLoadingAssessment = false;
@@ -58,19 +58,10 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
 
   Future<void> _loadData() async {
     try {
-      // Load user profile
+      // Load subscription status for quiz gating (force refresh to get latest usage)
       final authService = Provider.of<AuthService>(context, listen: false);
-      final firestoreService = Provider.of<FirestoreUserService>(context, listen: false);
       final user = authService.currentUser;
       if (user != null) {
-        final profile = await firestoreService.getUserProfile(user.uid);
-        if (mounted) {
-          setState(() {
-            _userProfile = profile;
-          });
-        }
-
-        // Load subscription status for quiz gating (force refresh to get latest usage)
         final token = await authService.getIdToken();
         if (token != null) {
           await _subscriptionService.fetchStatus(token, forceRefresh: true);
@@ -154,8 +145,8 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
     }
   }
 
-  String _getUserName() {
-    return _userProfile?.firstName ?? 'Student';
+  String _getUserName(UserProfileProvider profileProvider) {
+    return profileProvider.firstName;
   }
 
   String _getFormattedDate() {
@@ -257,8 +248,8 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<DailyQuizProvider>(
-      builder: (context, provider, child) {
+    return Consumer2<DailyQuizProvider, UserProfileProvider>(
+      builder: (context, provider, profileProvider, child) {
         final isLoading = provider.isLoadingSummary || provider.isLoadingProgress;
         final hasError = provider.hasError;
 
@@ -597,7 +588,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      'Hi ${_getUserName()}! 👋',
+                      'Hi ${_getUserName(profileProvider)}! 👋',
                       style: AppTextStyles.headerWhite.copyWith(fontSize: 28),
                       textAlign: TextAlign.center,
                     ),
@@ -740,7 +731,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '💜 Great to see you, ${_getUserName()}! You\'ve made solid progress. Let\'s keep going!',
+                  '💜 Great to see you, ${_getUserName(profileProvider)}! You\'ve made solid progress. Let\'s keep going!',
                   style: AppTextStyles.bodySmall,
                 ),
                 const SizedBox(height: 8),
@@ -937,9 +928,9 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
   Widget _buildWelcomeBanner() {
     String message;
     if (_userState == UserState.returningUser) {
-      message = "👋 Welcome back, ${_getUserName()}! Your progress is saved. Ready to continue?";
+      message = "👋 Welcome back, ${_getUserName(profileProvider)}! Your progress is saved. Ready to continue?";
     } else {
-      message = "👋 Welcome back, ${_getUserName()}! Your progress is saved. Ready to continue?";
+      message = "👋 Welcome back, ${_getUserName(profileProvider)}! Your progress is saved. Ready to continue?";
     }
 
     return Container(

@@ -5,6 +5,7 @@ import '../../services/firebase/auth_service.dart';
 import '../../services/firebase/firestore_user_service.dart';
 import '../../services/subscription_service.dart';
 import '../../providers/offline_provider.dart';
+import '../../providers/user_profile_provider.dart';
 import '../../services/quiz_storage_service.dart';
 import '../../models/user_profile.dart';
 import '../../models/subscription_models.dart';
@@ -29,8 +30,6 @@ class ProfileViewScreen extends StatefulWidget {
 }
 
 class _ProfileViewScreenState extends State<ProfileViewScreen> {
-  UserProfile? _profile;
-  bool _isLoading = true;
   String _appVersion = '';
   SubscriptionStatus? _subscriptionStatus;
   bool _loadingSubscription = true;
@@ -38,7 +37,6 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProfile();
     _loadAppVersion();
     _loadSubscriptionStatus();
   }
@@ -49,26 +47,6 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       setState(() {
         _appVersion = 'v${packageInfo.version} (${packageInfo.buildNumber})';
       });
-    }
-  }
-
-  Future<void> _loadProfile() async {
-    try {
-      final auth = Provider.of<AuthService>(context, listen: false);
-      final firestore = Provider.of<FirestoreUserService>(context, listen: false);
-      if (auth.currentUser != null) {
-        final profile = await firestore.getUserProfile(auth.currentUser!.uid);
-        if (mounted) {
-          setState(() {
-            _profile = profile;
-            _isLoading = false;
-          });
-        }
-      } else {
-        if (mounted) setState(() => _isLoading = false);
-      }
-    } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -102,11 +80,8 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     }
   }
 
-  String _getUserName() {
-    if (_profile?.firstName != null && _profile!.firstName!.isNotEmpty) {
-      return _profile!.firstName!;
-    }
-    return 'Student';
+  String _getUserName(UserProfileProvider profileProvider) {
+    return profileProvider.firstName;
   }
 
   Widget _buildHeaderTierBadge() {

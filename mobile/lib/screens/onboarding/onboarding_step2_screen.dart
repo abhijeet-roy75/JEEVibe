@@ -7,6 +7,7 @@ import '../../theme/app_text_styles.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/buttons/icon_button.dart';
 import '../../services/firebase/firestore_user_service.dart';
+import '../../providers/user_profile_provider.dart';
 import '../../models/user_profile.dart';
 import '../welcome_carousel_screen.dart';
 
@@ -82,6 +83,10 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
       await firestoreService.saveUserProfile(profile);
 
       if (!mounted) return;
+
+      // Update UserProfileProvider so all screens show correct name immediately
+      final profileProvider = Provider.of<UserProfileProvider>(context, listen: false);
+      profileProvider.updateProfile(profile);
 
       // Navigate to Welcome Carousel (3-slide feature introduction)
       // After onboarding, show the welcome carousel before going to home

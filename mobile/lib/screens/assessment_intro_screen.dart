@@ -257,16 +257,10 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   }
 
   String _getUserName() {
-    // Read from centralized provider so it updates when profile loads
-    final provider = Provider.of<UserProfileProvider>(context, listen: false);
-    if (provider.hasProfile && provider.firstName.isNotEmpty) {
-      return provider.firstName;
-    }
-    // Fallback to local profile if provider hasn't loaded yet
-    if (_userProfile?.firstName != null) {
-      return _userProfile!.firstName!;
-    }
-    return 'Student';
+    // Read from centralized provider (with listen=true so it rebuilds)
+    // Provider is pre-populated during app initialization
+    final provider = Provider.of<UserProfileProvider>(context);
+    return provider.firstName;
   }
 
   /// Generate dynamic Priya message based on quiz summary data
