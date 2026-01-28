@@ -527,6 +527,34 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       return;
     }
 
+    // Validate that the cached user still exists on the server
+    // This prevents stale auth cache issues after user deletion/cleanup
+    try {
+      print('Validating cached user exists on server...');
+      await user.getIdToken(true); // Force refresh validates user exists on Firebase
+      print('User validation successful');
+    } catch (e) {
+      print('User validation failed - user may have been deleted from server: $e');
+
+      // Clear all auth state and redirect to welcome screen
+      try {
+        await authService.signOut();
+        final pinService = PinService();
+        await pinService.clearPin();
+        print('Cleared stale auth cache and PIN');
+      } catch (clearError) {
+        print('Error clearing auth state: $clearError');
+      }
+
+      if (mounted) {
+        setState(() {
+          _targetScreen = const WelcomeScreen();
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
     // Step 1: Parallelize profile fetch and token fetch (both independent)
     UserProfile? userProfile;
     String? authToken;
