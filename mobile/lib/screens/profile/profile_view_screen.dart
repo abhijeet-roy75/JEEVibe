@@ -298,12 +298,16 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                 constraints: const BoxConstraints(),
               ),
             ),
-      title: Text(
-        'Hi ${_getUserName()}! 👋',
-        style: AppTextStyles.headerWhite.copyWith(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
+      title: Consumer<UserProfileProvider>(
+        builder: (context, profileProvider, child) {
+          return Text(
+            'Hi ${_getUserName(profileProvider)}! 👋',
+            style: AppTextStyles.headerWhite.copyWith(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          );
+        },
       ),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 4),
@@ -321,18 +325,20 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   }
 
   Future<void> _navigateToEditProfile() async {
-    if (_profile == null) return;
+    final profileProvider = Provider.of<UserProfileProvider>(context, listen: false);
+    final profile = profileProvider.profile;
+
+    if (profile == null) return;
 
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
-        builder: (context) => ProfileEditScreen(profile: _profile!),
+        builder: (context) => ProfileEditScreen(profile: profile),
       ),
     );
 
-    // If profile was updated, reload the profile data
+    // If profile was updated, reload the profile data from provider
     if (result == true) {
-      setState(() => _isLoading = true);
-      await _loadProfile();
+      profileProvider.refreshProfile();
     }
   }
 
@@ -371,17 +377,14 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
-      body: _isLoading 
-        ? const Scaffold(
-            backgroundColor: AppColors.backgroundWhite,
-            body: Center(
-              child: CircularProgressIndicator(color: AppColors.primaryPurple),
-            ),
-          )
-        : _profile == null
-          ? Scaffold(
+    return Consumer<UserProfileProvider>(
+      builder: (context, profileProvider, child) {
+        final profile = profileProvider.profile;
+
+        return Scaffold(
+          backgroundColor: AppColors.backgroundWhite,
+          body: profile == null
+            ? Scaffold(
               backgroundColor: AppColors.backgroundWhite,
               body: SafeArea(
                 child: Center(
@@ -488,8 +491,8 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                                 ),
                                 child: Center(
                                   child: Text(
-                                    (_profile!.firstName?.isNotEmpty ?? false)
-                                        ? _profile!.firstName![0].toUpperCase()
+                                    (profile!.firstName?.isNotEmpty ?? false)
+                                        ? profile!.firstName![0].toUpperCase()
                                         : '?',
                                     style: AppTextStyles.headerLarge.copyWith(
                                       fontSize: 32,
@@ -506,7 +509,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '${_profile!.firstName ?? ''} ${_profile!.lastName ?? ''}'.trim(),
+                                      '${profile!.firstName ?? ''} ${profile!.lastName ?? ''}'.trim(),
                                       style: AppTextStyles.headerMedium.copyWith(
                                         fontSize: 20,
                                         color: AppColors.textDark,
@@ -525,7 +528,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
-                                          _profile!.phoneNumber,
+                                          profile!.phoneNumber,
                                           style: AppTextStyles.bodyMedium.copyWith(
                                             color: AppColors.textMedium,
                                             fontSize: 14,
@@ -580,7 +583,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                             ),
                             boxShadow: AppShadows.card,
                           ),
-                          child: _buildGroupedProfileFields(),
+                          child: _buildGroupedProfileFields(profile),
                         ),
 
                         const SizedBox(height: AppSpacing.xxl),
@@ -650,10 +653,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                 ),
               ],
             ),
+        );
+      },
     );
   }
 
-  Widget _buildGroupedProfileFields() {
+  Widget _buildGroupedProfileFields(UserProfile profile) {
     final fields = <Widget>[];
     int fieldCount = 0;
 
@@ -671,13 +676,13 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       }
     }
 
-    addField(Icons.calendar_today_outlined, 'Target Year', _profile!.targetYear);
-    addField(Icons.school_outlined, 'Target Exam', _profile!.targetExam);
-    addField(Icons.email_outlined, 'Email', _profile!.email);
-    addField(Icons.location_on_outlined, 'State', _profile!.state);
-    addField(Icons.workspace_premium_outlined, 'Dream Branch', _profile!.dreamBranch);
-    if (_profile!.studySetup.isNotEmpty) {
-      addField(Icons.book_outlined, 'Study Setup', _profile!.studySetup.join(', '));
+    addField(Icons.calendar_today_outlined, 'Target Year', profile.targetYear);
+    addField(Icons.school_outlined, 'Target Exam', profile.targetExam);
+    addField(Icons.email_outlined, 'Email', profile.email);
+    addField(Icons.location_on_outlined, 'State', profile.state);
+    addField(Icons.workspace_premium_outlined, 'Dream Branch', profile.dreamBranch);
+    if (profile.studySetup.isNotEmpty) {
+      addField(Icons.book_outlined, 'Study Setup', profile.studySetup.join(', '));
     }
 
     if (fields.isEmpty) {
