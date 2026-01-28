@@ -533,26 +533,18 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
     bool profileNotFound = false;
 
     try {
+      // Fetch profile and auth token in parallel
+      final profileFuture = firestoreService.getUserProfile(user.uid);
+      final tokenFuture = user.getIdToken();
+
       final results = await Future.wait([
-        firestoreService.getUserProfile(user.uid).catchError((e) {
-          if (e is ProfileNotFoundException) {
-            // Profile doesn't exist - mark it and rethrow to handle separately
-            profileNotFound = true;
-            throw e;
-          }
-          // Network error or other issue - log and return null
-          print('Error checking profile: $e');
-          return null; // null = couldn't check
-        }),
-        user.getIdToken().catchError((e) {
-          print('Error getting auth token: $e');
-          return null;
-        }),
+        profileFuture,
+        tokenFuture,
       ]).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
           print('Profile/token fetch timed out after 10 seconds');
-          return [null, null]; // Return nulls on timeout
+          throw TimeoutException('Profile fetch timed out');
         },
       );
 
@@ -564,6 +556,9 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       // Profile doesn't exist - this is a new user who needs onboarding
       print('Profile not found - redirecting to onboarding');
       profileNotFound = true;
+    } on TimeoutException {
+      print('Profile/token fetch timed out');
+      userProfile = null;
     } catch (e) {
       print('Error in parallel initialization: $e');
       userProfile = null;
