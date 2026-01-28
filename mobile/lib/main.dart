@@ -408,22 +408,42 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
         return;
       }
 
+      final userId = authService.currentUser?.uid;
+      if (userId == null) return;
+
+      // Update last active timestamp
+      _updateLastActive(userId);
+
       final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);
       if (!offlineProvider.offlineEnabled || !offlineProvider.isOnline) {
         return;
       }
 
       final authToken = await authService.currentUser?.getIdToken();
-      if (authToken != null && authService.currentUser != null) {
+      if (authToken != null) {
         _triggerBackgroundSync(
           offlineProvider,
-          authService.currentUser!.uid,
+          userId,
           authToken,
         );
       }
     } catch (e) {
       print('Error triggering foreground sync: $e');
     }
+  }
+
+  /// Update last active timestamp (non-blocking)
+  void _updateLastActive(String userId) {
+    // Fire and forget - don't block app startup/resume
+    () async {
+      try {
+        final firestoreService = FirestoreUserService();
+        await firestoreService.updateLastActive(userId);
+      } catch (e) {
+        print('Failed to update last active: $e');
+        // Non-critical error, don't show to user
+      }
+    }();
   }
 
   /// Trigger background sync for offline solutions
@@ -605,6 +625,11 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
           navigatorKey: globalNavigatorKey,
         ).catchError((e) {
           print('Error initializing push notifications: $e');
+        });
+
+        // Update last active timestamp (non-blocking)
+        firestoreService.updateLastActive(user.uid).catchError((e) {
+          print('Error updating last active: $e');
         });
 
         // Trigger automatic sync for Pro/Ultra users if online
