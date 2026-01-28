@@ -132,7 +132,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
 
         if (token != null) {
           try {
-            // Fetch all data in parallel
+            // Fetch all data in parallel (including subscription for tier badge)
             final results = await Future.wait([
               ApiService.getAssessmentResults(
                 authToken: token,
@@ -147,6 +147,11 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               }),
               AnalyticsService.getOverview(authToken: token).catchError((e) {
                 debugPrint('Error fetching analytics overview: $e');
+                return null;
+              }),
+              // Fetch subscription to ensure tier badge shows correct data
+              SubscriptionService().fetchStatus(token).catchError((e) {
+                debugPrint('Error fetching subscription status: $e');
                 return null;
               }),
             ]);
