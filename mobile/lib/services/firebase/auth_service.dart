@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../push_notification_service.dart';
+import 'pin_service.dart';
 
 class AuthService extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -255,6 +256,15 @@ class AuthService extends ChangeNotifier {
       } catch (e) {
         debugPrint('Error clearing FCM token: $e');
       }
+    }
+
+    // Clear PIN (fire and forget)
+    try {
+      final pinService = PinService();
+      await pinService.clearPin();
+      debugPrint('PIN cleared on sign out');
+    } catch (e) {
+      debugPrint('Error clearing PIN: $e');
     }
 
     // Clear local session token
