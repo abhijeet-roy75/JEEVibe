@@ -50,12 +50,18 @@ router.get('/profile', authenticateUser, async (req, res, next) => {
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
-    
+
     if (!userDoc.exists) {
       throw new ApiError(404, 'User profile not found');
     }
-    
+
     const userData = userDoc.data();
+
+    // Check if this is a valid profile (not just a partial document with auth/fcm fields)
+    // A valid profile must have at least a phoneNumber
+    if (!userData.phoneNumber) {
+      throw new ApiError(404, 'User profile not found');
+    }
     
     // Convert Firestore Timestamps to ISO strings for JSON response
     const profile = {
@@ -276,15 +282,19 @@ router.post('/profile',
 router.get('/profile/exists', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
-    
+
     const userRef = db.collection('users').doc(userId);
     const userDoc = await retryFirestoreOperation(async () => {
       return await userRef.get();
     });
-    
+
+    // Check if this is a valid profile (not just a partial document with auth/fcm fields)
+    // A valid profile must have at least a phoneNumber
+    const exists = userDoc.exists && userDoc.data()?.phoneNumber;
+
     res.json({
       success: true,
-      exists: userDoc.exists,
+      exists: !!exists,
       requestId: req.id,
     });
   } catch (error) {

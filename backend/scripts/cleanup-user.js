@@ -23,11 +23,12 @@
  * 18. Feedback entries (feedback collection, queried by userId)
  * 19. User quizzes subcollection (users/{userId}/quizzes)
  * 20. Snap practice sessions (snap_practice_sessions/{odatgabkak}/{odatgabkak} - from snap-and-solve)
+ * 21. Trial events (trial_events collection, queried by user_id)
  *
  * LEGACY COLLECTIONS (typos - kept for cleanup):
- * 21. thetha_snapshots/{userId}/daily (typo: thetha -> theta)
- * 22. thetha_history/{userId}/snapshots (typo: thetha -> theta)
- * 23. chapter_practise_sessions/{userId}/sessions (typo: practise -> practice)
+ * 22. thetha_snapshots/{userId}/daily (typo: thetha -> theta)
+ * 23. thetha_history/{userId}/snapshots (typo: thetha -> theta)
+ * 24. chapter_practise_sessions/{userId}/sessions (typo: practise -> practice)
  *
  * Usage:
  *   node scripts/cleanup-user.js <userId|phoneNumber> [--preview] [--force]
@@ -250,6 +251,34 @@ async function deleteFeedbackByUser(userId, isPreview = false) {
     console.log(`     ✓ Deleted ${feedbackSnapshot.size} feedback entries`);
 }
 
+/**
+ * Delete trial events by user_id
+ * Queries the trial_events collection for entries belonging to this user
+ * @param {string} userId
+ * @param {boolean} isPreview
+ */
+async function deleteTrialEventsByUser(userId, isPreview = false) {
+    const trialEventsQuery = db.collection('trial_events').where('user_id', '==', userId);
+    const trialEventsSnapshot = await trialEventsQuery.get();
+
+    if (trialEventsSnapshot.empty) {
+        return;
+    }
+
+    if (isPreview) {
+        console.log(`     [DRY RUN] Would delete ${trialEventsSnapshot.size} trial event entries...`);
+        return;
+    }
+
+    const batch = db.batch();
+    trialEventsSnapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+    await batch.commit();
+
+    console.log(`     ✓ Deleted ${trialEventsSnapshot.size} trial event entries`);
+}
+
 async function cleanupUser(identifier, options = {}) {
     const { isPreview = false, isForce = false } = options;
 
@@ -404,6 +433,10 @@ async function cleanupUser(identifier, options = {}) {
         // --- FEEDBACK ---
         console.log('   - Processing feedback entries...');
         await deleteFeedbackByUser(userId, isPreview);
+
+        // --- TRIAL EVENTS ---
+        console.log('   - Processing trial events...');
+        await deleteTrialEventsByUser(userId, isPreview);
 
         // --- TOP-LEVEL ---
         console.log('   - Processing practice streak document...');
