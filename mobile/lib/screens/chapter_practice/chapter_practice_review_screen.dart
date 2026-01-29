@@ -91,7 +91,7 @@ class _ChapterPracticeReviewScreenState
           chapterName: _chapterName,
           tutorContext: _sessionId != null
               ? ReviewTutorContext(
-                  type: TutorContextType.quiz,
+                  type: TutorContextType.chapterPractice,
                   id: _sessionId!,
                   title: '$_chapterName - $_subject',
                 )

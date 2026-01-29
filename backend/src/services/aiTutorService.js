@@ -299,6 +299,14 @@ function buildGreetingData(context) {
       data.total = context.snapshot.total || 0;
     }
 
+    // Chapter Practice context
+    if (context.type === 'chapterPractice') {
+      data.chapterName = context.snapshot.chapterName || 'this chapter';
+      data.subject = context.snapshot.subject || 'this subject';
+      data.score = context.snapshot.score || 0;
+      data.totalAnswered = context.snapshot.totalAnswered || 0;
+    }
+
     // Analytics context
     if (context.type === 'analytics') {
       if (context.snapshot.strongestSubject) {

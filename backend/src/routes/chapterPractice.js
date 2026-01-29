@@ -598,6 +598,7 @@ router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req
     const batch = db.batch();
 
     // 1. Update question in session (clear answering flag and mark as answered)
+    // Also store solution fields so they're available when reviewing from history
     batch.update(questionDocRef, {
       answered: true,
       answering: admin.firestore.FieldValue.delete(),
@@ -606,7 +607,13 @@ router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req
       correct_answer: correctAnswer,
       time_taken_seconds: time_taken_seconds,
       answered_at: admin.firestore.FieldValue.serverTimestamp(),
-      theta_delta: adjustedThetaDelta
+      theta_delta: adjustedThetaDelta,
+      // Solution fields for history review
+      solution_text: fullQuestionData.solution_text || null,
+      solution_steps: fullQuestionData.solution_steps || [],
+      key_insight: fullQuestionData.metadata?.key_insight || fullQuestionData.key_insight || null,
+      distractor_analysis: fullQuestionData.distractor_analysis || null,
+      common_mistakes: fullQuestionData.metadata?.common_mistakes || fullQuestionData.common_mistakes || null
     });
 
     // 2. Update session stats
@@ -636,7 +643,13 @@ router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req
       theta_delta: adjustedThetaDelta,
       question_irt_params: irtParams,
       sub_topics: fullQuestionData.sub_topics || [],
-      answered_at: admin.firestore.FieldValue.serverTimestamp()
+      answered_at: admin.firestore.FieldValue.serverTimestamp(),
+      // Solution fields for history review and idempotency
+      solution_text: fullQuestionData.solution_text || null,
+      solution_steps: fullQuestionData.solution_steps || [],
+      key_insight: fullQuestionData.metadata?.key_insight || fullQuestionData.key_insight || null,
+      distractor_analysis: fullQuestionData.distractor_analysis || null,
+      common_mistakes: fullQuestionData.metadata?.common_mistakes || fullQuestionData.common_mistakes || null
     });
 
     // Commit all updates atomically

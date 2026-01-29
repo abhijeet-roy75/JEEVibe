@@ -212,6 +212,99 @@ function calculateSubjectBreakdown(questions) {
 }
 
 /**
+ * Build context from a chapter practice session
+ * @param {string} sessionId - Chapter practice session ID (starts with cp_)
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Context object for chapter practice
+ */
+async function buildChapterPracticeContext(sessionId, userId) {
+  try {
+    // Validate IDs
+    const validSessionId = validateDocumentId(sessionId, 'sessionId');
+    const validUserId = validateDocumentId(userId, 'userId');
+
+    const sessionRef = db.collection('chapter_practice_sessions')
+      .doc(validUserId)
+      .collection('sessions')
+      .doc(validSessionId);
+
+    const sessionDoc = await retryFirestoreOperation(() => sessionRef.get());
+
+    if (!sessionDoc.exists) {
+      logger.warn('Chapter practice session not found for context', { sessionId: validSessionId });
+      return null;
+    }
+
+    const session = sessionDoc.data();
+
+    // Fetch questions from session subcollection
+    const [incorrectSnapshot, allQuestionsSnapshot] = await Promise.all([
+      // Get only incorrect questions (limited to 5 for context)
+      retryFirestoreOperation(() =>
+        sessionRef.collection('questions')
+          .where('is_correct', '==', false)
+          .orderBy('position', 'asc')
+          .limit(5)
+          .get()
+      ),
+      // Get all questions for stats
+      retryFirestoreOperation(() =>
+        sessionRef.collection('questions')
+          .where('answered', '==', true)
+          .select('is_correct', 'question_text', 'position', 'student_answer', 'correct_answer')
+          .get()
+      )
+    ]);
+
+    // Process incorrect questions
+    const incorrectQuestions = incorrectSnapshot.docs.map(doc => {
+      const q = doc.data();
+      return {
+        position: q.position,
+        question: q.question_text || `Question ${q.position}`,
+        studentAnswer: q.student_answer,
+        correctAnswer: q.correct_answer
+      };
+    });
+
+    // Calculate stats
+    const allQuestions = allQuestionsSnapshot.docs.map(doc => doc.data());
+    const correctCount = allQuestions.filter(q => q.is_correct === true).length;
+    const totalAnswered = allQuestions.length;
+    const totalQuestions = session.total_questions || 0;
+
+    const context = {
+      type: 'chapterPractice',
+      contextId: validSessionId,
+      title: `${session.chapter_name} Practice - ${session.subject}`,
+      snapshot: {
+        chapterName: session.chapter_name,
+        subject: session.subject,
+        score: correctCount,
+        totalAnswered: totalAnswered,
+        totalQuestions: totalQuestions,
+        accuracy: totalAnswered > 0 ? Math.round((correctCount / totalAnswered) * 100) : 0,
+        completedAt: session.completed_at ? session.completed_at.toDate().toISOString() : null,
+        status: session.status,
+        incorrectQuestions: incorrectQuestions
+      }
+    };
+
+    logger.debug('Chapter practice context built', {
+      sessionId: validSessionId,
+      chapterName: session.chapter_name,
+      score: correctCount,
+      totalAnswered: totalAnswered
+    });
+
+    return context;
+  } catch (error) {
+    logger.error('Error building chapter practice context', { error: error.message });
+    throw error;
+  }
+}
+
+/**
  * Build context from analytics/theta data
  * @param {string} userId - User ID
  * @returns {Promise<Object>} Context object for analytics
@@ -404,6 +497,12 @@ async function buildContext(contextType, contextId, userId) {
       }
       return buildQuizContext(contextId, userId);
 
+    case 'chapterPractice':
+      if (!contextId) {
+        throw new Error('contextId required for chapter practice context');
+      }
+      return buildChapterPracticeContext(contextId, userId);
+
     case 'analytics':
       return buildAnalyticsContext(userId);
 
@@ -416,6 +515,7 @@ async function buildContext(contextType, contextId, userId) {
 module.exports = {
   buildSolutionContext,
   buildQuizContext,
+  buildChapterPracticeContext,
   buildAnalyticsContext,
   buildGeneralContext,
   buildContext,

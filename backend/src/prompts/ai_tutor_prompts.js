@@ -81,6 +81,11 @@ const CONTEXT_GREETINGS = {
     "Good effort on the quiz! Let me help you understand where things went wrong so you can ace it next time.",
     "Let's analyze your quiz performance! I noticed some patterns in the questions you found challenging. Want me to explain?"
   ],
+  chapterPractice: [
+    "Great job practicing {{chapterName}}! You got {{score}}/{{totalAnswered}}. Let's review the questions together. What would you like to focus on?",
+    "I see you've been working on {{chapterName}}! Let me help you understand the concepts better. Which questions were tricky?",
+    "Nice work on {{chapterName}} practice! Let's go through the challenging questions and strengthen your understanding."
+  ],
   analytics: [
     "I've been looking at your progress! You've been doing well in {{strongSubject}}, and I think we should focus on strengthening {{weakArea}}. What do you think?",
     "Your analytics show interesting patterns! Let's talk about how to improve your weaker areas while maintaining your strengths.",
@@ -108,6 +113,12 @@ const QUICK_ACTIONS = {
     { id: 'concept_gaps', label: 'Concept gaps', prompt: 'What concepts should I revise based on my quiz performance?' },
     { id: 'practice_weak', label: 'Practice weak areas', prompt: 'Can you suggest practice problems for my weak areas?' },
     { id: 'study_tips', label: 'Study tips', prompt: 'What study tips do you have for improving in these topics?' }
+  ],
+  chapterPractice: [
+    { id: 'review_mistakes', label: 'Review mistakes', prompt: 'Help me understand where I went wrong in this chapter practice.' },
+    { id: 'chapter_concepts', label: 'Key concepts', prompt: 'What are the key concepts I should focus on for this chapter?' },
+    { id: 'more_practice', label: 'More practice', prompt: 'Can you suggest how to practice this chapter more effectively?' },
+    { id: 'common_errors', label: 'Common errors', prompt: 'What are common mistakes students make in this chapter?' }
   ],
   analytics: [
     { id: 'improvement_plan', label: 'Improvement plan', prompt: 'Based on my analytics, what should I focus on to improve?' },

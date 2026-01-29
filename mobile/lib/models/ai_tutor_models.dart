@@ -16,6 +16,7 @@ enum TutorContextType {
   analytics,
   general,
   mockTest,
+  chapterPractice,
 }
 
 /// Model for a chat message
@@ -217,6 +218,10 @@ class ConversationResponse {
         return TutorContextType.quiz;
       case 'analytics':
         return TutorContextType.analytics;
+      case 'mockTest':
+        return TutorContextType.mockTest;
+      case 'chapterPractice':
+        return TutorContextType.chapterPractice;
       default:
         return TutorContextType.general;
     }
