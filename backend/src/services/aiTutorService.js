@@ -307,6 +307,13 @@ function buildGreetingData(context) {
       data.totalAnswered = context.snapshot.totalAnswered || 0;
     }
 
+    // Mock Test context
+    if (context.type === 'mockTest') {
+      data.score = context.snapshot.score || 0;
+      data.maxScore = context.snapshot.maxScore || 300;
+      data.percentile = context.snapshot.percentile || 0;
+    }
+
     // Analytics context
     if (context.type === 'analytics') {
       if (context.snapshot.strongestSubject) {

@@ -305,6 +305,96 @@ async function buildChapterPracticeContext(sessionId, userId) {
 }
 
 /**
+ * Build context from a mock test result
+ * @param {string} testId - Mock test ID
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Context object for mock test
+ */
+async function buildMockTestContext(testId, userId) {
+  try {
+    // Validate IDs
+    const validTestId = validateDocumentId(testId, 'testId');
+    const validUserId = validateDocumentId(userId, 'userId');
+
+    const testRef = db.collection('users')
+      .doc(validUserId)
+      .collection('mock_tests')
+      .doc(validTestId);
+
+    const testDoc = await retryFirestoreOperation(() => testRef.get());
+
+    if (!testDoc.exists) {
+      logger.warn('Mock test not found for context', { testId: validTestId });
+      return null;
+    }
+
+    const test = testDoc.data();
+
+    // Only build context for completed tests
+    if (test.status !== 'completed') {
+      logger.warn('Mock test not completed, cannot build context', {
+        testId: validTestId,
+        status: test.status
+      });
+      return null;
+    }
+
+    // Get incorrect questions (limited to 5 for context)
+    const incorrectQuestions = (test.question_results || [])
+      .filter(q => !q.is_correct && q.user_answer !== null)
+      .slice(0, 5)
+      .map(q => ({
+        questionNumber: q.question_number,
+        subject: q.subject,
+        userAnswer: q.user_answer,
+        correctAnswer: q.correct_answer,
+        marksObtained: q.marks_obtained
+      }));
+
+    // Calculate subject-wise performance
+    const subjectPerformance = Object.entries(test.subject_scores || {}).map(([subject, data]) => ({
+      subject: getSubjectDisplayName(subject),
+      score: data.score,
+      maxScore: data.max_score,
+      accuracy: data.max_score > 0 ? Math.round((data.score / data.max_score) * 100) : 0
+    }));
+
+    const context = {
+      type: 'mockTest',
+      contextId: validTestId,
+      title: `${test.template_name || 'Mock Test'} Review`,
+      snapshot: {
+        templateName: test.template_name,
+        score: test.score || 0,
+        maxScore: test.max_score || 300,
+        percentile: test.percentile || 0,
+        accuracy: test.accuracy ? Math.round(test.accuracy * 100) : 0,
+        completedAt: test.completed_at ? test.completed_at.toDate().toISOString() : null,
+        timeTakenMinutes: test.time_taken_seconds ? Math.round(test.time_taken_seconds / 60) : 0,
+        correctCount: test.correct_count || 0,
+        incorrectCount: test.incorrect_count || 0,
+        unattemptedCount: test.unattempted_count || 0,
+        totalQuestions: 90, // JEE Main format
+        subjectPerformance: subjectPerformance,
+        incorrectQuestions: incorrectQuestions
+      }
+    };
+
+    logger.debug('Mock test context built', {
+      testId: validTestId,
+      score: test.score,
+      maxScore: test.max_score,
+      percentile: test.percentile
+    });
+
+    return context;
+  } catch (error) {
+    logger.error('Error building mock test context', { error: error.message });
+    throw error;
+  }
+}
+
+/**
  * Build context from analytics/theta data
  * @param {string} userId - User ID
  * @returns {Promise<Object>} Context object for analytics
@@ -503,6 +593,12 @@ async function buildContext(contextType, contextId, userId) {
       }
       return buildChapterPracticeContext(contextId, userId);
 
+    case 'mockTest':
+      if (!contextId) {
+        throw new Error('contextId required for mock test context');
+      }
+      return buildMockTestContext(contextId, userId);
+
     case 'analytics':
       return buildAnalyticsContext(userId);
 
@@ -516,6 +612,7 @@ module.exports = {
   buildSolutionContext,
   buildQuizContext,
   buildChapterPracticeContext,
+  buildMockTestContext,
   buildAnalyticsContext,
   buildGeneralContext,
   buildContext,

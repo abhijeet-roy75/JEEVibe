@@ -86,6 +86,11 @@ const CONTEXT_GREETINGS = {
     "I see you've been working on {{chapterName}}! Let me help you understand the concepts better. Which questions were tricky?",
     "Nice work on {{chapterName}} practice! Let's go through the challenging questions and strengthen your understanding."
   ],
+  mockTest: [
+    "Impressive effort on the mock test! You scored {{score}}/{{maxScore}} ({{percentile}}th percentile). Let's analyze your performance and work on improvement areas.",
+    "I've reviewed your mock test results - {{score}}/{{maxScore}}! Let's discuss the questions you found challenging and strategies to improve.",
+    "Great work completing the full mock test! Scoring {{score}}/{{maxScore}} shows solid preparation. Want to review your weak areas together?"
+  ],
   analytics: [
     "I've been looking at your progress! You've been doing well in {{strongSubject}}, and I think we should focus on strengthening {{weakArea}}. What do you think?",
     "Your analytics show interesting patterns! Let's talk about how to improve your weaker areas while maintaining your strengths.",
@@ -119,6 +124,12 @@ const QUICK_ACTIONS = {
     { id: 'chapter_concepts', label: 'Key concepts', prompt: 'What are the key concepts I should focus on for this chapter?' },
     { id: 'more_practice', label: 'More practice', prompt: 'Can you suggest how to practice this chapter more effectively?' },
     { id: 'common_errors', label: 'Common errors', prompt: 'What are common mistakes students make in this chapter?' }
+  ],
+  mockTest: [
+    { id: 'subject_analysis', label: 'Subject analysis', prompt: 'Analyze my performance across Physics, Chemistry, and Mathematics.' },
+    { id: 'time_management', label: 'Time management', prompt: 'How can I improve my time management for the actual JEE?' },
+    { id: 'weak_topics', label: 'Weak topics', prompt: 'Which topics should I focus on based on my mock test performance?' },
+    { id: 'exam_strategy', label: 'Exam strategy', prompt: 'What strategy should I use for attempting questions in JEE Main?' }
   ],
   analytics: [
     { id: 'improvement_plan', label: 'Improvement plan', prompt: 'Based on my analytics, what should I focus on to improve?' },
