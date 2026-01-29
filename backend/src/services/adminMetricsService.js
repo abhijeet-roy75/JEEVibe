@@ -491,6 +491,10 @@ async function getUsers(options = {}) {
     };
   });
 
+  // Filter out incomplete/orphaned users (no phone AND no email)
+  // These are typically test accounts or corrupted records
+  users = users.filter(u => u.phone || u.email);
+
   // Apply filters
   const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
 
