@@ -191,6 +191,7 @@ async function getEngagement() {
   // Sample feature usage from recent users
   for (const user of activeUsers.slice(0, 50)) {
     try {
+      // Get daily_usage for daily_quiz, snap_solve, ai_tutor
       const usageSnapshot = await db
         .collection('users')
         .doc(user.uid)
@@ -204,10 +205,30 @@ async function getEngagement() {
         featureUsage.daily_quiz += data.daily_quiz || 0;
         featureUsage.snap_solve += data.snap_solve || 0;
         featureUsage.ai_tutor += data.ai_tutor || 0;
-        featureUsage.chapter_practice += data.chapter_practice || 0;
       });
+
+      // Get chapter_practice from chapter_practice_sessions (corrected source)
+      // Query completed sessions in last 7 days
+      const practiceSnapshot = await db
+        .collection('chapter_practice_sessions')
+        .doc(user.uid)
+        .collection('sessions')
+        .where('status', '==', 'completed')
+        .where('completed_at', '>=', sevenDaysAgo)
+        .get();
+
+      // Count total questions answered in chapter practice sessions
+      practiceSnapshot.forEach(doc => {
+        const data = doc.data();
+        featureUsage.chapter_practice += data.final_total_answered || data.questions_answered || 0;
+      });
+
     } catch (err) {
       // Skip users without usage data
+      logger.warn('Failed to get usage for user in engagement metrics', {
+        userId: user.uid,
+        error: err.message
+      });
     }
   }
 
@@ -236,7 +257,12 @@ async function getEngagement() {
     avgSessionMinutes,
     featureUsage,
     streakDistribution,
-    generatedAt: new Date().toISOString()
+    generatedAt: new Date().toISOString(),
+    metadata: {
+      featureUsageSampleSize: Math.min(50, activeUsers.length),
+      featureUsageSampled: activeUsers.length > 50,
+      streakDistributionIncludesInactive: true
+    }
   };
 }
 
