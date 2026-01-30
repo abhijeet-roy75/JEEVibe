@@ -187,6 +187,9 @@ function generateFeedback(questionData, isCorrect, studentAnswer) {
  * @returns {Promise<Object>} Feedback and response data
  */
 async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTakenSeconds) {
+  const startTime = Date.now();
+  const timings = {};
+
   try {
     // Validate inputs
     const validatedQuestionId = validateQuestionId(questionId);
@@ -198,9 +201,11 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
       .collection('quizzes')
       .doc(quizId);
 
+    const t1 = Date.now();
     const quizDoc = await retryFirestoreOperation(async () => {
       return await quizRef.get();
     });
+    timings.getQuizDoc = Date.now() - t1;
 
     if (!quizDoc.exists) {
       throw new Error(`Quiz ${quizId} not found`);
@@ -214,12 +219,14 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
     }
 
     // Find question in quiz subcollection
+    const t2 = Date.now();
     const questionsSnapshot = await retryFirestoreOperation(async () => {
       return await quizRef.collection('questions')
         .where('question_id', '==', questionId)
         .limit(1)
         .get();
     });
+    timings.queryQuestion = Date.now() - t2;
 
     if (questionsSnapshot.empty) {
       throw new Error(`Question ${questionId} not found in quiz ${quizId}`);
@@ -234,23 +241,26 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
       throw new Error(`Question data missing for ${questionId} in quiz ${quizId}`);
     }
 
-    // If question data is incomplete (missing correct_answer OR solution_steps), fetch from questions collection
-    // Note: Old quizzes may have correct_answer but missing solution_steps due to prior code versions
-    const needsFullData = !questionData.correct_answer ||
-                          !questionData.solution_steps ||
-                          questionData.solution_steps.length === 0;
+    // Only fetch from questions collection if correct_answer is missing (required for validation)
+    // Skip fetch for missing solution_steps - old quizzes just won't show detailed explanations
+    // This prioritizes response speed over showing solution steps for legacy quizzes
+    const needsCorrectAnswer = !questionData.correct_answer;
 
-    if (needsFullData) {
+    if (needsCorrectAnswer) {
+      const t3 = Date.now();
       const fullQuestionRef = db.collection('questions').doc(questionId);
       const fullQuestionDoc = await retryFirestoreOperation(async () => {
         return await fullQuestionRef.get();
       });
+      timings.fetchFullQuestion = Date.now() - t3;
 
       if (!fullQuestionDoc.exists) {
         throw new Error(`Question ${questionId} not found in questions collection`);
       }
 
       questionData = { ...questionData, ...fullQuestionDoc.data() };
+    } else {
+      timings.fetchFullQuestion = 0; // correct_answer present - no fetch needed
     }
 
     // Validate answer
@@ -271,26 +281,28 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
       answered: true
     };
 
-    // Update question document in subcollection
+    // Update question document and quiz document in a single batch (reduces network round trips)
+    const t4 = Date.now();
     const questionRef = quizRef.collection('questions').doc(String(questionPosition));
     await retryFirestoreOperation(async () => {
-      return await questionRef.update(responseData);
-    });
-
-    // Update quiz document with last answered timestamp and increment questions_answered
-    await retryFirestoreOperation(async () => {
-      return await quizRef.update({
+      const batch = db.batch();
+      batch.update(questionRef, responseData);
+      batch.update(quizRef, {
         last_answered_at: admin.firestore.FieldValue.serverTimestamp(),
         questions_answered: admin.firestore.FieldValue.increment(1)
       });
+      return await batch.commit();
     });
+    timings.batchWrite = Date.now() - t4;
+    timings.total = Date.now() - startTime;
 
     logger.info('Answer submitted', {
       userId,
       quizId,
       questionId,
       isCorrect: validation.isCorrect,
-      position: questionPosition
+      position: questionPosition,
+      timingsMs: timings
     });
 
     return {
