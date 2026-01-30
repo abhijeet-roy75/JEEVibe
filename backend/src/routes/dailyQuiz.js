@@ -279,15 +279,6 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
           // Remove sensitive fields before storing
           const { solution_text, solution_steps, correct_answer, correct_answer_text, ...questionData } = q;
 
-          // Debug: Log if correct_answer is still in questionData (it shouldn't be)
-          if (questionData.correct_answer !== undefined) {
-            logger.warn('BUG: correct_answer still in questionData after destructuring', {
-              questionId: q.question_id,
-              quizId: quizData.quiz_id,
-              hasCorrectAnswer: true
-            });
-          }
-
           const questionRef = quizRef.collection('questions').doc(String(index));
           batch.set(questionRef, {
             ...questionData,

@@ -241,14 +241,6 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
                           questionData.solution_steps.length === 0;
 
     if (needsFullData) {
-      logger.info('Fetching full question data from questions collection', {
-        questionId,
-        quizId,
-        hasCorrectAnswerInQuiz: !!questionData.correct_answer,
-        hasSolutionStepsInQuiz: !!questionData.solution_steps,
-        reason: !questionData.correct_answer ? 'missing_correct_answer' : 'missing_solution_steps'
-      });
-
       const fullQuestionRef = db.collection('questions').doc(questionId);
       const fullQuestionDoc = await retryFirestoreOperation(async () => {
         return await fullQuestionRef.get();
@@ -258,24 +250,7 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
         throw new Error(`Question ${questionId} not found in questions collection`);
       }
 
-      const fullData = fullQuestionDoc.data();
-      logger.info('Full question data fetched', {
-        questionId,
-        hasSolutionText: !!fullData.solution_text,
-        hasSolutionSteps: !!fullData.solution_steps,
-        solutionStepsLength: fullData.solution_steps?.length || 0,
-        hasKeyInsight: !!fullData.metadata?.key_insight
-      });
-
-      questionData = { ...questionData, ...fullData };
-    } else {
-      // Log if we're NOT fetching - this means all required data exists in quiz subcollection
-      logger.info('Question data complete in quiz subcollection - no fetch needed', {
-        questionId,
-        quizId,
-        hasSolutionSteps: !!questionData.solution_steps,
-        solutionStepsLength: questionData.solution_steps?.length || 0
-      });
+      questionData = { ...questionData, ...fullQuestionDoc.data() };
     }
 
     // Validate answer
@@ -283,17 +258,6 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
 
     // Generate feedback
     const feedback = generateFeedback(questionData, validation.isCorrect, validation.validatedAnswer);
-
-    // Log feedback details for debugging solution steps issue
-    logger.info('Feedback generated', {
-      questionId,
-      hasSolutionText: !!feedback.solution_text,
-      hasSolutionSteps: !!feedback.solution_steps,
-      solutionStepsLength: feedback.solution_steps?.length || 0,
-      hasExplanation: !!feedback.explanation,
-      hasKeyInsight: !!feedback.key_insight,
-      explanationPreview: feedback.explanation?.substring(0, 100) || null
-    });
 
     // Prepare response data
     // Ensure correct_answer is always stored as string for consistency
