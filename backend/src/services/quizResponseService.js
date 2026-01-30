@@ -234,13 +234,19 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
       throw new Error(`Question data missing for ${questionId} in quiz ${quizId}`);
     }
 
-    // If question data is incomplete (missing correct_answer), fetch from questions collection
-    if (!questionData.correct_answer) {
+    // If question data is incomplete (missing correct_answer OR solution_steps), fetch from questions collection
+    // Note: Old quizzes may have correct_answer but missing solution_steps due to prior code versions
+    const needsFullData = !questionData.correct_answer ||
+                          !questionData.solution_steps ||
+                          questionData.solution_steps.length === 0;
+
+    if (needsFullData) {
       logger.info('Fetching full question data from questions collection', {
         questionId,
         quizId,
         hasCorrectAnswerInQuiz: !!questionData.correct_answer,
-        hasSolutionStepsInQuiz: !!questionData.solution_steps
+        hasSolutionStepsInQuiz: !!questionData.solution_steps,
+        reason: !questionData.correct_answer ? 'missing_correct_answer' : 'missing_solution_steps'
       });
 
       const fullQuestionRef = db.collection('questions').doc(questionId);
@@ -263,8 +269,8 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
 
       questionData = { ...questionData, ...fullData };
     } else {
-      // Log if we're NOT fetching - this means correct_answer was in quiz data
-      logger.warn('Question has correct_answer in quiz subcollection - not fetching full data', {
+      // Log if we're NOT fetching - this means all required data exists in quiz subcollection
+      logger.info('Question data complete in quiz subcollection - no fetch needed', {
         questionId,
         quizId,
         hasSolutionSteps: !!questionData.solution_steps,
