@@ -94,7 +94,12 @@ router.get('/status', authenticateUser, async (req, res, next) => {
       requestId: req.id,
       userId,
       tier: status.tier,
-      source: status.source
+      source: status.source,
+      dailyQuizUsage: {
+        used: usage.daily_quiz.used,
+        limit: usage.daily_quiz.limit,
+        remaining: usage.daily_quiz.remaining
+      }
     });
 
     res.json({
