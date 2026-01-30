@@ -8,6 +8,7 @@ class UserProfile {
   // Basic Profile (Screen 1 - Required)
   final String? firstName;
   final String? lastName;
+  final String? currentClass; // "11", "12", or "Other"
   final String? targetYear;
 
   // Optional Profile (Screen 2)
@@ -27,6 +28,7 @@ class UserProfile {
     this.profileCompleted = false,
     this.firstName,
     this.lastName,
+    this.currentClass,
     this.targetYear,
     this.email,
     this.state,
@@ -44,6 +46,7 @@ class UserProfile {
       'profileCompleted': profileCompleted,
       'firstName': firstName,
       'lastName': lastName,
+      'currentClass': currentClass,
       'targetYear': targetYear,
       'email': email,
       'state': state,
@@ -73,6 +76,7 @@ class UserProfile {
       profileCompleted: map['profileCompleted'] ?? false,
       firstName: map['firstName'],
       lastName: map['lastName'],
+      currentClass: map['currentClass'],
       targetYear: map['targetYear'],
       email: map['email'],
       state: map['state'],

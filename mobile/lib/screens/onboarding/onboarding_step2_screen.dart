@@ -67,6 +67,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
         firstName: widget.step1Data['firstName'],
         lastName: widget.step1Data['lastName'],
         email: widget.step1Data['email'], // Email now comes from Step 1
+        currentClass: widget.step1Data['currentClass'],
         targetYear: widget.step1Data['targetYear'],
         // Screen 2 data (all optional)
         state: _state,

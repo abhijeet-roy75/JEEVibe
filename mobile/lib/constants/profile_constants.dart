@@ -7,6 +7,13 @@ class ProfileConstants {
     'JEE Main + Advanced',
   ];
 
+  /// Current class options for onboarding (Screen 1)
+  static const List<String> currentClassOptions = [
+    '11',
+    '12',
+    'Other',
+  ];
+
   /// Target years (dynamically generated)
   static List<String> getTargetYears() {
     final currentYear = DateTime.now().year;

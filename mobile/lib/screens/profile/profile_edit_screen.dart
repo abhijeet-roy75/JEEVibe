@@ -39,6 +39,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   String? _firstName;
   String? _lastName;
   String? _email;
+  String? _currentClass;
   String? _targetYear;
   String? _state;
   String? _examType;
@@ -61,6 +62,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     _firstName = widget.profile.firstName;
     _lastName = widget.profile.lastName;
     _email = widget.profile.email;
+    _currentClass = widget.profile.currentClass;
     _targetYear = widget.profile.targetYear;
     _state = widget.profile.state;
     _examType = widget.profile.targetExam;
@@ -102,6 +104,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         firstName: _firstName,
         lastName: _lastName,
         email: _email,
+        currentClass: _currentClass,
         targetYear: _targetYear,
         // Screen 2 data (optional)
         state: _state,
@@ -423,6 +426,35 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           ),
                         ],
                       ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Current Class (required)
+                    _buildFieldLabel('Current Class'),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: _currentClass,
+                      isExpanded: true,
+                      decoration: _buildInputDecoration(hintText: 'Select your current class'),
+                      dropdownColor: Colors.white,
+                      items: ProfileConstants.currentClassOptions.map((String classValue) {
+                        return DropdownMenuItem<String>(
+                          value: classValue,
+                          child: Text(
+                            classValue == 'Other' ? classValue : 'Class $classValue',
+                            style: AppTextStyles.bodyMedium,
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() => _currentClass = value),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select your current class';
+                        }
+                        return null;
+                      },
+                      onSaved: (value) => _currentClass = value,
                     ),
 
                     const SizedBox(height: 20),

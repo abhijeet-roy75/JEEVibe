@@ -31,6 +31,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
   String? _firstName;
   String? _lastName;
   String? _email;
+  String? _currentClass;
   String? _targetYear;
   String? _phoneNumber;
 
@@ -65,6 +66,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
               'lastName': _lastName,
               'email': _email,
               'phoneNumber': _phoneNumber,
+              'currentClass': _currentClass,
               'targetYear': _targetYear,
             },
           ),
@@ -426,6 +428,80 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                             ),
                           ],
                         ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Current Class (required)
+                      Text(
+                        'Current Class',
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: AppColors.textDark,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: _currentClass,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          hintText: 'Select your current class',
+                          hintStyle: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textLight,
+                          ),
+                          filled: true,
+                          fillColor: AppColors.cardWhite,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderGray,
+                              width: 1,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryPurple,
+                              width: 2,
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.errorRed,
+                              width: 1,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                        ),
+                        dropdownColor: Colors.white,
+                        items: ProfileConstants.currentClassOptions.map((String classValue) {
+                          return DropdownMenuItem<String>(
+                            value: classValue,
+                            child: Text(
+                              classValue == 'Other' ? classValue : 'Class $classValue',
+                              style: AppTextStyles.bodyMedium,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => _currentClass = value),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select your current class';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) => _currentClass = value,
                       ),
 
                       const SizedBox(height: 24),
