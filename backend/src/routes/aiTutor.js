@@ -212,8 +212,8 @@ router.post('/inject-context',
   checkUsageLimit('ai_tutor'), // Add rate limiting - context injection uses AI tokens
   [
     body('contextType')
-      .isIn(['solution', 'quiz', 'analytics', 'general'])
-      .withMessage('contextType must be one of: solution, quiz, analytics, general'),
+      .isIn(['solution', 'quiz', 'chapterPractice', 'mockTest', 'analytics', 'general'])
+      .withMessage('contextType must be one of: solution, quiz, chapterPractice, mockTest, analytics, general'),
     body('contextId')
       .optional()
       .isString()
@@ -231,8 +231,9 @@ router.post('/inject-context',
       const userId = req.userId;
       const { contextType, contextId } = req.body;
 
-      // Validate contextId is provided for solution and quiz
-      if ((contextType === 'solution' || contextType === 'quiz') && !contextId) {
+      // Validate contextId is provided for context types that require it
+      const contextTypesRequiringId = ['solution', 'quiz', 'chapterPractice', 'mockTest'];
+      if (contextTypesRequiringId.includes(contextType) && !contextId) {
         throw new ApiError(400, `contextId is required for ${contextType} context`, ERROR_CODES.MISSING_CONTEXT_ID);
       }
 
