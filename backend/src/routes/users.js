@@ -152,6 +152,8 @@ router.post('/profile',
 
       return true;
     }),
+    body('currentClass').optional().isIn(['11', '12', 'Other'])
+      .withMessage('Invalid currentClass. Must be "11", "12", or "Other"'),
   ],
   async (req, res, next) => {
     try {
