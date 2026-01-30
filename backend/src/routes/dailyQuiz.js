@@ -276,12 +276,11 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
         const batch = db.batch();
 
         quizData.questions.forEach((q, index) => {
-          // Remove sensitive fields before storing
-          const { solution_text, solution_steps, correct_answer, correct_answer_text, ...questionData } = q;
-
+          // Store all question data including solution_steps (for fast feedback at submit time)
+          // Note: We strip sensitive fields when SENDING to client, not when storing
           const questionRef = quizRef.collection('questions').doc(String(index));
           batch.set(questionRef, {
-            ...questionData,
+            ...q,
             position: index,
             answered: false,
             student_answer: null,
