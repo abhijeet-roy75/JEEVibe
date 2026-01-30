@@ -236,6 +236,13 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
 
     // If question data is incomplete (missing correct_answer), fetch from questions collection
     if (!questionData.correct_answer) {
+      logger.info('Fetching full question data from questions collection', {
+        questionId,
+        quizId,
+        hasCorrectAnswerInQuiz: !!questionData.correct_answer,
+        hasSolutionStepsInQuiz: !!questionData.solution_steps
+      });
+
       const fullQuestionRef = db.collection('questions').doc(questionId);
       const fullQuestionDoc = await retryFirestoreOperation(async () => {
         return await fullQuestionRef.get();
@@ -245,7 +252,24 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
         throw new Error(`Question ${questionId} not found in questions collection`);
       }
 
-      questionData = { ...questionData, ...fullQuestionDoc.data() };
+      const fullData = fullQuestionDoc.data();
+      logger.info('Full question data fetched', {
+        questionId,
+        hasSolutionText: !!fullData.solution_text,
+        hasSolutionSteps: !!fullData.solution_steps,
+        solutionStepsLength: fullData.solution_steps?.length || 0,
+        hasKeyInsight: !!fullData.metadata?.key_insight
+      });
+
+      questionData = { ...questionData, ...fullData };
+    } else {
+      // Log if we're NOT fetching - this means correct_answer was in quiz data
+      logger.warn('Question has correct_answer in quiz subcollection - not fetching full data', {
+        questionId,
+        quizId,
+        hasSolutionSteps: !!questionData.solution_steps,
+        solutionStepsLength: questionData.solution_steps?.length || 0
+      });
     }
 
     // Validate answer
@@ -253,6 +277,17 @@ async function submitAnswer(userId, quizId, questionId, studentAnswer, timeTaken
 
     // Generate feedback
     const feedback = generateFeedback(questionData, validation.isCorrect, validation.validatedAnswer);
+
+    // Log feedback details for debugging solution steps issue
+    logger.info('Feedback generated', {
+      questionId,
+      hasSolutionText: !!feedback.solution_text,
+      hasSolutionSteps: !!feedback.solution_steps,
+      solutionStepsLength: feedback.solution_steps?.length || 0,
+      hasExplanation: !!feedback.explanation,
+      hasKeyInsight: !!feedback.key_insight,
+      explanationPreview: feedback.explanation?.substring(0, 100) || null
+    });
 
     // Prepare response data
     // Ensure correct_answer is always stored as string for consistency
