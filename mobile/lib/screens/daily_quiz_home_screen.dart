@@ -54,6 +54,40 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
   void initState() {
     super.initState();
     _loadData();
+    // Listen for subscription cache invalidation (e.g., after generating a quiz)
+    _subscriptionService.addListener(_onSubscriptionChanged);
+  }
+
+  @override
+  void dispose() {
+    _subscriptionService.removeListener(_onSubscriptionChanged);
+    super.dispose();
+  }
+
+  /// Called when subscription cache is invalidated
+  /// Refreshes usage data to show updated remaining count
+  void _onSubscriptionChanged() {
+    _refreshUsageData();
+  }
+
+  /// Refresh only usage data (lightweight, no full reload)
+  Future<void> _refreshUsageData() async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final token = await authService.getIdToken();
+      if (token != null) {
+        await _subscriptionService.fetchStatus(token, forceRefresh: true);
+        final quizUsage = _subscriptionService.getUsageInfo(UsageType.dailyQuiz);
+        if (mounted && quizUsage != null) {
+          setState(() {
+            _isQuizUnlimited = quizUsage.isUnlimited;
+            _quizzesRemaining = quizUsage.isUnlimited ? 999 : quizUsage.remaining;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error refreshing usage data: $e');
+    }
   }
 
   Future<void> _loadData() async {

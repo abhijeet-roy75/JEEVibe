@@ -197,9 +197,11 @@ class SubscriptionService extends ChangeNotifier {
     final currentUsage = _cachedStatus!.usage.getUsage(type);
     if (currentUsage.isUnlimited) return;
 
-    // We can't directly modify the immutable models, so just invalidate cache
-    // This forces a refresh on next check
+    // Invalidate cache to force a refresh on next check
     _lastFetchTime = null;
+
+    // Notify listeners so UI knows to refresh subscription data
+    notifyListeners();
   }
 
   /// Clear cached status (on logout)

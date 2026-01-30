@@ -2,9 +2,11 @@
 /// Centralized state management for daily quiz feature
 import 'package:flutter/foundation.dart';
 import '../models/daily_quiz_question.dart';
+import '../models/subscription_models.dart';
 import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../services/quiz_storage_service.dart';
+import '../services/subscription_service.dart';
 
 class DailyQuizProvider extends ChangeNotifier {
   final AuthService _authService;
@@ -104,6 +106,9 @@ class DailyQuizProvider extends ChangeNotifier {
       _error = null;
       _saveQuizState();
       _safeNotifyListeners();
+
+      // Invalidate subscription cache so home screen shows updated usage count
+      SubscriptionService().updateLocalUsage(UsageType.dailyQuiz);
 
       return quiz;
     } catch (e) {
