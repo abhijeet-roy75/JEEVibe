@@ -316,7 +316,10 @@ promo_codes/                      - Promotional codes
 - Skip the trial system for new users
 - Hardcode tier limits (use Firestore config)
 - Store payment data outside India (RBI compliance)
-- check in mobile files unles asked for (ok to check in backend file after verification)
+
+## Do
+- check-in and commit backend changes to remote repository immedidately so they deploy on render.com
+- check-in mobile files only if asked
 
 ## JEE Chapter Weights
 
@@ -332,12 +335,3 @@ High-priority chapters (weight 1.0):
 The `BROAD_TO_SPECIFIC_CHAPTER_MAP` maps assessment chapters to specific daily quiz chapters.
 
 ---
-
-## Documentation Links
-
-Key docs to reference:
-- [TIER-SYSTEM-ARCHITECTURE.md](docs/03-features/TIER-SYSTEM-ARCHITECTURE.md) - Tier system and feature gating
-- [TRIAL-FIRST-IMPLEMENTATION.md](docs/03-features/TRIAL-FIRST-IMPLEMENTATION.md) - Trial flow
-- [MOCK-TESTS-FEATURE-PLAN.md](docs/03-features/MOCK-TESTS-FEATURE-PLAN.md) - Mock tests implementation
-- [BUSINESS-MODEL-REVIEW.md](docs/09-business/BUSINESS-MODEL-REVIEW.md) - Business strategy
-- [GTM-EXECUTION-PLAN.md](docs/09-business/GTM-EXECUTION-PLAN.md) - Go-to-market plan
