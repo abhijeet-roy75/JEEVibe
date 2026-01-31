@@ -676,6 +676,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       }
     }
 
+    // Format currentClass to display "Class 11" or "Class 12" instead of just "11" or "12"
+    final currentClassDisplay = profile.currentClass != null && profile.currentClass != 'Other'
+        ? 'Class ${profile.currentClass}'
+        : profile.currentClass;
+
+    addField(Icons.class_outlined, 'Current Class', currentClassDisplay);
     addField(Icons.calendar_today_outlined, 'Target Year', profile.targetYear);
     addField(Icons.school_outlined, 'Target Exam', profile.targetExam);
     addField(Icons.email_outlined, 'Email', profile.email);
