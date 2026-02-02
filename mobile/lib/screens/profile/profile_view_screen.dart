@@ -682,7 +682,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
         : profile.currentClass;
 
     addField(Icons.class_outlined, 'Current Class', currentClassDisplay);
-    addField(Icons.calendar_today_outlined, 'Target Year', profile.targetYear);
+    addField(Icons.school_outlined, 'Coaching Enrollment', profile.isEnrolledInCoaching == true ? 'Yes' : profile.isEnrolledInCoaching == false ? 'No' : null);
     addField(Icons.school_outlined, 'Target Exam', profile.targetExam);
     addField(Icons.email_outlined, 'Email', profile.email);
     addField(Icons.location_on_outlined, 'State', profile.state);

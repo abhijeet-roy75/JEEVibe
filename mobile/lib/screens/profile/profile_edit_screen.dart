@@ -40,7 +40,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   String? _lastName;
   String? _email;
   String? _currentClass;
-  String? _targetYear;
+  bool? _isEnrolledInCoaching;
   String? _state;
   String? _examType;
   String? _dreamBranch;
@@ -63,7 +63,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     _lastName = widget.profile.lastName;
     _email = widget.profile.email;
     _currentClass = widget.profile.currentClass;
-    _targetYear = widget.profile.targetYear;
+    _isEnrolledInCoaching = widget.profile.isEnrolledInCoaching;
     _state = widget.profile.state;
     _examType = widget.profile.targetExam;
     _dreamBranch = widget.profile.dreamBranch;
@@ -105,7 +105,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         lastName: _lastName,
         email: _email,
         currentClass: _currentClass,
-        targetYear: _targetYear,
+        isEnrolledInCoaching: _isEnrolledInCoaching,
         // Screen 2 data (optional)
         state: _state,
         targetExam: _examType,
@@ -459,31 +459,32 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Target JEE Year (required)
-                    _buildFieldLabel('Target JEE Year'),
+                    // Coaching Enrollment Status (required)
+                    _buildFieldLabel('Do you attend coaching classes?'),
                     const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      value: _targetYear,
+                    DropdownButtonFormField<bool>(
+                      value: _isEnrolledInCoaching,
                       isExpanded: true,
-                      decoration: _buildInputDecoration(hintText: 'Select year'),
+                      decoration: _buildInputDecoration(hintText: 'Select an option'),
                       dropdownColor: Colors.white,
-                      items: ProfileConstants.getTargetYears().map((String year) {
-                        return DropdownMenuItem<String>(
-                          value: year,
-                          child: Text(
-                            year,
-                            style: AppTextStyles.bodyMedium,
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) => setState(() => _targetYear = value),
+                      items: const [
+                        DropdownMenuItem<bool>(
+                          value: true,
+                          child: Text('Yes'),
+                        ),
+                        DropdownMenuItem<bool>(
+                          value: false,
+                          child: Text('No'),
+                        ),
+                      ],
+                      onChanged: (value) => setState(() => _isEnrolledInCoaching = value),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please select your target year';
+                        if (value == null) {
+                          return 'Please select an option';
                         }
                         return null;
                       },
-                      onSaved: (value) => _targetYear = value,
+                      onSaved: (value) => _isEnrolledInCoaching = value,
                     ),
 
                     const SizedBox(height: 32),

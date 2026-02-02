@@ -54,7 +54,7 @@ class FeedbackService {
               'lastName': profile.lastName,
               'email': profile.email,
               'phoneNumber': profile.phoneNumber,
-              'targetYear': profile.targetYear,
+              'isEnrolledInCoaching': profile.isEnrolledInCoaching,
               'targetExam': profile.targetExam,
             };
           }
