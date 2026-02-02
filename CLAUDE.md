@@ -240,9 +240,12 @@ promo_codes/                      - Promotional codes
     "mathematics": { theta: 0.6, se: 0.22 }
   },
   overall_theta: 0.4,
-  overall_percentile: 65.2
+  overall_percentile: 65.2,
+  isEnrolledInCoaching: true  // Whether student attends coaching classes
 }
 ```
+
+**Note:** The `isEnrolledInCoaching` field is collected during onboarding (Screen 1) and is used to personalize learning content (chapter practice/quiz) based on coaching enrollment status.
 
 ## Important Files
 

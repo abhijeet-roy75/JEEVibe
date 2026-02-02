@@ -9,7 +9,7 @@ class UserProfile {
   final String? firstName;
   final String? lastName;
   final String? currentClass; // "11", "12", or "Other"
-  final String? targetYear;
+  final bool? isEnrolledInCoaching; // true if student attends coaching classes
 
   // Optional Profile (Screen 2)
   final String? email;
@@ -29,7 +29,7 @@ class UserProfile {
     this.firstName,
     this.lastName,
     this.currentClass,
-    this.targetYear,
+    this.isEnrolledInCoaching,
     this.email,
     this.state,
     this.targetExam,
@@ -47,7 +47,7 @@ class UserProfile {
       'firstName': firstName,
       'lastName': lastName,
       'currentClass': currentClass,
-      'targetYear': targetYear,
+      'isEnrolledInCoaching': isEnrolledInCoaching,
       'email': email,
       'state': state,
       'targetExam': targetExam,
@@ -77,7 +77,7 @@ class UserProfile {
       firstName: map['firstName'],
       lastName: map['lastName'],
       currentClass: map['currentClass'],
-      targetYear: map['targetYear'],
+      isEnrolledInCoaching: map['isEnrolledInCoaching'],
       email: map['email'],
       state: map['state'],
       targetExam: map['targetExam'],

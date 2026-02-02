@@ -11,7 +11,7 @@ import 'onboarding_step2_screen.dart';
 /// Collects essential information:
 /// - Your Name (required)
 /// - Phone Number (pre-filled from auth, verified)
-/// - Target JEE Year (required)
+/// - Coaching Enrollment Status (required)
 class OnboardingStep1Screen extends StatefulWidget {
   const OnboardingStep1Screen({super.key});
 
@@ -32,7 +32,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
   String? _lastName;
   String? _email;
   String? _currentClass;
-  String? _targetYear;
+  bool? _isEnrolledInCoaching;
   String? _phoneNumber;
 
   @override
@@ -67,7 +67,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
               'email': _email,
               'phoneNumber': _phoneNumber,
               'currentClass': _currentClass,
-              'targetYear': _targetYear,
+              'isEnrolledInCoaching': _isEnrolledInCoaching,
             },
           ),
         ),
@@ -506,20 +506,20 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
 
                       const SizedBox(height: 24),
 
-                      // Target JEE Year (required)
+                      // Coaching Enrollment Status (required)
                       Text(
-                        'Target JEE Year',
+                        'Do you attend coaching classes?',
                         style: AppTextStyles.labelMedium.copyWith(
                           color: AppColors.textDark,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        value: _targetYear,
+                      DropdownButtonFormField<bool>(
+                        value: _isEnrolledInCoaching,
                         isExpanded: true,
                         decoration: InputDecoration(
-                          hintText: 'Select year',
+                          hintText: 'Select an option',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.textLight,
                           ),
@@ -559,23 +559,24 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           ),
                         ),
                         dropdownColor: Colors.white,
-                        items: ProfileConstants.getTargetYears().map((String year) {
-                          return DropdownMenuItem<String>(
-                            value: year,
-                            child: Text(
-                              year,
-                              style: AppTextStyles.bodyMedium,
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) => setState(() => _targetYear = value),
+                        items: const [
+                          DropdownMenuItem<bool>(
+                            value: true,
+                            child: Text('Yes'),
+                          ),
+                          DropdownMenuItem<bool>(
+                            value: false,
+                            child: Text('No'),
+                          ),
+                        ],
+                        onChanged: (value) => setState(() => _isEnrolledInCoaching = value),
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select your target year';
+                          if (value == null) {
+                            return 'Please select an option';
                           }
                           return null;
                         },
-                        onSaved: (value) => _targetYear = value,
+                        onSaved: (value) => _isEnrolledInCoaching = value,
                       ),
 
                     const SizedBox(height: 32),
