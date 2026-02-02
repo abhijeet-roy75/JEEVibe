@@ -154,6 +154,8 @@ router.post('/profile',
     }),
     body('currentClass').optional().isIn(['11', '12', 'Other'])
       .withMessage('Invalid currentClass. Must be "11", "12", or "Other"'),
+    body('isEnrolledInCoaching').optional().isBoolean()
+      .withMessage('isEnrolledInCoaching must be a boolean (true or false)'),
   ],
   async (req, res, next) => {
     try {
