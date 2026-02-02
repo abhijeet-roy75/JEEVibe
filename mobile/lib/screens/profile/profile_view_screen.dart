@@ -687,9 +687,6 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     addField(Icons.email_outlined, 'Email', profile.email);
     addField(Icons.location_on_outlined, 'State', profile.state);
     addField(Icons.workspace_premium_outlined, 'Dream Branch', profile.dreamBranch);
-    if (profile.studySetup.isNotEmpty) {
-      addField(Icons.book_outlined, 'Study Setup', profile.studySetup.join(', '));
-    }
 
     if (fields.isEmpty) {
       return Padding(

@@ -17,10 +17,9 @@ import '../welcome_carousel_screen.dart';
 /// - Your State (optional)
 /// - Exam Type (optional) - "JEE Main" or "JEE Main + Advanced"
 /// - Dream Branch (optional)
-/// - Current Study Setup (optional, multi-select)
 ///
 /// All fields are optional, user can skip to continue.
-/// Email is now collected in Step 1 and passed via step1Data.
+/// Email and coaching enrollment are collected in Step 1 and passed via step1Data.
 class OnboardingStep2Screen extends StatefulWidget {
   final Map<String, dynamic> step1Data;
 
@@ -39,7 +38,6 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
   String? _state;
   String? _examType;
   String? _dreamBranch;
-  final Set<String> _studySetup = {};
 
   bool _isLoading = false;
 
@@ -73,7 +71,6 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
         state: _state,
         targetExam: _examType,
         dreamBranch: _dreamBranch,
-        studySetup: _studySetup.toList(),
         // Metadata
         createdAt: now,
         lastActive: now,
@@ -438,77 +435,6 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                         }).toList(),
                         onChanged: (value) => setState(() => _dreamBranch = value),
                         onSaved: (value) => _dreamBranch = value,
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Current Study Setup (optional, multi-select)
-                      Text(
-                        'Current Study Setup',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.textDark,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Column(
-                        children: ProfileConstants.studySetupOptions.map((option) {
-                          final isSelected = _studySetup.contains(option);
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: InkWell(
-                              onTap: () => setState(() {
-                                if (isSelected) {
-                                  _studySetup.remove(option);
-                                } else {
-                                  _studySetup.add(option);
-                                }
-                              }),
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? AppColors.primaryPurple.withValues(alpha: 0.1)
-                                      : AppColors.cardWhite,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? AppColors.primaryPurple
-                                        : AppColors.borderGray,
-                                    width: isSelected ? 2 : 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      isSelected
-                                          ? Icons.check_box
-                                          : Icons.check_box_outline_blank,
-                                      color: isSelected
-                                          ? AppColors.primaryPurple
-                                          : AppColors.textLight,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        option,
-                                        style: AppTextStyles.bodyMedium.copyWith(
-                                          color: isSelected
-                                              ? AppColors.primaryPurple
-                                              : AppColors.textDark,
-                                          fontWeight: isSelected
-                                              ? FontWeight.w600
-                                              : FontWeight.normal,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
                       ),
 
                     const SizedBox(height: 32),
