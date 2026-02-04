@@ -348,6 +348,42 @@
         { "fieldPath": "active", "order": "ASCENDING" },
         { "fieldPath": "total_attempts", "order": "ASCENDING" }
       ]
+    },
+    {
+      "comment": "Teacher Integration: Teacher lookup by email and active status",
+      "collectionGroup": "teachers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "email", "order": "ASCENDING" },
+        { "fieldPath": "is_active", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "Teacher Integration: Teacher filtering by institute",
+      "collectionGroup": "teachers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "coaching_institute_name", "order": "ASCENDING" },
+        { "fieldPath": "is_active", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "Teacher Integration: Student lookup by teacher and coaching status",
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "teacher_id", "order": "ASCENDING" },
+        { "fieldPath": "isEnrolledInCoaching", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "Teacher Integration: Teacher reports by teacher and week",
+      "collectionGroup": "teacher_reports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "teacher_id", "order": "ASCENDING" },
+        { "fieldPath": "week_end", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [
