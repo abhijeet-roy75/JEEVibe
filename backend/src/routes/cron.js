@@ -477,6 +477,58 @@ router.post('/process-trials', verifyCronRequest, async (req, res) => {
 });
 
 /**
+ * POST /api/cron/weekly-teacher-reports
+ *
+ * Generates and sends weekly performance reports to all active teachers
+ * Should be called every Monday at 5:30 AM IST
+ *
+ * Security: Requires CRON_SECRET in header or query param
+ */
+router.post('/weekly-teacher-reports', verifyCronRequest, async (req, res) => {
+  try {
+    const { sendAllWeeklyTeacherEmails } = require('../services/teacherEmailService');
+
+    logger.info('Weekly teacher reports cron job triggered', {
+      requestId: req.id
+    });
+
+    const results = await withTimeout(
+      sendAllWeeklyTeacherEmails(),
+      EMAIL_BATCH_TIMEOUT,
+      'Teacher reports job timed out'
+    );
+
+    res.json({
+      success: true,
+      message: 'Weekly teacher reports sent',
+      results: {
+        total: results.total,
+        sent: results.sent,
+        skipped: results.skipped,
+        errors: results.errors,
+        errorDetails: results.errorDetails
+      },
+      requestId: req.id
+    });
+  } catch (error) {
+    const isTimeout = error.message.includes('timed out');
+    logger.error('Error in weekly teacher reports cron job', {
+      error: error.message,
+      isTimeout,
+      stack: error.stack,
+      requestId: req.id
+    });
+
+    res.status(isTimeout ? 504 : 500).json({
+      success: false,
+      error: isTimeout ? 'Teacher reports job timed out' : 'Failed to send teacher reports',
+      message: error.message,
+      requestId: req.id
+    });
+  }
+});
+
+/**
  * GET /api/cron/health
  *
  * Health check for cron service
