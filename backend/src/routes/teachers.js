@@ -40,7 +40,7 @@ router.post('/',
   authenticateAdmin,
   [
     body('email').isEmail().normalizeEmail(),
-    body('phone_number').matches(/^\+91\d{10}$/),
+    body('phone_number').matches(/^\+(?:91\d{10}|1\d{10})$/),
     body('first_name').notEmpty().trim(),
     body('last_name').optional().trim(),
     body('coaching_institute_name').optional().trim(),
