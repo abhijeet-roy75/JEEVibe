@@ -14,7 +14,7 @@ class ConnectivityService extends ChangeNotifier {
   factory ConnectivityService() => _instance;
 
   final Connectivity _connectivity = Connectivity();
-  StreamSubscription<ConnectivityResult>? _subscription;
+  StreamSubscription<List<ConnectivityResult>>? _subscription;
 
   bool _isOnline = true;
   bool _isInitialized = false;
@@ -79,7 +79,7 @@ class ConnectivityService extends ChangeNotifier {
       await _checkConnectivity();
 
       // Listen to connectivity changes
-      // Note: connectivity_plus 5.x uses single ConnectivityResult
+      // Note: connectivity_plus 6.x uses List<ConnectivityResult> for multiple interfaces
       _subscription = _connectivity.onConnectivityChanged.listen(_onConnectivityChanged);
 
       _isInitialized = true;
@@ -110,9 +110,9 @@ class ConnectivityService extends ChangeNotifier {
   }
 
   /// Handle connectivity state changes
-  Future<void> _onConnectivityChanged(ConnectivityResult result) async {
+  Future<void> _onConnectivityChanged(List<ConnectivityResult> results) async {
     // If no connectivity, mark as offline immediately
-    if (_hasNoConnectivity(result)) {
+    if (_hasNoConnectivity(results)) {
       _updateOnlineStatus(false);
       return;
     }
@@ -122,16 +122,17 @@ class ConnectivityService extends ChangeNotifier {
   }
 
   /// Check if result indicates no connectivity
-  bool _hasNoConnectivity(ConnectivityResult result) {
-    return result == ConnectivityResult.none;
+  /// Returns true if all results are 'none' or the list is empty
+  bool _hasNoConnectivity(List<ConnectivityResult> results) {
+    return results.isEmpty || results.every((result) => result == ConnectivityResult.none);
   }
 
   /// Check connectivity state
   Future<void> _checkConnectivity() async {
     try {
-      final result = await _connectivity.checkConnectivity();
+      final results = await _connectivity.checkConnectivity();
 
-      if (_hasNoConnectivity(result)) {
+      if (_hasNoConnectivity(results)) {
         _updateOnlineStatus(false);
         return;
       }
@@ -202,8 +203,8 @@ class ConnectivityService extends ChangeNotifier {
 
   /// Stream of connectivity changes
   Stream<bool> get onConnectivityChanged {
-    return _connectivity.onConnectivityChanged.asyncMap((result) async {
-      if (_hasNoConnectivity(result)) {
+    return _connectivity.onConnectivityChanged.asyncMap((results) async {
+      if (_hasNoConnectivity(results)) {
         return false;
       }
       return await _checkRealConnectivity();

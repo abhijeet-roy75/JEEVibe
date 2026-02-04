@@ -1,7 +1,7 @@
 name: jeevibe_mobile
 description: JEEVibe Snap & Solve POC - iOS Flutter App
 publish_to: 'none'
-version: 1.0.1+83
+version: 1.0.1+85
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -78,7 +78,7 @@ dependencies:
   cached_network_image: ^3.3.1
 
   # Connectivity Detection
-  connectivity_plus: ^5.0.2
+  connectivity_plus: ^6.0.0
 
   # Social Sharing
   share_plus: ^7.2.1
