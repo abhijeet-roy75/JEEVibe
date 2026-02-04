@@ -301,11 +301,17 @@ async function sendWeeklyReportEmail(teacherId, reportData) {
 
     // Update report document
     await retryFirestoreOperation(async () => {
-      await db.collection('teacher_reports').doc(reportData.report_id).update({
+      const updateData = {
         email_sent: true,
-        email_sent_at: new Date(),
-        email_id: result.id
-      });
+        email_sent_at: new Date()
+      };
+
+      // Only add email_id if it exists
+      if (result?.id) {
+        updateData.email_id = result.id;
+      }
+
+      await db.collection('teacher_reports').doc(reportData.report_id).update(updateData);
     });
 
     logger.info('Weekly report email sent', {
