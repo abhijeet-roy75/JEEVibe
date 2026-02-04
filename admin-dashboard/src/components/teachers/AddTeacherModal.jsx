@@ -25,8 +25,10 @@ export default function AddTeacherModal({ isOpen, onClose, onSuccess }) {
     setLoading(true);
     setError(null);
 
+    console.log('Submitting teacher data:', formData);
     try {
-      await api.createTeacher(formData);
+      const result = await api.createTeacher(formData);
+      console.log('Teacher created successfully:', result);
       onSuccess();
       onClose();
       // Reset form
@@ -39,6 +41,7 @@ export default function AddTeacherModal({ isOpen, onClose, onSuccess }) {
         coaching_institute_location: ''
       });
     } catch (err) {
+      console.error('Failed to create teacher:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -86,7 +89,6 @@ export default function AddTeacherModal({ isOpen, onClose, onSuccess }) {
               value={formData.phone_number}
               onChange={handleChange}
               required
-              pattern="^\+(?:91[0-9]{10}|1[0-9]{10})$"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="+919876543210 or +12025551234"
             />
