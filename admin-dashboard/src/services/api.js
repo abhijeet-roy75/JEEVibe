@@ -80,6 +80,15 @@ export const api = {
   deactivateTeacher: (teacherId) => fetchWithAuth(`/api/teachers/${teacherId}`, {
     method: 'DELETE',
   }),
+
+  addStudentsToTeacher: (teacherId, studentIds) => fetchWithAuth(`/api/teachers/${teacherId}/students`, {
+    method: 'POST',
+    body: JSON.stringify({ student_ids: studentIds }),
+  }),
+
+  removeStudentFromTeacher: (teacherId, studentId) => fetchWithAuth(`/api/teachers/${teacherId}/students/${studentId}`, {
+    method: 'DELETE',
+  }),
 };
 
 export default api;

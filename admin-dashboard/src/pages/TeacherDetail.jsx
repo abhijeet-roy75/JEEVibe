@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import api from '../services/api';
+import AssignStudentsModal from '../components/teachers/AssignStudentsModal';
 
 export default function TeacherDetail() {
   const { teacherId } = useParams();
@@ -10,6 +11,7 @@ export default function TeacherDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [studentFilter, setStudentFilter] = useState('all');
+  const [showAssignModal, setShowAssignModal] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -29,6 +31,34 @@ export default function TeacherDetail() {
     }
     fetchData();
   }, [teacherId, studentFilter]);
+
+  const refreshData = async () => {
+    try {
+      setLoading(true);
+      const [teacherResult, studentsResult] = await Promise.all([
+        api.getTeacher(teacherId),
+        api.getTeacherStudents(teacherId, { filter: studentFilter, limit: 100 })
+      ]);
+      setTeacher(teacherResult.data);
+      setStudents(studentsResult.data.students);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveStudent = async (studentId) => {
+    if (!confirm('Are you sure you want to remove this student from the teacher?')) {
+      return;
+    }
+    try {
+      await api.removeStudentFromTeacher(teacherId, studentId);
+      await refreshData();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const formatDate = (date) => {
     if (!date) return 'Never';
@@ -112,19 +142,35 @@ export default function TeacherDetail() {
         </div>
       </div>
 
+      {/* Assign Students Modal */}
+      <AssignStudentsModal
+        isOpen={showAssignModal}
+        onClose={() => setShowAssignModal(false)}
+        teacherId={teacherId}
+        onSuccess={refreshData}
+      />
+
       {/* Students Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-lg font-semibold text-gray-800">Students</h2>
-          <select
-            value={studentFilter}
-            onChange={(e) => setStudentFilter(e.target.value)}
-            className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
-          >
-            <option value="all">All Students</option>
-            <option value="active">Active (last 7 days)</option>
-            <option value="inactive">Inactive (7+ days)</option>
-          </select>
+          <div className="flex gap-3 items-center">
+            <button
+              onClick={() => setShowAssignModal(true)}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
+            >
+              + Assign Students
+            </button>
+            <select
+              value={studentFilter}
+              onChange={(e) => setStudentFilter(e.target.value)}
+              className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white"
+            >
+              <option value="all">All Students</option>
+              <option value="active">Active (last 7 days)</option>
+              <option value="inactive">Inactive (7+ days)</option>
+            </select>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -149,12 +195,15 @@ export default function TeacherDetail() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   Last Active
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                     No students associated with this teacher
                   </td>
                 </tr>
@@ -186,6 +235,14 @@ export default function TeacherDetail() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {formatDate(student.lastActive)}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <button
+                        onClick={() => handleRemoveStudent(student.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Remove
+                      </button>
                     </td>
                   </tr>
                 ))

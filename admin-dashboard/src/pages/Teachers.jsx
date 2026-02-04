@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import AddTeacherModal from '../components/teachers/AddTeacherModal';
 
 function StatusBadge({ isActive }) {
   return (
@@ -20,6 +21,7 @@ export default function Teachers() {
   const [filter, setFilter] = useState('active');
   const [search, setSearch] = useState('');
   const [total, setTotal] = useState(0);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     async function fetchTeachers() {
@@ -57,10 +59,32 @@ export default function Teachers() {
           <h1 className="text-2xl font-bold text-gray-800">Teachers</h1>
           <p className="text-gray-500">Manage coaching class teachers and student associations</p>
         </div>
-        <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+        >
           + Add Teacher
         </button>
       </div>
+
+      {/* Add Teacher Modal */}
+      <AddTeacherModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={async () => {
+          // Refresh teachers list
+          try {
+            setLoading(true);
+            const result = await api.getTeachers({ filter, search, limit: 50 });
+            setTeachers(result.data.teachers);
+            setTotal(result.data.total);
+          } catch (err) {
+            setError(err.message);
+          } finally {
+            setLoading(false);
+          }
+        }}
+      />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">

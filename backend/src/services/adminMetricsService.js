@@ -447,13 +447,18 @@ async function getContent() {
  * @returns {Object} Paginated user list
  */
 async function getUsers(options = {}) {
-  const { filter = 'all', search = '', limit = 50, offset = 0 } = options;
+  const { filter = 'all', search = '', limit = 50, offset = 0, isEnrolledInCoaching = false, hasNoTeacher = false } = options;
 
   // Get all users
   const usersSnapshot = await db.collection('users').get();
   let users = [];
   usersSnapshot.forEach(doc => {
-    users.push({ uid: doc.id, ...doc.data() });
+    const userData = doc.data();
+    // Apply teacher filters early to reduce data processing
+    if (isEnrolledInCoaching && !userData.isEnrolledInCoaching) return;
+    if (hasNoTeacher && userData.teacher_id) return;
+
+    users.push({ uid: doc.id, ...userData });
   });
 
   // Get streak data
@@ -474,11 +479,14 @@ async function getUsers(options = {}) {
                           subscriptionData.override?.tier_id ||
                           'free';
     return {
+      id: user.uid,
       uid: user.uid,
       firstName: user.firstName || user.first_name || '',
       lastName: user.lastName || user.last_name || '',
       email: user.email || '',
-      phone: user.phone || '',
+      phoneNumber: user.phoneNumber || user.phone_number || user.phone || '',
+      phone: user.phoneNumber || user.phone_number || user.phone || '',
+      currentClass: user.currentClass || user.current_class || '',
       tier: effectiveTier,
       currentStreak: streak.current_streak || 0,
       longestStreak: streak.longest_streak || 0,
@@ -486,8 +494,11 @@ async function getUsers(options = {}) {
       quizzesCompleted: user.completed_quiz_count || 0,
       lastActive: user.lastActive,
       createdAt: user.createdAt,
+      overall_percentile: user.overall_percentile || 0,
       overallPercentile: Math.round(user.overall_percentile || 0),
-      assessmentCompleted: user.assessment?.status === 'completed'
+      assessmentCompleted: user.assessment?.status === 'completed',
+      isEnrolledInCoaching: user.isEnrolledInCoaching || false,
+      teacher_id: user.teacher_id || null
     };
   });
 

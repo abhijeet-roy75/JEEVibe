@@ -253,13 +253,15 @@ router.get('/metrics/content', authenticateAdmin, async (req, res, next) => {
  */
 router.get('/users', authenticateAdmin, async (req, res, next) => {
   try {
-    const { filter = 'all', search = '', limit = '50', offset = '0' } = req.query;
+    const { filter = 'all', search = '', limit = '50', offset = '0', isEnrolledInCoaching, hasNoTeacher } = req.query;
 
     const result = await adminMetricsService.getUsers({
       filter,
       search,
       limit: Math.min(parseInt(limit) || 50, 100),
-      offset: parseInt(offset) || 0
+      offset: parseInt(offset) || 0,
+      isEnrolledInCoaching: isEnrolledInCoaching === 'true',
+      hasNoTeacher: hasNoTeacher === 'true'
     });
 
     logger.info('Admin user list retrieved', {
