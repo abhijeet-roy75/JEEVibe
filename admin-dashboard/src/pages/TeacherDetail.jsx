@@ -60,6 +60,23 @@ export default function TeacherDetail() {
     }
   };
 
+  const handleToggleActive = async () => {
+    const action = teacher.is_active ? 'deactivate' : 'activate';
+    if (!confirm(`Are you sure you want to ${action} this teacher?`)) {
+      return;
+    }
+    try {
+      if (teacher.is_active) {
+        await api.deactivateTeacher(teacherId);
+      } else {
+        await api.updateTeacher(teacherId, { is_active: true });
+      }
+      await refreshData();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const formatDate = (date) => {
     if (!date) return 'Never';
     try {
@@ -101,7 +118,7 @@ export default function TeacherDetail() {
       {/* Teacher Profile Card */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex justify-between items-start">
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-800 mb-2">
               {teacher.first_name} {teacher.last_name}
             </h1>
@@ -116,9 +133,21 @@ export default function TeacherDetail() {
               )}
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-500 mb-2">Total Students</div>
-            <div className="text-3xl font-bold text-primary-600">{teacher.total_students || 0}</div>
+          <div className="flex flex-col items-end gap-3">
+            <button
+              onClick={handleToggleActive}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                teacher.is_active
+                  ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+              }`}
+            >
+              {teacher.is_active ? 'Deactivate Teacher' : 'Activate Teacher'}
+            </button>
+            <div className="text-right">
+              <div className="text-sm text-gray-500 mb-1">Total Students</div>
+              <div className="text-3xl font-bold text-primary-600">{teacher.total_students || 0}</div>
+            </div>
           </div>
         </div>
 
