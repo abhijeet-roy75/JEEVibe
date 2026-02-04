@@ -8,6 +8,8 @@ import Learning from './pages/Learning';
 import Users from './pages/Users';
 import Content from './pages/Content';
 import Alerts from './pages/Alerts';
+import Teachers from './pages/Teachers';
+import TeacherDetail from './pages/TeacherDetail';
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
         <Route path="/users" element={<Users />} />
         <Route path="/content" element={<Content />} />
         <Route path="/alerts" element={<Alerts />} />
+        <Route path="/teachers" element={<Teachers />} />
+        <Route path="/teachers/:teacherId" element={<TeacherDetail />} />
       </Route>
     </Routes>
   );

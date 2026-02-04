@@ -53,6 +53,33 @@ export const api = {
 
   // Alerts
   getAlerts: () => fetchWithAuth('/api/admin/alerts'),
+
+  // Teachers
+  getTeachers: (params = {}) => {
+    const searchParams = new URLSearchParams(params);
+    return fetchWithAuth(`/api/teachers?${searchParams}`);
+  },
+
+  getTeacher: (teacherId) => fetchWithAuth(`/api/teachers/${teacherId}`),
+
+  getTeacherStudents: (teacherId, params = {}) => {
+    const searchParams = new URLSearchParams(params);
+    return fetchWithAuth(`/api/teachers/${teacherId}/students?${searchParams}`);
+  },
+
+  createTeacher: (teacherData) => fetchWithAuth('/api/teachers', {
+    method: 'POST',
+    body: JSON.stringify(teacherData),
+  }),
+
+  updateTeacher: (teacherId, updates) => fetchWithAuth(`/api/teachers/${teacherId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  }),
+
+  deactivateTeacher: (teacherId) => fetchWithAuth(`/api/teachers/${teacherId}`, {
+    method: 'DELETE',
+  }),
 };
 
 export default api;
