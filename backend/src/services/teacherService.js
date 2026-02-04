@@ -43,10 +43,10 @@ async function createTeacher(teacherData, createdByAdmin) {
       throw new Error('Invalid email format');
     }
 
-    // Validate phone format (E.164: +91XXXXXXXXXX)
-    const phoneRegex = /^\+91\d{10}$/;
+    // Validate phone format (E.164: +91XXXXXXXXXX or +1XXXXXXXXXX for testing)
+    const phoneRegex = /^\+(?:91\d{10}|1\d{10})$/;
     if (!phoneRegex.test(teacherData.phone_number)) {
-      throw new Error('Invalid phone format (must be +91XXXXXXXXXX)');
+      throw new Error('Invalid phone format (must be +91XXXXXXXXXX or +1XXXXXXXXXX)');
     }
 
     // Check if teacher with this email already exists

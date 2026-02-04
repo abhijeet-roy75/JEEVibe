@@ -79,10 +79,10 @@ function parseCSV(filePath) {
       continue;
     }
 
-    // Validate phone format
-    const phoneRegex = /^\+91\d{10}$/;
+    // Validate phone format (India +91 or US +1 for testing)
+    const phoneRegex = /^\+(?:91\d{10}|1\d{10})$/;
     if (!phoneRegex.test(teacher.phone)) {
-      console.warn(`⚠️  Skipping line ${i + 1}: invalid phone format (${teacher.phone}) - must be +91XXXXXXXXXX`);
+      console.warn(`⚠️  Skipping line ${i + 1}: invalid phone format (${teacher.phone}) - must be +91XXXXXXXXXX or +1XXXXXXXXXX`);
       continue;
     }
 

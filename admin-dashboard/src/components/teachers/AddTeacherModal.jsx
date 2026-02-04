@@ -86,11 +86,11 @@ export default function AddTeacherModal({ isOpen, onClose, onSuccess }) {
               value={formData.phone_number}
               onChange={handleChange}
               required
-              pattern="^\+91[0-9]{10}$"
+              pattern="^\+(?:91[0-9]{10}|1[0-9]{10})$"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="+919876543210"
+              placeholder="+919876543210 or +12025551234"
             />
-            <p className="text-xs text-gray-500 mt-1">Format: +91XXXXXXXXXX</p>
+            <p className="text-xs text-gray-500 mt-1">Format: +91XXXXXXXXXX (India) or +1XXXXXXXXXX (US)</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
