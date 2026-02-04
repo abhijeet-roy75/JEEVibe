@@ -48,10 +48,10 @@ class ShareService {
         topic: topic,
       );
 
-      // Share via native share sheet (use shareWithResult to get ShareResult)
+      // Share via native share sheet
       // sharePositionOrigin is required on iPad for the popover position
       final timeStr = _formatTimestampForFilename();
-      final result = await Share.shareWithResult(
+      final result = await Share.share(
         message,
         subject: 'JEEVibe $subject Solution $timeStr',
         sharePositionOrigin: sharePositionOrigin,
@@ -285,7 +285,7 @@ Solved with JEEVibe - Download from App Store''';
       );
 
       final timeStr = _formatTimestampForFilename();
-      final result = await Share.shareWithResult(
+      final result = await Share.share(
         message,
         subject: 'My JEEVibe Journey $timeStr',
         sharePositionOrigin: sharePositionOrigin,
