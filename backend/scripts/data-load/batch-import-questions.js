@@ -556,6 +556,7 @@ function parseQuestionsFile(filePath) {
 /**
  * Validate a chapter's questions and images (no DB operations)
  * Returns detailed report of all issues found
+ * Supports multiple JSON files in flat/super-flat structures
  */
 function validateChapter(chapterPath, subject, chapterName) {
   const report = {
@@ -567,8 +568,10 @@ function validateChapter(chapterPath, subject, chapterName) {
     issues: []
   };
 
-  const jsonFile = findQuestionFile(chapterPath);
-  if (!jsonFile) {
+  // Get ALL JSON files in the folder
+  const jsonFiles = findQuestionFiles(chapterPath);
+
+  if (jsonFiles.length === 0) {
     report.issues.push({
       type: 'MISSING_JSON',
       severity: 'ERROR',
@@ -577,113 +580,126 @@ function validateChapter(chapterPath, subject, chapterName) {
     return report;
   }
 
-  let questions;
-  try {
-    questions = parseQuestionsFile(jsonFile);
-  } catch (error) {
-    report.issues.push({
-      type: 'INVALID_JSON',
-      severity: 'ERROR',
-      message: `Failed to parse JSON: ${error.message}`
-    });
-    return report;
-  }
+  // Process each JSON file
+  for (const jsonFile of jsonFiles) {
+    const fileName = path.basename(jsonFile);
 
-  report.totalQuestions = questions.length;
-
-  if (questions.length === 0) {
-    report.issues.push({
-      type: 'EMPTY_FILE',
-      severity: 'WARNING',
-      message: 'No questions found in file'
-    });
-    return report;
-  }
-
-  // Validate each question
-  for (const { questionId, questionData } of questions) {
-    // 1. Validate required fields
-    const validation = validateQuestion(questionId, questionData);
-    if (!validation.valid) {
+    let questions;
+    try {
+      questions = parseQuestionsFile(jsonFile);
+    } catch (error) {
       report.issues.push({
-        type: 'INVALID_QUESTION',
+        type: 'INVALID_JSON',
         severity: 'ERROR',
-        questionId,
-        message: validation.errors.join(', ')
+        file: fileName,
+        message: `Failed to parse JSON: ${error.message}`
       });
       continue;
     }
 
-    // 2. Check for missing images
-    if (questionData.has_image === true) {
-      const imageFileName = `${questionId}.svg`;
-      const imagePath = path.join(chapterPath, imageFileName);
+    report.totalQuestions += questions.length;
 
-      if (!fs.existsSync(imagePath)) {
-        report.issues.push({
-          type: 'MISSING_IMAGE',
-          severity: 'ERROR',
-          questionId,
-          expectedPath: imagePath,
-          message: `Question has_image=true but image file not found: ${imageFileName}`
-        });
-        continue;
-      }
-
-      // Check if image file is not empty
-      const stats = fs.statSync(imagePath);
-      if (stats.size === 0) {
-        report.issues.push({
-          type: 'EMPTY_IMAGE',
-          severity: 'ERROR',
-          questionId,
-          message: `Image file is empty (0 bytes): ${imageFileName}`
-        });
-        continue;
-      }
-    }
-
-    // 3. Check for orphan images (image exists but has_image is false/missing)
-    const potentialImage = path.join(chapterPath, `${questionId}.svg`);
-    if (fs.existsSync(potentialImage) && !questionData.has_image) {
+    if (questions.length === 0) {
       report.issues.push({
-        type: 'ORPHAN_IMAGE',
+        type: 'EMPTY_FILE',
         severity: 'WARNING',
-        questionId,
-        message: `Image file exists but has_image is not true - image won't be uploaded`
+        file: fileName,
+        message: 'No questions found in file'
       });
+      continue;
     }
 
-    // 4. Validate MCQ options
-    if (questionData.question_type === 'mcq_single') {
-      if (!questionData.options || Object.keys(questionData.options).length < 2) {
+    // Validate each question
+    for (const { questionId, questionData } of questions) {
+      // 1. Validate required fields
+      const validation = validateQuestion(questionId, questionData);
+      if (!validation.valid) {
         report.issues.push({
-          type: 'INVALID_OPTIONS',
+          type: 'INVALID_QUESTION',
           severity: 'ERROR',
+          file: fileName,
           questionId,
-          message: 'MCQ question must have at least 2 options'
+          message: validation.errors.join(', ')
         });
         continue;
       }
-    }
 
-    // 5. Validate correct_answer matches options for MCQ
-    if (questionData.question_type === 'mcq_single' && questionData.options) {
-      const optionKeys = Array.isArray(questionData.options)
-        ? questionData.options.map((_, i) => String.fromCharCode(65 + i))
-        : Object.keys(questionData.options);
+      // 2. Check for missing images
+      if (questionData.has_image === true) {
+        const imageFileName = `${questionId}.svg`;
+        const imagePath = path.join(chapterPath, imageFileName);
 
-      if (!optionKeys.includes(String(questionData.correct_answer))) {
+        if (!fs.existsSync(imagePath)) {
+          report.issues.push({
+            type: 'MISSING_IMAGE',
+            severity: 'ERROR',
+            file: fileName,
+            questionId,
+            expectedPath: imagePath,
+            message: `Question has_image=true but image file not found: ${imageFileName}`
+          });
+          continue;
+        }
+
+        // Check if image file is not empty
+        const stats = fs.statSync(imagePath);
+        if (stats.size === 0) {
+          report.issues.push({
+            type: 'EMPTY_IMAGE',
+            severity: 'ERROR',
+            file: fileName,
+            questionId,
+            message: `Image file is empty (0 bytes): ${imageFileName}`
+          });
+          continue;
+        }
+      }
+
+      // 3. Check for orphan images (image exists but has_image is false/missing)
+      const potentialImage = path.join(chapterPath, `${questionId}.svg`);
+      if (fs.existsSync(potentialImage) && !questionData.has_image) {
         report.issues.push({
-          type: 'INVALID_ANSWER',
+          type: 'ORPHAN_IMAGE',
           severity: 'WARNING',
+          file: fileName,
           questionId,
-          message: `correct_answer "${questionData.correct_answer}" not in options: [${optionKeys.join(', ')}]`
+          message: `Image file exists but has_image is not true - image won't be uploaded`
         });
       }
-    }
 
-    report.validQuestions++;
+      // 4. Validate MCQ options
+      if (questionData.question_type === 'mcq_single') {
+        if (!questionData.options || Object.keys(questionData.options).length < 2) {
+          report.issues.push({
+            type: 'INVALID_OPTIONS',
+            severity: 'ERROR',
+            file: fileName,
+            questionId,
+            message: 'MCQ question must have at least 2 options'
+          });
+          continue;
+        }
+      }
+
+      // 5. Validate correct_answer matches options for MCQ
+      if (questionData.question_type === 'mcq_single' && questionData.options) {
+        const optionKeys = Array.isArray(questionData.options)
+          ? questionData.options.map((_, i) => String.fromCharCode(65 + i))
+          : Object.keys(questionData.options);
+
+        if (!optionKeys.includes(String(questionData.correct_answer))) {
+          report.issues.push({
+            type: 'INVALID_ANSWER',
+            severity: 'WARNING',
+            file: fileName,
+            questionId,
+            message: `correct_answer "${questionData.correct_answer}" not in options: [${optionKeys.join(', ')}]`
+          });
+        }
+      }
+
+      report.validQuestions++;
+    }
   }
 
   return report;
