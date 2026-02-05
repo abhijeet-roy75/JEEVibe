@@ -1,10 +1,24 @@
 /**
  * Batch Import Questions Script
  *
- * Imports questions from a nested folder structure:
- *   Subject/
- *     Chapter/
- *       *.json (any JSON file with questions)
+ * Imports questions from various folder structures:
+ *
+ *   OPTION 1 (Nested - for organized bulk imports):
+ *     RootDir/
+ *       Subject/
+ *         Chapter/
+ *           *.json (any JSON file with questions)
+ *           *.svg (image files)
+ *
+ *   OPTION 2 (Flat - for quick incremental imports with subjects):
+ *     RootDir/
+ *       Subject/
+ *         *.json (question files directly in subject folder)
+ *         *.svg (image files)
+ *
+ *   OPTION 3 (Super-flat - simplest, all files in one folder):
+ *     RootDir/
+ *       *.json (all question files in root directory)
  *       *.svg (image files)
  *
  * Supports both collections:
@@ -12,46 +26,70 @@
  * - initial_assessment_questions (diagnostic assessment)
  *
  * Features:
- * - Processes nested Subject/Chapter folders
- * - Handles SVG images in each chapter folder
+ * - Auto-detects folder structure (nested, flat, or super-flat)
+ * - Handles SVG images in each folder
  * - Validates all questions before import
  * - Preview mode (dry run)
  * - Validate mode (checks for missing images & data issues)
+ * - Moves processed files to 'processed' subfolder (optional with --move-files)
  * - Supports InitialAssessment special folder
+ * - Skips existing questions (additive, never overwrites)
  *
  * Usage:
  *   # VALIDATE ONLY - Check for missing images & data issues (RECOMMENDED FIRST STEP)
- *   node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load --validate
+ *   node scripts/data-load/batch-import-questions.js --dir inputs/incremental_load1 --validate
  *
  *   # Preview import (safe, no changes)
- *   node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load --preview
+ *   node scripts/data-load/batch-import-questions.js --dir inputs/incremental_load1 --preview
  *
  *   # Import all questions
- *   node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load
+ *   node scripts/data-load/batch-import-questions.js --dir inputs/incremental_load1
  *
- *   # Import specific subject only
- *   node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load --subject Physics
+ *   # Import with file movement (moves to processed/ folder after success)
+ *   node scripts/data-load/batch-import-questions.js --dir inputs/incremental_load1 --move-files
+ *
+ *   # Import specific subject only (works with nested/flat structures)
+ *   node scripts/data-load/batch-import-questions.js --dir inputs/incremental_load1 --subject Physics
  *
  *   # Skip image upload (just import JSON data)
- *   node scripts/data-load/batch-import-questions.js --dir inputs/fresh_load --skip-images
+ *   node scripts/data-load/batch-import-questions.js --dir inputs/incremental_load1 --skip-images
  *
- * Expected Folder Structure:
- *   inputs/fresh_load/
- *     Physics/
- *       Mechanics/
- *         questions_mechanics.json   <- Any JSON filename accepted
+ * Expected Folder Structure Examples:
+ *
+ *   NESTED (organized):
+ *     inputs/incremental_load1/
+ *       Physics/
+ *         Mechanics/
+ *           questions_mechanics.json
+ *           PHY_MECH_001.svg
+ *         Thermodynamics/
+ *           questions_thermo.json
+ *           PHY_THERM_001.svg
+ *
+ *   FLAT (with subjects):
+ *     inputs/incremental_load1/
+ *       Physics/
+ *         questions_mechanics.json
+ *         questions_thermodynamics.json
  *         PHY_MECH_001.svg
- *         PHY_MECH_002.svg
- *       Thermodynamics/
- *         *.json                     <- Any JSON filename accepted
- *         *.svg
- *     Chemistry/
- *       ...
- *     Mathematics/
- *       ...
- *     InitialAssessment/             <- Special folder for assessment questions
+ *         PHY_THERM_001.svg
+ *       Chemistry/
+ *         questions_organic.json
+ *         CHEM_ORG_001.svg
+ *
+ *   SUPER-FLAT (simplest - all in root):
+ *     inputs/incremental_load1/
+ *       questions_physics_mechanics.json
+ *       questions_chemistry_organic.json
+ *       PHY_MECH_001.svg
+ *       CHEM_ORG_001.svg
+ *
+ *   Special folder:
+ *     InitialAssessment/
  *       questions.json
  *       ASSESS_*.svg
+ *
+ * Note: The script auto-detects which structure you're using!
  */
 
 const path = require('path');
@@ -333,6 +371,10 @@ function processQuestionDocument(questionId, questionData, isAssessment = false)
 
 /**
  * Discover subjects and chapters from folder structure
+ * Supports:
+ * 1. Nested: RootDir/Subject/Chapter/files
+ * 2. Flat: RootDir/Subject/files
+ * 3. Super-flat: RootDir/files (no subject folders)
  */
 function discoverFolders(rootDir) {
   const structure = {
@@ -347,11 +389,39 @@ function discoverFolders(rootDir) {
 
   const items = fs.readdirSync(rootDir);
 
+  // Check for super-flat structure (JSON files directly in root)
+  const jsonFilesInRoot = items.filter(f =>
+    f.endsWith('.json') && !f.startsWith('.') && f !== 'processed'
+  );
+
+  if (jsonFilesInRoot.length > 0) {
+    // Super-flat structure: all files in root directory
+    structure.subjects.push('All');
+    structure.chapters['All'] = [{
+      name: 'All',
+      path: rootDir,
+      isFlat: true,
+      isSuperFlat: true
+    }];
+    return structure;
+  }
+
+  // Process subdirectories
   for (const item of items) {
     const itemPath = path.join(rootDir, item);
-    const stat = fs.statSync(itemPath);
+    let stat;
+
+    try {
+      stat = fs.statSync(itemPath);
+    } catch (error) {
+      // Skip items that cause errors
+      continue;
+    }
 
     if (!stat.isDirectory()) continue;
+
+    // Skip 'processed' folder
+    if (item.toLowerCase() === 'processed') continue;
 
     // Check for InitialAssessment special folder
     if (item.toLowerCase() === 'initialassessment' || item.toLowerCase() === 'initial_assessment') {
@@ -368,22 +438,48 @@ function discoverFolders(rootDir) {
 
     // Find chapters within subject
     const subItems = fs.readdirSync(itemPath);
-    for (const subItem of subItems) {
-      const subItemPath = path.join(itemPath, subItem);
-      const subStat = fs.statSync(subItemPath);
 
-      if (!subStat.isDirectory()) continue;
+    // Check for flat structure (JSON files directly in subject folder)
+    const jsonFilesInSubject = subItems.filter(f =>
+      f.endsWith('.json') && !f.startsWith('.') && f !== 'processed'
+    );
 
-      // Check if it has any JSON file (question file)
-      const jsonFiles = fs.readdirSync(subItemPath).filter(f =>
-        f.endsWith('.json') && !f.startsWith('.')
-      );
+    if (jsonFilesInSubject.length > 0) {
+      // Flat structure: treat subject folder itself as a "chapter"
+      structure.chapters[item].push({
+        name: item, // Use subject name as chapter name
+        path: itemPath,
+        isFlat: true // Flag to indicate flat structure
+      });
+    } else {
+      // Nested structure: look for chapter subfolders
+      for (const subItem of subItems) {
+        const subItemPath = path.join(itemPath, subItem);
 
-      if (jsonFiles.length > 0) {
-        structure.chapters[item].push({
-          name: subItem,
-          path: subItemPath
-        });
+        try {
+          const subStat = fs.statSync(subItemPath);
+
+          if (!subStat.isDirectory()) continue;
+
+          // Skip 'processed' folder
+          if (subItem.toLowerCase() === 'processed') continue;
+
+          // Check if it has any JSON file (question file)
+          const jsonFiles = fs.readdirSync(subItemPath).filter(f =>
+            f.endsWith('.json') && !f.startsWith('.')
+          );
+
+          if (jsonFiles.length > 0) {
+            structure.chapters[item].push({
+              name: subItem,
+              path: subItemPath,
+              isFlat: false
+            });
+          }
+        } catch (error) {
+          // Skip items that cause errors (permission issues, etc.)
+          continue;
+        }
       }
     }
   }
@@ -392,29 +488,30 @@ function discoverFolders(rootDir) {
 }
 
 /**
- * Find question JSON file in a folder
+ * Find question JSON files in a folder
+ * Returns array of file paths (supports multiple JSON files in flat structure)
+ */
+function findQuestionFiles(folderPath) {
+  const files = fs.readdirSync(folderPath);
+  const jsonFiles = files.filter(f =>
+    f.endsWith('.json') && !f.startsWith('.') && f !== 'processed'
+  );
+
+  if (jsonFiles.length === 0) {
+    return [];
+  }
+
+  // Return all JSON files found
+  return jsonFiles.map(f => path.join(folderPath, f));
+}
+
+/**
+ * Find question JSON file in a folder (legacy - returns first file)
  * Accepts any JSON file (not just specific names)
  */
 function findQuestionFile(folderPath) {
-  // First try the standard names for backwards compatibility
-  for (const name of QUESTION_FILE_NAMES) {
-    const filePath = path.join(folderPath, name);
-    if (fs.existsSync(filePath)) {
-      return filePath;
-    }
-  }
-
-  // Otherwise, find any JSON file in the folder
-  const files = fs.readdirSync(folderPath);
-  const jsonFiles = files.filter(f => f.endsWith('.json') && !f.startsWith('.'));
-
-  if (jsonFiles.length > 0) {
-    // If multiple JSON files, prefer ones with "question" in the name
-    const questionFile = jsonFiles.find(f => f.toLowerCase().includes('question'));
-    return path.join(folderPath, questionFile || jsonFiles[0]);
-  }
-
-  return null;
+  const files = findQuestionFiles(folderPath);
+  return files.length > 0 ? files[0] : null;
 }
 
 /**
@@ -775,105 +872,201 @@ function runValidation(rootDir, subjectsToProcess, structure) {
 }
 
 // ============================================================================
+// FILE MOVEMENT OPERATIONS
+// ============================================================================
+
+/**
+ * Move processed files (JSON + related images) to processed folder
+ *
+ * @param {string} folderPath - Folder containing the files
+ * @param {string} jsonFilePath - Path to the JSON file
+ * @param {Array<string>} questionIds - Array of question IDs from the JSON file
+ * @returns {Promise<void>}
+ */
+async function moveProcessedFiles(folderPath, jsonFilePath, questionIds) {
+  try {
+    const processedDir = path.join(folderPath, 'processed');
+
+    // Ensure processed directory exists
+    if (!fs.existsSync(processedDir)) {
+      fs.mkdirSync(processedDir, { recursive: true });
+      console.log(`      📁 Created processed directory: ${processedDir}`);
+    }
+
+    const jsonFileName = path.basename(jsonFilePath);
+    const processedJsonPath = path.join(processedDir, jsonFileName);
+
+    // Move JSON file
+    if (fs.existsSync(jsonFilePath)) {
+      fs.renameSync(jsonFilePath, processedJsonPath);
+      console.log(`      ✓ Moved JSON file to processed: ${jsonFileName}`);
+    }
+
+    // Move related SVG images
+    let movedImages = 0;
+    for (const questionId of questionIds) {
+      const imageFileName = `${questionId}.svg`;
+      const imagePath = path.join(folderPath, imageFileName);
+      const processedImagePath = path.join(processedDir, imageFileName);
+
+      if (fs.existsSync(imagePath)) {
+        fs.renameSync(imagePath, processedImagePath);
+        movedImages++;
+      }
+    }
+
+    if (movedImages > 0) {
+      console.log(`      ✓ Moved ${movedImages} image file(s) to processed folder`);
+    }
+
+  } catch (error) {
+    console.error(`      ⚠️  Warning: Could not move files to processed folder:`, error.message);
+    // Don't throw - file moving is not critical
+  }
+}
+
+// ============================================================================
 // IMPORT OPERATIONS
 // ============================================================================
 
 /**
- * Import a chapter's questions
+ * Import a chapter's questions (supports both nested and flat structures)
  */
-async function importChapter(chapterPath, subject, chapterName, options) {
+async function importChapter(chapterPath, subject, chapterName, options, isFlat = false) {
   const results = {
     total: 0,
     imported: 0,
     skipped: 0,
     errors: 0,
-    errorDetails: []
+    errorDetails: [],
+    processedFiles: [] // Track files for movement
   };
 
-  const jsonFile = findQuestionFile(chapterPath);
-  if (!jsonFile) {
+  // Get all JSON files in the folder
+  const jsonFiles = findQuestionFiles(chapterPath);
+
+  if (jsonFiles.length === 0) {
     console.log(`   ⚠️  No question file found in ${chapterName}`);
     return results;
   }
 
-  console.log(`   📖 Processing ${chapterName}...`);
-
-  const questions = parseQuestionsFile(jsonFile);
-  results.total = questions.length;
-
-  if (questions.length === 0) {
-    console.log(`   ⚠️  No questions found in ${chapterName}`);
-    return results;
+  if (isFlat) {
+    console.log(`   📖 Processing ${chapterName} (flat structure: ${jsonFiles.length} file(s))...`);
+  } else {
+    console.log(`   📖 Processing ${chapterName}...`);
   }
 
-  // Check which questions already exist
-  const questionIds = questions.map(q => q.questionId);
-  const questionRefs = questionIds.map(id => db.collection('questions').doc(id));
-  const existingDocs = await retryFirestoreOperation(() => db.getAll(...questionRefs));
-  const existingIds = new Set(existingDocs.filter(doc => doc.exists).map(doc => doc.id));
+  // Process each JSON file
+  for (const jsonFile of jsonFiles) {
+    const fileName = path.basename(jsonFile);
+    if (jsonFiles.length > 1) {
+      console.log(`      📄 Processing ${fileName}...`);
+    }
 
-  // Process questions
-  const batch = db.batch();
-  let batchCount = 0;
-
-  for (const { questionId, questionData } of questions) {
+    let questions;
     try {
-      // Skip existing
-      if (existingIds.has(questionId)) {
-        results.skipped++;
-        continue;
-      }
-
-      // Validate
-      const validation = validateQuestion(questionId, questionData);
-      if (!validation.valid) {
-        results.errors++;
-        results.errorDetails.push({ questionId, error: validation.errors.join(', ') });
-        continue;
-      }
-
-      if (options.preview) {
-        results.imported++;
-        continue;
-      }
-
-      // Process document
-      const doc = processQuestionDocument(questionId, questionData, false);
-
-      // Upload image if needed
-      if (doc.has_image && !options.skipImages) {
-        const imageFileName = `${questionId}.svg`;
-        const imagePath = path.join(chapterPath, imageFileName);
-        const storagePath = `${STORAGE_PATHS.questions}/${imageFileName}`;
-
-        const imageUrl = await uploadImage(imagePath, storagePath);
-        doc.image_url = imageUrl;
-      }
-
-      // Add to batch
-      const ref = db.collection('questions').doc(questionId);
-      batch.set(ref, doc);
-      batchCount++;
-      results.imported++;
-
-      // Commit batch if full
-      if (batchCount >= BATCH_SIZE) {
-        await retryFirestoreOperation(() => batch.commit());
-        batchCount = 0;
-      }
-
+      questions = parseQuestionsFile(jsonFile);
     } catch (error) {
+      console.error(`      ❌ Failed to parse ${fileName}: ${error.message}`);
       results.errors++;
-      results.errorDetails.push({ questionId, error: error.message });
+      continue;
+    }
+
+    results.total += questions.length;
+
+    if (questions.length === 0) {
+      console.log(`      ⚠️  No questions found in ${fileName}`);
+      continue;
+    }
+
+    // Check which questions already exist
+    const questionIds = questions.map(q => q.questionId);
+    const questionRefs = questionIds.map(id => db.collection('questions').doc(id));
+    const existingDocs = await retryFirestoreOperation(() => db.getAll(...questionRefs));
+    const existingIds = new Set(existingDocs.filter(doc => doc.exists).map(doc => doc.id));
+
+    // Process questions
+    const batch = db.batch();
+    let batchCount = 0;
+    const importedFromThisFile = [];
+
+    for (const { questionId, questionData } of questions) {
+      try {
+        // Skip existing
+        if (existingIds.has(questionId)) {
+          results.skipped++;
+          continue;
+        }
+
+        // Validate
+        const validation = validateQuestion(questionId, questionData);
+        if (!validation.valid) {
+          results.errors++;
+          results.errorDetails.push({ questionId, error: validation.errors.join(', ') });
+          continue;
+        }
+
+        if (options.preview) {
+          results.imported++;
+          importedFromThisFile.push(questionId);
+          continue;
+        }
+
+        // Process document
+        const doc = processQuestionDocument(questionId, questionData, false);
+
+        // Upload image if needed
+        if (doc.has_image && !options.skipImages) {
+          const imageFileName = `${questionId}.svg`;
+          const imagePath = path.join(chapterPath, imageFileName);
+          const storagePath = `${STORAGE_PATHS.questions}/${imageFileName}`;
+
+          const imageUrl = await uploadImage(imagePath, storagePath);
+          doc.image_url = imageUrl;
+        }
+
+        // Add to batch
+        const ref = db.collection('questions').doc(questionId);
+        batch.set(ref, doc);
+        batchCount++;
+        results.imported++;
+        importedFromThisFile.push(questionId);
+
+        // Commit batch if full
+        if (batchCount >= BATCH_SIZE) {
+          await retryFirestoreOperation(() => batch.commit());
+          batchCount = 0;
+        }
+
+      } catch (error) {
+        results.errors++;
+        results.errorDetails.push({ questionId, error: error.message });
+      }
+    }
+
+    // Commit remaining
+    if (batchCount > 0 && !options.preview) {
+      await retryFirestoreOperation(() => batch.commit());
+    }
+
+    // Track file for movement if any questions were imported
+    if (importedFromThisFile.length > 0) {
+      results.processedFiles.push({
+        jsonFile,
+        questionIds: importedFromThisFile
+      });
     }
   }
 
-  // Commit remaining
-  if (batchCount > 0 && !options.preview) {
-    await retryFirestoreOperation(() => batch.commit());
-  }
-
   console.log(`      ✅ ${results.imported} imported, ${results.skipped} skipped, ${results.errors} errors`);
+
+  // Move files if option is enabled and not in preview mode
+  if (options.moveFiles && !options.preview && results.processedFiles.length > 0) {
+    console.log(`      📦 Moving processed files...`);
+    for (const { jsonFile, questionIds } of results.processedFiles) {
+      await moveProcessedFiles(chapterPath, jsonFile, questionIds);
+    }
+  }
 
   return results;
 }
@@ -986,6 +1179,7 @@ async function main() {
       preview: args.includes('--preview'),
       validate: args.includes('--validate'),
       skipImages: args.includes('--skip-images'),
+      moveFiles: args.includes('--move-files'),
       dir: null,
       subject: null
     };
@@ -1019,6 +1213,7 @@ async function main() {
     console.log(`Mode: ${modeDisplay}`);
     if (!options.validate) {
       console.log(`Skip images: ${options.skipImages ? 'Yes' : 'No'}`);
+      console.log(`Move files after import: ${options.moveFiles ? 'Yes' : 'No'}`);
     }
     console.log('='.repeat(60));
 
@@ -1028,9 +1223,22 @@ async function main() {
 
     console.log('📊 Found:');
     for (const subject of structure.subjects) {
-      console.log(`   ${subject}: ${structure.chapters[subject].length} chapters`);
+      const chapterCount = structure.chapters[subject].length;
+      const hasFlat = structure.chapters[subject].some(c => c.isFlat);
+      const hasSuperFlat = structure.chapters[subject].some(c => c.isSuperFlat);
+
+      let structureType = '';
+      if (hasSuperFlat) {
+        structureType = ' (super-flat: all files in root)';
+      } else if (hasFlat) {
+        structureType = ' (flat structure)';
+      }
+
+      console.log(`   ${subject}: ${chapterCount} chapter${chapterCount !== 1 ? 's' : ''}${structureType}`);
       for (const chapter of structure.chapters[subject]) {
-        console.log(`      └─ ${chapter.name}`);
+        if (!chapter.isFlat && !chapter.isSuperFlat) {
+          console.log(`      └─ ${chapter.name}`);
+        }
       }
     }
     if (structure.assessmentFolder) {
@@ -1071,7 +1279,7 @@ async function main() {
       console.log(`\n📚 ${subject}`);
 
       for (const chapter of structure.chapters[subject]) {
-        const results = await importChapter(chapter.path, subject, chapter.name, options);
+        const results = await importChapter(chapter.path, subject, chapter.name, options, chapter.isFlat);
         allResults.questions.total += results.total;
         allResults.questions.imported += results.imported;
         allResults.questions.skipped += results.skipped;
