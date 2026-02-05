@@ -269,22 +269,45 @@ function extractIRTParameters(questionData) {
 function validateQuestion(questionId, questionData) {
   const errors = [];
 
-  if (!questionData.subject) errors.push('Missing subject');
-  if (!questionData.chapter) errors.push('Missing chapter');
-  if (!questionData.question_type) errors.push('Missing question_type');
-  if (!questionData.question_text) errors.push('Missing question_text');
-  if (!questionData.correct_answer && questionData.correct_answer !== 0) errors.push('Missing correct_answer');
+  // Required fields
+  if (!questionData.subject) {
+    errors.push('Missing subject');
+  }
+  if (!questionData.chapter) {
+    errors.push('Missing chapter');
+  }
+  if (!questionData.question_type) {
+    errors.push('Missing question_type');
+  }
+  if (!questionData.question_text) {
+    errors.push('Missing question_text');
+  }
+  if (!questionData.correct_answer && questionData.correct_answer !== 0) {
+    errors.push('Missing correct_answer');
+  }
 
+  // IRT parameters
   if (questionData.difficulty_irt === undefined &&
     (!questionData.irt_parameters || questionData.irt_parameters.difficulty_b === undefined)) {
     errors.push('Missing difficulty_irt or irt_parameters.difficulty_b');
   }
 
+  // Question type validation
   if (questionData.question_type === 'mcq_single' && !questionData.options) {
     errors.push('MCQ questions must have options');
   }
 
-  return { valid: errors.length === 0, errors };
+  // Numerical questions must have answer_range or correct_answer_exact
+  if (questionData.question_type === 'numerical') {
+    if (!questionData.answer_range && !questionData.correct_answer_exact) {
+      errors.push('Numerical questions must have answer_range or correct_answer_exact');
+    }
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors
+  };
 }
 
 /**
