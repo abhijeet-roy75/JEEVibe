@@ -890,16 +890,79 @@ router.put('/profile/target-exam-date',
       "chemistry": ["chemistry_periodic_table", "chemistry_chemical_bonding"],
       "mathematics": []  // Empty - continue with month_2 math
     },
-    // ... months 4-24
+    // ... months 4-19
+    "month_20": {
+      "physics": ["physics_modern_physics_advanced"],  // Last physics chapter
+      "chemistry": [],  // Chemistry curriculum complete (finished at month 18)
+      "mathematics": ["mathematics_probability_distributions"]
+    },
+    "month_21": {
+      "physics": [],  // Physics curriculum complete - revision phase starts
+      "chemistry": [],  // Revision phase
+      "mathematics": ["mathematics_calculus_applications"]  // Last math chapter
+    },
+    "month_22": {
+      "physics": [],  // Revision and mock tests
+      "chemistry": [],  // Revision and mock tests
+      "mathematics": []  // Math curriculum complete - revision phase starts
+    },
+    "month_23": {
+      "physics": [],  // Intensive revision and full-length mock tests
+      "chemistry": [],
+      "mathematics": []
+    },
+    "month_24": {
+      "physics": [],  // Final revision, exam strategies, last-minute tips
+      "chemistry": [],
+      "mathematics": []
+    }
   }
 }
 ```
 
 **Handling Empty Months:**
 - **Empty array (`[]`)**: No new chapters unlock for that subject in that month
-- **Rationale**: Some chapters require multiple months to master (e.g., Organic Chemistry, Calculus)
+- **Rationale**: Two scenarios for empty months:
+  1. **Within the curriculum**: Chapter requires multiple months to master (e.g., Organic Chemistry, Calculus)
+  2. **Post-curriculum**: All chapters completed, remaining time is for revision/practice/mock tests
 - **Student Experience**: Students continue practicing the previously unlocked chapters
-- **UI Message**: "No new chapters this month - focus on mastering current topics!"
+- **UI Message**:
+  - During curriculum: "No new chapters this month - focus on mastering current topics!"
+  - Post-curriculum: "All chapters completed! Focus on revision and mock tests."
+
+**Variable-Length Subject Timelines:**
+- **Not all subjects need 24 months of new content**
+- Examples:
+  - Physics: 20 months of chapters → months 21-24 are revision only
+  - Chemistry: 18 months of chapters → months 19-24 are revision only
+  - Mathematics: 22 months of chapters → months 23-24 are revision only
+- **Implementation**: Empty arrays for all subjects after curriculum completion
+  ```javascript
+  "month_21": {
+    "physics": [],  // Curriculum complete, revision phase
+    "chemistry": [],  // Curriculum complete, revision phase
+    "mathematics": ["mathematics_advanced_calculus_applications"]  // Still adding content
+  }
+  ```
+
+**Mobile UI Handling:**
+When displaying chapter unlock status to students, check if all chapters for a subject are unlocked:
+```dart
+// In chapter practice screen
+String getSubjectStatusMessage(String subject, int currentMonth, List<String> unlockedChapters, int totalChapters) {
+  if (unlockedChapters.length == totalChapters) {
+    return 'All $subject chapters unlocked! 🎉\nFocus on revision and mock tests.';
+  }
+
+  // Check if current month has new chapters
+  final currentMonthData = schedule['month_$currentMonth'][subject.toLowerCase()];
+  if (currentMonthData.isEmpty) {
+    return 'No new chapters this month.\nKeep practicing current topics!';
+  }
+
+  return '${unlockedChapters.length}/$totalChapters chapters unlocked';
+}
+```
 
 ### File: `backend/scripts/seed-countdown-schedule.js`
 
@@ -953,11 +1016,28 @@ async function seedSchedule() {
     console.log(`Loading schedule from: ${scheduleFilePath}`);
     console.log(`Found ${Object.keys(scheduleData.timeline).length} months in timeline`);
 
-    // Validate that we have months 1-24
+    // Validate that we have months 1-24 (all must exist, even if empty)
     for (let i = 1; i <= 24; i++) {
       if (!scheduleData.timeline[`month_${i}`]) {
         throw new Error(`Missing month_${i} in timeline data`);
       }
+
+      // Validate each month has all three subjects (can be empty arrays)
+      const monthData = scheduleData.timeline[`month_${i}`];
+      ['physics', 'chemistry', 'mathematics'].forEach(subject => {
+        if (!Array.isArray(monthData[subject])) {
+          throw new Error(`Month ${i} missing ${subject} array`);
+        }
+      });
+    }
+
+    // Count total chapters per subject (for logging)
+    const chapterCounts = { physics: 0, chemistry: 0, mathematics: 0 };
+    for (let i = 1; i <= 24; i++) {
+      const monthData = scheduleData.timeline[`month_${i}`];
+      chapterCounts.physics += monthData.physics.length;
+      chapterCounts.chemistry += monthData.chemistry.length;
+      chapterCounts.mathematics += monthData.mathematics.length;
     }
 
     await db.collection('unlock_schedules').doc('v1_countdown').set(COUNTDOWN_SCHEDULE);
@@ -965,6 +1045,10 @@ async function seedSchedule() {
     console.log('   - Version:', COUNTDOWN_SCHEDULE.version);
     console.log('   - Type:', COUNTDOWN_SCHEDULE.type);
     console.log('   - Months:', Object.keys(scheduleData.timeline).length);
+    console.log('   - Total chapters:');
+    console.log('     • Physics:', chapterCounts.physics);
+    console.log('     • Chemistry:', chapterCounts.chemistry);
+    console.log('     • Mathematics:', chapterCounts.mathematics);
   } catch (error) {
     console.error('❌ Error seeding schedule:', error);
     process.exit(1);
