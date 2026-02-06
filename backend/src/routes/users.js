@@ -154,6 +154,8 @@ router.post('/profile',
     }),
     body('currentClass').optional().isIn(['11', '12', 'Other'])
       .withMessage('Invalid currentClass. Must be "11", "12", or "Other"'),
+    body('jeeTargetExamDate').optional().matches(/^\d{4}-(01|04)$/)
+      .withMessage('jeeTargetExamDate must be in YYYY-MM format (01 for January, 04 for April)'),
     body('isEnrolledInCoaching').optional().isBoolean()
       .withMessage('isEnrolledInCoaching must be a boolean (true or false)'),
   ],
