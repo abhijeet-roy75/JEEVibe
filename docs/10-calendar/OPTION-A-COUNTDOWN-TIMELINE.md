@@ -275,21 +275,640 @@ for (let m = 1; m <= currentMonth; m++) {
 - Fix needed: Replace with `jeeTargetExamDate` dropdown (same as onboarding)
 - File: `mobile/lib/screens/profile/profile_edit_screen.dart`
 
+**7. Chapter Practice & Daily Quiz Integration (CONFIRMED)**
+- All users (FREE/PRO/ULTRA) follow the same chapter unlock schedule
+- Chapter practice and daily quiz must only use unlocked chapters
+- Tier differences: question limits and daily chapter limits (not unlock schedule)
+
+---
+
+## Chapter Practice & Daily Quiz Integration
+
+### Overview
+
+The chapter unlock system integrates with existing features to ensure all content respects the pedagogical timeline:
+
+| Feature | Integration Point | Behavior |
+|---------|------------------|----------|
+| **Chapter Practice** | Chapter selection screen | Show all chapters with lock/unlock states |
+| **Daily Quiz** | Question selection | Only select from unlocked chapters |
+| **Dashboard (Home)** | Recommended chapters | Show 3 unlocked chapters based on adaptive logic |
+| **Focus Areas** | Week planning | Only show unlocked chapters |
+
+---
+
+### Chapter Practice - Tier-Based Limits
+
+**All tiers follow the same unlock schedule.** Tier differences apply to usage limits only:
+
+| Tier | Questions/Chapter | Chapters/Day | Can Retry? | Unlock Schedule |
+|------|-------------------|--------------|------------|-----------------|
+| **FREE** | 5 questions | 5 chapters max | No (uses daily slot) | Same as Pro/Ultra |
+| **PRO** | 15 questions | Unlimited | Yes | Same as Free |
+| **ULTRA** | 15 questions | Unlimited | Yes | Same as Free |
+
+#### FREE Tier Behavior
+
+**Daily Chapter Limit**: 5 chapters per day (rolling 24-hour window)
+- Each chapter practice session consumes 1 slot (even if same chapter)
+- After 5 slots used: Show upgrade dialog when tapping any chapter
+
+**Question Limit**: 5 questions per chapter per session
+- After 5th question: Show upgrade prompt with option to:
+  - **"Practice Another Chapter"** (if daily slots remain)
+  - **"Upgrade to Pro"** (if no slots remain OR want more questions)
+
+**UI Indicators**:
+```dart
+// Chapter selection header (like Snap & Solve)
+"📚 3 chapters remaining today"
+"📚 No chapters remaining - Upgrade to Pro for unlimited practice"
+
+// After 5th question in a session
+"You've completed 5 questions in this chapter.
+Upgrade to Pro for 10 more questions per chapter!"
+
+[Practice Another Chapter]  [Upgrade to Pro ⭐]
+```
+
+#### PRO/ULTRA Tier Behavior
+
+**No Daily Limits**: Unlimited chapter practice sessions
+**Question Limit**: 15 questions per chapter per session
+**Can Retry**: Can practice same chapter multiple times per day
+
+---
+
+### Question Selection Logic - Adaptive Difficulty Bands
+
+**Current Logic**: Fixed difficulty bands (easy/medium/hard) for all students
+**New Logic**: Difficulty bands **shift based on chapter theta** (Option B)
+
+#### Adaptive Bands Formula
+
+```javascript
+// Difficulty bands adapt to student's chapter theta
+const easyMax = chapterTheta + 0.5;
+const mediumMax = chapterTheta + 1.0;
+
+// Band definitions:
+// Easy:   b ≤ chapterTheta + 0.5
+// Medium: chapterTheta + 0.5 < b ≤ chapterTheta + 1.0
+// Hard:   b > chapterTheta + 1.0
+```
+
+#### Examples by Student Ability
+
+| Student Theta | Easy Band (b ≤) | Medium Band (b range) | Hard Band (b >) | Experience |
+|---------------|-----------------|----------------------|-----------------|------------|
+| **Weak (-1.0)** | -0.5 | -0.5 to 0.0 | > 0.0 | Progressive but manageable |
+| **Average (0.0)** | 0.5 | 0.5 to 1.0 | > 1.0 | Standard progression |
+| **Strong (+1.5)** | 2.0 | 2.0 to 2.5 | > 2.5 | Challenging throughout |
+
+#### Selection Algorithm (Updated)
+
+```javascript
+/**
+ * Select 15 questions with adaptive difficulty bands
+ *
+ * @param {Array} questions - All available questions for chapter
+ * @param {Map} history - Question history (unseen/wrong/correct)
+ * @param {number} chapterTheta - Student's theta for this chapter
+ * @param {number} totalCount - Total questions to select (default: 15)
+ * @returns {Array} 15 questions ordered easy → medium → hard
+ */
+function selectAdaptiveDifficultyQuestions(questions, history, chapterTheta, totalCount = 15) {
+  // Step 1: Define adaptive bands
+  const easyMax = chapterTheta + 0.5;
+  const mediumMax = chapterTheta + 1.0;
+
+  // Step 2: Classify and score each question
+  const scoredQuestions = questions.map(q => {
+    const b = q.irt_parameters?.difficulty_b ?? 0;
+
+    // Determine band
+    let band;
+    if (b <= easyMax) band = 'easy';
+    else if (b <= mediumMax) band = 'medium';
+    else band = 'hard';
+
+    // Priority: 3 = unseen, 2 = wrong, 1 = correct
+    const historyEntry = history.get(q.question_id);
+    let priority = 0;
+    if (!historyEntry) priority = 3;
+    else if (!historyEntry.lastCorrect) priority = 2;
+    else priority = 1;
+
+    return { ...q, _band: band, _priority: priority, _difficulty: b };
+  });
+
+  // Step 3: Group by band
+  const bands = {
+    easy: scoredQuestions.filter(q => q._band === 'easy'),
+    medium: scoredQuestions.filter(q => q._band === 'medium'),
+    hard: scoredQuestions.filter(q => q._band === 'hard')
+  };
+
+  // Step 4: Sort each band (priority desc, then difficulty asc)
+  Object.values(bands).forEach(band => {
+    band.sort((a, b) => {
+      if (b._priority !== a._priority) return b._priority - a._priority;
+      return a._difficulty - b._difficulty;
+    });
+  });
+
+  // Step 5: Select ~5 from each band
+  const selected = [];
+  const targetPerBand = Math.floor(totalCount / 3);
+
+  selected.push(...bands.easy.slice(0, targetPerBand));
+  selected.push(...bands.medium.slice(0, targetPerBand));
+  selected.push(...bands.hard.slice(0, totalCount - selected.length));
+
+  // Step 6: Fill remaining if needed
+  if (selected.length < totalCount) {
+    const selectedIds = new Set(selected.map(q => q.question_id));
+    const remaining = scoredQuestions
+      .filter(q => !selectedIds.has(q.question_id))
+      .sort((a, b) => a._difficulty - b._difficulty);
+    selected.push(...remaining.slice(0, totalCount - selected.length));
+  }
+
+  return selected;
+}
+```
+
+**Benefits of Adaptive Bands**:
+- ✅ **Maintains progression**: Every student sees Easy → Medium → Hard
+- ✅ **Personalized difficulty**: Strong students get harder "easy" questions
+- ✅ **IRT-aligned**: Questions near student's ability level
+- ✅ **Builds confidence**: Weak students can succeed on "easy" questions
+- ✅ **Prevents frustration**: No overwhelming jumps in difficulty
+
+**Changes to Existing Code**:
+- File: `backend/src/services/chapterPracticeService.js`
+- Function: `selectDifficultyProgressiveQuestions` → Rename to `selectAdaptiveDifficultyQuestions`
+- Update lines 183-283 to use adaptive band calculation
+- Add `chapterTheta` parameter to function signature
+
+---
+
+### Daily Quiz - Unlocked Chapters Filter
+
+**CRITICAL REQUIREMENT**: Daily quiz must **only select questions from unlocked chapters**.
+
+#### Current Daily Quiz Logic
+
+Location: `backend/src/services/dailyQuizService.js`
+
+Current question selection does NOT filter by unlocked chapters. It selects from all chapters.
+
+#### Required Changes
+
+**Step 1**: Import chapter unlock service
+```javascript
+const { getUnlockedChapters } = require('./chapterUnlockService');
+```
+
+**Step 2**: Filter questions by unlocked chapters
+```javascript
+async function generateDailyQuiz(userId, date) {
+  // ... existing code ...
+
+  // NEW: Get unlocked chapters for this user
+  const unlockedData = await getUnlockedChapters(userId);
+  const unlockedChapterKeys = new Set(unlockedData.unlockedChapterKeys);
+
+  logger.info('Daily quiz - unlocked chapters filter', {
+    userId,
+    totalUnlocked: unlockedChapterKeys.size,
+    currentMonth: unlockedData.currentMonth,
+    usingHighWaterMark: unlockedData.usingHighWaterMark
+  });
+
+  // Filter candidate questions to only unlocked chapters
+  const candidateQuestions = allQuestions.filter(q => {
+    const chapterKey = q.chapter_key;
+    const isUnlocked = unlockedChapterKeys.has(chapterKey);
+
+    if (!isUnlocked) {
+      logger.debug('Daily quiz - skipping locked chapter', {
+        userId,
+        chapterKey,
+        questionId: q.question_id
+      });
+    }
+
+    return isUnlocked;
+  });
+
+  if (candidateQuestions.length === 0) {
+    throw new Error('No questions available from unlocked chapters. Please check your JEE target date.');
+  }
+
+  // ... continue with existing IRT selection from candidateQuestions ...
+}
+```
+
+**Step 3**: Update question selection by subject
+```javascript
+// When selecting questions per subject, ensure they're from unlocked chapters
+const physicsQuestions = candidateQuestions.filter(q =>
+  q.subject === 'Physics' && unlockedChapterKeys.has(q.chapter_key)
+);
+const chemistryQuestions = candidateQuestions.filter(q =>
+  q.subject === 'Chemistry' && unlockedChapterKeys.has(q.chapter_key)
+);
+const mathQuestions = candidateQuestions.filter(q =>
+  q.subject === 'Mathematics' && unlockedChapterKeys.has(q.chapter_key)
+);
+```
+
+**Edge Cases**:
+1. **Student with no unlocked chapters**: Should never happen (month 1 always has chapters)
+2. **Very early in timeline**: Might have <10 questions available → Generate quiz with available count
+3. **Post-exam students**: All chapters unlocked, quiz works normally
+
+---
+
+### Dashboard - Recommended Chapters (3 Chapters)
+
+**Current Behavior**: Show 3 recommended chapters based on adaptive performance
+**New Behavior**: Show 3 recommended chapters **from unlocked chapters only**
+
+#### Selection Logic (Option B - Confirmed)
+
+Keep adaptive selection but filter by unlocked chapters:
+
+```javascript
+async function getRecommendedChapters(userId, limit = 3) {
+  // Get unlocked chapters
+  const unlockedData = await getUnlockedChapters(userId);
+  const unlockedChapterKeys = new Set(unlockedData.unlockedChapterKeys);
+
+  // Get user theta data
+  const userData = await getUserData(userId);
+  const thetaByChapter = userData.theta_by_chapter || {};
+
+  // Filter to unlocked chapters with performance data
+  const unlockedChaptersWithTheta = Object.entries(thetaByChapter)
+    .filter(([chapterKey, _]) => unlockedChapterKeys.has(chapterKey))
+    .map(([chapterKey, data]) => ({
+      chapterKey,
+      theta: data.theta || 0,
+      accuracy: data.accuracy || 0,
+      attempts: data.attempts || 0,
+      lastPracticed: data.last_practiced || null
+    }));
+
+  // Adaptive selection: prioritize weak chapters (low theta/accuracy)
+  const recommended = unlockedChaptersWithTheta
+    .sort((a, b) => {
+      // Primary: lowest accuracy with at least 3 attempts
+      if (a.attempts >= 3 && b.attempts >= 3) {
+        return a.accuracy - b.accuracy;
+      }
+      // Secondary: lowest theta
+      return a.theta - b.theta;
+    })
+    .slice(0, limit);
+
+  return recommended;
+}
+```
+
+**UI Display**:
+```dart
+// Home screen header
+"Focus on these chapters"
+
+// 3 chapter cards (only unlocked chapters)
+ChapterCard(
+  chapterName: "Electrostatics",
+  subject: "Physics",
+  progress: "12/15 questions",
+  isUnlocked: true,
+  isRecommended: true,
+  onTap: () => navigateToChapterPractice(chapterKey)
+)
+
+// "Explore All Chapters" button
+ElevatedButton(
+  child: Text("Explore All Chapters"),
+  onPressed: () => navigateToChapterList()
+)
+```
+
+---
+
+### Chapter List Screen - Lock/Unlock States
+
+**New Screen**: Show all 67 chapters with visual lock/unlock indicators
+
+#### UI Layout
+
+```dart
+class ChapterListScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('All Chapters')),
+      body: Column(
+        children: [
+          // Tier-specific header (FREE tier only)
+          if (isFree) FreeChapterLimitHeader(),
+
+          // Subject tabs
+          TabBar(tabs: [
+            Tab(text: 'Physics'),
+            Tab(text: 'Chemistry'),
+            Tab(text: 'Mathematics'),
+          ]),
+
+          // Chapter list with lock states
+          Expanded(
+            child: ListView.builder(
+              itemBuilder: (context, index) {
+                final chapter = chapters[index];
+                return ChapterListTile(
+                  chapter: chapter,
+                  isUnlocked: unlockedChapterKeys.contains(chapter.key),
+                  onTap: () => handleChapterTap(chapter),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+#### Chapter Tile States
+
+```dart
+class ChapterListTile extends StatelessWidget {
+  final Chapter chapter;
+  final bool isUnlocked;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: SubjectIcon(subject: chapter.subject),
+      title: Text(chapter.name),
+      subtitle: Text(_getSubtitle()),
+      trailing: _getTrailingIcon(),
+      onTap: isUnlocked ? onTap : _showLockedDialog,
+      enabled: isUnlocked,
+    );
+  }
+
+  String _getSubtitle() {
+    if (isUnlocked && chapter.completed) return '✓ Completed';
+    if (isUnlocked && chapter.inProgress) return '${chapter.questionsAnswered}/15 questions';
+    if (isUnlocked) return 'Available now';
+    return 'Locked'; // No "unlocks in X months" message
+  }
+
+  Widget _getTrailingIcon() {
+    if (isUnlocked && chapter.completed) return Icon(Icons.check_circle, color: Colors.green);
+    if (isUnlocked) return Icon(Icons.chevron_right);
+    return Icon(Icons.lock, color: Colors.grey);
+  }
+
+  void _showLockedDialog() {
+    // Simple locked message - no unlock date shown
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Chapter Locked'),
+        content: Text('This chapter will unlock as you progress through your JEE preparation timeline. Focus on your current chapters first!'),
+        actions: [
+          TextButton(
+            child: Text('Got it'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+#### Visual Indicators
+
+| State | Icon | Text Color | Subtitle | Clickable? |
+|-------|------|------------|----------|------------|
+| **Unlocked - Not Started** | `chevron_right` | Black | "Available now" | ✅ Yes |
+| **Unlocked - In Progress** | `chevron_right` | Black | "5/15 questions" | ✅ Yes |
+| **Unlocked - Completed** | `check_circle` (green) | Black | "✓ Completed" | ✅ Yes (can retry) |
+| **Locked** | `lock` (grey) | Grey | "Locked" | ❌ No (shows dialog) |
+
+**Note**: We do NOT show "Unlocks in Month X" or countdown timers to avoid coupling UI to schedule implementation details.
+
+---
+
+### FREE Tier - Daily Chapter Limit UI
+
+#### Chapter Selection Header
+
+```dart
+class FreeChapterLimitHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      color: Colors.blue.shade50,
+      child: Row(
+        children: [
+          Icon(Icons.auto_stories, color: Colors.blue),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _getHeaderText(),
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                if (chaptersRemaining > 0)
+                  Text(
+                    'Practice sessions reset in ${hoursUntilReset}h',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+              ],
+            ),
+          ),
+          if (chaptersRemaining == 0)
+            TextButton(
+              child: Text('Upgrade'),
+              onPressed: () => navigateToUpgrade(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _getHeaderText() {
+    if (chaptersRemaining == 0) {
+      return '📚 No chapters remaining today';
+    }
+    return '📚 $chaptersRemaining chapter${chaptersRemaining == 1 ? '' : 's'} remaining today';
+  }
+}
+```
+
+#### After 5th Question in Chapter
+
+```dart
+void _showUpgradePrompt(BuildContext context) {
+  final hasChaptersRemaining = freeChaptersRemaining > 0;
+
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Chapter Complete!'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('You\'ve completed 5 questions in this chapter.'),
+          SizedBox(height: 16),
+          Text(
+            'Upgrade to Pro for 10 more questions per chapter!',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+      actions: [
+        if (hasChaptersRemaining)
+          TextButton(
+            child: Text('Practice Another Chapter'),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context); // Return to chapter list
+            },
+          ),
+        ElevatedButton(
+          child: Text('Upgrade to Pro ⭐'),
+          onPressed: () {
+            Navigator.pop(context);
+            navigateToUpgrade();
+          },
+        ),
+      ],
+    ),
+  );
+}
+```
+
+---
+
+### Implementation Checklist
+
+#### Backend Changes
+
+**chapterPracticeService.js**:
+- [ ] Update `selectDifficultyProgressiveQuestions` → `selectAdaptiveDifficultyQuestions`
+- [ ] Add `chapterTheta` parameter
+- [ ] Implement adaptive band calculation: `easyMax = theta + 0.5`, `mediumMax = theta + 1.0`
+- [ ] Update band filtering logic
+
+**dailyQuizService.js**:
+- [ ] Import `getUnlockedChapters` from chapterUnlockService
+- [ ] Add unlocked chapters filter in `generateDailyQuiz`
+- [ ] Filter questions by `unlockedChapterKeys.has(chapterKey)`
+- [ ] Add logging for unlocked chapter count
+- [ ] Handle edge case: no unlocked chapters (should never happen)
+
+**tierConfigService.js**:
+- [ ] Update FREE tier: `chapter_practice_per_chapter: 5` (was 15)
+- [ ] Update FREE tier: Add `chapter_practice_daily_limit: 5`
+- [ ] Update PRO tier: `chapter_practice_per_chapter: 15` (was 20)
+- [ ] Update ULTRA tier: `chapter_practice_per_chapter: 15` (was 50)
+- [ ] Remove `chapter_practice_weekly_per_subject` limit (deprecated)
+
+**chapterPractice.js** (routes):
+- [ ] Update `/generate` endpoint to check daily limit for FREE tier
+- [ ] Add response field: `daily_chapters_remaining` for FREE tier
+- [ ] Return 403 with upgrade prompt when daily limit reached
+
+#### Mobile Changes
+
+**Chapter List Screen**:
+- [ ] Create `ChapterListScreen` widget
+- [ ] Fetch unlocked chapters via API
+- [ ] Implement `ChapterListTile` with lock/unlock states
+- [ ] Add subject tabs (Physics/Chemistry/Math)
+- [ ] Add FREE tier header showing daily limit
+- [ ] Show locked dialog for locked chapters (no unlock date)
+
+**Chapter Practice Flow**:
+- [ ] Add question counter UI (e.g., "Question 3 of 5" for FREE)
+- [ ] After 5th question (FREE): Show upgrade prompt
+- [ ] Track daily chapter usage for FREE tier
+- [ ] Update home screen to show "X chapters remaining" for FREE
+
+**Home Screen**:
+- [ ] Update recommended chapters to only show unlocked
+- [ ] Change "Explore All Chapters" button to open ChapterListScreen
+
+#### Testing
+
+- [ ] Unit test: Adaptive difficulty band calculation
+- [ ] Unit test: Daily quiz unlocked chapters filter
+- [ ] Integration test: FREE tier daily limit enforcement
+- [ ] Integration test: Chapter unlock state display
+- [ ] E2E test: Full chapter practice flow for FREE/PRO/ULTRA
+
+---
+
 ### Implementation Status
 
-**✅ Completed:**
+**✅ Completed (Planning Phase):**
 - Onboarding screens updated (Step 1 & Step 2)
 - `jeeTargetExamDate` field added to UserProfile model
 - Migration script created and run (8 existing users migrated)
 - Backend validation added for jeeTargetExamDate format
+- Data file validated and ready: `inputs/chapter_unlock/countdown_24month_schedule_CORRECTED.json`
+- QA validation completed (94% syllabus coverage - 63/67 chapters)
+- Chapter practice & daily quiz integration plan finalized
+- Adaptive difficulty band algorithm designed (Option B)
+- Tier limits confirmed for FREE/PRO/ULTRA
 
-**⏳ Pending:**
-- Fix profile edit screen (replace currentClass with jeeTargetExamDate)
-- Create `backend/src/services/chapterUnlockService.js`
-- Create `backend/scripts/seed-countdown-schedule.js`
-- User to provide `backend/data/countdown_24month_schedule.json`
-- Create API endpoint `/api/chapters/unlocked`
-- Update Daily Quiz service to filter by unlocked chapters
+**⏳ Pending (Implementation Phase):**
+
+**Core Chapter Unlock System:**
+- [ ] Fix profile edit screen (replace currentClass with jeeTargetExamDate)
+- [ ] Create `backend/src/services/chapterUnlockService.js`
+- [ ] Create `backend/scripts/seed-countdown-schedule.js`
+- [ ] Copy data file to `backend/data/countdown_24month_schedule.json`
+- [ ] Create API endpoint `/api/chapters/unlocked`
+- [ ] Seed schedule to Firestore
+
+**Chapter Practice Integration:**
+- [ ] Update tier limits in `tierConfigService.js` (FREE: 5q/5ch, PRO/ULTRA: 15q/unlimited)
+- [ ] Implement adaptive difficulty bands in `chapterPracticeService.js`
+- [ ] Add daily chapter limit tracking for FREE tier
+- [ ] Update `/generate` endpoint with daily limit enforcement
+- [ ] Create Chapter List Screen (mobile) with lock/unlock states
+- [ ] Add FREE tier header showing "X chapters remaining"
+- [ ] Implement upgrade prompts (after 5 questions, after daily limit)
+
+**Daily Quiz Integration:**
+- [ ] Add unlocked chapters filter in `dailyQuizService.js`
+- [ ] Update question selection to only use unlocked chapters
+- [ ] Add logging for unlocked chapter count
+
+**Home Screen Integration:**
+- [ ] Update recommended chapters to filter by unlocked
+- [ ] Keep existing adaptive logic (Option B)
+
+**Testing & Validation:**
+- [ ] Run validation script before seeding
+- [ ] Unit tests for adaptive difficulty bands
+- [ ] Integration tests for tier limits
+- [ ] E2E tests for chapter practice flow
 
 ---
 
