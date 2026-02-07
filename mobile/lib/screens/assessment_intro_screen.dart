@@ -1765,7 +1765,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     );
   }
 
-  Widget _buildChapterUnlockProgress() {
+  Widget _buildChapterUnlockProgress(bool isLocked) {
     if (_chapterUnlockData == null) return const SizedBox.shrink();
 
     final unlockedChapters = _chapterUnlockData!['unlockedChapters'] as List? ?? [];
@@ -1836,9 +1836,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          // View All button - opens chapter list screen
+          // View All button - opens chapter list screen (disabled until user completes quiz)
           TextButton(
-            onPressed: () {
+            onPressed: isLocked ? null : () {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => const ChapterListScreen(),
@@ -1853,7 +1853,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             child: Text(
               'View All',
               style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.primaryPurple,
+                color: isLocked ? AppColors.textTertiary : AppColors.primaryPurple,
                 fontWeight: FontWeight.w600,
                 fontSize: 12,
               ),
@@ -2151,7 +2151,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             const SizedBox(height: 12),
             // Chapter unlock progress bar (if data available)
             if (_chapterUnlockData != null && _chapterUnlockData!.isNotEmpty) ...[
-              _buildChapterUnlockProgress(),
+              _buildChapterUnlockProgress(shouldShowUnlockMessage),
               const SizedBox(height: 12),
             ],
             // Show unlock message if assessment not completed OR no quizzes completed
