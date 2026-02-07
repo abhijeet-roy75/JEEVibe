@@ -496,7 +496,6 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 // Refresh data when returning from profile (user may have edited their profile)
                 debugPrint('🔄 Returned from profile, reloading data...');
                 await _loadData();
-                });
               },
               child: Container(
                 padding: const EdgeInsets.all(8),

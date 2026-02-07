@@ -384,6 +384,33 @@
         { "fieldPath": "teacher_id", "order": "ASCENDING" },
         { "fieldPath": "week_end", "order": "DESCENDING" }
       ]
+    },
+    {
+      "comment": "Data Extraction: Assessment responses by user and completion date",
+      "collectionGroup": "assessment_responses",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "user_id", "order": "ASCENDING" },
+        { "fieldPath": "completed_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Data Extraction: Chapter practice sessions by user and start date",
+      "collectionGroup": "chapter_practice_sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "user_id", "order": "ASCENDING" },
+        { "fieldPath": "started_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Data Extraction: Theta snapshots by user and snapshot date",
+      "collectionGroup": "theta_snapshots",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "user_id", "order": "ASCENDING" },
+        { "fieldPath": "snapshot_date", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [

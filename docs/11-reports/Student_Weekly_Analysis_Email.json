@@ -1,0 +1,46 @@
+Fields to use for this report. Field Summary by Tier
+
+TIER 1: You Already Have ✅
+json
+{
+  "question_id": "PHY_ELEC_001",
+  "subject": "Physics",
+  "chapter": "Electrostatics",
+  "correct_answer": "C",
+  "is_correct": false,
+  "time_spent_seconds": 127,
+  "answered_at": "2026-02-05T06:14:01.669Z",
+  "source": "daily_quiz"
+}
+
+TIER 2: Critical for MPA ⭐
+json
+{
+  "user_answer": "B",                     // ← Store in response
+  "sub_topics": [
+        "Gauss's Law"
+    ],          // ← Join from QB
+  "concepts_tested": [
+        "Symmetry"
+    ],        // ← Join from QB
+  "difficulty_irt": 1.2,                  // ← Join from QB
+  "distractor_analysis": {                // ← Join from QB
+    "B": "Used Coulomb instead of Gauss"
+  
+    }
+}
+
+TIER 3: Enhanced Metadata 🟡
+json
+{
+  "metadata": {
+    "common_mistakes": [...
+        ],             // ← Join from QB
+    "key_insight": "...",                 // ← Join from QB
+    "hint": "...",                        // ← Join from QB
+    "formula_used": "...",                // ← Join from QB
+    "prerequisite_concepts": [...
+        ]        // ← Join from QB
+  
+    }
+}
