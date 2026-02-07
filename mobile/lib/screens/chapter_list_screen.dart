@@ -158,9 +158,9 @@ class _ChapterListScreenState extends State<ChapterListScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundColor,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
@@ -168,7 +168,7 @@ class _ChapterListScreenState extends State<ChapterListScreen>
         ),
         title: Text(
           'All Chapters',
-          style: AppTextStyles.heading2.copyWith(color: AppColors.textPrimary),
+          style: AppTextStyles.headerMedium.copyWith(color: AppColors.textPrimary),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(100),
@@ -180,9 +180,9 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.cardBackground,
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.borderColor),
+                    border: Border.all(color: AppColors.borderDefault),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -192,12 +192,12 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                           const Icon(
                             Icons.calendar_today,
                             size: 16,
-                            color: AppColors.accentBlue,
+                            color: AppColors.info,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             '$_monthsUntilExam months to JEE',
-                            style: AppTextStyles.bodyText.copyWith(
+                            style: AppTextStyles.bodyMedium.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -205,8 +205,8 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                       ),
                       Text(
                         '${_unlockedChapterKeys.length}/63 unlocked',
-                        style: AppTextStyles.bodyText.copyWith(
-                          color: AppColors.accentGreen,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.success,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -218,9 +218,9 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                 controller: _tabController,
                 labelColor: AppColors.textPrimary,
                 unselectedLabelColor: AppColors.textSecondary,
-                indicatorColor: AppColors.primaryPurple,
+                indicatorColor: AppColors.primary,
                 indicatorWeight: 3,
-                labelStyle: AppTextStyles.bodyText.copyWith(
+                labelStyle: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
                 tabs: const [
@@ -250,7 +250,7 @@ class _ChapterListScreenState extends State<ChapterListScreen>
     if (isLoading || _isLoadingUnlockData) {
       return const Center(
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryPurple),
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
         ),
       );
     }
@@ -265,13 +265,13 @@ class _ChapterListScreenState extends State<ChapterListScreen>
               const Icon(
                 Icons.error_outline,
                 size: 64,
-                color: AppColors.errorRed,
+                color: AppColors.error,
               ),
               const SizedBox(height: 16),
               Text(
                 error,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.bodyText.copyWith(
+                style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
@@ -279,7 +279,7 @@ class _ChapterListScreenState extends State<ChapterListScreen>
               ElevatedButton(
                 onPressed: () => _loadChaptersForSubject(subject),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryPurple,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                 ),
                 child: const Text('Retry'),
@@ -294,7 +294,7 @@ class _ChapterListScreenState extends State<ChapterListScreen>
       return Center(
         child: Text(
           'No chapters available',
-          style: AppTextStyles.bodyText.copyWith(
+          style: AppTextStyles.bodyMedium.copyWith(
             color: AppColors.textSecondary,
           ),
         ),
@@ -315,13 +315,16 @@ class _ChapterListScreenState extends State<ChapterListScreen>
   }
 
   Widget _buildChapterCard(ChapterMastery chapter, bool isUnlocked) {
+    // Get subject from chapter key (format: "physics_laws_of_motion")
+    final subject = chapter.chapterKey.split('_')[0];
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isUnlocked ? AppColors.borderColor : AppColors.textTertiary.withOpacity(0.3),
+          color: isUnlocked ? AppColors.borderDefault : AppColors.textTertiary.withOpacity(0.3),
         ),
       ),
       child: Material(
@@ -335,7 +338,7 @@ class _ChapterListScreenState extends State<ChapterListScreen>
               arguments: {
                 'chapterKey': chapter.chapterKey,
                 'chapterName': chapter.chapterName,
-                'subject': chapter.subject,
+                'subject': subject,
               },
             );
           } : null,
@@ -349,13 +352,13 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                   height: 40,
                   decoration: BoxDecoration(
                     color: isUnlocked
-                        ? AppColors.accentGreen.withOpacity(0.1)
+                        ? AppColors.success.withOpacity(0.1)
                         : AppColors.textTertiary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     isUnlocked ? Icons.lock_open : Icons.lock,
-                    color: isUnlocked ? AppColors.accentGreen : AppColors.textTertiary,
+                    color: isUnlocked ? AppColors.success : AppColors.textTertiary,
                     size: 20,
                   ),
                 ),
@@ -367,33 +370,33 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                     children: [
                       Text(
                         chapter.chapterName,
-                        style: AppTextStyles.bodyText.copyWith(
+                        style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w600,
                           color: isUnlocked ? AppColors.textPrimary : AppColors.textTertiary,
                         ),
                       ),
                       const SizedBox(height: 4),
                       if (isUnlocked) ...[
-                        // Show mastery for unlocked chapters
+                        // Show percentile and attempts for unlocked chapters
                         Row(
                           children: [
                             Icon(
                               Icons.analytics,
                               size: 14,
-                              color: _getMasteryColor(chapter.masteryLevel),
+                              color: _getPercentileColor(chapter.percentile),
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${chapter.masteryLevel}% mastery',
-                              style: AppTextStyles.caption.copyWith(
-                                color: _getMasteryColor(chapter.masteryLevel),
+                              '${chapter.percentile.toInt()}th percentile',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: _getPercentileColor(chapter.percentile),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              '${chapter.questionsAnswered} questions',
-                              style: AppTextStyles.caption.copyWith(
+                              '${chapter.total} questions',
+                              style: AppTextStyles.bodySmall.copyWith(
                                 color: AppColors.textSecondary,
                               ),
                             ),
@@ -403,7 +406,7 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                         // Show lock message for locked chapters
                         Text(
                           'Unlocks as you progress',
-                          style: AppTextStyles.caption.copyWith(
+                          style: AppTextStyles.bodySmall.copyWith(
                             color: AppColors.textTertiary,
                             fontStyle: FontStyle.italic,
                           ),
@@ -427,9 +430,9 @@ class _ChapterListScreenState extends State<ChapterListScreen>
     );
   }
 
-  Color _getMasteryColor(int masteryLevel) {
-    if (masteryLevel >= 80) return AppColors.accentGreen;
-    if (masteryLevel >= 50) return AppColors.accentOrange;
-    return AppColors.errorRed;
+  Color _getPercentileColor(double percentile) {
+    if (percentile >= 70) return AppColors.success;
+    if (percentile >= 40) return AppColors.warning;
+    return AppColors.error;
   }
 }
