@@ -86,6 +86,26 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
     _trackSession();
   }
 
+  /// Refresh chapter unlock data (called when returning from profile edit)
+  Future<void> _refreshChapterUnlockData() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final token = await authService.getIdToken();
+
+    if (token != null) {
+      try {
+        final unlockData = await ApiService.getUnlockedChapters(authToken: token);
+        if (mounted && unlockData.isNotEmpty) {
+          setState(() {
+            _chapterUnlockData = unlockData;
+          });
+          debugPrint('Chapter unlock data refreshed: month=${unlockData['currentMonth']}, unlocked=${(unlockData['unlockedChapters'] as List?)?.length ?? 0}');
+        }
+      } catch (e) {
+        debugPrint('Error refreshing chapter unlock data: $e');
+      }
+    }
+  }
+
   Future<void> _trackSession() async {
     try {
       final sessionService = SessionTrackingService();
@@ -222,9 +242,15 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
 
             // Process chapter unlock data
             final unlockData = results[3] as Map<String, dynamic>?;
+            debugPrint('📊 Chapter unlock API response: ${unlockData?.keys.toList()}');
             if (unlockData != null && unlockData.isNotEmpty && mounted) {
-              _chapterUnlockData = unlockData;
-              debugPrint('Chapter unlock data loaded: month=${unlockData['currentMonth']}, unlocked=${(unlockData['unlockedChapters'] as List?)?.length ?? 0}');
+              setState(() {
+                _chapterUnlockData = unlockData;
+              });
+              final unlockedList = unlockData['unlockedChapters'] as List? ?? [];
+              debugPrint('✅ Chapter unlock data loaded: month=${unlockData['currentMonth']}, monthsUntil=${unlockData['monthsUntilExam']}, unlocked=${unlockedList.length}/63');
+            } else {
+              debugPrint('⚠️ No chapter unlock data received or mounted=false');
             }
           } catch (e) {
             debugPrint('Error in parallel data fetch: $e');
@@ -462,13 +488,14 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
       trailing: widget.isInBottomNav
           ? _buildTierBadge()
           : GestureDetector(
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const ProfileViewScreen()),
-                ).then((_) {
-                  // Refresh data when returning from profile (user may have edited their profile)
-                  _loadData();
+                );
+                // Refresh data when returning from profile (user may have edited their profile)
+                debugPrint('🔄 Returned from profile, reloading data...');
+                await _loadData();
                 });
               },
               child: Container(
