@@ -41,6 +41,7 @@ import '../widgets/shareable_journey_card.dart';
 import 'subscription/paywall_screen.dart';
 import 'chapter_practice/chapter_practice_loading_screen.dart';
 import 'chapter_practice/chapter_picker_screen.dart';
+import 'chapter_list_screen.dart';
 import 'mock_test/mock_test_home_screen.dart';
 import '../providers/mock_test_provider.dart';
 
@@ -1835,14 +1836,12 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          // View All button - will open chapter list screen
+          // View All button - opens chapter list screen
           TextButton(
             onPressed: () {
-              // TODO: Navigate to Chapter List Screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Chapter List Screen coming soon!'),
-                  duration: Duration(seconds: 2),
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ChapterListScreen(),
                 ),
               );
             },
