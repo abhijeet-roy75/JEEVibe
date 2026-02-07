@@ -7,7 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateUser } = require('../middleware/auth');
 const { getUnlockedChapters, isChapterUnlocked, TOTAL_TIMELINE_MONTHS } = require('../services/chapterUnlockService');
 const logger = require('../utils/logger');
 
@@ -15,9 +15,9 @@ const logger = require('../utils/logger');
  * GET /api/chapters/unlocked
  * Get all unlocked chapters for the authenticated user
  */
-router.get('/unlocked', authenticateToken, async (req, res) => {
+router.get('/unlocked', authenticateUser, async (req, res) => {
   try {
-    const userId = req.user.uid;
+    const userId = req.userId;
     const result = await getUnlockedChapters(userId);
 
     res.json({
@@ -34,7 +34,7 @@ router.get('/unlocked', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    logger.error('Error getting unlocked chapters', { error: error.message, userId: req.user?.uid });
+    logger.error('Error getting unlocked chapters', { error: error.message, userId: req.userId });
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -43,9 +43,9 @@ router.get('/unlocked', authenticateToken, async (req, res) => {
  * GET /api/chapters/:chapterKey/unlock-status
  * Check if a specific chapter is unlocked
  */
-router.get('/:chapterKey/unlock-status', authenticateToken, async (req, res) => {
+router.get('/:chapterKey/unlock-status', authenticateUser, async (req, res) => {
   try {
-    const userId = req.user.uid;
+    const userId = req.userId;
     const { chapterKey } = req.params;
 
     const unlocked = await isChapterUnlocked(userId, chapterKey);
@@ -60,7 +60,7 @@ router.get('/:chapterKey/unlock-status', authenticateToken, async (req, res) => 
   } catch (error) {
     logger.error('Error checking chapter unlock status', {
       error: error.message,
-      userId: req.user?.uid,
+      userId: req.userId,
       chapterKey: req.params.chapterKey
     });
     res.status(500).json({ success: false, error: error.message });
