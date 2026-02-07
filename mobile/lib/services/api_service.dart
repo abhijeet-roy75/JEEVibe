@@ -1128,6 +1128,55 @@ class ApiService {
     });
   }
 
+  /// Get unlocked chapters based on JEE target exam date
+  /// Returns unlocked chapters, current month, and timeline info
+  /// Requires Firebase ID token for authentication
+  static Future<Map<String, dynamic>> getUnlockedChapters({
+    required String authToken,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/chapters/unlocked'),
+          headers: headers,
+        ).timeout(const Duration(seconds: 15));
+
+        // Check for session expiry
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData['data'] as Map<String, dynamic>;
+          } else {
+            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            throw Exception(errorMsg);
+          }
+        } else {
+          // Check if response is HTML (server error page) vs JSON
+          if (response.body.trimLeft().startsWith('<!DOCTYPE') ||
+              response.body.trimLeft().startsWith('<html')) {
+            throw Exception('Server temporarily unavailable (${response.statusCode}). Please try again.');
+          }
+          final errorData = json.decode(response.body);
+          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get unlocked chapters';
+          throw Exception(errorMsg);
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      } on FormatException {
+        throw Exception('Server returned invalid response. Please try again.');
+      } catch (e) {
+        throw Exception('Failed to get unlocked chapters: ${e.toString()}');
+      }
+    });
+  }
+
   /// Get daily quiz history for the History screen
   /// Returns list of completed quizzes with pagination
   /// Requires Firebase ID token for authentication

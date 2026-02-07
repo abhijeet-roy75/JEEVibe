@@ -72,6 +72,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   // Analytics overview for cumulative progress display
   AnalyticsOverview? _analyticsOverview;
 
+  // Chapter unlock data for JEE countdown timeline
+  Map<String, dynamic>? _chapterUnlockData;
+
   // Screenshot controller for image sharing
   final _screenshotController = ScreenshotController();
 
@@ -132,7 +135,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
 
         if (token != null) {
           try {
-            // Fetch all data in parallel (including subscription for tier badge)
+            // Fetch all data in parallel (including subscription for tier badge and chapter unlock)
             final results = await Future.wait([
               ApiService.getAssessmentResults(
                 authToken: token,
@@ -148,6 +151,10 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               AnalyticsService.getOverview(authToken: token).catchError((e) {
                 debugPrint('Error fetching analytics overview: $e');
                 return null;
+              }),
+              ApiService.getUnlockedChapters(authToken: token).catchError((e) {
+                debugPrint('Error fetching chapter unlock data: $e');
+                return <String, dynamic>{};
               }),
               // Fetch subscription to ensure tier badge shows correct data
               SubscriptionService().fetchStatus(token).catchError((e) {
@@ -210,6 +217,13 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             if (overview != null && mounted) {
               _analyticsOverview = overview;
               debugPrint('Analytics overview loaded: quizzes=${overview.stats.quizzesCompleted}, questions=${overview.stats.questionsSolved}');
+            }
+
+            // Process chapter unlock data
+            final unlockData = results[3] as Map<String, dynamic>?;
+            if (unlockData != null && unlockData.isNotEmpty && mounted) {
+              _chapterUnlockData = unlockData;
+              debugPrint('Chapter unlock data loaded: month=${unlockData['currentMonth']}, unlocked=${(unlockData['unlockedChapters'] as List?)?.length ?? 0}');
             }
           } catch (e) {
             debugPrint('Error in parallel data fetch: $e');
@@ -1602,6 +1616,11 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            // JEE Countdown Timeline Section (if data available)
+            if (_chapterUnlockData != null && _chapterUnlockData!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildJeeCountdownSection(),
+            ],
             // Chat with Priya button (Ultra tier only)
             if (hasAiTutorAccess) ...[
               const SizedBox(height: 16),
@@ -1621,6 +1640,227 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildJeeCountdownSection() {
+    if (_chapterUnlockData == null) return const SizedBox.shrink();
+
+    final monthsUntilExam = _chapterUnlockData!['monthsUntilExam'] as int? ?? 0;
+    final unlockedChapters = _chapterUnlockData!['unlockedChapters'] as List? ?? [];
+    final totalMonths = _chapterUnlockData!['totalMonths'] as int? ?? 24;
+    final currentMonth = _chapterUnlockData!['currentMonth'] as int? ?? 1;
+
+    // Get jeeTargetExamDate from user profile to show the actual exam date
+    final userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
+    final examDate = userProfileProvider.profile?.jeeTargetExamDate ?? '';
+
+    // Parse exam date (format: "YYYY-MM")
+    String examLabel = '';
+    if (examDate.isNotEmpty) {
+      final parts = examDate.split('-');
+      if (parts.length == 2) {
+        final year = parts[0];
+        final month = parts[1];
+        examLabel = month == '01' ? 'JEE January $year' : 'JEE April $year';
+      }
+    }
+
+    // Calculate progress percentage (total chapters is approximately 63)
+    const totalChapters = 63;
+    final progress = unlockedChapters.length / totalChapters;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cardLightPurple.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.primaryPurple.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Exam date and countdown row
+          Row(
+            children: [
+              const Icon(
+                Icons.calendar_today,
+                size: 16,
+                color: AppColors.primaryPurple,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  examLabel.isNotEmpty ? examLabel : 'Your JEE Target',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryPurple,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  monthsUntilExam == 0
+                      ? 'Exam time!'
+                      : '$monthsUntilExam ${monthsUntilExam == 1 ? 'month' : 'months'} left',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Progress row
+          Row(
+            children: [
+              const Icon(
+                Icons.auto_stories,
+                size: 16,
+                color: AppColors.primaryPurple,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${unlockedChapters.length}/$totalChapters chapters unlocked',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textMedium,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress.clamp(0.0, 1.0),
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          AppColors.primaryPurple,
+                        ),
+                        minHeight: 6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChapterUnlockProgress() {
+    if (_chapterUnlockData == null) return const SizedBox.shrink();
+
+    final unlockedChapters = _chapterUnlockData!['unlockedChapters'] as List? ?? [];
+    final monthsUntilExam = _chapterUnlockData!['monthsUntilExam'] as int? ?? 0;
+
+    // Calculate progress percentage (total chapters is approximately 63)
+    const totalChapters = 63;
+    final progress = unlockedChapters.length / totalChapters;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.cardLightPurple.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Chapters Unlocked',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textMedium,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progress.clamp(0.0, 1.0),
+                          backgroundColor: Colors.grey.shade200,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            AppColors.primaryPurple,
+                          ),
+                          minHeight: 6,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${unlockedChapters.length}/$totalChapters',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryPurple,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                if (monthsUntilExam > 0) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    '$monthsUntilExam ${monthsUntilExam == 1 ? 'month' : 'months'} to JEE',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textLight,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // View All button - will open chapter list screen
+          TextButton(
+            onPressed: () {
+              // TODO: Navigate to Chapter List Screen
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Chapter List Screen coming soon!'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              'View All',
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.primaryPurple,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1910,6 +2150,11 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
               ],
             ),
             const SizedBox(height: 12),
+            // Chapter unlock progress bar (if data available)
+            if (_chapterUnlockData != null && _chapterUnlockData!.isNotEmpty) ...[
+              _buildChapterUnlockProgress(),
+              const SizedBox(height: 12),
+            ],
             // Show unlock message if assessment not completed OR no quizzes completed
             if (shouldShowUnlockMessage)
               Padding(
