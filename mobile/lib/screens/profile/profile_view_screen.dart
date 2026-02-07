@@ -676,14 +676,31 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       }
     }
 
-    // Format currentClass to display "Class 11" or "Class 12" instead of just "11" or "12"
+    // Format JEE target exam date to display "January 2027" or "April 2027"
+    String? jeeTargetDisplay;
+    if (profile.jeeTargetExamDate != null && profile.jeeTargetExamDate!.isNotEmpty) {
+      final parts = profile.jeeTargetExamDate!.split('-');
+      if (parts.length == 2) {
+        final year = parts[0];
+        final month = parts[1];
+        final monthName = month == '01' ? 'January' : month == '04' ? 'April' : month;
+        jeeTargetDisplay = '$monthName $year';
+      }
+    }
+
+    // Legacy: Format currentClass to display "Class 11" or "Class 12" (for users who haven't migrated)
     final currentClassDisplay = profile.currentClass != null && profile.currentClass != 'Other'
         ? 'Class ${profile.currentClass}'
         : profile.currentClass;
 
-    addField(Icons.class_outlined, 'Current Class', currentClassDisplay);
+    // Show JEE Target Exam Date (new field) or fall back to Current Class (legacy)
+    if (jeeTargetDisplay != null) {
+      addField(Icons.calendar_today_outlined, 'JEE Target Exam', jeeTargetDisplay);
+    } else if (currentClassDisplay != null) {
+      addField(Icons.class_outlined, 'Current Class', currentClassDisplay);
+    }
+
     addField(Icons.school_outlined, 'Coaching Enrollment', profile.isEnrolledInCoaching == true ? 'Yes' : profile.isEnrolledInCoaching == false ? 'No' : null);
-    addField(Icons.school_outlined, 'Target Exam', profile.targetExam);
     addField(Icons.email_outlined, 'Email', profile.email);
     addField(Icons.location_on_outlined, 'State', profile.state);
     addField(Icons.workspace_premium_outlined, 'Dream Branch', profile.dreamBranch);
