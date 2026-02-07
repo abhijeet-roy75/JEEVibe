@@ -366,30 +366,33 @@ describe('getDifficultyBand', () => {
 describe('selectDifficultyProgressiveQuestions', () => {
   describe('difficulty ordering', () => {
     test('should return questions in easy → medium → hard order', () => {
+      const chapterTheta = 0; // Student at average ability
       const questions = [
         { question_id: 'hard1', irt_parameters: { difficulty_b: 1.5 } },
         { question_id: 'easy1', irt_parameters: { difficulty_b: 0.3 } },
-        { question_id: 'medium1', irt_parameters: { difficulty_b: 1.0 } },
+        { question_id: 'medium1', irt_parameters: { difficulty_b: 0.8 } },
       ];
       const history = new Map();
 
-      const result = selectDifficultyProgressiveQuestions(questions, history, 3);
+      const result = selectDifficultyProgressiveQuestions(questions, history, chapterTheta, 3);
 
       expect(result[0]._band).toBe('easy');
       expect(result[1]._band).toBe('medium');
       expect(result[2]._band).toBe('hard');
     });
 
-    test('should classify questions correctly by difficulty_b thresholds', () => {
+    test('should classify questions correctly by adaptive difficulty_b thresholds', () => {
+      const chapterTheta = 0; // Student at average ability
+      // With theta=0: easy <= 0.5, medium <= 1.0, hard > 1.0
       const questions = [
-        { question_id: 'q1', irt_parameters: { difficulty_b: 0.7 } },  // easy
-        { question_id: 'q2', irt_parameters: { difficulty_b: 0.71 } }, // medium
-        { question_id: 'q3', irt_parameters: { difficulty_b: 1.2 } },  // medium
-        { question_id: 'q4', irt_parameters: { difficulty_b: 1.21 } }, // hard
+        { question_id: 'q1', irt_parameters: { difficulty_b: 0.4 } },  // easy
+        { question_id: 'q2', irt_parameters: { difficulty_b: 0.6 } }, // medium
+        { question_id: 'q3', irt_parameters: { difficulty_b: 0.9 } },  // medium
+        { question_id: 'q4', irt_parameters: { difficulty_b: 1.2 } }, // hard
       ];
       const history = new Map();
 
-      const result = selectDifficultyProgressiveQuestions(questions, history, 4);
+      const result = selectDifficultyProgressiveQuestions(questions, history, chapterTheta, 4);
 
       expect(result.filter(q => q._band === 'easy').length).toBe(1);
       expect(result.filter(q => q._band === 'medium').length).toBe(2);
@@ -397,17 +400,18 @@ describe('selectDifficultyProgressiveQuestions', () => {
     });
 
     test('should maintain band order even with mixed input', () => {
+      const chapterTheta = 0;
       const questions = [
         { question_id: 'h1', irt_parameters: { difficulty_b: 2.0 } },
         { question_id: 'e1', irt_parameters: { difficulty_b: 0.1 } },
-        { question_id: 'm1', irt_parameters: { difficulty_b: 0.9 } },
+        { question_id: 'm1', irt_parameters: { difficulty_b: 0.7 } },
         { question_id: 'h2', irt_parameters: { difficulty_b: 1.8 } },
         { question_id: 'e2', irt_parameters: { difficulty_b: 0.3 } },
-        { question_id: 'm2', irt_parameters: { difficulty_b: 1.1 } },
+        { question_id: 'm2', irt_parameters: { difficulty_b: 0.9 } },
       ];
       const history = new Map();
 
-      const result = selectDifficultyProgressiveQuestions(questions, history, 6);
+      const result = selectDifficultyProgressiveQuestions(questions, history, chapterTheta, 6);
 
       // First two should be easy
       expect(result[0]._band).toBe('easy');
@@ -423,15 +427,16 @@ describe('selectDifficultyProgressiveQuestions', () => {
 
   describe('priority within bands', () => {
     test('should prioritize unseen questions over previously wrong within same band', () => {
+      const chapterTheta = 0;
       const questions = [
-        { question_id: 'seen_wrong', irt_parameters: { difficulty_b: 0.5 } },
-        { question_id: 'unseen', irt_parameters: { difficulty_b: 0.5 } },
+        { question_id: 'seen_wrong', irt_parameters: { difficulty_b: 0.3 } },
+        { question_id: 'unseen', irt_parameters: { difficulty_b: 0.3 } },
       ];
       const history = new Map([
         ['seen_wrong', { seen: true, lastCorrect: false }]
       ]);
 
-      const result = selectDifficultyProgressiveQuestions(questions, history, 2);
+      const result = selectDifficultyProgressiveQuestions(questions, history, chapterTheta, 2);
 
       // Both are easy, but unseen should come first due to priority
       expect(result[0].question_id).toBe('unseen');
@@ -441,16 +446,17 @@ describe('selectDifficultyProgressiveQuestions', () => {
     });
 
     test('should prioritize previously wrong over previously correct within same band', () => {
+      const chapterTheta = 0;
       const questions = [
-        { question_id: 'correct', irt_parameters: { difficulty_b: 0.5 } },
-        { question_id: 'wrong', irt_parameters: { difficulty_b: 0.5 } },
+        { question_id: 'correct', irt_parameters: { difficulty_b: 0.3 } },
+        { question_id: 'wrong', irt_parameters: { difficulty_b: 0.3 } },
       ];
       const history = new Map([
         ['correct', { seen: true, lastCorrect: true }],
         ['wrong', { seen: true, lastCorrect: false }]
       ]);
 
-      const result = selectDifficultyProgressiveQuestions(questions, history, 2);
+      const result = selectDifficultyProgressiveQuestions(questions, history, chapterTheta, 2);
 
       expect(result[0].question_id).toBe('wrong');
       expect(result[0]._priority).toBe(2);
@@ -459,18 +465,19 @@ describe('selectDifficultyProgressiveQuestions', () => {
     });
 
     test('should use priority ordering across all bands', () => {
+      const chapterTheta = 0;
       const questions = [
         { question_id: 'easy_correct', irt_parameters: { difficulty_b: 0.3 } },
         { question_id: 'easy_unseen', irt_parameters: { difficulty_b: 0.4 } },
-        { question_id: 'medium_correct', irt_parameters: { difficulty_b: 1.0 } },
-        { question_id: 'medium_unseen', irt_parameters: { difficulty_b: 1.1 } },
+        { question_id: 'medium_correct', irt_parameters: { difficulty_b: 0.8 } },
+        { question_id: 'medium_unseen', irt_parameters: { difficulty_b: 0.9 } },
       ];
       const history = new Map([
         ['easy_correct', { seen: true, lastCorrect: true }],
         ['medium_correct', { seen: true, lastCorrect: true }]
       ]);
 
-      const result = selectDifficultyProgressiveQuestions(questions, history, 4);
+      const result = selectDifficultyProgressiveQuestions(questions, history, chapterTheta, 4);
 
       // Easy band: unseen before correct
       const easyQuestions = result.filter(q => q._band === 'easy');
@@ -484,6 +491,7 @@ describe('selectDifficultyProgressiveQuestions', () => {
 
   describe('fallback behavior', () => {
     test('should fill from other bands when a band has insufficient questions', () => {
+      const chapterTheta = 0;
       // Only easy questions available
       const questions = Array(15).fill(null).map((_, i) => ({
         question_id: `easy_${i}`,
@@ -491,7 +499,7 @@ describe('selectDifficultyProgressiveQuestions', () => {
       }));
       const history = new Map();
 
-      const result = selectDifficultyProgressiveQuestions(questions, history, 15);
+      const result = selectDifficultyProgressiveQuestions(questions, history, chapterTheta, 15);
 
       expect(result.length).toBe(15);
       // All should be easy since that's all we have
@@ -499,16 +507,17 @@ describe('selectDifficultyProgressiveQuestions', () => {
     });
 
     test('should handle missing bands gracefully', () => {
+      const chapterTheta = 0;
       // Only medium and hard questions
       const questions = [
-        { question_id: 'm1', irt_parameters: { difficulty_b: 0.9 } },
-        { question_id: 'm2', irt_parameters: { difficulty_b: 1.0 } },
+        { question_id: 'm1', irt_parameters: { difficulty_b: 0.7 } },
+        { question_id: 'm2', irt_parameters: { difficulty_b: 0.9 } },
         { question_id: 'h1', irt_parameters: { difficulty_b: 1.5 } },
         { question_id: 'h2', irt_parameters: { difficulty_b: 2.0 } },
       ];
       const history = new Map();
 
-      const result = selectDifficultyProgressiveQuestions(questions, history, 4);
+      const result = selectDifficultyProgressiveQuestions(questions, history, chapterTheta, 4);
 
       expect(result.length).toBe(4);
       // Should still order medium before hard
@@ -519,58 +528,62 @@ describe('selectDifficultyProgressiveQuestions', () => {
     });
 
     test('should handle empty question pool gracefully', () => {
-      const result = selectDifficultyProgressiveQuestions([], new Map(), 15);
+      const result = selectDifficultyProgressiveQuestions([], new Map(), 0, 15);
       expect(result.length).toBe(0);
     });
 
     test('should handle null/undefined questions gracefully', () => {
-      const result = selectDifficultyProgressiveQuestions(null, new Map(), 15);
+      const result = selectDifficultyProgressiveQuestions(null, new Map(), 0, 15);
       expect(result.length).toBe(0);
     });
 
     test('should respect totalCount parameter', () => {
+      const chapterTheta = 0;
       const questions = Array(20).fill(null).map((_, i) => ({
         question_id: `q_${i}`,
         irt_parameters: { difficulty_b: i * 0.1 }
       }));
 
-      const result = selectDifficultyProgressiveQuestions(questions, new Map(), 10);
+      const result = selectDifficultyProgressiveQuestions(questions, new Map(), chapterTheta, 10);
       expect(result.length).toBe(10);
     });
 
     test('should return all questions if pool is smaller than requested', () => {
+      const chapterTheta = 0;
       const questions = [
-        { question_id: 'q1', irt_parameters: { difficulty_b: 0.5 } },
-        { question_id: 'q2', irt_parameters: { difficulty_b: 1.0 } },
+        { question_id: 'q1', irt_parameters: { difficulty_b: 0.3 } },
+        { question_id: 'q2', irt_parameters: { difficulty_b: 0.8 } },
       ];
 
-      const result = selectDifficultyProgressiveQuestions(questions, new Map(), 15);
+      const result = selectDifficultyProgressiveQuestions(questions, new Map(), chapterTheta, 15);
       expect(result.length).toBe(2);
     });
   });
 
   describe('legacy difficulty field support', () => {
     test('should use difficulty_irt when irt_parameters not present', () => {
+      const chapterTheta = 0;
       const questions = [
-        { question_id: 'q1', difficulty_irt: 0.5 },
+        { question_id: 'q1', difficulty_irt: 0.3 },
         { question_id: 'q2', irt_parameters: { difficulty_b: 1.5 } },
       ];
 
-      const result = selectDifficultyProgressiveQuestions(questions, new Map(), 2);
+      const result = selectDifficultyProgressiveQuestions(questions, new Map(), chapterTheta, 2);
 
-      expect(result[0]._band).toBe('easy');  // 0.5 is easy
-      expect(result[1]._band).toBe('hard');  // 1.5 is hard
+      expect(result[0]._band).toBe('easy');  // 0.3 is easy (< 0.5)
+      expect(result[1]._band).toBe('hard');  // 1.5 is hard (> 1.0)
     });
 
     test('should handle mixed difficulty field formats', () => {
+      const chapterTheta = 0;
       const questions = [
         { question_id: 'q1', difficulty_irt: 0.3 },
-        { question_id: 'q2', irt_parameters: { difficulty_b: 0.9 } },
+        { question_id: 'q2', irt_parameters: { difficulty_b: 0.7 } },
         { question_id: 'q3', difficulty_irt: 1.5 },
         { question_id: 'q4', irt_parameters: { difficulty_b: 1.8 } },
       ];
 
-      const result = selectDifficultyProgressiveQuestions(questions, new Map(), 4);
+      const result = selectDifficultyProgressiveQuestions(questions, new Map(), chapterTheta, 4);
 
       // Should still order correctly
       expect(result[0]._band).toBe('easy');
@@ -582,23 +595,24 @@ describe('selectDifficultyProgressiveQuestions', () => {
 
   describe('target distribution', () => {
     test('should aim for balanced distribution across bands when possible', () => {
-      // Create 6 questions of each difficulty
+      const chapterTheta = 0;
+      // Create 6 questions of each difficulty (theta=0: easy<=0.5, medium<=1.0, hard>1.0)
       const questions = [
         ...Array(6).fill(null).map((_, i) => ({
           question_id: `easy_${i}`,
-          irt_parameters: { difficulty_b: 0.3 + i * 0.05 }
+          irt_parameters: { difficulty_b: 0.2 + i * 0.04 } // 0.2 to 0.4
         })),
         ...Array(6).fill(null).map((_, i) => ({
           question_id: `medium_${i}`,
-          irt_parameters: { difficulty_b: 0.8 + i * 0.05 }
+          irt_parameters: { difficulty_b: 0.6 + i * 0.06 } // 0.6 to 0.9
         })),
         ...Array(6).fill(null).map((_, i) => ({
           question_id: `hard_${i}`,
-          irt_parameters: { difficulty_b: 1.3 + i * 0.1 }
+          irt_parameters: { difficulty_b: 1.2 + i * 0.1 } // 1.2 to 1.7
         })),
       ];
 
-      const result = selectDifficultyProgressiveQuestions(questions, new Map(), 15);
+      const result = selectDifficultyProgressiveQuestions(questions, new Map(), chapterTheta, 15);
 
       expect(result.length).toBe(15);
 
