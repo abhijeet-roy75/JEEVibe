@@ -172,18 +172,24 @@ function getDifficultyBand(question) {
 }
 
 /**
- * Select questions with difficulty progression (easy → medium → hard)
- * This helps weak students "ease into" the chapter by starting with easier questions
+ * Select questions with adaptive difficulty progression (easy → medium → hard)
+ * Difficulty bands adapt to student's chapter theta for personalized progression
  *
  * @param {Array} questions - All available questions for the chapter
  * @param {Map} history - Question history map from getQuestionHistory
+ * @param {number} chapterTheta - Student's theta for this chapter (defaults to 0)
  * @param {number} totalCount - Total questions to select (default: 15)
  * @returns {Array} Questions ordered by difficulty band (easy first, hard last)
  */
-function selectDifficultyProgressiveQuestions(questions, history, totalCount = DEFAULT_QUESTION_COUNT) {
+function selectDifficultyProgressiveQuestions(questions, history, chapterTheta = 0, totalCount = DEFAULT_QUESTION_COUNT) {
   if (!questions || questions.length === 0) {
     return [];
   }
+
+  // Calculate adaptive difficulty bands based on student's chapter theta
+  // This ensures progression is appropriate for the student's ability level
+  const easyMax = chapterTheta + 0.5;
+  const mediumMax = chapterTheta + 1.0;
 
   // Step 1: Add priority scores and difficulty info to each question
   const scoredQuestions = questions.map(q => {
@@ -201,7 +207,16 @@ function selectDifficultyProgressiveQuestions(questions, history, totalCount = D
     }
 
     const b = q.irt_parameters?.difficulty_b ?? q.difficulty_irt ?? 0;
-    const band = getDifficultyBand(q);
+
+    // Determine adaptive band based on chapter theta
+    let band;
+    if (b <= easyMax) {
+      band = 'easy';
+    } else if (b <= mediumMax) {
+      band = 'medium';
+    } else {
+      band = 'hard';
+    }
 
     return { ...q, _priority: priority, _difficulty: b, _band: band };
   });
@@ -473,11 +488,12 @@ async function generateChapterPractice(userId, chapterKey, questionCount = DEFAU
       });
     }
 
-    // Select questions with difficulty progression (easy → medium → hard)
-    // This helps weak students ease into the chapter
+    // Select questions with adaptive difficulty progression (easy → medium → hard)
+    // Difficulty bands adapt based on student's chapter theta
     const selectedQuestions = selectDifficultyProgressiveQuestions(
       questions,
       questionHistory,
+      chapterTheta,      // NEW: Pass chapter theta for adaptive bands
       questionCount
     );
 

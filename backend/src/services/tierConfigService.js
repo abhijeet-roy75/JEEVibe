@@ -32,8 +32,9 @@ const DEFAULT_TIER_CONFIG = {
         ai_tutor_enabled: false,
         ai_tutor_messages_daily: 0,
         chapter_practice_enabled: true,
-        chapter_practice_per_chapter: 15,
-        chapter_practice_weekly_per_subject: 1,
+        chapter_practice_per_chapter: 5,           // Updated: 5 questions per chapter
+        chapter_practice_daily_limit: 5,           // NEW: 5 chapters per day
+        chapter_practice_weekly_per_subject: -1,   // Removed (deprecated)
         mock_tests_monthly: 1,
         pyq_years_access: 2,
         offline_enabled: false,
@@ -56,8 +57,9 @@ const DEFAULT_TIER_CONFIG = {
         ai_tutor_enabled: false,
         ai_tutor_messages_daily: 0,
         chapter_practice_enabled: true,
-        chapter_practice_per_chapter: 20,
-        chapter_practice_weekly_per_subject: -1,
+        chapter_practice_per_chapter: 15,           // Updated: 15 questions per chapter
+        chapter_practice_daily_limit: -1,           // NEW: Unlimited chapters per day
+        chapter_practice_weekly_per_subject: -1,    // Removed (deprecated)
         mock_tests_monthly: 5,
         pyq_years_access: 5,
         offline_enabled: true,
@@ -108,8 +110,9 @@ const DEFAULT_TIER_CONFIG = {
         ai_tutor_enabled: true,
         ai_tutor_messages_daily: 100,   // Was -1, now 100/day
         chapter_practice_enabled: true,
-        chapter_practice_per_chapter: 50,     // Was -1, high cap
-        chapter_practice_weekly_per_subject: -1,  // Keep unlimited for weekly
+        chapter_practice_per_chapter: 15,           // Updated: 15 questions per chapter
+        chapter_practice_daily_limit: -1,           // NEW: Unlimited chapters per day
+        chapter_practice_weekly_per_subject: -1,    // Removed (deprecated)
         mock_tests_monthly: 15,         // Was -1, now 15/month
         pyq_years_access: -1,           // Keep unlimited for PYQ years
         offline_enabled: true,
