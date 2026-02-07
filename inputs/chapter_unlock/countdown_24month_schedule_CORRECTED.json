@@ -1,0 +1,258 @@
+{
+  "version": "v1_countdown",
+  "type": "countdown_24month",
+  "total_months": 24,
+  "design_notes": {
+    "timeline": "24-month countdown timeline ending at JEE exam",
+    "content_months": "Months 1-19 have new content, months 20-24 are revision",
+    "splits": "5 high-weightage chapters stretched across 2 months for deeper mastery",
+    "split_chapters": [
+      "Kinematics — unlocked month 1, continues month 2",
+      "Rotational Motion — unlocked month 4, continues month 5",
+      "Equilibrium — unlocked month 4, continues month 5",
+      "Electrostatics — unlocked month 11, continues month 12",
+      "Optics — unlocked month 15, continues month 16"
+    ],
+    "buffer_month": "Month 10 — full 11th revision before starting 12th",
+    "revision_months": "Months 20-24 — full syllabus revision + mock tests"
+  },
+  "timeline": {
+    "month_1": {
+      "physics": [
+        "physics_units_measurements",
+        "physics_kinematics"
+      ],
+      "chemistry": [
+        "chemistry_basic_concepts",
+        "chemistry_atomic_structure"
+      ],
+      "mathematics": [
+        "mathematics_sets_relations_functions"
+      ]
+    },
+    "month_2": {
+      "physics": [],
+      "chemistry": [
+        "chemistry_chemical_bonding"
+      ],
+      "mathematics": [
+        "mathematics_trigonometry"
+      ]
+    },
+    "month_3": {
+      "physics": [
+        "physics_laws_of_motion",
+        "physics_work_energy_and_power"
+      ],
+      "chemistry": [
+        "chemistry_classification_and_periodicity"
+      ],
+      "mathematics": [
+        "mathematics_complex_numbers",
+        "mathematics_permutations_and_combinations"
+      ]
+    },
+    "month_4": {
+      "physics": [
+        "physics_rotational_motion"
+      ],
+      "chemistry": [
+        "chemistry_equilibrium"
+      ],
+      "mathematics": [
+        "mathematics_binomial_theorem",
+        "mathematics_sequences_and_series"
+      ]
+    },
+    "month_5": {
+      "physics": [
+        "physics_gravitation"
+      ],
+      "chemistry": [
+        "chemistry_thermodynamics"
+      ],
+      "mathematics": [
+        "mathematics_straight_lines"
+      ]
+    },
+    "month_6": {
+      "physics": [
+        "physics_properties_of_solids_liquids",
+        "physics_thermodynamics"
+      ],
+      "chemistry": [
+        "chemistry_redox_electrochemistry",
+        "chemistry_p_block_elements"
+      ],
+      "mathematics": [
+        "mathematics_circles",
+        "mathematics_conic_sections_parabola"
+      ]
+    },
+    "month_7": {
+      "physics": [
+        "physics_kinetic_theory_of_gases",
+        "physics_oscillations_waves"
+      ],
+      "chemistry": [
+        "chemistry_general_organic_chemistry"
+      ],
+      "mathematics": [
+        "mathematics_conic_sections_ellipse_hyperbola",
+        "mathematics_three_dimensional_geometry"
+      ]
+    },
+    "month_8": {
+      "physics": [],
+      "chemistry": [
+        "chemistry_hydrocarbons"
+      ],
+      "mathematics": [
+        "mathematics_limits_continuity_differentiability",
+        "mathematics_statistics"
+      ]
+    },
+    "month_9": {
+      "physics": [
+        "physics_experimental_skills"
+      ],
+      "chemistry": [
+        "chemistry_purification_characterization",
+        "chemistry_principles_of_practical_chemistry"
+      ],
+      "mathematics": [
+        "mathematics_probability"
+      ]
+    },
+    "month_10": {
+      "physics": [],
+      "chemistry": [],
+      "mathematics": []
+    },
+    "month_11": {
+      "physics": [
+        "physics_electrostatics"
+      ],
+      "chemistry": [
+        "chemistry_solutions"
+      ],
+      "mathematics": [
+        "mathematics_inverse_trigonometry"
+      ]
+    },
+    "month_12": {
+      "physics": [
+        "physics_current_electricity"
+      ],
+      "chemistry": [
+        "chemistry_redox_electrochemistry",
+        "chemistry_chemical_kinetics"
+      ],
+      "mathematics": [
+        "mathematics_matrices_determinants"
+      ]
+    },
+    "month_13": {
+      "physics": [
+        "physics_magnetic_effects_magnetism"
+      ],
+      "chemistry": [
+        "chemistry_d_f_block_elements",
+        "chemistry_coordination_compounds"
+      ],
+      "mathematics": [
+        "mathematics_limits_continuity_differentiability",
+        "mathematics_differential_calculus_aod"
+      ]
+    },
+    "month_14": {
+      "physics": [
+        "physics_emi_ac_circuits"
+      ],
+      "chemistry": [
+        "chemistry_p_block_elements"
+      ],
+      "mathematics": [
+        "mathematics_integral_calculus_indefinite"
+      ]
+    },
+    "month_15": {
+      "physics": [
+        "physics_electromagnetic_waves",
+        "physics_optics"
+      ],
+      "chemistry": [
+        "chemistry_haloalkanes_and_haloarenes"
+      ],
+      "mathematics": [
+        "mathematics_integral_calculus_definite_area"
+      ]
+    },
+    "month_16": {
+      "physics": [],
+      "chemistry": [
+        "chemistry_alcohols_phenols_ethers"
+      ],
+      "mathematics": [
+        "mathematics_differential_equations"
+      ]
+    },
+    "month_17": {
+      "physics": [
+        "physics_dual_nature_of_radiation",
+        "physics_atoms_nuclei"
+      ],
+      "chemistry": [
+        "chemistry_aldehydes_ketones"
+      ],
+      "mathematics": [
+        "mathematics_vector_algebra",
+        "mathematics_three_dimensional_geometry"
+      ]
+    },
+    "month_18": {
+      "physics": [
+        "physics_electronic_devices"
+      ],
+      "chemistry": [
+        "chemistry_carboxylic_acids_derivatives",
+        "chemistry_amines_diazonium_salts"
+      ],
+      "mathematics": [
+        "mathematics_probability"
+      ]
+    },
+    "month_19": {
+      "physics": [],
+      "chemistry": [
+        "chemistry_biomolecules"
+      ],
+      "mathematics": []
+    },
+    "month_20": {
+      "physics": [],
+      "chemistry": [],
+      "mathematics": []
+    },
+    "month_21": {
+      "physics": [],
+      "chemistry": [],
+      "mathematics": []
+    },
+    "month_22": {
+      "physics": [],
+      "chemistry": [],
+      "mathematics": []
+    },
+    "month_23": {
+      "physics": [],
+      "chemistry": [],
+      "mathematics": []
+    },
+    "month_24": {
+      "physics": [],
+      "chemistry": [],
+      "mathematics": []
+    }
+  }
+}

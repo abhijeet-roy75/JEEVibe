@@ -13,10 +13,15 @@ Example:
 - Unlocked: Chapters scheduled for month 1
 ```
 
-**Key Decision: Support Both January and April Sessions**
-- JEE Main has 2 sessions per year: January and April
-- Students can target either session
-- April exams give students 3 extra months of preparation automatically
+**Key Decisions (FINALIZED):**
+- ✅ **24-month timeline** - keeps full 24-month structure
+- ✅ **Countdown-based unlocking** - chapters unlock based on months until exam (exam-date dependent)
+- ✅ **Revision months included** - empty arrays in JSON indicate revision months (no new chapters)
+- ✅ **Subject-specific pacing** - each subject can have different content/revision patterns
+- ✅ **Simple unlock logic** - if array has chapters → unlock them, if empty → no new chapters
+- ✅ **High-water mark pattern** - chapters never re-lock when target date changes
+- ✅ Support both January and April exam sessions
+- ✅ April exams give students 3 extra months of preparation automatically
 
 ## Pros & Cons
 
@@ -218,6 +223,73 @@ Firestore: unlock_schedules/v1_countdown
 ```
 
 **No changes needed to the source JSON file** - the seeding script handles all transformations.
+
+---
+
+## Implementation Decisions Summary
+
+### Key Decisions (February 2026)
+
+**1. Timeline Structure: 24 Months (CONFIRMED)**
+- Keep the full 24-month countdown structure
+- User will provide a single JSON file with 24 months of data
+- Formula: `currentMonth = 24 - monthsUntilExam + 1`
+- No changes needed to the existing formula
+
+**2. Countdown-Based Unlocking (CONFIRMED)**
+- Chapters unlock based on **months until exam**, not calendar month
+- Students with different exam dates get different chapters in the same calendar month
+- Example: March 2026
+  - Student A (targeting Jan 2027, 10 months away) → Month 15
+  - Student B (targeting Jan 2028, 22 months away) → Month 3
+
+**3. Revision Months via Empty Arrays (CONFIRMED)**
+- Revision months represented by empty arrays: `[]`
+- Simple rule: Array with chapters → unlock them, empty array → no new chapters
+- Each subject can have independent revision patterns
+- Revisions can be intermittent (month 10, 15) or at the end (months 21-24)
+
+**4. Simple Unlock Logic (CONFIRMED)**
+```javascript
+// Loop through months 1 to currentMonth
+for (let m = 1; m <= currentMonth; m++) {
+  const monthData = schedule.timeline[`month_${m}`];
+
+  ['physics', 'chemistry', 'mathematics'].forEach(subject => {
+    if (Array.isArray(monthData[subject]) && monthData[subject].length > 0) {
+      monthData[subject].forEach(ch => unlockedChapters.add(ch));
+    }
+    // If empty or missing, skip - no new chapters for this subject this month
+  });
+}
+```
+
+**5. High-Water Mark Pattern (CONFIRMED)**
+- Track highest month ever reached: `chapterUnlockHighWaterMark`
+- Chapters never re-lock when target date changes
+- Use `max(currentMonth, highWaterMark)` for unlocking
+- Prevents frustration when students postpone exams
+
+**6. Profile Edit Screen Update (USER REPORTED BUG)**
+- Current issue: Profile edit screen shows old `currentClass` dropdown
+- Fix needed: Replace with `jeeTargetExamDate` dropdown (same as onboarding)
+- File: `mobile/lib/screens/profile/profile_edit_screen.dart`
+
+### Implementation Status
+
+**✅ Completed:**
+- Onboarding screens updated (Step 1 & Step 2)
+- `jeeTargetExamDate` field added to UserProfile model
+- Migration script created and run (8 existing users migrated)
+- Backend validation added for jeeTargetExamDate format
+
+**⏳ Pending:**
+- Fix profile edit screen (replace currentClass with jeeTargetExamDate)
+- Create `backend/src/services/chapterUnlockService.js`
+- Create `backend/scripts/seed-countdown-schedule.js`
+- User to provide `backend/data/countdown_24month_schedule.json`
+- Create API endpoint `/api/chapters/unlocked`
+- Update Daily Quiz service to filter by unlocked chapters
 
 ---
 
@@ -920,8 +992,11 @@ router.put('/profile/target-exam-date',
 }
 ```
 
-**Handling Empty Months:**
+**Handling Empty Months (FINALIZED APPROACH):**
 - **Empty array (`[]`)**: No new chapters unlock for that subject in that month
+- **Simple Rule**:
+  - If `monthData[subject]` has chapters → unlock those chapters
+  - If `monthData[subject]` is empty `[]` → skip, no new chapters for that subject this month
 - **Rationale**: Two scenarios for empty months:
   1. **Within the curriculum**: Chapter requires multiple months to master (e.g., Organic Chemistry, Calculus)
   2. **Post-curriculum**: All chapters completed, remaining time is for revision/practice/mock tests
@@ -929,15 +1004,30 @@ router.put('/profile/target-exam-date',
 - **UI Message**:
   - During curriculum: "No new chapters this month - focus on mastering current topics!"
   - Post-curriculum: "All chapters completed! Focus on revision and mock tests."
+- **Implementation**: Simple loop through months 1 to currentMonth:
+  ```javascript
+  if (Array.isArray(monthData[subject]) && monthData[subject].length > 0) {
+    monthData[subject].forEach(ch => unlockedChapters.add(ch));
+  }
+  // If empty or missing, skip - no chapters to unlock
+  ```
 
-**Variable-Length Subject Timelines:**
-- **Not all subjects need 24 months of new content**
+**Variable-Length Subject Timelines (KEY FLEXIBILITY):**
+- **Not all subjects need 24 months of new content** - User confirmed this is the approach
+- **Coaching reality**: Typically starts in April, so ~20 months of actual content available
+- **Each subject independent**: Physics, Chemistry, and Mathematics can have different timelines
 - Examples:
   - Physics: 20 months of chapters → months 21-24 are revision only
   - Chemistry: 18 months of chapters → months 19-24 are revision only
   - Mathematics: 22 months of chapters → months 23-24 are revision only
-- **Implementation**: Empty arrays for all subjects after curriculum completion
+- **Intermittent revision allowed**: Revision months can occur anywhere (e.g., month 10, 15, 20)
+- **Implementation**: Empty arrays for subjects when no new chapters needed
   ```javascript
+  "month_10": {
+    "physics": [],  // Revision month - no new chapters
+    "chemistry": ["chemistry_coordination_compounds"],  // Chemistry continues
+    "mathematics": []  // Revision month - no new chapters
+  },
   "month_21": {
     "physics": [],  // Curriculum complete, revision phase
     "chemistry": [],  // Curriculum complete, revision phase

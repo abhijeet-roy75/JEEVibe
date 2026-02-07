@@ -8,11 +8,14 @@ class UserProfile {
   // Basic Profile (Screen 1 - Required)
   final String? firstName;
   final String? lastName;
-  final String? currentClass; // "11", "12", or "Other"
-  final bool? isEnrolledInCoaching; // true if student attends coaching classes
+  final String? jeeTargetExamDate; // Format: "YYYY-MM" (e.g., "2027-01" or "2027-04")
+
+  // Legacy fields (for backward compatibility)
+  final String? currentClass; // Deprecated: "11", "12", or "Other"
 
   // Optional Profile (Screen 2)
   final String? email;
+  final bool? isEnrolledInCoaching; // Optional: true if student attends coaching classes
   final String? state;
   final String? targetExam; // "JEE Main" or "JEE Main + Advanced"
   final String? dreamBranch;
@@ -28,9 +31,10 @@ class UserProfile {
     this.profileCompleted = false,
     this.firstName,
     this.lastName,
-    this.currentClass,
-    this.isEnrolledInCoaching,
+    this.jeeTargetExamDate,
+    this.currentClass, // Deprecated
     this.email,
+    this.isEnrolledInCoaching,
     this.state,
     this.targetExam,
     this.dreamBranch,
@@ -46,9 +50,10 @@ class UserProfile {
       'profileCompleted': profileCompleted,
       'firstName': firstName,
       'lastName': lastName,
-      'currentClass': currentClass,
-      'isEnrolledInCoaching': isEnrolledInCoaching,
+      'jeeTargetExamDate': jeeTargetExamDate,
+      'currentClass': currentClass, // Keep for backward compatibility
       'email': email,
+      'isEnrolledInCoaching': isEnrolledInCoaching,
       'state': state,
       'targetExam': targetExam,
       'dreamBranch': dreamBranch,
@@ -76,9 +81,10 @@ class UserProfile {
       profileCompleted: map['profileCompleted'] ?? false,
       firstName: map['firstName'],
       lastName: map['lastName'],
-      currentClass: map['currentClass'],
-      isEnrolledInCoaching: map['isEnrolledInCoaching'],
+      jeeTargetExamDate: map['jeeTargetExamDate'],
+      currentClass: map['currentClass'], // Backward compatibility
       email: map['email'],
+      isEnrolledInCoaching: map['isEnrolledInCoaching'],
       state: map['state'],
       targetExam: map['targetExam'],
       dreamBranch: map['dreamBranch'],

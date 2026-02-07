@@ -39,10 +39,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   String? _firstName;
   String? _lastName;
   String? _email;
-  String? _currentClass;
+  String? _jeeTargetExamDate;
   bool? _isEnrolledInCoaching;
   String? _state;
-  String? _examType;
   String? _dreamBranch;
 
   bool _isLoading = false;
@@ -61,10 +60,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     _firstName = widget.profile.firstName;
     _lastName = widget.profile.lastName;
     _email = widget.profile.email;
-    _currentClass = widget.profile.currentClass;
+    _jeeTargetExamDate = widget.profile.jeeTargetExamDate;
     _isEnrolledInCoaching = widget.profile.isEnrolledInCoaching;
     _state = widget.profile.state;
-    _examType = widget.profile.targetExam;
     _dreamBranch = widget.profile.dreamBranch;
   }
 
@@ -102,11 +100,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         firstName: _firstName,
         lastName: _lastName,
         email: _email,
-        currentClass: _currentClass,
+        jeeTargetExamDate: _jeeTargetExamDate,
         isEnrolledInCoaching: _isEnrolledInCoaching,
         // Screen 2 data (optional)
         state: _state,
-        targetExam: _examType,
         dreamBranch: _dreamBranch,
         // Preserve original createdAt, update lastActive
         createdAt: widget.profile.createdAt,
@@ -226,6 +223,56 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         ],
       ],
     );
+  }
+
+  /// Generate JEE exam date options dynamically based on current date
+  List<Map<String, String>> _getJeeExamOptions() {
+    final now = DateTime.now();
+    final currentYear = now.year;
+    final currentMonth = now.month;
+
+    // JEE Main is held in January and April
+    final allOptions = <Map<String, String>>[];
+
+    // Determine if current year's exams have passed
+    final jan2026Passed = currentYear > 2026 || (currentYear == 2026 && currentMonth > 1);
+    final apr2026Passed = currentYear > 2026 || (currentYear == 2026 && currentMonth > 4);
+
+    // Add 2026 options if not passed
+    if (!jan2026Passed) {
+      allOptions.add({'label': 'January 2026', 'value': '2026-01'});
+    }
+    if (!apr2026Passed) {
+      allOptions.add({'label': 'April 2026', 'value': '2026-04'});
+    }
+
+    // Add 2027 and 2028 options (future exams)
+    allOptions.addAll([
+      {'label': 'January 2027', 'value': '2027-01'},
+      {'label': 'April 2027', 'value': '2027-04'},
+      {'label': 'January 2028', 'value': '2028-01'},
+      {'label': 'April 2028', 'value': '2028-04'},
+    ]);
+
+    // If user has a current value that's not in the list (e.g., past date), add it at the beginning
+    if (_jeeTargetExamDate != null && _jeeTargetExamDate!.isNotEmpty) {
+      final hasCurrentValue = allOptions.any((option) => option['value'] == _jeeTargetExamDate);
+
+      if (!hasCurrentValue) {
+        final parts = _jeeTargetExamDate!.split('-');
+        if (parts.length == 2) {
+          final year = parts[0];
+          final month = parts[1];
+          final monthName = month == '01' ? 'January' : 'April';
+          allOptions.insert(0, {
+            'label': '$monthName $year (Selected)',
+            'value': _jeeTargetExamDate!,
+          });
+        }
+      }
+    }
+
+    return allOptions;
   }
 
   @override
@@ -427,31 +474,31 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Current Class (required)
-                    _buildFieldLabel('Current Class'),
+                    // JEE Target Exam Date (required)
+                    _buildFieldLabel('When are you giving JEE?'),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      value: _currentClass,
+                      value: _jeeTargetExamDate,
                       isExpanded: true,
-                      decoration: _buildInputDecoration(hintText: 'Select your current class'),
+                      decoration: _buildInputDecoration(hintText: 'Select your JEE exam date'),
                       dropdownColor: Colors.white,
-                      items: ProfileConstants.currentClassOptions.map((String classValue) {
+                      items: _getJeeExamOptions().map((option) {
                         return DropdownMenuItem<String>(
-                          value: classValue,
+                          value: option['value'],
                           child: Text(
-                            classValue == 'Other' ? classValue : 'Class $classValue',
+                            option['label']!,
                             style: AppTextStyles.bodyMedium,
                           ),
                         );
                       }).toList(),
-                      onChanged: (value) => setState(() => _currentClass = value),
+                      onChanged: (value) => setState(() => _jeeTargetExamDate = value),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please select your current class';
+                          return 'Please select your JEE exam date';
                         }
                         return null;
                       },
-                      onSaved: (value) => _currentClass = value,
+                      onSaved: (value) => _jeeTargetExamDate = value,
                     ),
 
                     const SizedBox(height: 20),
@@ -508,67 +555,6 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       }).toList(),
                       onChanged: (value) => setState(() => _state = value),
                       onSaved: (value) => _state = value,
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Exam Type (optional)
-                    _buildFieldLabel('Exam Type', isOptional: true),
-                    const SizedBox(height: 12),
-                    Column(
-                      children: ProfileConstants.examTypes.map((examType) {
-                        final isSelected = _examType == examType;
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: InkWell(
-                            onTap: () => setState(() {
-                              _examType = isSelected ? null : examType;
-                            }),
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? AppColors.primaryPurple.withValues(alpha: 0.1)
-                                    : AppColors.cardWhite,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? AppColors.primaryPurple
-                                      : AppColors.borderGray,
-                                  width: isSelected ? 2 : 1,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    isSelected
-                                        ? Icons.radio_button_checked
-                                        : Icons.radio_button_unchecked,
-                                    color: isSelected
-                                        ? AppColors.primaryPurple
-                                        : AppColors.textLight,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      examType,
-                                      style: AppTextStyles.bodyMedium.copyWith(
-                                        color: isSelected
-                                            ? AppColors.primaryPurple
-                                            : AppColors.textDark,
-                                        fontWeight: isSelected
-                                            ? FontWeight.w600
-                                            : FontWeight.normal,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
                     ),
 
                     const SizedBox(height: 20),

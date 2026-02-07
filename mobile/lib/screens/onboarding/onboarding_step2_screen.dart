@@ -17,9 +17,9 @@ import '../welcome_carousel_screen.dart';
 /// - Your State (optional)
 /// - Exam Type (optional) - "JEE Main" or "JEE Main + Advanced"
 /// - Dream Branch (optional)
+/// - Coaching Enrollment (optional)
 ///
 /// All fields are optional, user can skip to continue.
-/// Email and coaching enrollment are collected in Step 1 and passed via step1Data.
 class OnboardingStep2Screen extends StatefulWidget {
   final Map<String, dynamic> step1Data;
 
@@ -38,6 +38,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
   String? _state;
   String? _examType;
   String? _dreamBranch;
+  bool? _isEnrolledInCoaching;
 
   bool _isLoading = false;
 
@@ -64,13 +65,13 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
         // Screen 1 data (required)
         firstName: widget.step1Data['firstName'],
         lastName: widget.step1Data['lastName'],
-        email: widget.step1Data['email'], // Email now comes from Step 1
-        currentClass: widget.step1Data['currentClass'],
-        isEnrolledInCoaching: widget.step1Data['isEnrolledInCoaching'],
+        email: widget.step1Data['email'],
+        jeeTargetExamDate: widget.step1Data['jeeTargetExamDate'], // NEW: JEE target date
         // Screen 2 data (all optional)
         state: _state,
         targetExam: _examType,
         dreamBranch: _dreamBranch,
+        isEnrolledInCoaching: _isEnrolledInCoaching, // NOW OPTIONAL in Step 2
         // Metadata
         createdAt: now,
         lastActive: now,
@@ -357,7 +358,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                         }).toList(),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
                       // Dream Branch (optional)
                       Row(
@@ -435,6 +436,129 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                         }).toList(),
                         onChanged: (value) => setState(() => _dreamBranch = value),
                         onSaved: (value) => _dreamBranch = value,
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Coaching Enrollment (optional)
+                      Row(
+                        children: [
+                          Text(
+                            'Do you attend coaching classes?',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColors.textDark,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '(Optional)',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.textLight,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => setState(() => _isEnrolledInCoaching = true),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: _isEnrolledInCoaching == true
+                                      ? AppColors.primaryPurple.withValues(alpha: 0.1)
+                                      : AppColors.cardWhite,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _isEnrolledInCoaching == true
+                                        ? AppColors.primaryPurple
+                                        : AppColors.borderGray,
+                                    width: _isEnrolledInCoaching == true ? 2 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      _isEnrolledInCoaching == true
+                                          ? Icons.radio_button_checked
+                                          : Icons.radio_button_unchecked,
+                                      color: _isEnrolledInCoaching == true
+                                          ? AppColors.primaryPurple
+                                          : AppColors.textLight,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Yes',
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        color: _isEnrolledInCoaching == true
+                                            ? AppColors.primaryPurple
+                                            : AppColors.textDark,
+                                        fontWeight: _isEnrolledInCoaching == true
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () => setState(() => _isEnrolledInCoaching = false),
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: _isEnrolledInCoaching == false
+                                      ? AppColors.primaryPurple.withValues(alpha: 0.1)
+                                      : AppColors.cardWhite,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _isEnrolledInCoaching == false
+                                        ? AppColors.primaryPurple
+                                        : AppColors.borderGray,
+                                    width: _isEnrolledInCoaching == false ? 2 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      _isEnrolledInCoaching == false
+                                          ? Icons.radio_button_checked
+                                          : Icons.radio_button_unchecked,
+                                      color: _isEnrolledInCoaching == false
+                                          ? AppColors.primaryPurple
+                                          : AppColors.textLight,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'No',
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        color: _isEnrolledInCoaching == false
+                                            ? AppColors.primaryPurple
+                                            : AppColors.textDark,
+                                        fontWeight: _isEnrolledInCoaching == false
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
 
                     const SizedBox(height: 32),

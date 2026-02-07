@@ -10,8 +10,9 @@ import 'onboarding_step2_screen.dart';
 ///
 /// Collects essential information:
 /// - Your Name (required)
+/// - Email (required)
 /// - Phone Number (pre-filled from auth, verified)
-/// - Coaching Enrollment Status (required)
+/// - JEE Target Exam Date (required)
 class OnboardingStep1Screen extends StatefulWidget {
   const OnboardingStep1Screen({super.key});
 
@@ -31,8 +32,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
   String? _firstName;
   String? _lastName;
   String? _email;
-  String? _currentClass;
-  bool? _isEnrolledInCoaching;
+  String? _jeeTargetExamDate;
   String? _phoneNumber;
 
   @override
@@ -66,8 +66,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
               'lastName': _lastName,
               'email': _email,
               'phoneNumber': _phoneNumber,
-              'currentClass': _currentClass,
-              'isEnrolledInCoaching': _isEnrolledInCoaching,
+              'jeeTargetExamDate': _jeeTargetExamDate,
             },
           ),
         ),
@@ -432,9 +431,9 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
 
                       const SizedBox(height: 24),
 
-                      // Current Class (required)
+                      // JEE Target Exam Date (required)
                       Text(
-                        'Current Class',
+                        'When are you appearing for JEE?',
                         style: AppTextStyles.labelMedium.copyWith(
                           color: AppColors.textDark,
                           fontWeight: FontWeight.w600,
@@ -442,10 +441,10 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: _currentClass,
+                        value: _jeeTargetExamDate,
                         isExpanded: true,
                         decoration: InputDecoration(
-                          hintText: 'Select your current class',
+                          hintText: 'Select your target exam date',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.textLight,
                           ),
@@ -485,98 +484,23 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           ),
                         ),
                         dropdownColor: Colors.white,
-                        items: ProfileConstants.currentClassOptions.map((String classValue) {
+                        items: _getJeeExamOptions().map((option) {
                           return DropdownMenuItem<String>(
-                            value: classValue,
+                            value: option['value'],
                             child: Text(
-                              classValue == 'Other' ? classValue : 'Class $classValue',
+                              option['label']!,
                               style: AppTextStyles.bodyMedium,
                             ),
                           );
                         }).toList(),
-                        onChanged: (value) => setState(() => _currentClass = value),
+                        onChanged: (value) => setState(() => _jeeTargetExamDate = value),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please select your current class';
+                            return 'Please select your JEE target date';
                           }
                           return null;
                         },
-                        onSaved: (value) => _currentClass = value,
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Coaching Enrollment Status (required)
-                      Text(
-                        'Do you attend coaching classes?',
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.textDark,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<bool>(
-                        value: _isEnrolledInCoaching,
-                        isExpanded: true,
-                        decoration: InputDecoration(
-                          hintText: 'Select an option',
-                          hintStyle: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textLight,
-                          ),
-                          filled: true,
-                          fillColor: AppColors.cardWhite,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.borderGray,
-                              width: 1,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.borderGray,
-                              width: 1,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.primaryPurple,
-                              width: 2,
-                            ),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: AppColors.errorRed,
-                              width: 1,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                        ),
-                        dropdownColor: Colors.white,
-                        items: const [
-                          DropdownMenuItem<bool>(
-                            value: true,
-                            child: Text('Yes'),
-                          ),
-                          DropdownMenuItem<bool>(
-                            value: false,
-                            child: Text('No'),
-                          ),
-                        ],
-                        onChanged: (value) => setState(() => _isEnrolledInCoaching = value),
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Please select an option';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) => _isEnrolledInCoaching = value,
+                        onSaved: (value) => _jeeTargetExamDate = value,
                       ),
 
                     const SizedBox(height: 32),
@@ -597,5 +521,48 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
           ],
         ),
       );
+  }
+
+  /// Generates available January and April exam dates
+  List<Map<String, String>> _getJeeExamOptions() {
+    final now = DateTime.now();
+    final currentYear = now.year;
+    final currentMonth = now.month;
+
+    List<Map<String, String>> options = [];
+
+    // April of current year (only if we're before April)
+    if (currentMonth <= 3) {
+      final monthsAway = 4 - currentMonth;
+      options.add({
+        'value': '$currentYear-04',
+        'label': 'April $currentYear ($monthsAway ${monthsAway == 1 ? 'month' : 'months'} away)',
+      });
+    }
+
+    // January of next year (always available)
+    final nextYear = currentYear + 1;
+    final monthsToNextJan = currentMonth == 1 ? 12 : (13 - currentMonth);
+    options.add({
+      'value': '$nextYear-01',
+      'label': 'January $nextYear ($monthsToNextJan months away)',
+    });
+
+    // April of next year (always available)
+    final monthsToNextApril = ((nextYear - currentYear) * 12) + (4 - currentMonth);
+    options.add({
+      'value': '$nextYear-04',
+      'label': 'April $nextYear ($monthsToNextApril months away)',
+    });
+
+    // January of year after next
+    final yearAfterNext = currentYear + 2;
+    final monthsToNextNextJan = ((yearAfterNext - currentYear) * 12) + (1 - currentMonth);
+    options.add({
+      'value': '$yearAfterNext-01',
+      'label': 'January $yearAfterNext ($monthsToNextNextJan months away)',
+    });
+
+    return options;
   }
 }
