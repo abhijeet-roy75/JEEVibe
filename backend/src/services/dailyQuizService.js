@@ -23,6 +23,7 @@ const { getReviewQuestions } = require('./spacedRepetitionService');
 const { checkConsecutiveFailures, generateRecoveryQuiz } = require('./circuitBreakerService');
 const { formatChapterKey } = require('./thetaCalculationService');
 const { initializeMappings } = require('./chapterMappingService');
+const { getUnlockedChapters } = require('./chapterUnlockService');
 
 // ============================================================================
 // CONSTANTS
@@ -687,6 +688,64 @@ async function generateDailyQuizInternal(userId) {
         userId,
         error: error.message
       });
+    }
+
+    // NEW: Filter chapters by unlock status (24-month countdown timeline)
+    logger.info('Checking chapter unlock status', { userId });
+    try {
+      const unlockResult = await getUnlockedChapters(userId);
+      const unlockedChapterKeys = new Set(unlockResult.unlockedChapterKeys);
+
+      logger.info('Chapter unlock status fetched', {
+        userId,
+        currentMonth: unlockResult.currentMonth,
+        monthsUntilExam: unlockResult.monthsUntilExam,
+        totalUnlocked: unlockedChapterKeys.size,
+        usingHighWaterMark: unlockResult.usingHighWaterMark,
+        isLegacyUser: unlockResult.isLegacyUser
+      });
+
+      // Filter allChapterMappings to only include unlocked chapters
+      if (allChapterMappings && allChapterMappings.size > 0) {
+        const filteredMappings = new Map();
+        for (const [chapterKey, value] of allChapterMappings.entries()) {
+          if (unlockedChapterKeys.has(chapterKey)) {
+            filteredMappings.set(chapterKey, value);
+          }
+        }
+
+        logger.info('Filtered chapters by unlock status', {
+          userId,
+          originalCount: allChapterMappings.size,
+          filteredCount: filteredMappings.size,
+          lockedCount: allChapterMappings.size - filteredMappings.size
+        });
+
+        allChapterMappings = filteredMappings;
+      }
+
+      // Also filter thetaByChapter to only include unlocked chapters
+      const filteredThetaByChapter = {};
+      for (const [chapterKey, data] of Object.entries(thetaByChapter)) {
+        if (unlockedChapterKeys.has(chapterKey)) {
+          filteredThetaByChapter[chapterKey] = data;
+        }
+      }
+
+      logger.info('Filtered theta chapters by unlock status', {
+        userId,
+        originalThetaChapters: Object.keys(thetaByChapter).length,
+        filteredThetaChapters: Object.keys(filteredThetaByChapter).length
+      });
+
+      // Use filtered theta for quiz generation
+      Object.assign(thetaByChapter, filteredThetaByChapter);
+    } catch (unlockError) {
+      logger.warn('Failed to get chapter unlock status, proceeding without filtering', {
+        userId,
+        error: unlockError.message
+      });
+      // Continue with all chapters if unlock check fails
     }
 
     // Get review questions (1 per quiz)

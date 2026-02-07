@@ -259,6 +259,9 @@ app.use('/api/mock-tests', mockTestsRouter);
 const teachersRouter = require('./routes/teachers');
 app.use('/api/teachers', teachersRouter);
 
+const chaptersRouter = require('./routes/chapters');
+app.use('/api/chapters', chaptersRouter);
+
 // Test endpoints (only in development)
 if (process.env.NODE_ENV !== 'production') {
   const testFirebaseRouter = require('./routes/test-firebase');
