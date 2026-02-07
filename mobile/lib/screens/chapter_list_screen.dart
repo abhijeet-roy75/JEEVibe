@@ -9,6 +9,7 @@ import '../services/firebase/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/subject_icon_widget.dart';
+import 'chapter_practice/chapter_practice_loading_screen.dart';
 
 class ChapterListScreen extends StatefulWidget {
   const ChapterListScreen({super.key});
@@ -333,13 +334,14 @@ class _ChapterListScreenState extends State<ChapterListScreen>
           borderRadius: BorderRadius.circular(12),
           onTap: isUnlocked ? () {
             // Navigate to chapter practice (existing flow)
-            Navigator.of(context).pushNamed(
-              '/chapter-practice-loading',
-              arguments: {
-                'chapterKey': chapter.chapterKey,
-                'chapterName': chapter.chapterName,
-                'subject': subject,
-              },
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => ChapterPracticeLoadingScreen(
+                  chapterKey: chapter.chapterKey,
+                  chapterName: chapter.chapterName,
+                  subject: subject,
+                ),
+              ),
             );
           } : null,
           child: Padding(
