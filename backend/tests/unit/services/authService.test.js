@@ -186,6 +186,7 @@ describe('authService', () => {
         userId: 'user-123',
         deviceId: 'device-1',
         deviceName: 'My Phone',
+        replacedOldSession: false, // No old session in test
       });
     });
   });
