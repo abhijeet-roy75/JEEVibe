@@ -10,6 +10,7 @@ let currentCollection = null;
 let currentDoc = null;
 
 const mockGet = jest.fn();
+const mockUpdate = jest.fn(() => Promise.resolve());
 const mockCollection = jest.fn((name) => {
   currentCollection = name;
   return mockFirestore;
@@ -23,8 +24,10 @@ const mockFirestore = {
   collection: mockCollection,
   where: jest.fn(() => mockFirestore),
   limit: jest.fn(() => mockFirestore),
+  select: jest.fn(() => mockFirestore),
   get: mockGet,
   doc: mockDoc,
+  update: mockUpdate,
 };
 
 // Mock Firebase Admin before importing anything
@@ -37,6 +40,12 @@ jest.mock('firebase-admin', () => {
   };
 });
 
+// Add FieldValue mock to firebase-admin
+const admin = require('firebase-admin');
+admin.firestore.FieldValue = {
+  serverTimestamp: jest.fn(() => 'MOCK_TIMESTAMP')
+};
+
 // Mock the Firebase config to return our mocked db
 jest.mock('../../../src/config/firebase', () => ({
   initializeFirebase: jest.fn(),
@@ -44,7 +53,6 @@ jest.mock('../../../src/config/firebase', () => ({
   db: mockFirestore,
 }));
 
-const admin = require('firebase-admin');
 const { getTimelinePosition, getUnlockedChapters, isChapterUnlocked } = require('../../../src/services/chapterUnlockService');
 
 // Load the actual schedule data
@@ -97,11 +105,28 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
         });
       }
 
-      // Questions fetch: db.collection('questions').get()
+      // Questions fetch: db.collection('questions').where().select().get()
+      // Return all 63 chapter keys from the schedule
       if (currentCollection === 'questions') {
+        const allChapterKeys = new Set();
+        Object.keys(scheduleData.timeline).forEach(monthKey => {
+          const monthData = scheduleData.timeline[monthKey];
+          ['physics', 'chemistry', 'mathematics'].forEach(subject => {
+            if (monthData[subject]) {
+              monthData[subject].forEach(ch => {
+                if (ch) allChapterKeys.add(ch);
+              });
+            }
+          });
+        });
+
+        const questionDocs = Array.from(allChapterKeys).map(chapterKey => ({
+          data: () => ({ chapter_key: chapterKey })
+        }));
+
         return Promise.resolve({
           empty: false,
-          docs: []
+          docs: questionDocs
         });
       }
 
@@ -235,14 +260,25 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
         expect(position.currentMonth).toBe(month);
         expect(position.monthsUntilExam).toBe(monthsUntil);
 
-        // Mock user data
+        // Mock user data - need to handle both schedule and user get() calls
         const userId = 'test-user';
-        mockGet.mockResolvedValue({
-          exists: true,
-          data: () => ({
-            jeeTargetExamDate: targetDate,
-            chapterUnlockHighWaterMark: 0 // No high water mark
-          })
+        mockGet.mockImplementation(() => {
+          if (currentCollection === 'unlock_schedules') {
+            return Promise.resolve({
+              empty: false,
+              docs: [{ data: () => scheduleData }]
+            });
+          }
+          if (currentCollection === 'users') {
+            return Promise.resolve({
+              exists: true,
+              data: () => ({
+                jeeTargetExamDate: targetDate,
+                chapterUnlockHighWaterMark: 0 // No high water mark
+              })
+            });
+          }
+          return Promise.resolve({ empty: true, docs: [] });
         });
 
         const result = await getUnlockedChapters(userId, currentDate);
@@ -259,13 +295,24 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
       const targetDate = '2027-01';
       const userId = 'test-user';
 
-      // Mock user data
-      mockFirestore.collection().doc().get = jest.fn().mockResolvedValue({
-        exists: true,
-        data: () => ({
-          jeeTargetExamDate: targetDate,
-          chapterUnlockHighWaterMark: 0
-        })
+      // Mock user data - handle both schedule and user get() calls
+      mockGet.mockImplementation(() => {
+        if (currentCollection === 'unlock_schedules') {
+          return Promise.resolve({
+            empty: false,
+            docs: [{ data: () => scheduleData }]
+          });
+        }
+        if (currentCollection === 'users') {
+          return Promise.resolve({
+            exists: true,
+            data: () => ({
+              jeeTargetExamDate: targetDate,
+              chapterUnlockHighWaterMark: 0
+            })
+          });
+        }
+        return Promise.resolve({ empty: true, docs: [] });
       });
 
       // Test at 20 months until exam
@@ -298,12 +345,23 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
       const initialDate = new Date('2025-10-20');
       let targetDate = '2027-04';
 
-      mockFirestore.collection().doc().get = jest.fn().mockResolvedValue({
-        exists: true,
-        data: () => ({
-          jeeTargetExamDate: targetDate,
-          chapterUnlockHighWaterMark: 7 // Previously reached month 7
-        })
+      mockGet.mockImplementation(() => {
+        if (currentCollection === 'unlock_schedules') {
+          return Promise.resolve({
+            empty: false,
+            docs: [{ data: () => scheduleData }]
+          });
+        }
+        if (currentCollection === 'users') {
+          return Promise.resolve({
+            exists: true,
+            data: () => ({
+              jeeTargetExamDate: targetDate,
+              chapterUnlockHighWaterMark: 7 // Previously reached month 7
+            })
+          });
+        }
+        return Promise.resolve({ empty: true, docs: [] });
       });
 
       let result = await getUnlockedChapters(userId, initialDate);
@@ -312,12 +370,23 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
       // User changes target to April 2028 (pushing exam forward by 12 months)
       // This would normally put them at month 1, but high water mark prevents re-lock
       targetDate = '2028-04';
-      mockFirestore.collection().doc().get = jest.fn().mockResolvedValue({
-        exists: true,
-        data: () => ({
-          jeeTargetExamDate: targetDate,
-          chapterUnlockHighWaterMark: 7 // Still at month 7
-        })
+      mockGet.mockImplementation(() => {
+        if (currentCollection === 'unlock_schedules') {
+          return Promise.resolve({
+            empty: false,
+            docs: [{ data: () => scheduleData }]
+          });
+        }
+        if (currentCollection === 'users') {
+          return Promise.resolve({
+            exists: true,
+            data: () => ({
+              jeeTargetExamDate: targetDate,
+              chapterUnlockHighWaterMark: 7 // Still at month 7
+            })
+          });
+        }
+        return Promise.resolve({ empty: true, docs: [] });
       });
 
       result = await getUnlockedChapters(userId, initialDate);
@@ -332,12 +401,44 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
     test('should handle legacy users without jeeTargetExamDate', async () => {
       const userId = 'legacy-user';
 
-      mockFirestore.collection().doc().get = jest.fn().mockResolvedValue({
-        exists: true,
-        data: () => ({
-          // No jeeTargetExamDate field
-          currentClass: '12'
-        })
+      mockGet.mockImplementation(() => {
+        if (currentCollection === 'unlock_schedules') {
+          return Promise.resolve({
+            empty: false,
+            docs: [{ data: () => scheduleData }]
+          });
+        }
+        if (currentCollection === 'users') {
+          return Promise.resolve({
+            exists: true,
+            data: () => ({
+              // No jeeTargetExamDate field
+              currentClass: '12'
+            })
+          });
+        }
+        if (currentCollection === 'questions') {
+          // Return all 63 chapter keys
+          const allChapterKeys = new Set();
+          Object.keys(scheduleData.timeline).forEach(monthKey => {
+            const monthData = scheduleData.timeline[monthKey];
+            ['physics', 'chemistry', 'mathematics'].forEach(subject => {
+              if (monthData[subject]) {
+                monthData[subject].forEach(ch => {
+                  if (ch) allChapterKeys.add(ch);
+                });
+              }
+            });
+          });
+          const questionDocs = Array.from(allChapterKeys).map(chapterKey => ({
+            data: () => ({ chapter_key: chapterKey })
+          }));
+          return Promise.resolve({
+            empty: false,
+            docs: questionDocs
+          });
+        }
+        return Promise.resolve({ empty: true, docs: [] });
       });
 
       const result = await getUnlockedChapters(userId);
@@ -351,12 +452,44 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
       const userId = 'test-user';
       const currentDate = new Date('2027-03-20'); // 2 months after exam
 
-      mockFirestore.collection().doc().get = jest.fn().mockResolvedValue({
-        exists: true,
-        data: () => ({
-          jeeTargetExamDate: targetDate,
-          chapterUnlockHighWaterMark: 20
-        })
+      mockGet.mockImplementation(() => {
+        if (currentCollection === 'unlock_schedules') {
+          return Promise.resolve({
+            empty: false,
+            docs: [{ data: () => scheduleData }]
+          });
+        }
+        if (currentCollection === 'users') {
+          return Promise.resolve({
+            exists: true,
+            data: () => ({
+              jeeTargetExamDate: targetDate,
+              chapterUnlockHighWaterMark: 20
+            })
+          });
+        }
+        if (currentCollection === 'questions') {
+          // Return all 63 chapter keys
+          const allChapterKeys = new Set();
+          Object.keys(scheduleData.timeline).forEach(monthKey => {
+            const monthData = scheduleData.timeline[monthKey];
+            ['physics', 'chemistry', 'mathematics'].forEach(subject => {
+              if (monthData[subject]) {
+                monthData[subject].forEach(ch => {
+                  if (ch) allChapterKeys.add(ch);
+                });
+              }
+            });
+          });
+          const questionDocs = Array.from(allChapterKeys).map(chapterKey => ({
+            data: () => ({ chapter_key: chapterKey })
+          }));
+          return Promise.resolve({
+            empty: false,
+            docs: questionDocs
+          });
+        }
+        return Promise.resolve({ empty: true, docs: [] });
       });
 
       const result = await getUnlockedChapters(userId, currentDate);
@@ -368,11 +501,22 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
     test('should handle user not found gracefully', async () => {
       const userId = 'non-existent-user';
 
-      mockFirestore.collection().doc().get = jest.fn().mockResolvedValue({
-        exists: false
+      mockGet.mockImplementation(() => {
+        if (currentCollection === 'unlock_schedules') {
+          return Promise.resolve({
+            empty: false,
+            docs: [{ data: () => scheduleData }]
+          });
+        }
+        if (currentCollection === 'users') {
+          return Promise.resolve({
+            exists: false
+          });
+        }
+        return Promise.resolve({ empty: true, docs: [] });
       });
 
-      await expect(getUnlockedChapters(userId)).rejects.toThrow('User not found');
+      await expect(getUnlockedChapters(userId)).rejects.toThrow('User non-existent-user not found');
     });
   });
 
@@ -444,12 +588,23 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
       const userId = 'real-user';
       const currentDate = new Date('2026-02-20'); // 11 months before
 
-      mockFirestore.collection().doc().get = jest.fn().mockResolvedValue({
-        exists: true,
-        data: () => ({
-          jeeTargetExamDate: targetDate,
-          chapterUnlockHighWaterMark: 0
-        })
+      mockGet.mockImplementation(() => {
+        if (currentCollection === 'unlock_schedules') {
+          return Promise.resolve({
+            empty: false,
+            docs: [{ data: () => scheduleData }]
+          });
+        }
+        if (currentCollection === 'users') {
+          return Promise.resolve({
+            exists: true,
+            data: () => ({
+              jeeTargetExamDate: targetDate,
+              chapterUnlockHighWaterMark: 0
+            })
+          });
+        }
+        return Promise.resolve({ empty: true, docs: [] });
       });
 
       const result = await getUnlockedChapters(userId, currentDate);
@@ -464,12 +619,23 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
       const userId = 'late-joiner';
       const currentDate = new Date('2026-12-20'); // 1 month before
 
-      mockFirestore.collection().doc().get = jest.fn().mockResolvedValue({
-        exists: true,
-        data: () => ({
-          jeeTargetExamDate: targetDate,
-          chapterUnlockHighWaterMark: 0
-        })
+      mockGet.mockImplementation(() => {
+        if (currentCollection === 'unlock_schedules') {
+          return Promise.resolve({
+            empty: false,
+            docs: [{ data: () => scheduleData }]
+          });
+        }
+        if (currentCollection === 'users') {
+          return Promise.resolve({
+            exists: true,
+            data: () => ({
+              jeeTargetExamDate: targetDate,
+              chapterUnlockHighWaterMark: 0
+            })
+          });
+        }
+        return Promise.resolve({ empty: true, docs: [] });
       });
 
       const result = await getUnlockedChapters(userId, currentDate);
@@ -484,12 +650,23 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
       const userId = 'early-bird';
       const currentDate = new Date('2025-01-20'); // 24 months before
 
-      mockFirestore.collection().doc().get = jest.fn().mockResolvedValue({
-        exists: true,
-        data: () => ({
-          jeeTargetExamDate: targetDate,
-          chapterUnlockHighWaterMark: 0
-        })
+      mockGet.mockImplementation(() => {
+        if (currentCollection === 'unlock_schedules') {
+          return Promise.resolve({
+            empty: false,
+            docs: [{ data: () => scheduleData }]
+          });
+        }
+        if (currentCollection === 'users') {
+          return Promise.resolve({
+            exists: true,
+            data: () => ({
+              jeeTargetExamDate: targetDate,
+              chapterUnlockHighWaterMark: 0
+            })
+          });
+        }
+        return Promise.resolve({ empty: true, docs: [] });
       });
 
       const result = await getUnlockedChapters(userId, currentDate);
