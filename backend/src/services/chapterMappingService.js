@@ -7,7 +7,6 @@
 
 const { db } = require('../config/firebase');
 const logger = require('../utils/logger');
-const { formatChapterKey } = require('./thetaCalculationService');
 
 // In-memory cache for mappings
 // Map<chapterKey, { subject, chapter }>
@@ -30,7 +29,7 @@ async function initializeMappings() {
         // Fetch only necessary fields to save memory and reduce OOM risk
         const snapshot = await db.collection('questions')
             .where('active', '==', true)
-            .select('subject', 'chapter')
+            .select('subject', 'chapter', 'chapter_key')
             .get();
 
         const newCache = new Map();
@@ -39,11 +38,13 @@ async function initializeMappings() {
             const data = doc.data();
             const subjectName = data.subject;
             const chapterName = data.chapter;
+            const chapterKey = data.chapter_key;
 
-            if (subjectName && chapterName) {
-                const key = formatChapterKey(subjectName, chapterName);
-                if (!newCache.has(key)) {
-                    newCache.set(key, {
+            if (subjectName && chapterName && chapterKey) {
+                // Use the actual chapter_key from the database instead of regenerating it
+                // This preserves the exact formatting (e.g., chemistry_p_block_elements)
+                if (!newCache.has(chapterKey)) {
+                    newCache.set(chapterKey, {
                         subject: subjectName,
                         chapter: chapterName
                     });
