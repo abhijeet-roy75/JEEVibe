@@ -10,6 +10,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/subject_icon_widget.dart';
 import '../widgets/app_header.dart';
+import 'assessment_intro_screen.dart';
 import 'chapter_practice/chapter_practice_loading_screen.dart';
 
 class ChapterListScreen extends StatefulWidget {
