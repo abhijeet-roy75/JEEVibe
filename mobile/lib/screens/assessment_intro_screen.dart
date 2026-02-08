@@ -297,7 +297,8 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
                 _chapterUnlockData = unlockData;
               });
               final unlockedList = unlockData['unlockedChapters'] as List? ?? [];
-              debugPrint('✅ Chapter unlock data loaded: month=${unlockData['currentMonth']}, monthsUntil=${unlockData['monthsUntilExam']}, unlocked=${unlockedList.length}/66');
+              final fullList = unlockData['fullChapterOrder'] as List? ?? [];
+              debugPrint('✅ Chapter unlock data loaded: month=${unlockData['currentMonth']}, monthsUntil=${unlockData['monthsUntilExam']}, unlocked=${unlockedList.length}/${fullList.length}');
             } else {
               debugPrint('⚠️ No chapter unlock data received or mounted=false');
             }
@@ -1727,6 +1728,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
 
     final monthsUntilExam = _chapterUnlockData!['monthsUntilExam'] as int? ?? 0;
     final unlockedChapters = _chapterUnlockData!['unlockedChapters'] as List? ?? [];
+    final fullChapterOrder = _chapterUnlockData!['fullChapterOrder'] as List? ?? [];
     final totalMonths = _chapterUnlockData!['totalMonths'] as int? ?? 24;
     final currentMonth = _chapterUnlockData!['currentMonth'] as int? ?? 1;
 
@@ -1745,9 +1747,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
       }
     }
 
-    // Calculate progress percentage (total chapters is approximately 66)
-    const totalChapters = 66;
-    final progress = unlockedChapters.length / totalChapters;
+    // Calculate progress percentage using actual total from API
+    final totalChapters = fullChapterOrder.isNotEmpty ? fullChapterOrder.length : 66;
+    final progress = totalChapters > 0 ? unlockedChapters.length / totalChapters : 0.0;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1846,11 +1848,12 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
     if (_chapterUnlockData == null) return const SizedBox.shrink();
 
     final unlockedChapters = _chapterUnlockData!['unlockedChapters'] as List? ?? [];
+    final fullChapterOrder = _chapterUnlockData!['fullChapterOrder'] as List? ?? [];
     final monthsUntilExam = _chapterUnlockData!['monthsUntilExam'] as int? ?? 0;
 
-    // Calculate progress percentage (total chapters is approximately 66)
-    const totalChapters = 66;
-    final progress = unlockedChapters.length / totalChapters;
+    // Calculate progress percentage using actual total from API
+    final totalChapters = fullChapterOrder.isNotEmpty ? fullChapterOrder.length : 66;
+    final progress = totalChapters > 0 ? unlockedChapters.length / totalChapters : 0.0;
 
     return Container(
       padding: const EdgeInsets.all(12),
