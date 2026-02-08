@@ -105,12 +105,8 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
     try {
       final pinService = PinService();
       await pinService.savePin(pin);
-      
-      // Success message
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-         const SnackBar(content: Text('PIN Set Successfully!')),
-      );
+
+      if (!mounted || _isDisposed) return;
 
       // Hide keyboard and remove focus before navigation
       // Check if FocusNode has focus before unfocusing
@@ -122,9 +118,9 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
         // Ignore if FocusNode is already disposed
       }
       FocusScope.of(context).unfocus();
-      // Wait longer to ensure FocusNode is fully detached from widget tree
-      await Future.delayed(const Duration(milliseconds: 600));
-      
+      // Wait for keyboard to fully hide and FocusNode to detach from widget tree
+      await Future.delayed(const Duration(milliseconds: 300));
+
       if (!mounted || _isDisposed) return;
 
       // Navigate to Target Screen (if provided) or Onboarding
