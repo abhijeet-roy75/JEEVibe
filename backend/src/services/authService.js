@@ -41,6 +41,9 @@ function generateSecureToken() {
  * Create a new session for a user
  * This REPLACES any existing session (single session enforcement)
  *
+ * If an old session exists, sends a push notification to that device
+ * notifying the user that they've been logged in on another device.
+ *
  * @param {string} userId - Firebase user ID
  * @param {Object} deviceInfo - Device information
  * @param {string} deviceInfo.deviceId - Unique device identifier
@@ -51,6 +54,28 @@ function generateSecureToken() {
 async function createSession(userId, deviceInfo) {
   const sessionToken = generateSecureToken();
 
+  // Get existing session (if any) BEFORE replacing it
+  let oldSession = null;
+  let oldDeviceFcmToken = null;
+
+  try {
+    const userDoc = await retryFirestoreOperation(async () => {
+      return await db.collection('users').doc(userId).get();
+    });
+
+    if (userDoc.exists) {
+      oldSession = userDoc.data()?.auth?.active_session;
+      // Get FCM token for push notification
+      oldDeviceFcmToken = userDoc.data()?.fcm_token;
+    }
+  } catch (error) {
+    logger.warn('Failed to get old session for notification', {
+      userId,
+      error: error.message
+    });
+  }
+
+  // Create new session data
   const sessionData = {
     token: sessionToken,
     device_id: deviceInfo.deviceId,
@@ -60,6 +85,7 @@ async function createSession(userId, deviceInfo) {
     ip_address: deviceInfo.ipAddress || null
   };
 
+  // Replace old session with new session
   await retryFirestoreOperation(async () => {
     // This REPLACES any existing session (single session enforcement)
     // Use set with merge to create document if it doesn't exist
@@ -73,10 +99,75 @@ async function createSession(userId, deviceInfo) {
   logger.info('Session created', {
     userId,
     deviceId: deviceInfo.deviceId,
-    deviceName: deviceInfo.deviceName
+    deviceName: deviceInfo.deviceName,
+    replacedOldSession: !!oldSession
   });
 
+  // Send push notification to old device (non-blocking)
+  if (oldSession && oldDeviceFcmToken && oldSession.device_id !== deviceInfo.deviceId) {
+    sendSessionExpiredNotification(
+      userId,
+      oldDeviceFcmToken,
+      oldSession.device_name,
+      deviceInfo.deviceName
+    ).catch(error => {
+      logger.warn('Failed to send session expired notification', {
+        userId,
+        error: error.message
+      });
+    });
+  }
+
   return sessionToken;
+}
+
+/**
+ * Send push notification to a device that was logged out
+ *
+ * @param {string} userId - User ID (for logging)
+ * @param {string} fcmToken - FCM token of the old device
+ * @param {string} oldDeviceName - Name of the old device being logged out
+ * @param {string} newDeviceName - Name of the new device that logged in
+ */
+async function sendSessionExpiredNotification(userId, fcmToken, oldDeviceName, newDeviceName) {
+  try {
+    const message = {
+      token: fcmToken,
+      notification: {
+        title: 'Logged in on another device',
+        body: `You've been logged in on ${newDeviceName}. Tap to continue.`
+      },
+      data: {
+        type: 'session_expired',
+        new_device: newDeviceName,
+        old_device: oldDeviceName
+      },
+      // High priority for immediate delivery
+      android: {
+        priority: 'high',
+      },
+      apns: {
+        headers: {
+          'apns-priority': '10'
+        }
+      }
+    };
+
+    await admin.messaging().send(message);
+
+    logger.info('Session expired notification sent', {
+      userId,
+      oldDevice: oldDeviceName,
+      newDevice: newDeviceName
+    });
+  } catch (error) {
+    // Don't throw - notification failure shouldn't block session creation
+    logger.warn('Failed to send session expired notification', {
+      userId,
+      error: error.message,
+      errorCode: error.code
+    });
+  }
 }
 
 /**

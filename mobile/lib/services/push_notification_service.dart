@@ -116,7 +116,10 @@ class PushNotificationService {
     // Check message type
     final messageType = message.data['type'] as String?;
 
-    if (messageType == 'trial_notification') {
+    if (messageType == 'session_expired') {
+      // User logged in on another device - force logout
+      _handleSessionExpiredNotification(message);
+    } else if (messageType == 'trial_notification') {
       final daysRemaining = int.tryParse(message.data['days_remaining'] ?? '0') ?? 0;
       _showTrialNotificationBanner(message.notification, daysRemaining);
     } else {
@@ -133,10 +136,30 @@ class PushNotificationService {
     // Navigate based on message type
     final messageType = message.data['type'] as String?;
 
-    if (messageType == 'trial_notification') {
+    if (messageType == 'session_expired') {
+      // User logged in on another device - force logout
+      _handleSessionExpiredNotification(message);
+    } else if (messageType == 'trial_notification') {
       // Navigate to paywall screen
       // This will be handled by the app's navigation logic
       debugPrint('PushNotificationService: Should navigate to paywall');
+    }
+  }
+
+  /// Handle session expired notification
+  /// Shows dialog and triggers session expiry callback (same as API-based expiry)
+  void _handleSessionExpiredNotification(RemoteMessage message) {
+    debugPrint('PushNotificationService: Session expired notification received');
+
+    final newDevice = message.data['new_device'] as String? ?? 'another device';
+
+    // Trigger the same session expiry callback that ApiService uses
+    // This will show the session expired dialog and force logout
+    if (ApiService.onSessionExpired != null) {
+      ApiService.onSessionExpired!(
+        'SESSION_EXPIRED',
+        'You have been logged in on $newDevice. Tap OK to continue.',
+      );
     }
   }
 
