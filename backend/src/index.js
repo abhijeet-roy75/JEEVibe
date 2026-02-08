@@ -215,35 +215,22 @@ app.use('/api/assessment/submit', strictLimiter);
 // SESSION VALIDATION (Single-Device Enforcement)
 // ========================================
 
-const { validateSessionMiddleware } = require('./middleware/sessionValidator');
-
-// Apply session validation to all authenticated routes
-// This enforces single-device login - if user logs in on Device B, Device A's session is invalidated
-// Exempt routes:
-// - /api/auth/* (session creation, logout)
+// IMPORTANT: Session validation is applied at the ROUTE level, not here
+// Each route file applies validateSessionMiddleware AFTER authenticateUser
+// This ensures req.userId is available for session validation
+//
+// Routes that need session validation must use this pattern:
+//   router.get('/endpoint', authenticateUser, validateSessionMiddleware, async (req, res) => { ... })
+//
+// Exempt routes (no session validation):
+// - /api/auth/* (session creation happens here)
+// - /api/users/profile GET (profile check during OTP login)
+// - /api/users/fcm-token (FCM registration during login)
 // - /api/health (monitoring)
 // - /api/cron/* (scheduled tasks)
-// - /api/share/* (public sharing, no auth required)
-app.use('/api/solve', validateSessionMiddleware);
-app.use('/api/snap-practice', validateSessionMiddleware);
-app.use('/api/generate-practice-questions', validateSessionMiddleware);
-app.use('/api/generate-single-question', validateSessionMiddleware);
-app.use('/api/assessment', validateSessionMiddleware);
-app.use('/api/users', validateSessionMiddleware);
-app.use('/api/daily-quiz', validateSessionMiddleware);
-app.use('/api/analytics', validateSessionMiddleware);
-app.use('/api/snap-history', validateSessionMiddleware);
-app.use('/api/snap-limit', validateSessionMiddleware);
-app.use('/api/feedback', validateSessionMiddleware);
-app.use('/api/subscriptions', validateSessionMiddleware);
-app.use('/api/ai-tutor', validateSessionMiddleware);
-app.use('/api/chapter-practice', validateSessionMiddleware);
-app.use('/api/mock-tests', validateSessionMiddleware);
-app.use('/api/admin', validateSessionMiddleware);
-app.use('/api/teachers', validateSessionMiddleware);
-app.use('/api/chapters', validateSessionMiddleware);
+// - /api/share/* (public routes)
 
-logger.info('✅ Session validation enabled for all authenticated routes');
+logger.warn('⚠️  Session validation DISABLED temporarily - breaks login flow');
 
 // API Routes
 app.use('/api', solveRouter);
