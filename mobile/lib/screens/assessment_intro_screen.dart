@@ -297,7 +297,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
                 _chapterUnlockData = unlockData;
               });
               final unlockedList = unlockData['unlockedChapters'] as List? ?? [];
-              debugPrint('✅ Chapter unlock data loaded: month=${unlockData['currentMonth']}, monthsUntil=${unlockData['monthsUntilExam']}, unlocked=${unlockedList.length}/63');
+              debugPrint('✅ Chapter unlock data loaded: month=${unlockData['currentMonth']}, monthsUntil=${unlockData['monthsUntilExam']}, unlocked=${unlockedList.length}/66');
             } else {
               debugPrint('⚠️ No chapter unlock data received or mounted=false');
             }
@@ -1745,8 +1745,8 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
       }
     }
 
-    // Calculate progress percentage (total chapters is approximately 63)
-    const totalChapters = 63;
+    // Calculate progress percentage (total chapters is approximately 66)
+    const totalChapters = 66;
     final progress = unlockedChapters.length / totalChapters;
 
     return Container(
@@ -1848,8 +1848,8 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
     final unlockedChapters = _chapterUnlockData!['unlockedChapters'] as List? ?? [];
     final monthsUntilExam = _chapterUnlockData!['monthsUntilExam'] as int? ?? 0;
 
-    // Calculate progress percentage (total chapters is approximately 63)
-    const totalChapters = 63;
+    // Calculate progress percentage (total chapters is approximately 66)
+    const totalChapters = 66;
     final progress = unlockedChapters.length / totalChapters;
 
     return Container(
