@@ -390,6 +390,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     return Consumer<UserProfileProvider>(
       builder: (context, profileProvider, child) {
         final profile = profileProvider.profile;
+        final isLoading = profileProvider.isLoading;
 
         return Scaffold(
           backgroundColor: AppColors.backgroundWhite,
@@ -401,16 +402,27 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
-                        Icons.person_off_outlined,
-                        size: 64,
-                        color: AppColors.textLight,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Profile not found',
-                        style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textLight),
-                      ),
+                      if (isLoading) ...[
+                        const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Loading profile...',
+                          style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textLight),
+                        ),
+                      ] else ...[
+                        const Icon(
+                          Icons.person_off_outlined,
+                          size: 64,
+                          color: AppColors.textLight,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Profile not found',
+                          style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textLight),
+                        ),
+                      ],
                       const SizedBox(height: 32),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 32),
