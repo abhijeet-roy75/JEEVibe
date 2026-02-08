@@ -285,7 +285,7 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                '${_unlockedChapterKeys.length}/63 unlocked',
+                                '${_unlockedChapterKeys.length}/${_fullChapterOrder.isNotEmpty ? _fullChapterOrder.length : 66} unlocked',
                                 style: AppTextStyles.bodySmall.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
