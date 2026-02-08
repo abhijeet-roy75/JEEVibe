@@ -64,9 +64,13 @@ async function createSession(userId, deviceInfo) {
     });
 
     if (userDoc.exists) {
-      oldSession = userDoc.data()?.auth?.active_session;
-      // Get FCM token for push notification
-      oldDeviceFcmToken = userDoc.data()?.fcm_token;
+      const userData = userDoc.data();
+      oldSession = userData?.auth?.active_session;
+
+      // Get FCM token for the OLD device (lookup by device_id)
+      if (oldSession && userData?.fcm_tokens) {
+        oldDeviceFcmToken = userData.fcm_tokens[oldSession.device_id];
+      }
     }
   } catch (error) {
     logger.warn('Failed to get old session for notification', {

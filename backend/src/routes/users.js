@@ -343,30 +343,50 @@ router.patch('/profile/last-active', authenticateUser, async (req, res, next) =>
 /**
  * POST /api/users/fcm-token
  *
- * Save or clear FCM token for push notifications
+ * Save or clear FCM token for push notifications (per device)
  *
- * Request body: { fcm_token: string | null }
+ * Request body: { fcm_token: string | null, device_id: string }
  * Authentication: Required (Bearer token in Authorization header)
  */
 router.post('/fcm-token', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
-    const { fcm_token } = req.body;
+    const { fcm_token, device_id } = req.body;
+
+    if (!device_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'device_id is required',
+        requestId: req.id
+      });
+    }
 
     const userRef = db.collection('users').doc(userId);
+
+    // Build the update object for fcm_tokens map
+    const updateData = {
+      fcm_token_updated_at: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (fcm_token) {
+      // Store token for this device: fcm_tokens.device_id = token
+      updateData[`fcm_tokens.${device_id}`] = fcm_token;
+    } else {
+      // Clear token for this device
+      updateData[`fcm_tokens.${device_id}`] = admin.firestore.FieldValue.delete();
+    }
+
     await retryFirestoreOperation(async () => {
-      return await userRef.update({
-        fcm_token: fcm_token || admin.firestore.FieldValue.delete(),
-        fcm_token_updated_at: admin.firestore.FieldValue.serverTimestamp()
-      });
+      return await userRef.update(updateData);
     });
 
     // Invalidate cache
     delCache(CacheKeys.userProfile(userId));
 
-    logger.info('FCM token updated', {
+    logger.info('FCM token updated (per device)', {
       requestId: req.id,
       userId,
+      deviceId: device_id,
       hasToken: !!fcm_token
     });
 
