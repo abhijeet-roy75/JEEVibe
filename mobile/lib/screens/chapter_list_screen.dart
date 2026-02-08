@@ -522,29 +522,36 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                       ),
                       const SizedBox(height: 4),
                       if (isUnlocked) ...[
-                        // Show percentile and attempts for unlocked chapters
+                        // Show accuracy for unlocked chapters
                         Row(
                           children: [
                             Icon(
-                              Icons.analytics,
+                              Icons.check_circle,
                               size: 14,
-                              color: _getPercentileColor(chapter.percentile),
+                              color: _getAccuracyColor(chapter.accuracy),
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${chapter.percentile.toInt()}th percentile',
+                              chapter.total > 0
+                                  ? '${chapter.correct}/${chapter.total} correct'
+                                  : 'No attempts yet',
                               style: AppTextStyles.bodySmall.copyWith(
-                                color: _getPercentileColor(chapter.percentile),
+                                color: chapter.total > 0
+                                    ? _getAccuracyColor(chapter.accuracy)
+                                    : AppColors.textSecondary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Text(
-                              '${chapter.total} questions',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textSecondary,
+                            if (chapter.total > 0) ...[
+                              const SizedBox(width: 12),
+                              Text(
+                                '${chapter.accuracy.toInt()}%',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: _getAccuracyColor(chapter.accuracy),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
+                            ],
                           ],
                         ),
                       ] else ...[
@@ -575,9 +582,9 @@ class _ChapterListScreenState extends State<ChapterListScreen>
     );
   }
 
-  Color _getPercentileColor(double percentile) {
-    if (percentile >= 70) return AppColors.success;
-    if (percentile >= 40) return AppColors.warning;
+  Color _getAccuracyColor(double accuracy) {
+    if (accuracy >= 70) return AppColors.success;
+    if (accuracy >= 40) return AppColors.warning;
     return AppColors.error;
   }
 }
