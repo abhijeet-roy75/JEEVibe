@@ -208,23 +208,36 @@ async function getEffectiveTier(userId, options = {}) {
     }
 
     // 3. Check active trial
-    if (userData.trial?.ends_at) {
-      const trialEnd = userData.trial.ends_at?.toDate ? userData.trial.ends_at.toDate() : new Date(userData.trial.ends_at);
+    if (userData.trial?.ends_at || userData.trialEndsAt) {
+      // Support both old format (userData.trial.ends_at) and new format (userData.trialEndsAt)
+      const trialEndTimestamp = userData.trialEndsAt || userData.trial?.ends_at;
+      const trialEnd = trialEndTimestamp?.toDate ? trialEndTimestamp.toDate() : new Date(trialEndTimestamp);
 
       if (trialEnd > now) {
         const daysRemaining = Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24));
 
+        // Determine tier: check subscriptionTier, then trial.tier_id, then subscriptionStatus, finally default to 'pro'
+        let tierValue = 'pro';
+        if (userData.subscriptionTier && ['pro', 'ultra'].includes(userData.subscriptionTier.toLowerCase())) {
+          tierValue = userData.subscriptionTier.toLowerCase();
+        } else if (userData.trial?.tier_id) {
+          tierValue = userData.trial.tier_id;
+        } else if (userData.subscriptionStatus === 'ultra_trial') {
+          tierValue = 'ultra';
+        }
+
         logger.info('User has active trial', {
           userId,
+          tier: tierValue,
           ends_at: trialEnd.toISOString(),
           days_remaining: daysRemaining
         });
 
         return cacheAndReturn({
-          tier: userData.trial.tier_id || 'pro',
+          tier: tierValue,
           source: 'trial',
           expires_at: trialEnd.toISOString(),
-          trial_started_at: userData.trial.started_at,
+          trial_started_at: userData.trial?.started_at,
           days_remaining: daysRemaining
         });
       } else {
