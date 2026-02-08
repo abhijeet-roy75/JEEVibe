@@ -106,7 +106,7 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
       }
 
       // Questions fetch: db.collection('questions').where().select().get()
-      // Return all 63 chapter keys from the schedule
+      // Return all 66 chapter keys from the schedule
       if (currentCollection === 'questions') {
         const allChapterKeys = new Set();
         Object.keys(scheduleData.timeline).forEach(monthKey => {
@@ -333,7 +333,7 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
       // Verify progressive unlock
       expect(chaptersAt10Months).toBeGreaterThan(chaptersAt20Months);
       expect(chaptersAt1Month).toBeGreaterThan(chaptersAt10Months);
-      expect(chaptersAt1Month).toBe(63); // All chapters at month 24
+      expect(chaptersAt1Month).toBe(66); // All chapters at month 24
     });
   });
 
@@ -418,7 +418,7 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
           });
         }
         if (currentCollection === 'questions') {
-          // Return all 63 chapter keys
+          // Return all 66 chapter keys
           const allChapterKeys = new Set();
           Object.keys(scheduleData.timeline).forEach(monthKey => {
             const monthData = scheduleData.timeline[monthKey];
@@ -444,7 +444,7 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
       const result = await getUnlockedChapters(userId);
 
       expect(result.isLegacyUser).toBe(true);
-      expect(result.unlockedChapterKeys.length).toBe(63); // All chapters unlocked
+      expect(result.unlockedChapterKeys.length).toBe(66); // All chapters unlocked
     });
 
     test('should unlock all chapters when exam has passed', async () => {
@@ -469,7 +469,7 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
           });
         }
         if (currentCollection === 'questions') {
-          // Return all 63 chapter keys
+          // Return all 66 chapter keys
           const allChapterKeys = new Set();
           Object.keys(scheduleData.timeline).forEach(monthKey => {
             const monthData = scheduleData.timeline[monthKey];
@@ -495,7 +495,7 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
       const result = await getUnlockedChapters(userId, currentDate);
 
       expect(result.isPostExam).toBe(true);
-      expect(result.unlockedChapterKeys.length).toBe(63); // All chapters
+      expect(result.unlockedChapterKeys.length).toBe(66); // All chapters
     });
 
     test('should handle user not found gracefully', async () => {
@@ -536,7 +536,7 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
       }
     });
 
-    test('total unique chapters should be 63', () => {
+    test('total unique chapters should be 66', () => {
       const allChapters = new Set();
 
       for (let i = 1; i <= 24; i++) {
@@ -548,7 +548,7 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
         });
       }
 
-      expect(allChapters.size).toBe(63);
+      expect(allChapters.size).toBe(66);
     });
 
     test('chapter unlocks should be cumulative (track duplicates)', () => {
@@ -611,7 +611,7 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
 
       expect(result.currentMonth).toBe(14); // 24 - 11 + 1 = 14
       expect(result.monthsUntilExam).toBe(11);
-      expect(result.unlockedChapterKeys.length).toBe(49); // Your reported value
+      expect(result.unlockedChapterKeys.length).toBe(52); // Updated: was 49, now 52 after month 14 physics fix
     });
 
     test('User joins last minute (1 month before exam)', async () => {
@@ -642,7 +642,7 @@ describe('Chapter Unlock Service - 24-Month Timeline Tests', () => {
 
       expect(result.currentMonth).toBe(24);
       expect(result.monthsUntilExam).toBe(1);
-      expect(result.unlockedChapterKeys.length).toBe(63); // All chapters (progressive unlock)
+      expect(result.unlockedChapterKeys.length).toBe(66); // All chapters (progressive unlock)
     });
 
     test('User joins 24 months early (ideal timeline)', async () => {
