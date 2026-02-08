@@ -8,7 +8,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const { authenticateUser } = require('../middleware/auth');
-const { getUnlockedChapters, isChapterUnlocked, TOTAL_TIMELINE_MONTHS } = require('../services/chapterUnlockService');
+const { getUnlockedChapters, isChapterUnlocked, getFullChapterOrder, TOTAL_TIMELINE_MONTHS } = require('../services/chapterUnlockService');
 const logger = require('../utils/logger');
 
 /**
@@ -19,11 +19,14 @@ router.get('/unlocked', authenticateUser, async (req, res) => {
   try {
     const userId = req.userId;
     const result = await getUnlockedChapters(userId);
+    const fullChapterOrder = await getFullChapterOrder();
 
     res.json({
       success: true,
       data: {
         unlockedChapters: result.unlockedChapterKeys,
+        chapterUnlockOrder: result.chapterUnlockOrder || [],
+        fullChapterOrder, // All chapters in unlock order (months 1-24)
         currentMonth: result.currentMonth,
         monthsUntilExam: result.monthsUntilExam,
         totalMonths: TOTAL_TIMELINE_MONTHS,

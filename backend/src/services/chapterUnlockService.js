@@ -154,14 +154,18 @@ async function getUnlockedChapters(userId, referenceDate = new Date()) {
 
   // Collect chapters from month 1 to currentMonthForUnlock (NOT position.currentMonth)
   const unlockedChapters = new Set();
+  const chapterUnlockOrder = []; // Track unlock order for sorting
 
   for (let m = 1; m <= currentMonthForUnlock; m++) {
     const monthData = schedule.timeline[`month_${m}`];
     if (!monthData) continue;
 
     if (monthData.all_unlocked) {
+      // Build order from all previous months first
+      const allChapterKeys = await getAllChapterKeys();
       return {
-        unlockedChapterKeys: await getAllChapterKeys(),
+        unlockedChapterKeys: allChapterKeys,
+        chapterUnlockOrder: chapterUnlockOrder.concat(allChapterKeys.filter(ch => !unlockedChapters.has(ch))),
         ...position,
         usingHighWaterMark: currentMonthForUnlock > position.currentMonth
       };
@@ -172,7 +176,12 @@ async function getUnlockedChapters(userId, referenceDate = new Date()) {
     // Students continue mastering previously unlocked chapters
     ['physics', 'chemistry', 'mathematics'].forEach(subject => {
       if (Array.isArray(monthData[subject]) && monthData[subject].length > 0) {
-        monthData[subject].forEach(ch => unlockedChapters.add(ch));
+        monthData[subject].forEach(ch => {
+          if (!unlockedChapters.has(ch)) {
+            unlockedChapters.add(ch);
+            chapterUnlockOrder.push(ch); // Track order
+          }
+        });
       }
       // If monthData[subject] is [] (empty), skip - no new chapters for this subject this month
     });
@@ -196,6 +205,7 @@ async function getUnlockedChapters(userId, referenceDate = new Date()) {
 
   return {
     unlockedChapterKeys: Array.from(unlockedChapters),
+    chapterUnlockOrder, // Array of chapter keys in unlock order
     ...position,
     usingHighWaterMark: currentMonthForUnlock > position.currentMonth
   };
@@ -207,6 +217,36 @@ async function getUnlockedChapters(userId, referenceDate = new Date()) {
 async function isChapterUnlocked(userId, chapterKey) {
   const result = await getUnlockedChapters(userId);
   return result.unlockedChapterKeys.includes(chapterKey);
+}
+
+/**
+ * Get full chapter order from schedule (all 24 months)
+ * Returns array of all chapter keys in the order they unlock across the timeline
+ */
+async function getFullChapterOrder() {
+  const schedule = await getActiveSchedule();
+  const chapterOrder = [];
+  const seen = new Set();
+
+  // Iterate through all 24 months
+  for (let m = 1; m <= TOTAL_TIMELINE_MONTHS; m++) {
+    const monthData = schedule.timeline[`month_${m}`];
+    if (!monthData) continue;
+
+    // Add chapters from each subject in order
+    ['physics', 'chemistry', 'mathematics'].forEach(subject => {
+      if (Array.isArray(monthData[subject]) && monthData[subject].length > 0) {
+        monthData[subject].forEach(ch => {
+          if (!seen.has(ch)) {
+            seen.add(ch);
+            chapterOrder.push(ch);
+          }
+        });
+      }
+    });
+  }
+
+  return chapterOrder;
 }
 
 /**
@@ -230,5 +270,6 @@ module.exports = {
   isChapterUnlocked,
   addChapterUnlockOverride,
   getActiveSchedule,
+  getFullChapterOrder,
   TOTAL_TIMELINE_MONTHS
 };
