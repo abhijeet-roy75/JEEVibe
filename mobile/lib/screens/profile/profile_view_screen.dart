@@ -33,6 +33,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   String _appVersion = '';
   SubscriptionStatus? _subscriptionStatus;
   bool _loadingSubscription = true;
+  bool _profileWasUpdated = false; // Track if profile was edited
 
   @override
   void initState() {
@@ -303,7 +304,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   color: Colors.white,
                   size: 20,
                 ),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => Navigator.of(context).pop(_profileWasUpdated),
                 padding: const EdgeInsets.all(8),
                 constraints: const BoxConstraints(),
               ),
@@ -349,6 +350,9 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     // If profile was updated, reload the profile data from provider
     if (result == true) {
       profileProvider.refreshProfile();
+      setState(() {
+        _profileWasUpdated = true; // Track that profile was updated
+      });
     }
   }
 

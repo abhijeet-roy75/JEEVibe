@@ -503,8 +503,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Coaching Enrollment Status (required)
-                    _buildFieldLabel('Do you attend coaching classes?'),
+                    // Coaching Enrollment Status (optional)
+                    _buildFieldLabel('Do you attend coaching classes?', isOptional: true),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<bool>(
                       value: _isEnrolledInCoaching,
@@ -522,12 +522,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                         ),
                       ],
                       onChanged: (value) => setState(() => _isEnrolledInCoaching = value),
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Please select an option';
-                        }
-                        return null;
-                      },
+                      // No validator - this field is optional
                       onSaved: (value) => _isEnrolledInCoaching = value,
                     ),
 

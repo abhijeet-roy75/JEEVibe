@@ -17,7 +17,7 @@ import '../../widgets/offline/offline_banner.dart';
 import '../../widgets/subject_icon_widget.dart';
 import '../../widgets/subject_filter_bar.dart';
 import '../chapter_practice/chapter_practice_review_screen.dart';
-import '../chapter_practice/chapter_picker_screen.dart';
+import '../chapter_list_screen.dart';
 import '../subscription/paywall_screen.dart';
 
 class ChapterPracticeHistoryScreen extends StatefulWidget {
@@ -367,7 +367,7 @@ class _ChapterPracticeHistoryScreenState
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ChapterPickerScreen(),
+                    builder: (context) => const ChapterListScreen(),
                   ),
                 ).then((_) => _loadPracticeHistory());
               } else {

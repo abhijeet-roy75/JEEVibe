@@ -196,7 +196,7 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

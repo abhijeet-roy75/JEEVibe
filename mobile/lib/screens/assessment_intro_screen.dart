@@ -40,7 +40,6 @@ import '../services/share_service.dart';
 import '../widgets/shareable_journey_card.dart';
 import 'subscription/paywall_screen.dart';
 import 'chapter_practice/chapter_practice_loading_screen.dart';
-import 'chapter_practice/chapter_picker_screen.dart';
 import 'chapter_list_screen.dart';
 import 'mock_test/mock_test_home_screen.dart';
 import '../providers/mock_test_provider.dart';
@@ -50,16 +49,27 @@ class AssessmentIntroScreen extends StatefulWidget {
   /// Profile icon is replaced with tier badge (profile is in bottom nav)
   final bool isInBottomNav;
 
+  /// Callback when tab becomes visible (for bottom nav refresh)
+  final VoidCallback? onTabVisible;
+
   const AssessmentIntroScreen({
     super.key,
     this.isInBottomNav = false,
+    this.onTabVisible,
   });
 
   @override
   State<AssessmentIntroScreen> createState() => _AssessmentIntroScreenState();
+
+  /// Static method to refresh data - called by parent when tab becomes visible
+  static void refreshIfNeeded(BuildContext context) {
+    final state = context.findAncestorStateOfType<_AssessmentIntroScreenState>();
+    state?._maybeRefreshData();
+  }
 }
 
-class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
+class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
+    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   UserProfile? _userProfile;
   String _assessmentStatus = 'not_started';
   bool _isLoading = true;
@@ -80,10 +90,49 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
   final _screenshotController = ScreenshotController();
 
   @override
+  bool get wantKeepAlive => true; // Keep state alive in IndexedStack
+
+  @override
   void initState() {
     super.initState();
     _loadData();
     _trackSession();
+
+    // Listen for profile changes to refresh chapter unlock data
+    final userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
+    userProfileProvider.addListener(_onProfileChanged);
+
+    // Listen for app lifecycle changes to refresh when screen becomes visible
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    final userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
+    userProfileProvider.removeListener(_onProfileChanged);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh data when app comes to foreground
+    if (state == AppLifecycleState.resumed) {
+      _maybeRefreshData();
+    }
+  }
+
+  /// Called when profile changes (e.g., JEE target date updated)
+  void _onProfileChanged() {
+    debugPrint('🔄 Profile changed detected, refreshing chapter unlock data...');
+    _refreshChapterUnlockData();
+  }
+
+  /// Refresh data when tab becomes visible
+  Future<void> _maybeRefreshData() async {
+    debugPrint('🔄 Refreshing home screen data...');
+    await _loadData();
   }
 
   /// Refresh chapter unlock data (called when returning from profile edit)
@@ -368,6 +417,8 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
     // Watch UserProfileProvider so widget rebuilds when profile loads
     context.watch<UserProfileProvider>();
 
@@ -489,12 +540,17 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
           ? _buildTierBadge()
           : GestureDetector(
               onTap: () async {
-                await Navigator.push(
+                final profileUpdated = await Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const ProfileViewScreen()),
                 );
                 // Refresh data when returning from profile (user may have edited their profile)
-                debugPrint('🔄 Returned from profile, reloading data...');
+                if (profileUpdated == true) {
+                  debugPrint('🔄 Profile was updated, waiting for Firestore propagation...');
+                  // Small delay to ensure Firestore write has propagated
+                  await Future.delayed(const Duration(milliseconds: 500));
+                }
+                debugPrint('🔄 Reloading data after profile change...');
                 await _loadData();
               },
               child: Container(
@@ -1643,11 +1699,6 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            // JEE Countdown Timeline Section (if data available)
-            if (_chapterUnlockData != null && _chapterUnlockData!.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              _buildJeeCountdownSection(),
-            ],
             // Chat with Priya button (Ultra tier only)
             if (hasAiTutorAccess) ...[
               const SizedBox(height: 16),
@@ -1859,30 +1910,6 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
                   ),
                 ],
               ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          // View All button - opens chapter list screen (disabled until user completes quiz)
-          TextButton(
-            onPressed: isLocked ? null : () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ChapterListScreen(),
-                ),
-              );
-            },
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(
-              'View All',
-              style: AppTextStyles.labelSmall.copyWith(
-                color: isLocked ? AppColors.textTertiary : AppColors.primaryPurple,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
             ),
           ),
         ],
@@ -2427,7 +2454,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const ChapterPickerScreen(),
+            builder: (context) => const ChapterListScreen(),
           ),
         ).then((_) {
           // Refresh data when returning from chapter practice

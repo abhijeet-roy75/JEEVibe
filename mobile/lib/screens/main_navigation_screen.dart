@@ -55,6 +55,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 
   void _onTabSelected(int index) {
+    // Always refresh Home tab when tapped, even if already on it
+    if (index == 0) {
+      // Small delay to ensure widget is built
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          AssessmentIntroScreen.refreshIfNeeded(context);
+        }
+      });
+    }
+
+    // Only change tabs if switching to a different one
     if (_currentIndex != index) {
       setState(() {
         _currentIndex = index;

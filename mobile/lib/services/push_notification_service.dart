@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'api_service.dart';
+import 'firebase/auth_service.dart';
 
 /// Push Notification Service
 ///
@@ -84,17 +85,23 @@ class PushNotificationService {
     try {
       debugPrint('PushNotificationService: Saving FCM token to backend...');
 
+      // Get device ID for per-device token storage
+      final deviceId = await AuthService.getDeviceId();
+
       final headers = await ApiService.getAuthHeaders(authToken);
       final response = await http.post(
         Uri.parse('${ApiService.baseUrl}/api/users/fcm-token'),
         headers: headers,
-        body: jsonEncode({'fcm_token': token}),
+        body: jsonEncode({
+          'fcm_token': token,
+          'device_id': deviceId,
+        }),
       );
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         if (jsonData['success'] == true) {
-          debugPrint('PushNotificationService: FCM token saved successfully');
+          debugPrint('PushNotificationService: FCM token saved successfully for device $deviceId');
         } else {
           debugPrint('PushNotificationService: Failed to save FCM token = ${jsonData['error']}');
         }
@@ -264,17 +271,23 @@ class PushNotificationService {
     try {
       debugPrint('PushNotificationService: Clearing FCM token...');
 
+      // Get device ID to clear this device's token
+      final deviceId = await AuthService.getDeviceId();
+
       final headers = await ApiService.getAuthHeaders(authToken);
       await http.post(
         Uri.parse('${ApiService.baseUrl}/api/users/fcm-token'),
         headers: headers,
-        body: jsonEncode({'fcm_token': null}),
+        body: jsonEncode({
+          'fcm_token': null,
+          'device_id': deviceId,
+        }),
       );
 
       _currentToken = null;
       await _messaging.deleteToken();
 
-      debugPrint('PushNotificationService: FCM token cleared');
+      debugPrint('PushNotificationService: FCM token cleared for device $deviceId');
     } catch (e) {
       debugPrint('PushNotificationService: Error clearing FCM token = $e');
     }
