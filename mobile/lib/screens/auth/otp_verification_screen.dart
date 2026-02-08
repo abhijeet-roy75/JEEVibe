@@ -8,6 +8,7 @@ import 'create_pin_screen.dart';
 import 'pin_verification_screen.dart';
 import '../main_navigation_screen.dart';
 import 'package:provider/provider.dart';
+import '../../providers/user_profile_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../utils/auth_error_helper.dart';
@@ -91,15 +92,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   Future<void> _verifyOTP(String otp) async {
     if (_isLoading || _isDisposed || !mounted) return;
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     final authService = Provider.of<AuthService>(context, listen: false);
     final firestoreService = Provider.of<FirestoreUserService>(context, listen: false);
     final pinService = PinService();
-    
+
     try {
       final userCredential = await authService.signInWithSMSCode(
         verificationId: _currentVerificationId!,
@@ -137,9 +138,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         } catch (e) {
           debugPrint('Error checking profile: $e');
         }
-        
+
         if (!mounted || _isDisposed) return;
-        
+
         // Wait to ensure FocusNode is fully detached
         await Future.delayed(const Duration(milliseconds: 600));
 
@@ -149,6 +150,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         if (widget.isForgotPinFlow) {
           // Clear old PIN immediately after successful verification
           await pinService.clearPin();
+
+          if (!mounted) return;
+
+          // Load profile BEFORE navigating (prevents "Hi Student" flash)
+          await _loadUserProfile();
 
           if (!mounted) return;
 
@@ -167,6 +173,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
         // Standard login flow
         if (hasProfile) {
+          // User exists - Load profile BEFORE navigating (prevents "Hi Student" flash)
+          await _loadUserProfile();
+
+          if (!mounted) return;
+
           // User exists - Check if PIN is set on this device
           final hasPin = await pinService.pinExists();
 
@@ -208,13 +219,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       if (mounted) {
         final userFriendlyMessage = AuthErrorHelper.getUserFriendlyMessage(e);
         final suggestion = AuthErrorHelper.getActionableSuggestion(e);
-        
+
         setState(() {
           _isLoading = false;
           _errorMessage = userFriendlyMessage;
           _errorSuggestion = suggestion;
         });
-        
+
         // Clear OTP fields on error to allow retry
         _isClearingProgrammatically = true;
         _otpController.clear();
@@ -224,6 +235,19 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           }
         });
       }
+    }
+  }
+
+  /// Load user profile into UserProfileProvider before navigation
+  /// This prevents "Hi Student" flash by ensuring profile is ready
+  Future<void> _loadUserProfile() async {
+    try {
+      final userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
+      await userProfileProvider.loadProfile();
+      debugPrint('✅ Profile loaded successfully: ${userProfileProvider.firstName}');
+    } catch (e) {
+      debugPrint('⚠️ Failed to load profile: $e');
+      // Don't block navigation on profile load failure
     }
   }
 
