@@ -9,6 +9,7 @@ import '../services/firebase/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../widgets/subject_icon_widget.dart';
+import '../widgets/app_header.dart';
 import 'chapter_practice/chapter_practice_loading_screen.dart';
 
 class ChapterListScreen extends StatefulWidget {
@@ -16,16 +17,23 @@ class ChapterListScreen extends StatefulWidget {
 
   @override
   State<ChapterListScreen> createState() => _ChapterListScreenState();
+
+  /// Static method to refresh unlock data - called when navigating back to this screen
+  static void refreshIfNeeded(BuildContext context) {
+    final state = context.findAncestorStateOfType<_ChapterListScreenState>();
+    state?._loadUnlockData();
+  }
 }
 
 class _ChapterListScreenState extends State<ChapterListScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
   String? _authToken;
 
   // Chapter unlock data from countdown timeline
   Map<String, dynamic>? _unlockData;
   Set<String> _unlockedChapterKeys = {};
+  List<String> _fullChapterOrder = []; // All chapters in unlock order
   int _currentMonth = 0;
   int _monthsUntilExam = 0;
   bool _isLoadingUnlockData = true;
@@ -51,13 +59,24 @@ class _ChapterListScreenState extends State<ChapterListScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
+    WidgetsBinding.instance.addObserver(this);
     _initData();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh unlock data when app comes to foreground
+    if (state == AppLifecycleState.resumed) {
+      _loadUnlockData();
+    }
   }
 
   @override
   void dispose() {
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -95,10 +114,17 @@ class _ChapterListScreenState extends State<ChapterListScreen>
       );
 
       if (mounted) {
+        final unlockedList = unlockData['unlockedChapters'] as List? ?? [];
+        debugPrint('📊 ChapterListScreen: Received ${unlockedList.length} unlocked chapters');
+        if (unlockedList.isNotEmpty) {
+          debugPrint('📊 First 3 unlocked keys: ${unlockedList.take(3).join(", ")}');
+        }
+
         setState(() {
           _unlockData = unlockData;
-          _unlockedChapterKeys = Set<String>.from(
-            unlockData['unlockedChapters'] as List? ?? []
+          _unlockedChapterKeys = Set<String>.from(unlockedList);
+          _fullChapterOrder = List<String>.from(
+            unlockData['fullChapterOrder'] as List? ?? []
           );
           _currentMonth = unlockData['currentMonth'] as int? ?? 0;
           _monthsUntilExam = unlockData['monthsUntilExam'] as int? ?? 0;
@@ -141,6 +167,11 @@ class _ChapterListScreenState extends State<ChapterListScreen>
       );
 
       if (mounted) {
+        // Debug: Log first few chapter keys from mastery data
+        if (chapters.isNotEmpty) {
+          debugPrint('📚 Chapter mastery data ($subject): ${chapters.take(3).map((c) => c.chapterKey).join(", ")}');
+        }
+
         setState(() {
           _chaptersCache[subject] = chapters;
           _loadingState[subject] = false;
@@ -160,85 +191,156 @@ class _ChapterListScreenState extends State<ChapterListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'All Chapters',
-          style: AppTextStyles.headerMedium.copyWith(color: AppColors.textPrimary),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(100),
-          child: Column(
-            children: [
-              // JEE Countdown Info
-              if (!_isLoadingUnlockData && _monthsUntilExam > 0)
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.borderDefault),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.calendar_today,
-                            size: 16,
-                            color: AppColors.info,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '$_monthsUntilExam months to JEE',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        '${_unlockedChapterKeys.length}/63 unlocked',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.success,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+      body: Column(
+        children: [
+          // Standard gradient header
+          AppHeader(
+            leading: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                  size: 20,
                 ),
-              // Subject Tabs
-              TabBar(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // Trigger home screen refresh when going back
+                  Future.delayed(const Duration(milliseconds: 100), () {
+                    if (context.mounted) {
+                      try {
+                        AssessmentIntroScreen.refreshIfNeeded(context);
+                      } catch (e) {
+                        // Ignore if home screen is not in widget tree
+                      }
+                    }
+                  });
+                },
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(),
+              ),
+            ),
+            title: Text(
+              'All Chapters',
+              style: AppTextStyles.headerWhite.copyWith(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: !_isLoadingUnlockData && _monthsUntilExam > 0
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.calendar_today,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '$_monthsUntilExam months to JEE',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.lock_open,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${_unlockedChapterKeys.length}/63 unlocked',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : null,
+            bottomPadding: 16,
+          ),
+          // Subject Tabs
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceGrey,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TabBar(
                 controller: _tabController,
-                labelColor: AppColors.textPrimary,
-                unselectedLabelColor: AppColors.textSecondary,
-                indicatorColor: AppColors.primary,
-                indicatorWeight: 3,
-                labelStyle: AppTextStyles.bodyMedium.copyWith(
+                indicator: BoxDecoration(
+                  gradient: AppColors.ctaGradient,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                labelColor: Colors.white,
+                unselectedLabelColor: AppColors.textTertiary,
+                labelStyle: AppTextStyles.labelMedium.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
+                unselectedLabelStyle: AppTextStyles.labelMedium,
+                padding: const EdgeInsets.all(4),
                 tabs: const [
                   Tab(text: 'Physics'),
                   Tab(text: 'Chemistry'),
                   Tab(text: 'Mathematics'),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: _subjects.map((subject) {
-          return _buildSubjectChapterList(subject);
-        }).toList(),
+          // Tab content
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: _subjects.map((subject) {
+                return _buildSubjectChapterList(subject);
+              }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -302,17 +404,57 @@ class _ChapterListScreenState extends State<ChapterListScreen>
       );
     }
 
+    // Sort chapters by unlock order
+    final sortedChapters = _sortChaptersByUnlockOrder(chapters);
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: chapters.length,
+      itemCount: sortedChapters.length,
       itemBuilder: (context, index) {
-        final chapter = chapters[index];
+        final chapter = sortedChapters[index];
         final chapterKey = chapter.chapterKey;
         final isUnlocked = _unlockedChapterKeys.contains(chapterKey);
+
+        // Debug: Log first few chapters to compare keys
+        if (index < 3) {
+          debugPrint('🔍 Chapter #$index: key="$chapterKey" (${chapter.chapterName}), isUnlocked=$isUnlocked');
+          if (!isUnlocked && _unlockedChapterKeys.isNotEmpty) {
+            // Check if any unlocked key is similar
+            final similar = _unlockedChapterKeys.where((k) => k.contains(chapterKey) || chapterKey.contains(k)).toList();
+            if (similar.isNotEmpty) {
+              debugPrint('   ⚠️  Found similar keys: ${similar.take(3).join(", ")}');
+            }
+          }
+        }
 
         return _buildChapterCard(chapter, isUnlocked);
       },
     );
+  }
+
+  /// Sort chapters by unlock order from the schedule
+  /// Unlocked chapters first (in unlock order), then locked chapters (in future unlock order)
+  List<ChapterMastery> _sortChaptersByUnlockOrder(List<ChapterMastery> chapters) {
+    if (_fullChapterOrder.isEmpty) {
+      // Fallback: no sorting if we don't have the order
+      return chapters;
+    }
+
+    // Create a map of chapter_key -> unlock position (lower = unlocks earlier)
+    final Map<String, int> unlockPosition = {};
+    for (int i = 0; i < _fullChapterOrder.length; i++) {
+      unlockPosition[_fullChapterOrder[i]] = i;
+    }
+
+    // Sort chapters by unlock position
+    final sortedChapters = List<ChapterMastery>.from(chapters);
+    sortedChapters.sort((a, b) {
+      final posA = unlockPosition[a.chapterKey] ?? 999999;
+      final posB = unlockPosition[b.chapterKey] ?? 999999;
+      return posA.compareTo(posB);
+    });
+
+    return sortedChapters;
   }
 
   Widget _buildChapterCard(ChapterMastery chapter, bool isUnlocked) {
