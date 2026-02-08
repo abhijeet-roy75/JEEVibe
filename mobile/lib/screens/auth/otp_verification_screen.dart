@@ -6,7 +6,7 @@ import '../../services/firebase/firestore_user_service.dart';
 import '../../services/firebase/pin_service.dart';
 import 'create_pin_screen.dart';
 import 'pin_verification_screen.dart';
-import '../assessment_intro_screen.dart';
+import '../main_navigation_screen.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
@@ -153,11 +153,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           if (!mounted) return;
 
           // Navigate to CreatePinScreen to set new PIN
-          // Target screen is always AssessmentIntroScreen for existing users
+          // Target screen is always MainNavigationScreen for existing users
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => const CreatePinScreen(
-                targetScreen: AssessmentIntroScreen(),
+                targetScreen: MainNavigationScreen(),
               ),
             ),
             (route) => false,
@@ -172,8 +172,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
           if (!mounted) return;
 
-          // Target screen is always Home for existing users
-          final targetScreen = const AssessmentIntroScreen();
+          // Target screen is always MainNavigationScreen (bottom nav) for existing users
+          final targetScreen = const MainNavigationScreen();
 
           if (hasPin) {
              // PIN exists - Verify it locally before going Home
