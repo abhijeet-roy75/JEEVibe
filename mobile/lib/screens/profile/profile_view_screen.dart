@@ -46,8 +46,8 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   Future<void> _ensureProfileLoaded() async {
     final profileProvider = Provider.of<UserProfileProvider>(context, listen: false);
     if (profileProvider.profile == null) {
-      debugPrint('Profile is null, fetching...');
-      await profileProvider.fetchProfile();
+      debugPrint('Profile is null, loading...');
+      await profileProvider.refreshProfile();
     }
   }
 
