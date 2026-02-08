@@ -81,10 +81,11 @@ describe('POST /api/users/fcm-token', () => {
   describe('Success Cases', () => {
     test('should save FCM token successfully', async () => {
       const fcmToken = 'test-fcm-token-12345';
+      const deviceId = 'test-device-123';
 
       const response = await request(app)
         .post('/api/users/fcm-token')
-        .send({ fcm_token: fcmToken })
+        .send({ fcm_token: fcmToken, device_id: deviceId })
         .expect(200);
 
       // Verify response
@@ -98,7 +99,7 @@ describe('POST /api/users/fcm-token', () => {
       expect(mockCollection).toHaveBeenCalledWith('users');
       expect(mockDoc).toHaveBeenCalledWith('test-user-123');
       expect(mockUpdate).toHaveBeenCalledWith({
-        fcm_token: fcmToken,
+        'fcm_tokens.test-device-123': fcmToken,
         fcm_token_updated_at: 'TIMESTAMP',
       });
 
@@ -107,9 +108,10 @@ describe('POST /api/users/fcm-token', () => {
     });
 
     test('should clear FCM token when null is provided', async () => {
+      const deviceId = 'test-device-123';
       const response = await request(app)
         .post('/api/users/fcm-token')
-        .send({ fcm_token: null })
+        .send({ fcm_token: null, device_id: deviceId })
         .expect(200);
 
       // Verify response
@@ -121,7 +123,7 @@ describe('POST /api/users/fcm-token', () => {
 
       // Verify Firestore was called with delete marker
       expect(mockUpdate).toHaveBeenCalledWith({
-        fcm_token: 'DELETE',
+        'fcm_tokens.test-device-123': 'DELETE',
         fcm_token_updated_at: 'TIMESTAMP',
       });
 
@@ -130,9 +132,10 @@ describe('POST /api/users/fcm-token', () => {
     });
 
     test('should clear FCM token when empty string is provided', async () => {
+      const deviceId = 'test-device-123';
       const response = await request(app)
         .post('/api/users/fcm-token')
-        .send({ fcm_token: '' })
+        .send({ fcm_token: '', device_id: deviceId })
         .expect(200);
 
       // Verify response
@@ -144,15 +147,16 @@ describe('POST /api/users/fcm-token', () => {
 
       // Verify Firestore was called with delete marker
       expect(mockUpdate).toHaveBeenCalledWith({
-        fcm_token: 'DELETE',
+        'fcm_tokens.test-device-123': 'DELETE',
         fcm_token_updated_at: 'TIMESTAMP',
       });
     });
 
     test('should update timestamp when token is saved', async () => {
+      const deviceId = 'test-device-123';
       await request(app)
         .post('/api/users/fcm-token')
-        .send({ fcm_token: 'new-token' })
+        .send({ fcm_token: 'new-token', device_id: deviceId })
         .expect(200);
 
       const updateCall = mockUpdate.mock.calls[0][0];
@@ -167,7 +171,7 @@ describe('POST /api/users/fcm-token', () => {
 
       await request(app)
         .post('/api/users/fcm-token')
-        .send({ fcm_token: 'test-token' })
+        .send({ fcm_token: 'test-token', device_id: 'test-device-123' })
         .expect(500);
 
       // The error should be caught and return a 500 status
@@ -181,26 +185,30 @@ describe('POST /api/users/fcm-token', () => {
   });
 
   describe('Edge Cases', () => {
-    test('should handle missing fcm_token field', async () => {
+    test('should return 400 when device_id is missing', async () => {
       const response = await request(app)
         .post('/api/users/fcm-token')
-        .send({})
-        .expect(200);
+        .send({ fcm_token: 'test-token' })
+        .expect(400);
 
-      // Should treat as clear when undefined
-      expect(response.body.message).toBe('FCM token cleared');
+      expect(response.body).toEqual({
+        success: false,
+        error: 'device_id is required',
+        requestId: 'request-id-123'
+      });
     });
 
     test('should handle very long FCM tokens', async () => {
       const longToken = 'a'.repeat(1000);
+      const deviceId = 'test-device-123';
 
       await request(app)
         .post('/api/users/fcm-token')
-        .send({ fcm_token: longToken })
+        .send({ fcm_token: longToken, device_id: deviceId })
         .expect(200);
 
       expect(mockUpdate).toHaveBeenCalledWith({
-        fcm_token: longToken,
+        'fcm_tokens.test-device-123': longToken,
         fcm_token_updated_at: 'TIMESTAMP',
       });
     });
@@ -224,7 +232,7 @@ describe('POST /api/users/fcm-token', () => {
     test('should include request ID in response', async () => {
       const response = await request(app)
         .post('/api/users/fcm-token')
-        .send({ fcm_token: 'test-token' })
+        .send({ fcm_token: 'test-token', device_id: 'test-device-123' })
         .expect(200);
 
       expect(response.body.requestId).toBe('request-id-123');
