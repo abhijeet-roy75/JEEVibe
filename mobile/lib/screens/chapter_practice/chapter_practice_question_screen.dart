@@ -2,6 +2,7 @@
 /// Main question interface for chapter practice (no timer, practice mode)
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
 import '../../models/chapter_practice_models.dart';
 import '../../providers/chapter_practice_provider.dart';
@@ -610,15 +611,34 @@ class _ChapterPracticeQuestionScreenState
               ],
             ),
             const SizedBox(height: 16),
-            // Question text
-            Text(
-              question.questionText,
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textDark,
-                fontWeight: FontWeight.w500,
-                height: 1.5,
+            // Question text - Use HTML if available for proper formatting (bold numbers, etc.)
+            if (question.questionTextHtml != null)
+              Html(
+                data: question.questionTextHtml,
+                style: {
+                  'body': Style(
+                    margin: Margins.zero,
+                    padding: HtmlPaddings.zero,
+                    fontSize: FontSize(18),
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textDark,
+                    lineHeight: const LineHeight(1.5),
+                  ),
+                  'p': Style(
+                    margin: Margins.zero,
+                    padding: HtmlPaddings.zero,
+                  ),
+                },
+              )
+            else
+              Text(
+                question.questionText,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textDark,
+                  fontWeight: FontWeight.w500,
+                  height: 1.5,
+                ),
               ),
-            ),
             const SizedBox(height: 20),
             // Show numerical input or MCQ options based on question type
             if (question.isNumerical) ...[
