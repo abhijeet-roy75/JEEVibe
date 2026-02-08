@@ -167,7 +167,10 @@
     },
     "month_14": {
       "physics": [
-        "physics_emi_ac_circuits"
+        "physics_electromagnetic_induction",
+        "physics_ac_circuits",
+        "physics_eddy_currents",
+        "physics_transformers"
       ],
       "chemistry": [
         "chemistry_p_block_elements"
