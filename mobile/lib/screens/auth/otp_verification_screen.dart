@@ -173,13 +173,16 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
         // Standard login flow
         if (hasProfile) {
+          debugPrint('📱 Existing user detected - loading profile...');
           // User exists - Load profile BEFORE navigating (prevents "Hi Student" flash)
           await _loadUserProfile();
 
           if (!mounted) return;
 
+          debugPrint('🔐 Checking if PIN exists on device...');
           // User exists - Check if PIN is set on this device
           final hasPin = await pinService.pinExists();
+          debugPrint('🔐 PIN exists: $hasPin');
 
           if (!mounted) return;
 
@@ -187,6 +190,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           final targetScreen = const MainNavigationScreen();
 
           if (hasPin) {
+             debugPrint('➡️ Navigating to PIN verification screen...');
              // PIN exists - Verify it locally before going Home
              Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(
@@ -197,6 +201,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               (route) => false,
             );
           } else {
+             debugPrint('➡️ Navigating to create PIN screen (existing user)...');
              // PIN missing (e.g. new phone) - Create it then go Home
              Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(
@@ -208,6 +213,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             );
           }
         } else {
+          debugPrint('➡️ Navigating to create PIN screen (new user)...');
           // New User - Standard flow: Create PIN -> Profile Setup
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const CreatePinScreen()),
@@ -242,8 +248,18 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   /// This prevents "Hi Student" flash by ensuring profile is ready
   Future<void> _loadUserProfile() async {
     try {
+      debugPrint('🔄 Loading user profile...');
       final userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
-      await userProfileProvider.loadProfile();
+
+      // Add timeout to prevent indefinite hanging
+      await userProfileProvider.loadProfile().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          debugPrint('⚠️ Profile load timed out after 10 seconds');
+          throw TimeoutException('Profile load timed out');
+        },
+      );
+
       debugPrint('✅ Profile loaded successfully: ${userProfileProvider.firstName}');
     } catch (e) {
       debugPrint('⚠️ Failed to load profile: $e');
