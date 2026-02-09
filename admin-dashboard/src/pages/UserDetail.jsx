@@ -28,15 +28,19 @@ function StatCard({ label, value, subtext }) {
 }
 
 function formatDuration(seconds) {
-  if (!seconds) return '0m';
+  if (!seconds) return '0s';
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
+  const remainingSeconds = seconds % 60;
 
   if (hours > 0) {
     return `${hours}h ${remainingMinutes}m`;
   }
-  return `${minutes}m`;
+  if (minutes > 0) {
+    return `${minutes}m`;
+  }
+  return `${remainingSeconds}s`;
 }
 
 function formatDate(date) {
