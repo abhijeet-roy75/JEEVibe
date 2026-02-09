@@ -585,19 +585,118 @@ async function getUserDetails(userId) {
                         subscriptionData.override?.tier_id ||
                         'free';
 
-  // Get recent quizzes
-  const quizzesSnapshot = await db
+  // Get initial assessment data
+  const assessmentData = userData.assessment || {};
+  let assessmentDetails = null;
+  if (assessmentData.status === 'completed') {
+    assessmentDetails = {
+      completedAt: assessmentData.completed_at,
+      score: assessmentData.score || 0,
+      totalQuestions: assessmentData.total_questions || 30,
+      timeSpentSeconds: assessmentData.time_spent_seconds || 0,
+      accuracy: assessmentData.accuracy || 0,
+      subjectScores: assessmentData.subject_scores || {}
+    };
+  }
+
+  // Get daily quizzes
+  const dailyQuizzesSnapshot = await db
     .collection('users')
     .doc(userId)
-    .collection('quizzes')
-    .orderBy('generated_at', 'desc')
-    .limit(10)
+    .collection('daily_quizzes')
+    .orderBy('completed_at', 'desc')
+    .limit(50)
     .get();
 
-  const recentQuizzes = [];
-  quizzesSnapshot.forEach(doc => {
-    recentQuizzes.push({ quiz_id: doc.id, ...doc.data() });
+  const dailyQuizzes = [];
+  dailyQuizzesSnapshot.forEach(doc => {
+    const quiz = doc.data();
+    dailyQuizzes.push({
+      id: doc.id,
+      date: quiz.date,
+      completedAt: quiz.completed_at,
+      score: quiz.score || 0,
+      totalQuestions: quiz.questions?.length || 0,
+      timeSpentSeconds: quiz.time_spent_seconds || 0,
+      accuracy: quiz.accuracy || (quiz.score / (quiz.questions?.length || 1)),
+      subjects: quiz.subjects || []
+    });
   });
+
+  // Get chapter practice sessions
+  const chapterPracticeSnapshot = await db
+    .collection('users')
+    .doc(userId)
+    .collection('chapter_sessions')
+    .orderBy('completed_at', 'desc')
+    .limit(50)
+    .get();
+
+  const chapterPractice = [];
+  chapterPracticeSnapshot.forEach(doc => {
+    const session = doc.data();
+    chapterPractice.push({
+      id: doc.id,
+      chapterKey: session.chapter_key,
+      chapterName: session.chapter_name || session.chapter_key,
+      subject: session.subject,
+      completedAt: session.completed_at,
+      score: session.score || 0,
+      totalQuestions: session.questions?.length || 0,
+      timeSpentSeconds: session.time_spent_seconds || 0,
+      accuracy: session.accuracy || 0
+    });
+  });
+
+  // Get mock tests
+  const mockTestsSnapshot = await db
+    .collection('users')
+    .doc(userId)
+    .collection('mock_tests')
+    .orderBy('completed_at', 'desc')
+    .limit(20)
+    .get();
+
+  const mockTests = [];
+  mockTestsSnapshot.forEach(doc => {
+    const test = doc.data();
+    mockTests.push({
+      id: doc.id,
+      testName: test.test_name || 'JEE Main Mock Test',
+      completedAt: test.completed_at,
+      score: test.total_score || 0,
+      maxScore: test.max_score || 300,
+      totalQuestions: test.total_questions || 90,
+      timeSpentSeconds: test.time_spent_seconds || 0,
+      accuracy: test.overall_accuracy || 0,
+      subjectScores: test.subject_scores || {}
+    });
+  });
+
+  // Calculate percentile history (from daily quizzes over time)
+  const percentileHistory = [];
+  if (dailyQuizzes.length > 0) {
+    // Group by month and calculate average percentile
+    const monthlyData = {};
+    dailyQuizzes.forEach(quiz => {
+      if (quiz.completedAt) {
+        const date = quiz.completedAt.toDate ? quiz.completedAt.toDate() : new Date(quiz.completedAt);
+        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (!monthlyData[monthKey]) {
+          monthlyData[monthKey] = { total: 0, count: 0 };
+        }
+        monthlyData[monthKey].total += quiz.accuracy * 100;
+        monthlyData[monthKey].count += 1;
+      }
+    });
+
+    Object.keys(monthlyData).sort().forEach(month => {
+      percentileHistory.push({
+        month,
+        averagePercentile: Math.round(monthlyData[month].total / monthlyData[month].count)
+      });
+    });
+  }
 
   return {
     uid: userId,
@@ -607,7 +706,8 @@ async function getUserDetails(userId) {
       email: userData.email || '',
       phone: userData.phone || '',
       createdAt: userData.createdAt,
-      lastActive: userData.lastActive
+      lastActive: userData.lastActive,
+      isEnrolledInCoaching: userData.isEnrolledInCoaching || false
     },
     subscription: {
       tier: effectiveTier,
@@ -621,6 +721,7 @@ async function getUserDetails(userId) {
       overallTheta: userData.overall_theta,
       overallPercentile: userData.overall_percentile,
       thetaBySubject: userData.theta_by_subject,
+      thetaByChapter: userData.theta_by_chapter,
       assessmentCompleted: userData.assessment?.status === 'completed'
     },
     streak: {
@@ -628,14 +729,11 @@ async function getUserDetails(userId) {
       longest: streakData.longest_streak || 0,
       totalDays: streakData.total_days_practiced || 0
     },
-    recentQuizzes: recentQuizzes.map(q => ({
-      quizId: q.quiz_id,
-      status: q.status,
-      accuracy: q.quiz_accuracy,
-      questionsCount: q.questions?.length || 0,
-      generatedAt: q.generated_at,
-      completedAt: q.completed_at
-    }))
+    assessment: assessmentDetails,
+    dailyQuizzes,
+    chapterPractice,
+    mockTests,
+    percentileHistory
   };
 }
 
