@@ -178,7 +178,7 @@ class ChapterPracticeResultScreen extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Column(
             children: [
               // Title
@@ -214,37 +214,26 @@ class ChapterPracticeResultScreen extends StatelessWidget {
                   const SizedBox(width: 48), // Balance the close button
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
               // Score circle
               Container(
-                width: 120,
-                height: 120,
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${(_accuracy * 100).toInt()}%',
-                        style: AppTextStyles.headerWhite.copyWith(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '$_correctCount / $_totalQuestions',
-                        style: AppTextStyles.bodyWhite.copyWith(
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    '${(_accuracy * 100).toInt()}%',
+                    style: AppTextStyles.headerWhite.copyWith(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               // Subject badge
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -312,7 +301,7 @@ class ChapterPracticeResultScreen extends StatelessWidget {
   Widget _buildSummaryCard(
       String label, String value, Color color, IconData icon) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
@@ -323,20 +312,22 @@ class ChapterPracticeResultScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
+          Icon(icon, color: color, size: 24),
+          const SizedBox(height: 6),
           Text(
             value,
             style: AppTextStyles.headerMedium.copyWith(
               color: color,
               fontWeight: FontWeight.bold,
+              fontSize: 20,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             label,
             style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.textMedium,
+              fontSize: 11,
             ),
           ),
         ],
