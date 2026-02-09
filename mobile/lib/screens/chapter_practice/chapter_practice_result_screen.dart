@@ -386,7 +386,7 @@ class ChapterPracticeResultScreen extends StatelessWidget {
   Widget _buildUpgradePromptIfNeeded(BuildContext context) {
     // Check if user is on Free tier and hit the 5-question limit
     final subscriptionService = SubscriptionService();
-    final isFree = subscriptionService.currentTier?.toLowerCase() == 'free';
+    final isFree = subscriptionService.isFree;
 
     // Only show upgrade prompt if:
     // 1. User is on Free tier
