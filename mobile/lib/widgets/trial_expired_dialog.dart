@@ -213,8 +213,8 @@ class TrialExpiredDialog extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          SizedBox(
-            width: 120,
+          Expanded(
+            flex: 3,
             child: Text(
               feature,
               style: AppTextStyles.bodySmall.copyWith(
@@ -222,26 +222,33 @@ class TrialExpiredDialog extends StatelessWidget {
               ),
             ),
           ),
-          const Spacer(),
-          Text(
-            proLimit,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textLight,
-              decoration: TextDecoration.lineThrough,
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: Text(
+              proLimit,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textLight,
+                decoration: TextDecoration.lineThrough,
+              ),
+              textAlign: TextAlign.right,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
           const Icon(
             Icons.arrow_forward,
             size: 14,
             color: AppColors.textLight,
           ),
-          const SizedBox(width: 8),
-          Text(
-            freeLimit,
-            style: AppTextStyles.bodySmall.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.textDark,
+          const SizedBox(width: 4),
+          Expanded(
+            flex: 2,
+            child: Text(
+              freeLimit,
+              style: AppTextStyles.bodySmall.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDark,
+              ),
             ),
           ),
         ],

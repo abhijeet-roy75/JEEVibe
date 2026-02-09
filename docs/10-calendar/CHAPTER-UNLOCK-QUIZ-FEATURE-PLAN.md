@@ -204,7 +204,9 @@ importExposureQuestions()
 node backend/scripts/import-exposure-questions.js
 ```
 
-**Expected Output**: ~315 questions imported (63 files × 5 questions each)
+**Expected Output**: 315 questions imported (63 files × 5 questions each)
+
+**Note**: After curriculum team provides 3 missing physics files, total will be 330 questions (66 files × 5)
 
 ---
 
@@ -1561,8 +1563,8 @@ MultiProvider(
 #### 5.3 Testing Checklist
 
 **Backend Tests**:
-- [ ] Import 5 exposure questions per chapter (63 files found = ~315 questions)
-- [ ] Verify chapter_key mapping matches existing unlock schedule
+- [x] Verify chapter_key mapping matches existing unlock schedule (✅ Completed: 63/63 files map correctly)
+- [ ] Import 5 exposure questions per chapter (63 files = 315 questions; 66 files after curriculum team provides missing 3 = 330 questions)
 - [ ] Test `/generate` endpoint for locked chapter
 - [ ] Test `/generate` endpoint returns error for already unlocked chapter
 - [ ] Test `/submit-answer` with correct/incorrect answers
@@ -1630,7 +1632,8 @@ MultiProvider(
    # Import exposure questions
    node backend/scripts/import-exposure-questions.js --dir inputs/chapter_exposure
 
-   # Verify 335 questions imported (67 chapters × 5)
+   # Verify 315 questions imported (63 chapters × 5)
+   # After curriculum team provides 3 missing files: 330 questions (66 chapters × 5)
    # Check Firestore: chapter_exposure/{chapter_key}/questions/
 
    # Deploy backend
@@ -1766,4 +1769,139 @@ return {
 - Confetti package for celebration animation
 - All existing question display widgets available for reuse
 
-**Note**: 63 chapters have exposure questions (vs 67 total chapters). Missing 4 chapters will need exposure questions created before enabling unlock quiz for those chapters.
+---
+
+## ✅ Chapter Name Verification (Completed 2026-02-08)
+
+**Status**: All exposure files successfully map to system chapters
+
+### Coverage Summary
+- **System chapters**: 66 unique chapters (from `countdown_24month_schedule_CORRECTED.json`)
+- **Exposure files**: 63 JSON files in `inputs/chapter_exposure/`
+- **Successfully mapped**: 63/63 files (100% mapping success)
+- **Chapters with exposure questions**: 63/66 chapters (95.5% coverage)
+- **Missing exposure questions**: 3 chapters (all from Physics Month 14)
+
+### Missing Chapters (3 total)
+These 3 chapters were added in the Month 14 Physics fix that split the combined `physics_emi_ac_circuits` chapter:
+
+1. **`physics_ac_circuits`** (Month 14)
+   - Note: `14PHY_EMI_AC_FIXED.json` exists but covers EMI content only
+2. **`physics_eddy_currents`** (Month 14)
+   - New chapter from Month 14 fix
+3. **`physics_transformers`** (Month 14)
+   - New chapter from Month 14 fix
+
+**Action Required**: Create 3 new exposure question files with 5 questions each:
+- `14PHY_AC_Circuits_Exposure_Questions.json`
+- `14PHY_Eddy_Currents_Exposure_Questions.json`
+- `14PHY_Transformers_Exposure_Questions.json`
+
+### Chapter Mapping Details
+
+All 63 exposure files correctly map to system chapter keys using the normalization logic in `backend/src/services/thetaCalculationService.js:formatChapterKey()`.
+
+#### Physics (20/23 chapters) - 87% coverage
+
+✅ **Mapped Files**:
+- `1PHY_Units_Measurements_Exposure_Questions_FIXED.json` → `physics_units_measurements` (month_1)
+- `2PHY_Kinematics_Exposure_Questions_FIXED.json` → `physics_kinematics` (month_1)
+- `3PHY_Laws_of_Motion_Exposure_Questions_FIXED.json` → `physics_laws_of_motion` (month_3)
+- `4PHY_Work_Energy_Power_Exposure_Questions_FIXED.json` → `physics_work_energy_and_power` (month_3)
+- `5PHY_Rotational_Motion_Exposure_Questions_FIXED.json` → `physics_rotational_motion` (month_4)
+- `6PHY_Gravitation_Exposure_Questions_FIXED.json` → `physics_gravitation` (month_5)
+- `7PHY_Properties_of_Matter_Exposure_Questions_FIXED.json` → `physics_properties_of_solids_liquids` (month_6)
+- `8PHY_Thermodynamics_Exposure_Questions_FIXED.json` → `physics_thermodynamics` (month_6)
+- `9PHY_Kinetic_Theory_Exposure_Questions_FIXED.json` → `physics_kinetic_theory_of_gases` (month_7)
+- `10PHY_Oscillations_Waves_FIXED.json` → `physics_oscillations_waves` (month_7)
+- `11PHY_Electrostatics_Exposure_Questions_FIXED.json` → `physics_electrostatics` (month_11)
+- `12PHY_Current_Electricity_Exposure_Questions_FIXED.json` → `physics_current_electricity` (month_12)
+- `13PHY_Magnetic_Effects_Magnetism_FIXED.json` → `physics_magnetic_effects_magnetism` (month_13)
+- `14PHY_EMI_AC_FIXED.json` → `physics_electromagnetic_induction` (month_14)
+- `15PHY_Electromagnetic_Waves_Exposure_Questions_FIXED.json` → `physics_electromagnetic_waves` (month_15)
+- `16PHY_Optics_FIXED.json` → `physics_optics` (month_15, month_16)
+- `17PHY_Dual_Nature_FIXED.json` → `physics_dual_nature_of_radiation` (month_17)
+- `18PHY_Atoms_Nuclei_FIXED.json` → `physics_atoms_nuclei` (month_17)
+- `19PHY_Electronic_Devices_FIXED.json` → `physics_electronic_devices` (month_18)
+- `20PHY_Experimental_Skills_FIXED.json` → `physics_experimental_skills` (month_9)
+
+❌ **Missing Physics Chapters**:
+- `physics_ac_circuits` (month_14) - No exposure file
+- `physics_eddy_currents` (month_14) - No exposure file
+- `physics_transformers` (month_14) - No exposure file
+
+#### Chemistry (22/22 chapters) - 100% coverage ✅
+
+All chemistry exposure files successfully mapped:
+- `1chemistry_exposure_check_basic_concepts_FIXED.json` → `chemistry_basic_concepts` (month_1)
+- `2chemistry_exposure_check_atomic_structure_FIXED.json` → `chemistry_atomic_structure` (month_1)
+- `3chemistry_exposure_check_chemical_bonding_FIXED.json` → `chemistry_chemical_bonding` (month_2)
+- `4chemistry_exposure_check_thermodynamics_FIXED.json` → `chemistry_thermodynamics` (month_5)
+- `5chemistry_exposure_check_solutions_FIXED.json` → `chemistry_solutions` (month_11)
+- `6chemistry_exposure_check_equilibrium_FIXED.json` → `chemistry_equilibrium` (month_4)
+- `7chemistry_exposure_check_redox_FIXED.json` → `chemistry_redox_electrochemistry` (month_6, month_12)
+- `8chemistry_exposure_check_kinetics_FIXED.json` → `chemistry_chemical_kinetics` (month_12)
+- `9chemistry_exposure_check_classification_periodicity_FIXED.json` → `chemistry_classification_and_periodicity` (month_3)
+- `10chemistry_exposure_check_p_block_FIXED.json` → `chemistry_p_block_elements` (month_6, month_14)
+- `11chemistry_exposure_check_d_f_block_FIXED.json` → `chemistry_d_f_block_elements` (month_13)
+- `12chemistry_exposure_check_coordination_FIXED.json` → `chemistry_coordination_compounds` (month_13)
+- `13chemistry_exposure_check_purification_FIXED.json` → `chemistry_purification_characterization` (month_9)
+- `14chemistry_exposure_check_goc_FIXED.json` → `chemistry_general_organic_chemistry` (month_7)
+- `15chemistry_exposure_check_hydrocarbons_FIXED.json` → `chemistry_hydrocarbons` (month_8)
+- `16chemistry_exposure_check_haloalkanes_FIXED.json` → `chemistry_haloalkanes_and_haloarenes` (month_15)
+- `17chemistry_exposure_check_alcohols_FIXED.json` → `chemistry_alcohols_phenols_ethers` (month_16)
+- `18chemistry_exposure_check_aldehydes_ketones_FIXED.json` → `chemistry_aldehydes_ketones` (month_17)
+- `19chemistry_exposure_check_carboxylic_acids_FIXED.json` → `chemistry_carboxylic_acids_derivatives` (month_18)
+- `20chemistry_exposure_check_amines_FIXED.json` → `chemistry_amines_diazonium_salts` (month_18)
+- `21chemistry_exposure_check_biomolecules_FIXED.json` → `chemistry_biomolecules` (month_19)
+- `22chemistry_exposure_check_practical_FIXED.json` → `chemistry_principles_of_practical_chemistry` (month_9)
+
+#### Mathematics (21/21 chapters) - 100% coverage ✅
+
+All mathematics exposure files successfully mapped:
+- `1MATH_SRF_Exposure_Questions_FIXED.json` → `mathematics_sets_relations_functions` (month_1)
+- `2MATH_CN_Exposure_Questions_FIXED.json` → `mathematics_complex_numbers` (month_3)
+- `3MATH_MAT_Exposure_Questions_FIXED.json` → `mathematics_matrices_determinants` (month_12)
+- `4MATH_PC_Exposure_Questions_FIXED.json` → `mathematics_permutations_and_combinations` (month_3)
+- `5MATH_BIN_Exposure_Questions_FIXED.json` → `mathematics_binomial_theorem` (month_4)
+- `6MATH_SEQ_Exposure_Questions_FIXED.json` → `mathematics_sequences_and_series` (month_4)
+- `7MATH_LCD_Exposure_Questions_FIXED.json` → `mathematics_limits_continuity_differentiability` (month_8, month_13)
+- `8MATH_AOD_Exposure_Questions_FIXED.json` → `mathematics_differential_calculus_aod` (month_13)
+- `9MATH_INT_Exposure_Questions_FIXED.json` → `mathematics_integral_calculus_indefinite` (month_14)
+- `10MATH_INTDEF_Exposure_Questions_FIXED.json` → `mathematics_integral_calculus_definite_area` (month_15)
+- `11MATH_DE_Exposure_Questions_FIXED.json` → `mathematics_differential_equations` (month_16)
+- `12MATH_STL_Exposure_Questions_FIXED.json` → `mathematics_straight_lines` (month_5)
+- `13MATH_CIR_Exposure_Questions_FIXED.json` → `mathematics_circles` (month_6)
+- `14MATH_PARA_Exposure_Questions_FIXED.json` → `mathematics_conic_sections_parabola` (month_6)
+- `15MATH_ELLHYP_Exposure_Questions_FIXED.json` → `mathematics_conic_sections_ellipse_hyperbola` (month_7)
+- `16MATH_3DG_Exposure_Questions_FIXED.json` → `mathematics_three_dimensional_geometry` (month_7, month_17)
+- `17MATH_VEC_Exposure_Questions_FIXED.json` → `mathematics_vector_algebra` (month_17)
+- `18MATH_STAT_Exposure_Questions_FIXED.json` → `mathematics_statistics` (month_8)
+- `19MATH_PROB_Exposure_Questions_FIXED.json` → `mathematics_probability` (month_9, month_18)
+- `20MATH_TRIG_Exposure_Questions_FIXED.json` → `mathematics_trigonometry` (month_2)
+- `21MATH_INVTRIG_Exposure_Questions_FIXED.json` → `mathematics_inverse_trigonometry` (month_11)
+
+### Mapping Logic
+
+All chapter name normalization uses the existing `formatChapterKey()` function in `backend/src/services/thetaCalculationService.js` (lines 224-344):
+
+**Key Mappings**:
+- Physics filenames: `{N}PHY_{Chapter_Name}_FIXED.json` → `physics_{normalized_name}`
+- Chemistry filenames: `{N}chemistry_exposure_check_{abbr}_FIXED.json` → `chemistry_{full_name}`
+- Math filenames: `{N}MATH_{ABBR}_FIXED.json` → `mathematics_{full_name}`
+
+**Special Cases Handled**:
+- `EMI_AC` → Maps to `physics_electromagnetic_induction` (AC circuits split into separate chapters later)
+- `Properties_of_Matter` → Maps to `physics_properties_of_solids_liquids`
+- `Work_Energy_Power` → Maps to `physics_work_energy_and_power`
+- Math abbreviations (SRF, CN, MAT, etc.) correctly expand to full names
+
+### Verification Method
+
+Python script created to:
+1. Load canonical chapter list from `countdown_24month_schedule_CORRECTED.json` (66 chapters)
+2. Map each of 63 exposure files to system chapter_key using normalization rules
+3. Identify 3 chapters without exposure files
+4. Confirm 100% successful mapping for existing files (no naming mismatches)
+
+**Recommendation**: Once the 3 missing physics exposure files are created by the curriculum team, we'll have 66/66 = 100% coverage and can proceed with full implementation.
