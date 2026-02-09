@@ -599,13 +599,17 @@ async function getUserDetails(userId) {
   const assessmentData = userData.assessment || {};
   let assessmentDetails = null;
   if (assessmentData.status === 'completed') {
+    const cumulativeStats = userData.cumulative_stats || {};
+    const totalQuestions = assessmentData.responses?.length || 30;
+    const correctAnswers = cumulativeStats.total_correct || 0;
+
     assessmentDetails = {
       completedAt: assessmentData.completed_at,
-      score: assessmentData.score || 0,
-      totalQuestions: assessmentData.total_questions || 30,
-      timeSpentSeconds: assessmentData.time_spent_seconds || 0,
-      accuracy: assessmentData.accuracy || 0,
-      subjectScores: assessmentData.subject_scores || {}
+      score: correctAnswers,
+      totalQuestions: totalQuestions,
+      timeSpentSeconds: assessmentData.time_taken_seconds || 0,
+      accuracy: totalQuestions > 0 ? correctAnswers / totalQuestions : 0,
+      subjectScores: userData.subject_accuracy || {}
     };
   }
 
