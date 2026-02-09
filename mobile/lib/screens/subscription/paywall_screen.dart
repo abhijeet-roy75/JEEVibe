@@ -5,6 +5,7 @@ import '../../theme/app_platform_sizing.dart';
 import '../../models/subscription_models.dart';
 import '../../services/subscription_service.dart';
 import '../../widgets/app_header.dart';
+import '../../widgets/buttons/icon_button.dart';
 
 /// Paywall Screen
 ///
@@ -87,16 +88,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 AppHeader(
                   showGradient: true,
                   gradient: AppColors.ctaGradient,
-                  leading: GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      padding: EdgeInsets.all(AppSpacing.xs), // 8→6.4px Android
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white24,
-                      ),
-                      child: Icon(Icons.close, color: Colors.white, size: AppIconSizes.md), // 20→17.6px Android
-                    ),
+                  leading: AppIconButton.close(
+                    onPressed: () => Navigator.of(context).pop(),
+                    size: AppIconButtonSize.medium,
                   ),
                   title: Text(
                     'Upgrade',
