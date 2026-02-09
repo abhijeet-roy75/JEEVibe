@@ -710,8 +710,9 @@ async function getUserDetails(userId) {
     logger.warn('Failed to fetch mock tests for user', { userId, error: err.message });
   }
 
-  // Calculate percentile history from daily theta snapshots
+  // Calculate percentile history and accuracy from daily theta snapshots
   const percentileHistory = [];
+  const accuracyHistory = [];
   try {
     const snapshotsSnapshot = await db
       .collection('theta_snapshots')
@@ -723,18 +724,48 @@ async function getUserDetails(userId) {
 
     snapshotsSnapshot.forEach(doc => {
       const snapshot = doc.data();
-      if (snapshot.overall_percentile !== undefined && snapshot.captured_at) {
-        const date = snapshot.captured_at.toDate ? snapshot.captured_at.toDate() : new Date(snapshot.captured_at);
+      const date = snapshot.captured_at ?
+        (snapshot.captured_at.toDate ? snapshot.captured_at.toDate() : new Date(snapshot.captured_at)).toISOString().split('T')[0]
+        : null;
+
+      if (!date) return;
+
+      // Add percentile data
+      if (snapshot.overall_percentile !== undefined) {
         percentileHistory.push({
-          date: date.toISOString().split('T')[0], // YYYY-MM-DD format
+          date: date,
           percentile: Math.round(snapshot.overall_percentile || 0),
           theta: snapshot.overall_theta ? parseFloat(snapshot.overall_theta.toFixed(2)) : null
         });
+      }
+
+      // Add accuracy data (calculated from subject_accuracy)
+      if (snapshot.subject_accuracy) {
+        let totalCorrect = 0;
+        let totalQuestions = 0;
+
+        ['physics', 'chemistry', 'mathematics'].forEach(subject => {
+          if (snapshot.subject_accuracy[subject]) {
+            totalCorrect += snapshot.subject_accuracy[subject].correct || 0;
+            totalQuestions += snapshot.subject_accuracy[subject].total || 0;
+          }
+        });
+
+        if (totalQuestions > 0) {
+          const accuracy = Math.round((totalCorrect / totalQuestions) * 100);
+          accuracyHistory.push({
+            date: date,
+            accuracy: accuracy,
+            correct: totalCorrect,
+            total: totalQuestions
+          });
+        }
       }
     });
 
     // Sort chronologically (oldest first)
     percentileHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+    accuracyHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
   } catch (err) {
     logger.warn('Failed to fetch theta snapshots for user', { userId, error: err.message });
   }
@@ -762,6 +793,22 @@ async function getUserDetails(userId) {
     completedAt: convertTimestamp(t.completedAt)
   }));
 
+  // Calculate current overall accuracy from subject_accuracy
+  let currentAccuracy = 0;
+  if (userData.subject_accuracy) {
+    let totalCorrect = 0;
+    let totalQuestions = 0;
+
+    ['physics', 'chemistry', 'mathematics'].forEach(subject => {
+      if (userData.subject_accuracy[subject]) {
+        totalCorrect += userData.subject_accuracy[subject].correct || 0;
+        totalQuestions += userData.subject_accuracy[subject].total || 0;
+      }
+    });
+
+    currentAccuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+  }
+
   return {
     uid: userId,
     profile: {
@@ -784,8 +831,10 @@ async function getUserDetails(userId) {
       quizzesCompleted: userData.completed_quiz_count || 0,
       overallTheta: userData.overall_theta,
       overallPercentile: userData.overall_percentile,
+      overallAccuracy: currentAccuracy, // NEW: Current accuracy percentage
       thetaBySubject: userData.theta_by_subject,
       thetaByChapter: userData.theta_by_chapter,
+      subjectAccuracy: userData.subject_accuracy, // NEW: Detailed subject accuracy
       assessmentCompleted: userData.assessment?.status === 'completed'
     },
     streak: {
@@ -797,7 +846,8 @@ async function getUserDetails(userId) {
     dailyQuizzes,
     chapterPractice,
     mockTests,
-    percentileHistory
+    percentileHistory,
+    accuracyHistory // NEW: Historical accuracy trend
   };
 }
 

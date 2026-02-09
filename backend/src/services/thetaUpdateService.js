@@ -451,17 +451,31 @@ async function updateChapterTheta(userId, chapterKey, responses) {
 }
 
 /**
+ * Standard normal cumulative distribution function (CDF)
+ * Uses Abramowitz and Stegun approximation for accurate results
+ *
+ * @param {number} z - Standard normal variable
+ * @returns {number} Probability [0, 1]
+ */
+function normalCDF(z) {
+  // Approximation using erf with error < 1.5 × 10^-7
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp(-z * z / 2);
+  const prob = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+  return z > 0 ? 1 - prob : prob;
+}
+
+/**
  * Convert theta to percentile
- * 
+ *
  * @param {number} theta - Theta value [-3, +3]
  * @returns {number} Percentile [0, 100]
  */
 function thetaToPercentile(theta) {
-  // Use cumulative normal distribution
+  // Use proper cumulative normal distribution
   // Percentile = Φ(theta) * 100
-  // Simplified approximation for standard normal
   const z = boundTheta(theta);
-  const percentile = 50 + 50 * (1 - Math.exp(-0.5 * z * z)) * Math.sign(z);
+  const percentile = normalCDF(z) * 100;
   return Math.max(0, Math.min(100, Math.round(percentile * 100) / 100));
 }
 
