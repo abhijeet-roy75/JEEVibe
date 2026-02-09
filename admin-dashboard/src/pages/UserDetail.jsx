@@ -183,15 +183,16 @@ export default function UserDetail() {
             {Object.entries(user.progress.thetaBySubject).map(([subject, data]) => (
               <div key={subject} className="border border-gray-200 rounded-lg p-4">
                 <div className="font-medium text-gray-800 mb-2 capitalize">{subject}</div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <div className="text-gray-500">Theta (θ)</div>
-                    <div className="font-medium">{data.theta?.toFixed(2) || 'N/A'}</div>
+                <div className="text-sm">
+                  <div className="text-gray-500">Theta (θ)</div>
+                  <div className="text-2xl font-bold text-gray-800 mt-1">
+                    {data.theta?.toFixed(2) || 'N/A'}
                   </div>
-                  <div>
-                    <div className="text-gray-500">Std Error</div>
-                    <div className="font-medium">{data.se?.toFixed(2) || 'N/A'}</div>
-                  </div>
+                  {data.percentile && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {data.percentile}th percentile
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -354,20 +355,55 @@ export default function UserDetail() {
         )}
       </div>
 
-      {/* Percentile History */}
-      {user.percentileHistory && user.percentileHistory.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Percentile Trend</h2>
-          <div className="space-y-2">
-            {user.percentileHistory.map((item) => (
-              <div key={item.month} className="flex justify-between items-center">
-                <div className="text-sm text-gray-600">{item.month}</div>
-                <div className="text-sm font-medium text-gray-800">{item.averagePercentile}%</div>
+      {/* Percentile History - Daily Trend */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          Percentile Trend
+        </h2>
+        {user.percentileHistory && user.percentileHistory.length > 0 ? (
+          <div className="overflow-x-auto">
+            <div className="text-sm text-gray-500 mb-3">
+              Last {user.percentileHistory.length} days
+            </div>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Date</th>
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Percentile</th>
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Theta (θ)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {user.percentileHistory.slice().reverse().slice(0, 30).map((item, idx) => (
+                  <tr key={item.date || idx} className="hover:bg-gray-50">
+                    <td className="py-2 px-3 text-sm text-gray-600">{item.date}</td>
+                    <td className="py-2 px-3 text-sm">
+                      <span className={`font-medium ${
+                        item.percentile >= 80 ? 'text-green-600' :
+                        item.percentile >= 60 ? 'text-blue-600' :
+                        item.percentile >= 40 ? 'text-yellow-600' :
+                        'text-red-600'
+                      }`}>
+                        {item.percentile}%
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-sm text-gray-800">{item.theta || 'N/A'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {user.percentileHistory.length > 30 && (
+              <div className="text-sm text-gray-500 mt-2 text-center">
+                Showing most recent 30 of {user.percentileHistory.length} days
               </div>
-            ))}
+            )}
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="text-gray-500 text-center py-4">
+            No percentile history yet. Snapshots are created after completing daily quizzes.
+          </div>
+        )}
+      </div>
     </div>
   );
 }
