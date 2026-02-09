@@ -540,7 +540,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'I\'m ready to help! Just snap a clear photo of your question, and I\'ll solve it step-by-step for you. 📚',
+                  'I\'m ready to help! Just snap a clear photo of your question, and I\'ll solve it step-by-step for you.',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color: const Color(0xFF6B21A8),
