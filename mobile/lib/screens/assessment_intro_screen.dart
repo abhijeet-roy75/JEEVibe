@@ -2237,11 +2237,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
                     final unlockInfo = isFree ? subscriptionService.getSubjectUnlockInfo(area.subject) : null;
                     return _buildFocusAreaRow(area, isLast, isSubjectLocked, unlockInfo);
                   }),
-                  // Show "Practice any chapter" link for Pro/Ultra users
-                  if (!isFree) ...[
-                    const SizedBox(height: 12),
-                    _buildPracticeAnyChapterLink(),
-                  ],
+                  // Show "Practice any chapter" link for all users (Free users can unlock chapters)
+                  const SizedBox(height: 12),
+                  _buildPracticeAnyChapterLink(),
                   // Show upgrade button at bottom if any subject is locked (free tier only)
                   if (isFree && hasAnySubjectLocked) ...[
                     const SizedBox(height: 12),
@@ -2262,11 +2260,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
                       ),
                     ),
                   ),
-                  // Show "Practice any chapter" link for Pro/Ultra users even when no focus areas
-                  if (!isFree) ...[
-                    const SizedBox(height: 8),
-                    _buildPracticeAnyChapterLink(),
-                  ],
+                  // Show "Practice any chapter" link for all users (Free users can unlock chapters)
+                  const SizedBox(height: 8),
+                  _buildPracticeAnyChapterLink(),
                 ],
               )
             // Fallback for users without chapter practice enabled (shouldn't happen with new config)
