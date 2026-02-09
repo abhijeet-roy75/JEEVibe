@@ -10,6 +10,16 @@ const logger = require('../utils/logger');
 const { getTodayIST, getYesterdayIST, formatDateIST, toIST } = require('../utils/dateUtils');
 
 /**
+ * Convert Firestore Timestamp to ISO string
+ */
+function convertTimestamp(timestamp) {
+  if (!timestamp) return null;
+  if (timestamp.toDate) return timestamp.toDate().toISOString();
+  if (timestamp instanceof Date) return timestamp.toISOString();
+  return new Date(timestamp).toISOString();
+}
+
+/**
  * Get daily health metrics for the dashboard
  *
  * @returns {Object} Health metrics including DAU, signups, completions, at-risk users
@@ -600,78 +610,90 @@ async function getUserDetails(userId) {
   }
 
   // Get daily quizzes
-  const dailyQuizzesSnapshot = await db
-    .collection('users')
-    .doc(userId)
-    .collection('daily_quizzes')
-    .orderBy('completed_at', 'desc')
-    .limit(50)
-    .get();
+  let dailyQuizzes = [];
+  try {
+    const dailyQuizzesSnapshot = await db
+      .collection('users')
+      .doc(userId)
+      .collection('daily_quizzes')
+      .orderBy('completed_at', 'desc')
+      .limit(50)
+      .get();
 
-  const dailyQuizzes = [];
-  dailyQuizzesSnapshot.forEach(doc => {
-    const quiz = doc.data();
-    dailyQuizzes.push({
-      id: doc.id,
-      date: quiz.date,
-      completedAt: quiz.completed_at,
-      score: quiz.score || 0,
-      totalQuestions: quiz.questions?.length || 0,
-      timeSpentSeconds: quiz.time_spent_seconds || 0,
-      accuracy: quiz.accuracy || (quiz.score / (quiz.questions?.length || 1)),
-      subjects: quiz.subjects || []
+    dailyQuizzesSnapshot.forEach(doc => {
+      const quiz = doc.data();
+      dailyQuizzes.push({
+        id: doc.id,
+        date: quiz.date,
+        completedAt: quiz.completed_at,
+        score: quiz.score || 0,
+        totalQuestions: quiz.questions?.length || 0,
+        timeSpentSeconds: quiz.time_spent_seconds || 0,
+        accuracy: quiz.accuracy || (quiz.score / (quiz.questions?.length || 1)),
+        subjects: quiz.subjects || []
+      });
     });
-  });
+  } catch (err) {
+    logger.warn('Failed to fetch daily quizzes for user', { userId, error: err.message });
+  }
 
   // Get chapter practice sessions
-  const chapterPracticeSnapshot = await db
-    .collection('users')
-    .doc(userId)
-    .collection('chapter_sessions')
-    .orderBy('completed_at', 'desc')
-    .limit(50)
-    .get();
+  let chapterPractice = [];
+  try {
+    const chapterPracticeSnapshot = await db
+      .collection('users')
+      .doc(userId)
+      .collection('chapter_sessions')
+      .orderBy('completed_at', 'desc')
+      .limit(50)
+      .get();
 
-  const chapterPractice = [];
-  chapterPracticeSnapshot.forEach(doc => {
-    const session = doc.data();
-    chapterPractice.push({
-      id: doc.id,
-      chapterKey: session.chapter_key,
-      chapterName: session.chapter_name || session.chapter_key,
-      subject: session.subject,
-      completedAt: session.completed_at,
-      score: session.score || 0,
-      totalQuestions: session.questions?.length || 0,
-      timeSpentSeconds: session.time_spent_seconds || 0,
-      accuracy: session.accuracy || 0
+    chapterPracticeSnapshot.forEach(doc => {
+      const session = doc.data();
+      chapterPractice.push({
+        id: doc.id,
+        chapterKey: session.chapter_key,
+        chapterName: session.chapter_name || session.chapter_key,
+        subject: session.subject,
+        completedAt: session.completed_at,
+        score: session.score || 0,
+        totalQuestions: session.questions?.length || 0,
+        timeSpentSeconds: session.time_spent_seconds || 0,
+        accuracy: session.accuracy || 0
+      });
     });
-  });
+  } catch (err) {
+    logger.warn('Failed to fetch chapter practice for user', { userId, error: err.message });
+  }
 
   // Get mock tests
-  const mockTestsSnapshot = await db
-    .collection('users')
-    .doc(userId)
-    .collection('mock_tests')
-    .orderBy('completed_at', 'desc')
-    .limit(20)
-    .get();
+  let mockTests = [];
+  try {
+    const mockTestsSnapshot = await db
+      .collection('users')
+      .doc(userId)
+      .collection('mock_tests')
+      .orderBy('completed_at', 'desc')
+      .limit(20)
+      .get();
 
-  const mockTests = [];
-  mockTestsSnapshot.forEach(doc => {
-    const test = doc.data();
-    mockTests.push({
-      id: doc.id,
-      testName: test.test_name || 'JEE Main Mock Test',
-      completedAt: test.completed_at,
-      score: test.total_score || 0,
-      maxScore: test.max_score || 300,
-      totalQuestions: test.total_questions || 90,
-      timeSpentSeconds: test.time_spent_seconds || 0,
-      accuracy: test.overall_accuracy || 0,
-      subjectScores: test.subject_scores || {}
+    mockTestsSnapshot.forEach(doc => {
+      const test = doc.data();
+      mockTests.push({
+        id: doc.id,
+        testName: test.test_name || 'JEE Main Mock Test',
+        completedAt: test.completed_at,
+        score: test.total_score || 0,
+        maxScore: test.max_score || 300,
+        totalQuestions: test.total_questions || 90,
+        timeSpentSeconds: test.time_spent_seconds || 0,
+        accuracy: test.overall_accuracy || 0,
+        subjectScores: test.subject_scores || {}
+      });
     });
-  });
+  } catch (err) {
+    logger.warn('Failed to fetch mock tests for user', { userId, error: err.message });
+  }
 
   // Calculate percentile history (from daily quizzes over time)
   const percentileHistory = [];
@@ -698,6 +720,29 @@ async function getUserDetails(userId) {
     });
   }
 
+  // Convert assessment timestamps
+  if (assessmentDetails) {
+    assessmentDetails.completedAt = convertTimestamp(assessmentDetails.completedAt);
+  }
+
+  // Convert daily quiz timestamps
+  dailyQuizzes = dailyQuizzes.map(q => ({
+    ...q,
+    completedAt: convertTimestamp(q.completedAt)
+  }));
+
+  // Convert chapter practice timestamps
+  chapterPractice = chapterPractice.map(s => ({
+    ...s,
+    completedAt: convertTimestamp(s.completedAt)
+  }));
+
+  // Convert mock test timestamps
+  mockTests = mockTests.map(t => ({
+    ...t,
+    completedAt: convertTimestamp(t.completedAt)
+  }));
+
   return {
     uid: userId,
     profile: {
@@ -705,15 +750,15 @@ async function getUserDetails(userId) {
       lastName: userData.lastName || userData.last_name || '',
       email: userData.email || '',
       phone: userData.phone || '',
-      createdAt: userData.createdAt,
-      lastActive: userData.lastActive,
+      createdAt: convertTimestamp(userData.createdAt),
+      lastActive: convertTimestamp(userData.lastActive),
       isEnrolledInCoaching: userData.isEnrolledInCoaching || false
     },
     subscription: {
       tier: effectiveTier,
       source: subscriptionData.override ? 'override' : (subscriptionData.active_subscription_id ? 'subscription' : 'default'),
       overrideType: subscriptionData.override?.type,
-      overrideExpires: subscriptionData.override?.expires_at
+      overrideExpires: convertTimestamp(subscriptionData.override?.expires_at)
     },
     progress: {
       totalQuestions: userData.total_questions_solved || 0,
