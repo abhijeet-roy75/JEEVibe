@@ -133,10 +133,11 @@ export default function UserDetail() {
         />
         <StatCard
           label="Last Active"
-          value={formatDistanceToNow(
-            user.profile.lastActive?.toDate ? user.profile.lastActive.toDate() : new Date(user.profile.lastActive || 0),
-            { addSuffix: true }
-          )}
+          value={
+            user.profile.lastActive
+              ? formatDistanceToNow(new Date(user.profile.lastActive), { addSuffix: true })
+              : 'Never'
+          }
           subtext={user.profile.isEnrolledInCoaching ? 'In coaching' : 'Self study'}
         />
       </div>
