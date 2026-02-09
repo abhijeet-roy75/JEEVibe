@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import api from '../services/api';
 
@@ -17,6 +18,7 @@ function TierBadge({ tier }) {
 }
 
 export default function Users() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -122,7 +124,11 @@ export default function Users() {
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.uid} className="hover:bg-gray-50 cursor-pointer">
+                  <tr
+                    key={user.uid}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => navigate(`/users/${user.uid}`)}
+                  >
                     <td className="px-6 py-4">
                       <div>
                         <div className="font-medium text-gray-800">

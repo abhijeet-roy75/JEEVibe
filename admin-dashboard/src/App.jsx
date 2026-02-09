@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Engagement from './pages/Engagement';
 import Learning from './pages/Learning';
 import Users from './pages/Users';
+import UserDetail from './pages/UserDetail';
 import Content from './pages/Content';
 import Alerts from './pages/Alerts';
 import Teachers from './pages/Teachers';
@@ -26,6 +27,7 @@ function App() {
         <Route path="/engagement" element={<Engagement />} />
         <Route path="/learning" element={<Learning />} />
         <Route path="/users" element={<Users />} />
+        <Route path="/users/:userId" element={<UserDetail />} />
         <Route path="/content" element={<Content />} />
         <Route path="/alerts" element={<Alerts />} />
         <Route path="/teachers" element={<Teachers />} />
