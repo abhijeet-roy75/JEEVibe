@@ -719,21 +719,23 @@ async function getUserDetails(userId) {
       .doc(userId)
       .collection('daily')
       .orderBy('captured_at', 'desc')
-      .limit(90) // Last 90 days
+      .limit(90) // Last 90 entries
       .get();
 
     snapshotsSnapshot.forEach(doc => {
       const snapshot = doc.data();
-      const date = snapshot.captured_at ?
-        (snapshot.captured_at.toDate ? snapshot.captured_at.toDate() : new Date(snapshot.captured_at)).toISOString().split('T')[0]
+
+      // Get full timestamp (not just date)
+      const timestamp = snapshot.captured_at ?
+        (snapshot.captured_at.toDate ? snapshot.captured_at.toDate() : new Date(snapshot.captured_at)).toISOString()
         : null;
 
-      if (!date) return;
+      if (!timestamp) return;
 
       // Add percentile data
       if (snapshot.overall_percentile !== undefined) {
         percentileHistory.push({
-          date: date,
+          date: timestamp,
           percentile: Math.round(snapshot.overall_percentile || 0),
           theta: snapshot.overall_theta ? parseFloat(snapshot.overall_theta.toFixed(2)) : null
         });
@@ -754,7 +756,7 @@ async function getUserDetails(userId) {
         if (totalQuestions > 0) {
           const accuracy = Math.round((totalCorrect / totalQuestions) * 100);
           accuracyHistory.push({
-            date: date,
+            date: timestamp,
             accuracy: accuracy,
             correct: totalCorrect,
             total: totalQuestions

@@ -53,6 +53,16 @@ function formatDate(date) {
   }
 }
 
+function formatDateTime(dateString) {
+  if (!dateString) return 'N/A';
+  try {
+    const d = new Date(dateString);
+    return format(d, 'MMM dd, yyyy HH:mm');
+  } catch {
+    return 'N/A';
+  }
+}
+
 export default function UserDetail() {
   const { userId } = useParams();
   const [user, setUser] = useState(null);
@@ -372,12 +382,12 @@ export default function UserDetail() {
         {user.percentileHistory && user.percentileHistory.length > 0 ? (
           <div className="overflow-x-auto">
             <div className="text-sm text-gray-500 mb-3">
-              Last {user.percentileHistory.length} days
+              Last {user.percentileHistory.length} {user.percentileHistory.length === 1 ? 'entry' : 'entries'}
             </div>
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Date</th>
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Date & Time</th>
                   <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Percentile</th>
                   <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Theta (θ)</th>
                 </tr>
@@ -385,7 +395,7 @@ export default function UserDetail() {
               <tbody className="divide-y divide-gray-100">
                 {user.percentileHistory.slice().reverse().slice(0, 30).map((item, idx) => (
                   <tr key={item.date || idx} className="hover:bg-gray-50">
-                    <td className="py-2 px-3 text-sm text-gray-600">{item.date}</td>
+                    <td className="py-2 px-3 text-sm text-gray-600">{formatDateTime(item.date)}</td>
                     <td className="py-2 px-3 text-sm">
                       <span className={`font-medium ${
                         item.percentile >= 80 ? 'text-green-600' :
@@ -403,7 +413,7 @@ export default function UserDetail() {
             </table>
             {user.percentileHistory.length > 30 && (
               <div className="text-sm text-gray-500 mt-2 text-center">
-                Showing most recent 30 of {user.percentileHistory.length} days
+                Showing most recent 30 of {user.percentileHistory.length} entries
               </div>
             )}
           </div>
@@ -422,12 +432,12 @@ export default function UserDetail() {
         {user.accuracyHistory && user.accuracyHistory.length > 0 ? (
           <div className="overflow-x-auto">
             <div className="text-sm text-gray-500 mb-3">
-              Last {user.accuracyHistory.length} days • Current: {user.progress.overallAccuracy || 0}%
+              Last {user.accuracyHistory.length} {user.accuracyHistory.length === 1 ? 'entry' : 'entries'} • Current: {user.progress.overallAccuracy || 0}%
             </div>
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Date</th>
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Date & Time</th>
                   <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Accuracy</th>
                   <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Questions (Correct/Total)</th>
                 </tr>
@@ -435,7 +445,7 @@ export default function UserDetail() {
               <tbody className="divide-y divide-gray-100">
                 {user.accuracyHistory.slice().reverse().slice(0, 30).map((item, idx) => (
                   <tr key={item.date || idx} className="hover:bg-gray-50">
-                    <td className="py-2 px-3 text-sm text-gray-600">{item.date}</td>
+                    <td className="py-2 px-3 text-sm text-gray-600">{formatDateTime(item.date)}</td>
                     <td className="py-2 px-3 text-sm">
                       <span className={`font-medium ${
                         item.accuracy >= 85 ? 'text-green-600' :
@@ -455,7 +465,7 @@ export default function UserDetail() {
             </table>
             {user.accuracyHistory.length > 30 && (
               <div className="text-sm text-gray-500 mt-2 text-center">
-                Showing most recent 30 of {user.accuracyHistory.length} days
+                Showing most recent 30 of {user.accuracyHistory.length} entries
               </div>
             )}
           </div>
