@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/chapter_practice_models.dart';
 import '../../providers/chapter_practice_provider.dart';
+import '../../services/subscription_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/priya_avatar.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../main_navigation_screen.dart';
+import '../subscription/paywall_screen.dart';
 import 'chapter_practice_review_screen.dart';
 
 class ChapterPracticeResultScreen extends StatelessWidget {
@@ -147,6 +149,9 @@ class ChapterPracticeResultScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     // Priya Ma'am message
                     _buildPriyaMaamMessage(),
+                    const SizedBox(height: 16),
+                    // Upgrade prompt for Free tier users (5 questions limit)
+                    _buildUpgradePromptIfNeeded(context),
                     const SizedBox(height: 24),
                     // Action buttons
                     _buildActionButtons(context),
@@ -374,6 +379,143 @@ class ChapterPracticeResultScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildUpgradePromptIfNeeded(BuildContext context) {
+    // Check if user is on Free tier and hit the 5-question limit
+    final subscriptionService = SubscriptionService();
+    final isFree = subscriptionService.currentTier?.toLowerCase() == 'free';
+
+    // Only show upgrade prompt if:
+    // 1. User is on Free tier
+    // 2. User completed exactly 5 questions (the Free tier limit)
+    if (!isFree || _totalQuestions != 5) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF9333EA).withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.workspace_premium,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Want More Practice?',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'You completed 5 questions (Free tier limit). Upgrade to Pro for 15 questions per chapter and practice unlimited chapters daily!',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.95),
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Benefits list
+            ...[
+              ('📚', '15 questions per chapter (3x more practice)'),
+              ('🚀', 'Practice unlimited chapters daily'),
+              ('📊', 'Full analytics & progress tracking'),
+            ].map((benefit) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Text(
+                    benefit.$1,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      benefit.$2,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )),
+            const SizedBox(height: 16),
+            // Upgrade button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PaywallScreen(
+                        featureName: 'Chapter Practice',
+                        limitReachedMessage: 'You\'ve completed 5 questions. Upgrade for 15 questions per chapter!',
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF9333EA),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Upgrade to Pro',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
