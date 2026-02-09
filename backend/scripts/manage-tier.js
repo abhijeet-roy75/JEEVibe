@@ -156,6 +156,15 @@ async function grantAccess(db, userId, tier, days, reason) {
     }
   }, { merge: true });
 
+  // Force cache invalidation by calling the subscription service
+  // This ensures the mobile app gets fresh data on next API call
+  try {
+    const { invalidateTierCache } = require('../src/services/subscriptionService');
+    invalidateTierCache(userId);
+  } catch (e) {
+    // Ignore if service not available in script context
+  }
+
   return expiresAt;
 }
 
@@ -165,6 +174,15 @@ async function revokeAccess(db, userId) {
     'subscription.tier': 'free',
     'subscription.override': admin.firestore.FieldValue.delete()
   });
+
+  // Force cache invalidation by calling the subscription service
+  // This ensures the mobile app gets fresh data on next API call
+  try {
+    const { invalidateTierCache } = require('../src/services/subscriptionService');
+    invalidateTierCache(userId);
+  } catch (e) {
+    // Ignore if service not available in script context
+  }
 }
 
 // Main function
