@@ -119,11 +119,16 @@ export default function UserDetail() {
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <StatCard
           label="Overall Percentile"
           value={`${user.progress.overallPercentile || 0}%`}
           subtext={`θ: ${user.progress.overallTheta?.toFixed(2) || 'N/A'}`}
+        />
+        <StatCard
+          label="Overall Accuracy"
+          value={`${user.progress.overallAccuracy || 0}%`}
+          subtext="Correct answers"
         />
         <StatCard
           label="Total Questions"
@@ -360,7 +365,7 @@ export default function UserDetail() {
       </div>
 
       {/* Percentile History - Daily Trend */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-4">
           Percentile Trend
         </h2>
@@ -405,6 +410,58 @@ export default function UserDetail() {
         ) : (
           <div className="text-gray-500 text-center py-4">
             No percentile history yet. Snapshots are created after completing daily quizzes.
+          </div>
+        )}
+      </div>
+
+      {/* Accuracy History - Daily Trend */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          Accuracy Trend
+        </h2>
+        {user.accuracyHistory && user.accuracyHistory.length > 0 ? (
+          <div className="overflow-x-auto">
+            <div className="text-sm text-gray-500 mb-3">
+              Last {user.accuracyHistory.length} days • Current: {user.progress.overallAccuracy || 0}%
+            </div>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Date</th>
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Accuracy</th>
+                  <th className="text-left py-2 px-3 text-sm font-medium text-gray-500">Questions (Correct/Total)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {user.accuracyHistory.slice().reverse().slice(0, 30).map((item, idx) => (
+                  <tr key={item.date || idx} className="hover:bg-gray-50">
+                    <td className="py-2 px-3 text-sm text-gray-600">{item.date}</td>
+                    <td className="py-2 px-3 text-sm">
+                      <span className={`font-medium ${
+                        item.accuracy >= 85 ? 'text-green-600' :
+                        item.accuracy >= 70 ? 'text-blue-600' :
+                        item.accuracy >= 50 ? 'text-yellow-600' :
+                        'text-red-600'
+                      }`}>
+                        {item.accuracy}%
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-sm text-gray-600">
+                      {item.correct || 0}/{item.total || 0}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {user.accuracyHistory.length > 30 && (
+              <div className="text-sm text-gray-500 mt-2 text-center">
+                Showing most recent 30 of {user.accuracyHistory.length} days
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-gray-500 text-center py-4">
+            No accuracy history yet. Data will appear after completing daily quizzes with the new system.
           </div>
         )}
       </div>
