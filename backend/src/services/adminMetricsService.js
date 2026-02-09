@@ -627,17 +627,18 @@ async function getUserDetails(userId) {
 
     dailyQuizzesSnapshot.forEach(doc => {
       const quiz = doc.data();
-      const correctCount = quiz.correct_count || 0;
-      const totalCount = quiz.questions_count || quiz.questions?.length || 0;
+      const score = quiz.score || 0;
+      const totalQuestions = quiz.total_questions || 0;
+      const accuracy = quiz.accuracy || 0;
 
       dailyQuizzes.push({
         id: doc.id,
         date: quiz.date,
         completedAt: quiz.completed_at,
-        score: correctCount,
-        totalQuestions: totalCount,
-        timeSpentSeconds: quiz.time_taken_seconds || 0,
-        accuracy: totalCount > 0 ? correctCount / totalCount : 0,
+        score: score,
+        totalQuestions: totalQuestions,
+        timeSpentSeconds: quiz.total_time_seconds || 0,
+        accuracy: accuracy,
         subjects: quiz.subjects || []
       });
     });
@@ -659,8 +660,9 @@ async function getUserDetails(userId) {
 
     chapterPracticeSnapshot.forEach(doc => {
       const session = doc.data();
-      const correctCount = session.correct_count || 0;
-      const totalCount = session.questions_count || session.questions?.length || 0;
+      const correctCount = session.final_correct_count || session.correct_count || 0;
+      const totalCount = session.final_total_answered || session.total_questions || 0;
+      const accuracy = session.final_accuracy || 0;
 
       chapterPractice.push({
         id: doc.id,
@@ -670,8 +672,8 @@ async function getUserDetails(userId) {
         completedAt: session.completed_at,
         score: correctCount,
         totalQuestions: totalCount,
-        timeSpentSeconds: session.time_taken_seconds || 0,
-        accuracy: totalCount > 0 ? correctCount / totalCount : 0
+        timeSpentSeconds: session.total_time_seconds || 0,
+        accuracy: accuracy
       });
     });
   } catch (err) {
