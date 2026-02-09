@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { format } from 'date-fns';
 import MetricCard from '../components/cards/MetricCard';
 import api from '../services/api';
+import { BUILD_TIMESTAMP } from '../version';
 
 export default function Dashboard() {
   const [health, setHealth] = useState(null);
@@ -47,9 +49,17 @@ export default function Dashboard() {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Daily Health</h1>
-        <p className="text-gray-500">Overview of key metrics for today</p>
+      <div className="mb-6 flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Daily Health</h1>
+          <p className="text-gray-500">Overview of key metrics for today</p>
+        </div>
+        <div className="text-right">
+          <div className="text-xs text-gray-400">Last deployed</div>
+          <div className="text-sm font-medium text-gray-600">
+            {format(new Date(BUILD_TIMESTAMP), 'MMM dd, yyyy HH:mm')}
+          </div>
+        </div>
       </div>
 
       {/* Key Metrics */}
