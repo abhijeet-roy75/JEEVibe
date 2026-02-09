@@ -38,9 +38,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       backgroundColor: AppColors.backgroundWhite,
       body: Column(
         children: [
-            // Gradient Header Section - Full Width
+            // Gradient Header Section - Full Width (reduced from flex: 2)
             Expanded(
-              flex: 2,
+              flex: 1,
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
@@ -254,7 +254,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(height: PlatformSizing.spacing(32)), // 32→25.6px Android
+                    // Bottom safe area padding to prevent Android nav bar covering content
+                    SizedBox(height: MediaQuery.of(context).padding.bottom),
                   ],
                 ),
               ),
