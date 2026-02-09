@@ -13,6 +13,7 @@ import 'all_solutions_screen.dart';
 import 'solution_review_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../theme/app_platform_sizing.dart';
 import '../providers/app_state_provider.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/subject_icon_widget.dart';
@@ -404,7 +405,7 @@ class _CameraScreenState extends State<CameraScreen> {
   Widget _buildCaptureButton() {
     return Container(
       width: double.infinity,
-      height: 80,
+      height: PlatformSizing.buttonHeight(80),  // 80px iOS, 70px Android (was hardcoded 80)
       decoration: BoxDecoration(
         gradient: AppColors.ctaGradient,
         borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
@@ -420,26 +421,26 @@ class _CameraScreenState extends State<CameraScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (_isProcessing)
-                  const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
+                  SizedBox(
+                    width: PlatformSizing.iconSize(24),  // 24px iOS, 21.12px Android
+                    height: PlatformSizing.iconSize(24),
+                    child: const CircularProgressIndicator(
                       color: Colors.white,
                       strokeWidth: 2.5,
                     ),
                   )
                 else
-                  const Icon(
+                  Icon(
                     Icons.camera_alt,
                     color: Colors.white,
-                    size: 32,
+                    size: PlatformSizing.iconSize(32),  // 32px iOS, 28.16px Android (was hardcoded 32)
                   ),
-                const SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),  // 12px iOS, 9.6px Android (was hardcoded 12)
                 Text(
                   'Capture',
                   style: AppTextStyles.labelMedium.copyWith(
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.08px Android (was hardcoded 16)
                   ),
                 ),
               ],
@@ -453,7 +454,7 @@ class _CameraScreenState extends State<CameraScreen> {
   Widget _buildGalleryButton() {
     return Container(
       width: double.infinity,
-      height: 80,
+      height: PlatformSizing.buttonHeight(80),  // 80px iOS, 70px Android
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
@@ -471,14 +472,14 @@ class _CameraScreenState extends State<CameraScreen> {
                 Icon(
                   Icons.photo_library_outlined,
                   color: _isProcessing ? AppColors.textGray : AppColors.primaryPurple,
-                  size: 32,
+                  size: PlatformSizing.iconSize(32),  // 32px iOS, 28.16px Android
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md),  // 12px iOS, 9.6px Android
                 Text(
                   'Gallery',
                   style: AppTextStyles.labelMedium.copyWith(
                     color: _isProcessing ? AppColors.textGray : AppColors.textDark,
-                    fontSize: 16,
+                    fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.08px Android
                   ),
                 ),
               ],

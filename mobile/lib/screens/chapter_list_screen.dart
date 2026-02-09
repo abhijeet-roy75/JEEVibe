@@ -324,11 +324,11 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                   fontWeight: FontWeight.w600,
                 ),
                 unselectedLabelStyle: AppTextStyles.labelMedium,
-                padding: const EdgeInsets.all(4),
+                padding: EdgeInsets.all(AppSpacing.xs),  // 4px iOS, 3.2px Android
                 tabs: const [
                   Tab(text: 'Physics'),
                   Tab(text: 'Chemistry'),
-                  Tab(text: 'Mathematics'),
+                  Tab(text: 'Math'),
                 ],
               ),
             ),
