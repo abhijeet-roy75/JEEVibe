@@ -306,8 +306,23 @@ router.post('/generate', authenticateUser, validateGenerate, async (req, res, ne
       }
     }
 
+    // Enforce tier-based question count limit
+    // Use tier's chapter_practice_per_chapter limit as the max
+    const tierQuestionLimit = limits.chapter_practice_per_chapter || 15;
+    const effectiveQuestionCount = question_count
+      ? Math.min(question_count, tierQuestionLimit)
+      : tierQuestionLimit;
+
+    logger.info('Generating chapter practice session with tier limits', {
+      userId,
+      tier: tierInfo.tier,
+      requestedCount: question_count,
+      tierLimit: tierQuestionLimit,
+      effectiveCount: effectiveQuestionCount
+    });
+
     // Generate new session
-    const sessionData = await generateChapterPractice(userId, chapter_key, question_count);
+    const sessionData = await generateChapterPractice(userId, chapter_key, effectiveQuestionCount);
 
     res.json({
       success: true,
