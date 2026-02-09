@@ -597,6 +597,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     ),
 
                     SizedBox(height: PlatformSizing.spacing(24)),
+
+                    // Bottom safe area padding to prevent Android nav bar covering Cancel button
+                    SizedBox(height: MediaQuery.of(context).padding.bottom),
                   ],
                 ),
               ),
