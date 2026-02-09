@@ -57,7 +57,7 @@ export default function Dashboard() {
         <div className="text-right">
           <div className="text-xs text-gray-400">Last deployed</div>
           <div className="text-sm font-medium text-gray-600">
-            {format(new Date(BUILD_TIMESTAMP), 'MMM dd, yyyy HH:mm')}
+            {format(new Date(BUILD_TIMESTAMP), 'MMM dd, yyyy h:mm a')} EST
           </div>
         </div>
       </div>
