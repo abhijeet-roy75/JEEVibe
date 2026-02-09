@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../theme/app_platform_sizing.dart';
 import '../widgets/app_header.dart';
 import '../widgets/priya_avatar.dart';
 
@@ -102,14 +103,14 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
         children: [
           Flexible(
             child: Text(
-              'Priya Ma\'am is working on your solution',
+              'Priya Ma\'am is working on it',
               style: AppTextStyles.subtitleWhite.copyWith(fontSize: 13), // Reduced from 15
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: AppSpacing.xs),  // 4px iOS, 3.2px Android
           _buildAnimatedDots(),
         ],
       ),
