@@ -462,7 +462,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           _buildFeatureRow(
             Icons.gps_fixed_outlined,
             'Chapter Practice',
-            '3/week',
+            '5/day',
             'Unlimited',
             tierColor,
             tierBgColor,

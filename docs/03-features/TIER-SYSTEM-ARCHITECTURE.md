@@ -27,8 +27,8 @@ This document describes the **3-tier subscription system** (FREE, PRO, ULTRA) wi
 | **Snap & Solve** | 5/day | 10/day | Unlimited |
 | **Practice after Snap & Solve** | ❌ | 3/snap | 3/snap |
 | **Daily Quiz** | 1/day | 10/day | Unlimited |
-| **Chapter Practice** | 1 chapter/subject/week | Unlimited | Unlimited |
-| **Chapter Selection for Practice** | Fixed | Full Repository | Full Repository |
+| **Chapter Practice** | 5 chapters/day (5 Qs each) | Unlimited (15 Qs each) | Unlimited (15 Qs each) |
+| **Chapter Selection for Practice** | Timeline-based | Full Repository | Full Repository |
 | **Solution History** | Last 7 days | Last 30 days | Unlimited |
 | **Analytics** | Basic (streak, total) | Full access | Full access |
 | **AI Tutor (Priya Ma'am)** | ❌ | ❌ | ✅ Unlimited |
@@ -126,10 +126,10 @@ This is the **single source of truth** for all tier definitions. Edit directly i
         ai_tutor_enabled: false,
         ai_tutor_messages_daily: 0,
 
-        // Chapter Practice (with weekly cooldown)
+        // Chapter Practice (with daily limits)
         chapter_practice_enabled: true,
-        chapter_practice_per_chapter: 15,
-        chapter_practice_weekly_per_subject: 1,  // 1 chapter per subject per week (7-day cooldown)
+        chapter_practice_per_chapter: 5,  // 5 questions per chapter
+        chapter_practice_daily_limit: 5,  // 5 chapters per day
 
         // Future features
         mock_tests_monthly: 1,
@@ -166,10 +166,10 @@ This is the **single source of truth** for all tier definitions. Edit directly i
         ai_tutor_enabled: false,
         ai_tutor_messages_daily: 0,
 
-        // Chapter Practice (no weekly limit)
+        // Chapter Practice (unlimited)
         chapter_practice_enabled: true,
-        chapter_practice_per_chapter: 20,
-        chapter_practice_weekly_per_subject: -1,  // Unlimited
+        chapter_practice_per_chapter: 15,  // 15 questions per chapter
+        chapter_practice_daily_limit: -1,  // Unlimited chapters per day
 
         // Future features
         mock_tests_monthly: 5,
@@ -236,8 +236,8 @@ This is the **single source of truth** for all tier definitions. Edit directly i
 
         // Chapter Practice - Unlimited
         chapter_practice_enabled: true,
-        chapter_practice_per_chapter: -1,
-        chapter_practice_weekly_per_subject: -1,
+        chapter_practice_per_chapter: 15,  // 15 questions per chapter
+        chapter_practice_daily_limit: -1,  // Unlimited chapters per day
 
         // Future features - All unlimited
         mock_tests_monthly: -1,
@@ -479,25 +479,24 @@ async function getEffectiveTier(userId) {
 - Partial solutions create frustration, not conversion
 - The value proposition is usage limits, not quality limits
 
-### Chapter Practice Weekly Limits (Free Tier)
+### Chapter Practice Daily Limits (Free Tier)
 
-Free tier users can only practice **1 chapter per subject per week** (7-day cooldown). This is tracked in Firestore:
+Free tier users can practice **5 chapters per day** with **5 questions per chapter**. This is tracked in daily usage:
 
-**Storage**: `users/{userId}/chapter_practice_weekly/{subject}`
+**Storage**: `users/{userId}/daily_usage/{date}`
 
 ```javascript
 {
-  last_chapter_key: "physics_mechanics_kinematics",
-  last_chapter_name: "Kinematics",
-  last_completed_at: Timestamp,
-  expires_at: Timestamp  // 7 days after last_completed_at
+  chapter_practice_count: 3,  // Number of chapters practiced today
+  // ... other daily usage counters
 }
 ```
 
 **Behavior**:
-- After completing a chapter practice session, the subject is locked for 7 days
-- User can practice different subjects (e.g., Physics locked, but Chemistry available)
-- Pro/Ultra users have no weekly restriction (`chapter_practice_weekly_per_subject: -1`)
+- Free tier: 5 chapters/day, 5 questions per chapter
+- Pro/Ultra tier: Unlimited chapters/day, 15 questions per chapter
+- Daily limit resets at midnight IST
+- Chapters unlock based on JEE timeline (24-month countdown) and coaching status
 
 ### AI Tutor Feature Gate
 
