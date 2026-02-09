@@ -126,13 +126,21 @@ export default function Users() {
                 users.map((user) => (
                   <tr
                     key={user.uid}
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => navigate(`/users/${user.uid}`)}
+                    className="hover:bg-gray-50"
                   >
                     <td className="px-6 py-4">
                       <div>
-                        <div className="font-medium text-gray-800">
-                          {user.firstName} {user.lastName}
+                        <div className="font-medium">
+                          <a
+                            href={`/users/${user.uid}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              navigate(`/users/${user.uid}`);
+                            }}
+                            className="text-primary-600 hover:text-primary-700 hover:underline"
+                          >
+                            {user.firstName} {user.lastName}
+                          </a>
                         </div>
                         <div className="text-sm text-gray-500">{user.email || user.phone}</div>
                       </div>
