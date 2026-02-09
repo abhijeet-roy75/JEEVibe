@@ -617,23 +617,27 @@ async function getUserDetails(userId) {
   let dailyQuizzes = [];
   try {
     const dailyQuizzesSnapshot = await db
-      .collection('users')
-      .doc(userId)
       .collection('daily_quizzes')
+      .doc(userId)
+      .collection('quizzes')
+      .where('status', '==', 'completed')
       .orderBy('completed_at', 'desc')
       .limit(50)
       .get();
 
     dailyQuizzesSnapshot.forEach(doc => {
       const quiz = doc.data();
+      const correctCount = quiz.correct_count || 0;
+      const totalCount = quiz.questions_count || quiz.questions?.length || 0;
+
       dailyQuizzes.push({
         id: doc.id,
         date: quiz.date,
         completedAt: quiz.completed_at,
-        score: quiz.score || 0,
-        totalQuestions: quiz.questions?.length || 0,
-        timeSpentSeconds: quiz.time_spent_seconds || 0,
-        accuracy: quiz.accuracy || (quiz.score / (quiz.questions?.length || 1)),
+        score: correctCount,
+        totalQuestions: totalCount,
+        timeSpentSeconds: quiz.time_taken_seconds || 0,
+        accuracy: totalCount > 0 ? correctCount / totalCount : 0,
         subjects: quiz.subjects || []
       });
     });
@@ -645,25 +649,29 @@ async function getUserDetails(userId) {
   let chapterPractice = [];
   try {
     const chapterPracticeSnapshot = await db
-      .collection('users')
+      .collection('chapter_practice_sessions')
       .doc(userId)
-      .collection('chapter_sessions')
+      .collection('sessions')
+      .where('status', '==', 'completed')
       .orderBy('completed_at', 'desc')
       .limit(50)
       .get();
 
     chapterPracticeSnapshot.forEach(doc => {
       const session = doc.data();
+      const correctCount = session.correct_count || 0;
+      const totalCount = session.questions_count || session.questions?.length || 0;
+
       chapterPractice.push({
         id: doc.id,
         chapterKey: session.chapter_key,
         chapterName: session.chapter_name || session.chapter_key,
         subject: session.subject,
         completedAt: session.completed_at,
-        score: session.score || 0,
-        totalQuestions: session.questions?.length || 0,
-        timeSpentSeconds: session.time_spent_seconds || 0,
-        accuracy: session.accuracy || 0
+        score: correctCount,
+        totalQuestions: totalCount,
+        timeSpentSeconds: session.time_taken_seconds || 0,
+        accuracy: totalCount > 0 ? correctCount / totalCount : 0
       });
     });
   } catch (err) {
