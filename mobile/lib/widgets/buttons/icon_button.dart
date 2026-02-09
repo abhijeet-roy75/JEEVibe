@@ -54,14 +54,13 @@ class AppIconButton extends StatelessWidget {
     this.isDisabled = false,
   });
 
-  /// Creates a back button with standard styling
-  /// Set [forGradientHeader] to true for the glass style on gradient backgrounds
+  /// Creates a back button with standard styling (always in square box)
   factory AppIconButton.back({
     Key? key,
     VoidCallback? onPressed,
     Color? color,
     AppIconButtonSize size = AppIconButtonSize.medium,
-    bool forGradientHeader = false,
+    bool forGradientHeader = true, // Deprecated: always uses glass variant
   }) {
     return AppIconButton(
       key: key,
@@ -69,27 +68,26 @@ class AppIconButton extends StatelessWidget {
       onPressed: onPressed,
       iconColor: color ?? Colors.white,
       size: size,
-      variant: forGradientHeader ? AppIconButtonVariant.glass : AppIconButtonVariant.ghost,
+      variant: AppIconButtonVariant.glass, // Always use glass (square box)
       tooltip: 'Go back',
     );
   }
 
-  /// Creates a close button with standard styling
-  /// Set [forGradientHeader] to true for the glass style on gradient backgrounds
+  /// Creates a close button with standard styling (always in square box)
   factory AppIconButton.close({
     Key? key,
     VoidCallback? onPressed,
     Color? color,
     AppIconButtonSize size = AppIconButtonSize.medium,
-    bool forGradientHeader = false,
+    bool forGradientHeader = true, // Deprecated: always uses glass variant
   }) {
     return AppIconButton(
       key: key,
       icon: Icons.close_rounded,
       onPressed: onPressed,
-      iconColor: color ?? (forGradientHeader ? Colors.white : AppColors.textSecondary),
+      iconColor: color ?? Colors.white,
       size: size,
-      variant: forGradientHeader ? AppIconButtonVariant.glass : AppIconButtonVariant.ghost,
+      variant: AppIconButtonVariant.glass, // Always use glass (square box)
       tooltip: 'Close',
     );
   }
