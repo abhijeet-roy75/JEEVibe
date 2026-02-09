@@ -334,7 +334,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           // Reduce tab height on Android for more compact appearance
           labelPadding: EdgeInsets.symmetric(
             horizontal: PlatformSizing.spacing(12),  // 12px iOS, 9.6px Android
-            vertical: PlatformSizing.spacing(8),     // 8px iOS, 6.4px Android
+            vertical: PlatformSizing.spacing(4),     // 4px iOS, 3.2px Android (reduced from 8 for more compact tabs)
           ),
           tabs: const [
             Tab(text: 'Overview'),
