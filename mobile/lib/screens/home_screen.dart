@@ -14,6 +14,7 @@ import 'photo_review_screen.dart';
 import 'subscription/paywall_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../theme/app_platform_sizing.dart';
 import '../providers/app_state_provider.dart';
 import '../providers/offline_provider.dart';
 import '../widgets/buttons/gradient_button.dart';
@@ -285,7 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildPriyaMaamCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(AppSpacing.lg), // 16px iOS, 12.8px Android (was 20px hardcoded)
       decoration: BoxDecoration(
         gradient: AppColors.priyaCardGradient,
         borderRadius: BorderRadius.circular(AppRadius.radiusLarge),
@@ -304,8 +305,8 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          PriyaAvatar(size: 48),
-          const SizedBox(width: 12),
+          PriyaAvatar(size: PlatformSizing.iconSize(48)), // 48px iOS, 42.24px Android
+          SizedBox(width: AppSpacing.md), // 12px iOS, 9.6px Android
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,24 +317,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       'Priya Ma\'am',
                       style: GoogleFonts.inter(
-                        fontSize: 14,
+                        fontSize: PlatformSizing.fontSize(14), // 14px iOS, 12.32px Android
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFF7C3AED),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    const Icon(
+                    SizedBox(width: AppSpacing.xs), // 4px iOS, 3.2px Android (was 8px)
+                    Icon(
                       Icons.auto_awesome,
                       color: AppColors.primaryPurple,
-                      size: 16,
+                      size: AppIconSizes.sm, // 16px iOS, 14.08px Android
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: AppSpacing.xs), // 4px iOS, 3.2px Android (was 8px)
                 Text(
                   'I\'m ready to help! Just snap a clear photo of your question, and I\'ll solve it step-by-step for you.',
                   style: GoogleFonts.inter(
-                    fontSize: 14,
+                    fontSize: PlatformSizing.fontSize(14), // 14px iOS, 12.32px Android
                     color: const Color(0xFF6B21A8),
                     height: 1.6,
                   ),
