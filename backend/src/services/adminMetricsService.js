@@ -599,9 +599,10 @@ async function getUserDetails(userId) {
   const assessmentData = userData.assessment || {};
   let assessmentDetails = null;
   if (assessmentData.status === 'completed') {
-    const cumulativeStats = userData.cumulative_stats || {};
-    const totalQuestions = assessmentData.responses?.length || 30;
-    const correctAnswers = cumulativeStats.total_correct || 0;
+    const responses = assessmentData.responses || [];
+    const totalQuestions = responses.length || 30;
+    // Count correct answers from the responses array
+    const correctAnswers = responses.filter(r => r.is_correct === true).length;
 
     assessmentDetails = {
       completedAt: assessmentData.completed_at,
