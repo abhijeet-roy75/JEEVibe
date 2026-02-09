@@ -89,6 +89,9 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
   // Screenshot controller for image sharing
   final _screenshotController = ScreenshotController();
 
+  // Store reference to UserProfileProvider for safe disposal
+  UserProfileProvider? _userProfileProvider;
+
   @override
   bool get wantKeepAlive => true; // Keep state alive in IndexedStack
 
@@ -99,8 +102,8 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
     _trackSession();
 
     // Listen for profile changes to refresh chapter unlock data
-    final userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
-    userProfileProvider.addListener(_onProfileChanged);
+    _userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
+    _userProfileProvider?.addListener(_onProfileChanged);
 
     // Listen for app lifecycle changes to refresh when screen becomes visible
     WidgetsBinding.instance.addObserver(this);
@@ -108,8 +111,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
 
   @override
   void dispose() {
-    final userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
-    userProfileProvider.removeListener(_onProfileChanged);
+    _userProfileProvider?.removeListener(_onProfileChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
