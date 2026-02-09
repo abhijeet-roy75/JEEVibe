@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../constants/profile_constants.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/buttons/icon_button.dart';
 import '../../services/firebase/firestore_user_service.dart';
@@ -153,31 +154,31 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       filled: true,
       fillColor: AppColors.cardWhite,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
+        borderSide: BorderSide(
           color: AppColors.borderGray,
-          width: 1,
+          width: PlatformSizing.spacing(1),
         ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
+        borderSide: BorderSide(
           color: AppColors.borderGray,
-          width: 1,
+          width: PlatformSizing.spacing(1),
         ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
+        borderSide: BorderSide(
           color: AppColors.primaryPurple,
-          width: 2,
+          width: PlatformSizing.spacing(2),
         ),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
+        borderSide: BorderSide(
           color: AppColors.errorRed,
-          width: 1,
+          width: PlatformSizing.spacing(1),
         ),
       ),
       contentPadding: const EdgeInsets.symmetric(
@@ -189,11 +190,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(16)),
       child: Text(
         title,
         style: AppTextStyles.headerMedium.copyWith(
-          fontSize: 16,
+          fontSize: PlatformSizing.fontSize(16),
           color: AppColors.textDark,
           fontWeight: FontWeight.bold,
         ),
@@ -212,12 +213,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           ),
         ),
         if (isOptional) ...[
-          const SizedBox(width: 6),
+          SizedBox(width: PlatformSizing.spacing(6)),
           Text(
             '(Optional)',
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textLight,
-              fontSize: 12,
+              fontSize: PlatformSizing.fontSize(12),
             ),
           ),
         ],
@@ -290,14 +291,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             child: SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16.0), vertical: PlatformSizing.spacing(12.0)),
                 child: Row(
                   children: [
                     // Back button
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                       ),
                       child: AppIconButton.back(
                         onPressed: () => Navigator.of(context).pop(),
@@ -305,17 +306,17 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                         size: AppIconButtonSize.small,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: PlatformSizing.spacing(12)),
                     const Text(
                       '✏️',
                       style: TextStyle(fontSize: 24),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: PlatformSizing.spacing(8)),
                     Expanded(
                       child: Text(
                         "Edit Profile",
                         style: AppTextStyles.headerLarge.copyWith(
-                          fontSize: 20,
+                          fontSize: PlatformSizing.fontSize(20),
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -330,7 +331,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           // Form Content
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(PlatformSizing.spacing(24.0)),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -341,7 +342,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
                     // First Name (required)
                     _buildFieldLabel('First Name'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: PlatformSizing.spacing(8)),
                     TextFormField(
                       controller: _firstNameController,
                       focusNode: _firstNameFocusNode,
@@ -363,11 +364,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       onSaved: (value) => _firstName = value?.trim(),
                     ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: PlatformSizing.spacing(20)),
 
                     // Last Name (required)
                     _buildFieldLabel('Last Name'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: PlatformSizing.spacing(8)),
                     TextFormField(
                       controller: _lastNameController,
                       focusNode: _lastNameFocusNode,
@@ -389,11 +390,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       onSaved: (value) => _lastName = value?.trim(),
                     ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: PlatformSizing.spacing(20)),
 
                     // Email (required)
                     _buildFieldLabel('Email'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: PlatformSizing.spacing(8)),
                     TextFormField(
                       controller: _emailController,
                       focusNode: _emailFocusNode,
@@ -419,28 +420,28 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       onSaved: (value) => _email = value?.trim(),
                     ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: PlatformSizing.spacing(20)),
 
                     // Phone Number (read-only)
                     _buildFieldLabel('Phone Number'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: PlatformSizing.spacing(8)),
                     Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 14,
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.backgroundLight,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.check_circle,
                             color: AppColors.successGreen,
-                            size: 20,
+                            size: PlatformSizing.iconSize(20),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: PlatformSizing.spacing(12)),
                           Text(
                             widget.profile.phoneNumber.isNotEmpty
                                 ? widget.profile.phoneNumber
@@ -449,22 +450,22 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                               color: AppColors.textDark,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: PlatformSizing.spacing(8)),
                           Container(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.successGreen.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(PlatformSizing.radius(4)),
                             ),
                             child: Text(
                               'Verified',
                               style: AppTextStyles.bodySmall.copyWith(
                                 color: AppColors.successGreen,
                                 fontWeight: FontWeight.w600,
-                                fontSize: 11,
+                                fontSize: PlatformSizing.fontSize(12),  // 12px iOS, 10.56px Android (was 11)
                               ),
                             ),
                           ),
@@ -472,11 +473,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: PlatformSizing.spacing(20)),
 
                     // JEE Target Exam Date (required)
                     _buildFieldLabel('When are you giving JEE?'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: PlatformSizing.spacing(8)),
                     DropdownButtonFormField<String>(
                       value: _jeeTargetExamDate,
                       isExpanded: true,
@@ -501,11 +502,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       onSaved: (value) => _jeeTargetExamDate = value,
                     ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: PlatformSizing.spacing(20)),
 
                     // Coaching Enrollment Status (optional)
                     _buildFieldLabel('Do you attend coaching classes?', isOptional: true),
-                    const SizedBox(height: 8),
+                    SizedBox(height: PlatformSizing.spacing(8)),
                     DropdownButtonFormField<bool>(
                       value: _isEnrolledInCoaching,
                       isExpanded: true,
@@ -526,14 +527,14 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       onSaved: (value) => _isEnrolledInCoaching = value,
                     ),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: PlatformSizing.spacing(32)),
 
                     // JEE Preparation Details Section
                     _buildSectionHeader('JEE Preparation Details'),
 
                     // Your State (optional)
                     _buildFieldLabel('Your State', isOptional: true),
-                    const SizedBox(height: 8),
+                    SizedBox(height: PlatformSizing.spacing(8)),
                     DropdownButtonFormField<String>(
                       value: _state,
                       isExpanded: true,
@@ -552,11 +553,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       onSaved: (value) => _state = value,
                     ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: PlatformSizing.spacing(20)),
 
                     // Dream Branch (optional)
                     _buildFieldLabel('Dream Branch', isOptional: true),
-                    const SizedBox(height: 8),
+                    SizedBox(height: PlatformSizing.spacing(8)),
                     DropdownButtonFormField<String>(
                       value: _dreamBranch,
                       isExpanded: true,
@@ -575,7 +576,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       onSaved: (value) => _dreamBranch = value,
                     ),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: PlatformSizing.spacing(32)),
 
                     // Save button
                     GradientButton(
@@ -585,7 +586,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       size: GradientButtonSize.large,
                     ),
 
-                    const SizedBox(height: 16),
+                    SizedBox(height: PlatformSizing.spacing(16)),
 
                     // Cancel button
                     Center(
@@ -595,7 +596,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: PlatformSizing.spacing(24)),
                   ],
                 ),
               ),

@@ -310,22 +310,22 @@ class _SolutionScreenState extends State<SolutionScreen> {
                 padding: AppSpacing.screenPadding,
                 child: Column(
                   children: [
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildQuestionCard(solution),
-                    const SizedBox(height: AppSpacing.space32),
+                    SizedBox(height: AppSpacing.space32),
                     _buildSolutionSteps(solution),
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildFinalAnswer(solution),
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildPriyaTip(solution),
-                    const SizedBox(height: AppSpacing.space32),
+                    SizedBox(height: AppSpacing.space32),
                     // Practice section for Pro/Ultra users only
                     if (SubscriptionService().isPro || SubscriptionService().isUltra) ...[
                       _buildPracticeSection(solution),
-                      const SizedBox(height: AppSpacing.space32),
+                      SizedBox(height: AppSpacing.space32),
                     ],
                     _buildActionButtons(solution),
-                    const SizedBox(height: AppSpacing.space32),
+                    SizedBox(height: AppSpacing.space32),
                   ],
                 ),
               ),
@@ -561,7 +561,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
     final processedStepContent = TextPreprocessor.preprocessStepContent(stepContent);
     
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
+                      margin: EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
                         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
@@ -571,7 +571,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
         data: ThemeData(dividerColor: Colors.transparent),
                         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          childrenPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
                           leading: Container(
                             width: 32,
                             height: 32,

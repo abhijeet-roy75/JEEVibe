@@ -14,6 +14,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../buttons/gradient_button.dart';
 
 class AppDialog extends StatelessWidget {
@@ -62,7 +63,7 @@ class AppDialog extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(false),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md), // 12→9.6px Android
           Expanded(
             child: GradientButton(
               text: confirmText,
@@ -200,15 +201,15 @@ class AppDialog extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
-              width: 48,
-              height: 48,
-              child: CircularProgressIndicator(
+            SizedBox(
+              width: PlatformSizing.buttonHeight(48), // 48→44px Android
+              height: PlatformSizing.buttonHeight(48),
+              child: const CircularProgressIndicator(
                 strokeWidth: 3,
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg), // 16→12.8px Android
             Text(
               message,
               style: AppTextStyles.bodyMedium,
@@ -232,7 +233,7 @@ class AppDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.lg),
       ),
       child: Container(
-        padding: padding ?? const EdgeInsets.all(24),
+        padding: padding ?? EdgeInsets.all(AppSpacing.xxl), // 24→19.2px Android
         constraints: const BoxConstraints(maxWidth: 340),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -242,9 +243,9 @@ class AppDialog extends StatelessWidget {
                 alignment: Alignment.topRight,
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(
+                  child: Icon(
                     Icons.close,
-                    size: 24,
+                    size: AppIconSizes.lg, // 24→21.12px Android
                     color: AppColors.textSecondary,
                   ),
                 ),
@@ -252,10 +253,10 @@ class AppDialog extends StatelessWidget {
             if (icon != null) ...[
               Icon(
                 icon,
-                size: 48,
+                size: AppIconSizes.massive, // 48→43.2px Android
                 color: iconColor ?? AppColors.primary,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg), // 16→12.8px Android
             ],
             if (title != null) ...[
               Text(
@@ -263,7 +264,7 @@ class AppDialog extends StatelessWidget {
                 style: AppTextStyles.headerMedium,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: AppSpacing.xs), // 8→6.4px Android
             ],
             if (message != null) ...[
               Text(
@@ -276,7 +277,7 @@ class AppDialog extends StatelessWidget {
             ],
             if (content != null) content!,
             if (actions != null && actions!.isNotEmpty) ...[
-              const SizedBox(height: 24),
+              SizedBox(height: AppSpacing.xxl), // 24→19.2px Android
               Row(
                 children: actions!,
               ),
@@ -341,7 +342,7 @@ class AppBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: padding ?? const EdgeInsets.all(24),
+        padding: padding ?? EdgeInsets.all(AppSpacing.xxl), // 24→19.2px Android
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -351,7 +352,7 @@ class AppBottomSheet extends StatelessWidget {
                 child: Container(
                   width: 40,
                   height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
+                  margin: EdgeInsets.only(bottom: AppSpacing.lg), // 16→12.8px Android
                   decoration: BoxDecoration(
                     color: AppColors.borderMedium,
                     borderRadius: BorderRadius.circular(2),
@@ -360,7 +361,7 @@ class AppBottomSheet extends StatelessWidget {
               ),
             if (title != null || showCloseButton)
               Padding(
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: EdgeInsets.only(bottom: AppSpacing.lg), // 16→12.8px Android
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -372,9 +373,9 @@ class AppBottomSheet extends StatelessWidget {
                     if (showCloseButton)
                       GestureDetector(
                         onTap: () => Navigator.of(context).pop(),
-                        child: const Icon(
+                        child: Icon(
                           Icons.close,
-                          size: 24,
+                          size: AppIconSizes.lg, // 24→21.12px Android
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -383,7 +384,7 @@ class AppBottomSheet extends StatelessWidget {
               ),
             child,
             if (actions != null && actions!.isNotEmpty) ...[
-              const SizedBox(height: 24),
+              SizedBox(height: AppSpacing.xxl), // 24→19.2px Android
               ...actions!,
             ],
           ],

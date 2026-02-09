@@ -614,7 +614,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: feedback == null ? () => _selectAnswer(option.optionId) : null,
         borderRadius: BorderRadius.circular(12),
@@ -928,7 +928,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                 final stepText = step.displayText;
                 
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: EdgeInsets.only(bottom: 12),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

@@ -150,7 +150,7 @@ class AssessmentInstructionsScreen extends StatelessWidget {
         textAlign: TextAlign.center,
       ),
       subtitle: Padding(
-        padding: const EdgeInsets.only(top: 8),
+        padding: EdgeInsets.only(top: 8),
         child: Text(
           'Tips for best results',
           style: AppTextStyles.bodyWhite.copyWith(

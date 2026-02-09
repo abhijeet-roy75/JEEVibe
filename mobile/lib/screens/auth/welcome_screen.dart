@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'phone_entry_screen.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../widgets/buttons/gradient_button.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -55,9 +56,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       children: [
                         // Logo in circle (matching profile pages style, larger for welcome screen)
                         Container(
-                          width: 100,
-                          height: 100,
-                          margin: const EdgeInsets.only(bottom: 20),
+                          width: PlatformSizing.iconSize(100), // 100→88px Android
+                          height: PlatformSizing.iconSize(100), // 100→88px Android
+                          margin: EdgeInsets.only(bottom: PlatformSizing.spacing(20)), // 20→16px Android
                           decoration: BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
@@ -71,7 +72,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           ),
                           child: ClipOval(
                             child: Padding(
-                              padding: const EdgeInsets.all(12),
+                              padding: EdgeInsets.all(PlatformSizing.spacing(12)), // 12→9.6px Android
                               child: Image.asset(
                                 'assets/images/JEEVibeLogo_240.png',
                                 fit: BoxFit.contain,
@@ -85,7 +86,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                       child: Text(
                                         'JV',
                                         style: AppTextStyles.headerLarge.copyWith(
-                                          fontSize: 36,
+                                          fontSize: PlatformSizing.fontSize(36), // 36→31.68px Android
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -101,12 +102,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           'Welcome to JEEVibe',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.headerLarge.copyWith(
-                            fontSize: 28,
+                            fontSize: PlatformSizing.fontSize(28), // 28→24.64px Android
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: AppSpacing.sm),
                         Flexible(
                           child: Text(
                             'Your AI-powered path to JEE success',
@@ -129,13 +130,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             Expanded(
               flex: 3,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xxl,
+                  vertical: PlatformSizing.spacing(32), // 32→25.6px Android
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Abstract Graphic - Wavy line with dots
                     SizedBox(
-                      height: 120,
+                      height: PlatformSizing.spacing(120), // 120→96px Android
                       child: LayoutBuilder(
                         builder: (context, constraints) {
                           final width = constraints.maxWidth;
@@ -155,11 +159,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                 // Purple dots - showing upward trajectory
                                 // First dot - lowest position
                                 Positioned(
-                                  left: dot1X - 6, // Center the dot
-                                  top: 100 - 6, // At bottom (y=100)
+                                  left: dot1X - PlatformSizing.spacing(6), // Center the dot
+                                  top: PlatformSizing.spacing(100) - PlatformSizing.spacing(6), // At bottom
                                   child: Container(
-                                    width: 12,
-                                    height: 12,
+                                    width: PlatformSizing.spacing(12), // 12→9.6px Android
+                                    height: PlatformSizing.spacing(12), // 12→9.6px Android
                                     decoration: BoxDecoration(
                                       color: AppColors.primaryPurple.withValues(alpha: 0.3),
                                       shape: BoxShape.circle,
@@ -168,11 +172,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                 ),
                                 // Second dot - middle position
                                 Positioned(
-                                  left: dot2X - 6, // Center the dot
-                                  top: 20 - 6, // Middle height (y=20)
+                                  left: dot2X - PlatformSizing.spacing(6), // Center the dot
+                                  top: PlatformSizing.spacing(20) - PlatformSizing.spacing(6), // Middle height
                                   child: Container(
-                                    width: 12,
-                                    height: 12,
+                                    width: PlatformSizing.spacing(12), // 12→9.6px Android
+                                    height: PlatformSizing.spacing(12), // 12→9.6px Android
                                     decoration: BoxDecoration(
                                       color: AppColors.primaryPurple.withValues(alpha: 0.3),
                                       shape: BoxShape.circle,
@@ -181,11 +185,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                 ),
                                 // Third dot - highest position (with padding to avoid header cutoff)
                                 Positioned(
-                                  left: dot3X - 6, // Center the dot
-                                  top: 15 - 6, // Slightly below top (y=15) to avoid header cutoff
+                                  left: dot3X - PlatformSizing.spacing(6), // Center the dot
+                                  top: PlatformSizing.spacing(15) - PlatformSizing.spacing(6), // Slightly below top
                                   child: Container(
-                                    width: 12,
-                                    height: 12,
+                                    width: PlatformSizing.spacing(12), // 12→9.6px Android
+                                    height: PlatformSizing.spacing(12), // 12→9.6px Android
                                     decoration: BoxDecoration(
                                       color: AppColors.primaryPurple.withValues(alpha: 0.3),
                                       shape: BoxShape.circle,
@@ -198,33 +202,33 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    SizedBox(height: PlatformSizing.spacing(32)), // 32→25.6px Android
                     // Feature List
                     _FeatureItem(
                       icon: Icons.auto_stories,
                       iconColor: Colors.blue,
                       title: 'Personalized Practice',
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: AppSpacing.xl),
                     _FeatureItem(
                       icon: Icons.check_circle_outline,
                       iconColor: Colors.green,
                       title: 'Track Your Progress',
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: AppSpacing.xl),
                     _FeatureItem(
                       icon: Icons.bolt,
                       iconColor: Colors.orange,
                       title: 'Achieve Your Goals',
                     ),
-                    const SizedBox(height: 48),
+                    SizedBox(height: PlatformSizing.spacing(48)), // 48→38.4px Android
                     // Continue Button
                     GradientButton(
                       text: 'Continue with Phone Number',
                       onPressed: _navigateToPhoneEntry,
                       size: GradientButtonSize.large,
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
                     // Legal text
                     Text(
                       'By continuing, you agree to our',
@@ -233,7 +237,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         color: AppColors.textLight,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.xs),
                     TextButton(
                       onPressed: _openTerms,
                       style: TextButton.styleFrom(
@@ -250,7 +254,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    SizedBox(height: PlatformSizing.spacing(32)), // 32→25.6px Android
                   ],
                 ),
               ),

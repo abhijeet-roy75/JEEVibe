@@ -506,33 +506,33 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
                 padding: AppSpacing.screenPadding,
                 child: Column(
                   children: [
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildProgressCard(),
-                    const SizedBox(height: AppSpacing.space20),
+                    SizedBox(height: AppSpacing.space20),
                     _buildDifficultyChip(),
-                    const SizedBox(height: AppSpacing.space20),
+                    SizedBox(height: AppSpacing.space20),
                     _buildQuestionCard(question),
-                    const SizedBox(height: AppSpacing.space20),
+                    SizedBox(height: AppSpacing.space20),
                     _buildOptions(question),
                     if (showFeedback && _currentFeedback != null) ...[
-                      const SizedBox(height: AppSpacing.space20),
+                      SizedBox(height: AppSpacing.space20),
                       // Reuse FeedbackBannerWidget from daily quiz
                       FeedbackBannerWidget(
                         feedback: _currentFeedback!,
                         timeTakenSeconds: _currentFeedback!.timeTakenSeconds,
                       ),
-                      const SizedBox(height: AppSpacing.space16),
+                      SizedBox(height: AppSpacing.space16),
                       // Reuse DetailedExplanationWidget from daily quiz
                       DetailedExplanationWidget(
                         feedback: _currentFeedback!,
                         isCorrect: isCorrect,
                       ),
                     ],
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildSubmitButton(),
-                    const SizedBox(height: AppSpacing.space12),
+                    SizedBox(height: AppSpacing.space12),
                     _buildSkipButton(),
-                    const SizedBox(height: AppSpacing.space32),
+                    SizedBox(height: AppSpacing.space32),
                   ],
                 ),
               ),
@@ -783,7 +783,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
         final showIcon = showFeedback && (isCorrectOption || isWrongAnswer);
 
         return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+          padding: EdgeInsets.only(bottom: 12),
           child: InkWell(
             onTap: showFeedback ? null : () => _selectAnswer(optionKey),
             borderRadius: BorderRadius.circular(12),

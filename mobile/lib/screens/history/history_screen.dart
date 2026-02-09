@@ -7,6 +7,7 @@ import '../../providers/user_profile_provider.dart';
 import '../../services/subscription_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../widgets/app_header.dart';
 import '../all_solutions_screen.dart';
 import '../subscription/paywall_screen.dart';
@@ -112,30 +113,30 @@ class _HistoryScreenState extends State<HistoryScreen>
           showGradient: true,
           gradient: AppColors.ctaGradient,
           leading: Container(
-            width: 40,
-            height: 40,
+            width: PlatformSizing.spacing(40),
+            height: PlatformSizing.spacing(40),
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withAlpha(25),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+                  blurRadius: PlatformSizing.spacing(8),
+                  offset: Offset(PlatformSizing.spacing(0), PlatformSizing.spacing(2)),
                 ),
               ],
             ),
             child: ClipOval(
               child: Padding(
-                padding: const EdgeInsets.all(6),
+                padding: EdgeInsets.all(PlatformSizing.spacing(6)),
                 child: Image.asset(
                   'assets/images/JEEVibeLogo.png',
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
+                    return Icon(
                       Icons.history,
                       color: AppColors.primary,
-                      size: 22,
+                      size: PlatformSizing.iconSize(22),
                     );
                   },
                 ),
@@ -145,16 +146,16 @@ class _HistoryScreenState extends State<HistoryScreen>
           title: Text(
             'Hi $userName! 👋',
             style: AppTextStyles.headerWhite.copyWith(
-              fontSize: 20,
+              fontSize: PlatformSizing.fontSize(20),
               fontWeight: FontWeight.bold,
             ),
           ),
           subtitle: Padding(
-            padding: const EdgeInsets.only(top: 4),
+            padding: EdgeInsets.only(top: PlatformSizing.spacing(4)),
             child: Text(
               'Practice History',
               style: AppTextStyles.bodyWhite.copyWith(
-                fontSize: 14,
+                fontSize: PlatformSizing.fontSize(14),
                 color: Colors.white.withAlpha(230),
               ),
               textAlign: TextAlign.center,
@@ -163,17 +164,17 @@ class _HistoryScreenState extends State<HistoryScreen>
           trailing: GestureDetector(
             onTap: () => _onTierBadgeTap(tier),
             child: Container(
-              padding: const EdgeInsets.symmetric(
+              padding: EdgeInsets.symmetric(
                 horizontal: 12,
                 vertical: 6,
               ),
               decoration: BoxDecoration(
                 gradient: tierDisplay.gradient,
                 color: tierDisplay.gradient == null ? tierDisplay.backgroundColor : null,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
                 border: Border.all(
                   color: tierDisplay.borderColor,
-                  width: 1.5,
+                  width: PlatformSizing.spacing(1.5),
                 ),
               ),
               child: Row(
@@ -181,10 +182,10 @@ class _HistoryScreenState extends State<HistoryScreen>
                 children: [
                   Icon(
                     tierDisplay.icon,
-                    size: 14,
+                    size: PlatformSizing.iconSize(14),
                     color: Colors.white,
                   ),
-                  const SizedBox(width: 6),
+                  SizedBox(width: PlatformSizing.spacing(6)),
                   Text(
                     tierDisplay.label,
                     style: AppTextStyles.caption.copyWith(
@@ -208,7 +209,7 @@ class _HistoryScreenState extends State<HistoryScreen>
         controller: _tabController,
         isScrollable: true,
         tabAlignment: TabAlignment.start,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(12)),
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.textSecondary,
         labelStyle: AppTextStyles.bodyMedium.copyWith(
@@ -225,7 +226,7 @@ class _HistoryScreenState extends State<HistoryScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(tab.icon, size: 18),
-                const SizedBox(width: 8),
+                SizedBox(width: PlatformSizing.spacing(8)),
                 Text(tab.label),
               ],
             ),
@@ -257,25 +258,25 @@ class _HistoryScreenState extends State<HistoryScreen>
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
         ),
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.all(PlatformSizing.spacing(8)),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [AppColors.primary, AppColors.secondary],
                 ),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.star,
                 color: Colors.white,
-                size: 20,
+                size: PlatformSizing.iconSize(20),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: PlatformSizing.spacing(12)),
             const Text('Ultra Benefits'),
           ],
         ),
@@ -302,15 +303,15 @@ class _HistoryScreenState extends State<HistoryScreen>
 
   Widget _buildBenefitItem(String text) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(4)),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.check_circle,
             color: AppColors.success,
-            size: 18,
+            size: PlatformSizing.iconSize(18),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: PlatformSizing.spacing(12)),
           Text(
             text,
             style: AppTextStyles.bodyMedium.copyWith(

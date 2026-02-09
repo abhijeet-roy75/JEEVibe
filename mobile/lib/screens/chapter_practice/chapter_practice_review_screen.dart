@@ -378,7 +378,7 @@ class _ChapterPracticeReviewScreenState
     final questionNumber = result.position + 1; // Convert 0-indexed to 1-indexed
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,

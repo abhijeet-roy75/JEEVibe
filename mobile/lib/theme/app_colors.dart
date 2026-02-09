@@ -2,6 +2,7 @@
 /// Single source of truth for all design tokens
 /// Based on Robinhood-inspired light theme
 import 'package:flutter/material.dart';
+import 'app_platform_sizing.dart';
 
 // =============================================================================
 // COLORS
@@ -208,76 +209,76 @@ class AppColors {
 class AppSpacing {
   AppSpacing._(); // Prevent instantiation
 
-  // Base spacing values (4px grid)
-  static const double xxs = 2.0;
-  static const double xs = 4.0;
-  static const double sm = 8.0;
-  static const double md = 12.0;
-  static const double lg = 16.0;
-  static const double xl = 20.0;
-  static const double xxl = 24.0;
-  static const double xxxl = 32.0;
-  static const double huge = 40.0;
-  static const double massive = 48.0;
+  // Base spacing values (4px grid) - Platform-adaptive
+  static double get xxs => PlatformSizing.spacing(2.0);   // 2.0px iOS, 1.7px Android
+  static double get xs => PlatformSizing.spacing(4.0);    // 4.0px iOS, 3.4px Android
+  static double get sm => PlatformSizing.spacing(8.0);    // 8.0px iOS, 6.8px Android
+  static double get md => PlatformSizing.spacing(12.0);   // 12px iOS, 10.2px Android
+  static double get lg => PlatformSizing.spacing(16.0);   // 16px iOS, 13.6px Android
+  static double get xl => PlatformSizing.spacing(20.0);   // 20px iOS, 17px Android
+  static double get xxl => PlatformSizing.spacing(24.0);  // 24px iOS, 20.4px Android
+  static double get xxxl => PlatformSizing.spacing(32.0); // 32px iOS, 27.2px Android
+  static double get huge => PlatformSizing.spacing(40.0); // 40px iOS, 34px Android
+  static double get massive => PlatformSizing.spacing(48.0); // 48px iOS, 40.8px Android
 
   // Legacy aliases (for backward compatibility)
-  static const double space4 = xs;
-  static const double space8 = sm;
-  static const double space12 = md;
-  static const double space16 = lg;
-  static const double space20 = xl;
-  static const double space24 = xxl;
-  static const double space32 = xxxl;
-  static const double space40 = huge;
-  static const double space48 = massive;
+  static double get space4 => xs;
+  static double get space8 => sm;
+  static double get space12 => md;
+  static double get space16 => lg;
+  static double get space20 => xl;
+  static double get space24 => xxl;
+  static double get space32 => xxxl;
+  static double get space40 => huge;
+  static double get space48 => massive;
 
-  // Common padding presets
-  static const EdgeInsets paddingXs = EdgeInsets.all(xs);
-  static const EdgeInsets paddingSm = EdgeInsets.all(sm);
-  static const EdgeInsets paddingMd = EdgeInsets.all(md);
-  static const EdgeInsets paddingLg = EdgeInsets.all(lg);
-  static const EdgeInsets paddingXl = EdgeInsets.all(xl);
-  static const EdgeInsets paddingXxl = EdgeInsets.all(xxl);
+  // Common padding presets - Platform-adaptive
+  static EdgeInsets get paddingXs => EdgeInsets.all(xs);
+  static EdgeInsets get paddingSm => EdgeInsets.all(sm);
+  static EdgeInsets get paddingMd => EdgeInsets.all(md);
+  static EdgeInsets get paddingLg => EdgeInsets.all(lg);
+  static EdgeInsets get paddingXl => EdgeInsets.all(xl);
+  static EdgeInsets get paddingXxl => EdgeInsets.all(xxl);
 
   // Legacy aliases
-  static const EdgeInsets paddingSmall = paddingMd;
-  static const EdgeInsets paddingMedium = paddingLg;
-  static const EdgeInsets paddingLarge = paddingXl;
-  static const EdgeInsets paddingXL = paddingXxl;
+  static EdgeInsets get paddingSmall => paddingMd;
+  static EdgeInsets get paddingMedium => paddingLg;
+  static EdgeInsets get paddingLarge => paddingXl;
+  static EdgeInsets get paddingXL => paddingXxl;
 
   // Screen padding
-  static const EdgeInsets screenPadding = EdgeInsets.symmetric(horizontal: xxl);
-  static const EdgeInsets screenPaddingCompact = EdgeInsets.symmetric(horizontal: lg);
+  static EdgeInsets get screenPadding => EdgeInsets.symmetric(horizontal: xxl);
+  static EdgeInsets get screenPaddingCompact => EdgeInsets.symmetric(horizontal: lg);
 
   // Horizontal padding
-  static EdgeInsets horizontalSm = const EdgeInsets.symmetric(horizontal: sm);
-  static EdgeInsets horizontalMd = const EdgeInsets.symmetric(horizontal: md);
-  static EdgeInsets horizontalLg = const EdgeInsets.symmetric(horizontal: lg);
-  static EdgeInsets horizontalXl = const EdgeInsets.symmetric(horizontal: xl);
-  static EdgeInsets horizontalXxl = const EdgeInsets.symmetric(horizontal: xxl);
+  static EdgeInsets get horizontalSm => EdgeInsets.symmetric(horizontal: sm);
+  static EdgeInsets get horizontalMd => EdgeInsets.symmetric(horizontal: md);
+  static EdgeInsets get horizontalLg => EdgeInsets.symmetric(horizontal: lg);
+  static EdgeInsets get horizontalXl => EdgeInsets.symmetric(horizontal: xl);
+  static EdgeInsets get horizontalXxl => EdgeInsets.symmetric(horizontal: xxl);
 
   // Vertical padding
-  static EdgeInsets verticalSm = const EdgeInsets.symmetric(vertical: sm);
-  static EdgeInsets verticalMd = const EdgeInsets.symmetric(vertical: md);
-  static EdgeInsets verticalLg = const EdgeInsets.symmetric(vertical: lg);
-  static EdgeInsets verticalXl = const EdgeInsets.symmetric(vertical: xl);
-  static EdgeInsets verticalXxl = const EdgeInsets.symmetric(vertical: xxl);
+  static EdgeInsets get verticalSm => EdgeInsets.symmetric(vertical: sm);
+  static EdgeInsets get verticalMd => EdgeInsets.symmetric(vertical: md);
+  static EdgeInsets get verticalLg => EdgeInsets.symmetric(vertical: lg);
+  static EdgeInsets get verticalXl => EdgeInsets.symmetric(vertical: xl);
+  static EdgeInsets get verticalXxl => EdgeInsets.symmetric(vertical: xxl);
 
-  // SizedBox helpers for gaps
-  static const SizedBox gapXs = SizedBox(height: xs);
-  static const SizedBox gapSm = SizedBox(height: sm);
-  static const SizedBox gapMd = SizedBox(height: md);
-  static const SizedBox gapLg = SizedBox(height: lg);
-  static const SizedBox gapXl = SizedBox(height: xl);
-  static const SizedBox gapXxl = SizedBox(height: xxl);
-  static const SizedBox gapXxxl = SizedBox(height: xxxl);
+  // SizedBox helpers for gaps - Platform-adaptive
+  static SizedBox get gapXs => SizedBox(height: xs);
+  static SizedBox get gapSm => SizedBox(height: sm);
+  static SizedBox get gapMd => SizedBox(height: md);
+  static SizedBox get gapLg => SizedBox(height: lg);
+  static SizedBox get gapXl => SizedBox(height: xl);
+  static SizedBox get gapXxl => SizedBox(height: xxl);
+  static SizedBox get gapXxxl => SizedBox(height: xxxl);
 
-  static const SizedBox gapHorizontalXs = SizedBox(width: xs);
-  static const SizedBox gapHorizontalSm = SizedBox(width: sm);
-  static const SizedBox gapHorizontalMd = SizedBox(width: md);
-  static const SizedBox gapHorizontalLg = SizedBox(width: lg);
-  static const SizedBox gapHorizontalXl = SizedBox(width: xl);
-  static const SizedBox gapHorizontalXxl = SizedBox(width: xxl);
+  static SizedBox get gapHorizontalXs => SizedBox(width: xs);
+  static SizedBox get gapHorizontalSm => SizedBox(width: sm);
+  static SizedBox get gapHorizontalMd => SizedBox(width: md);
+  static SizedBox get gapHorizontalLg => SizedBox(width: lg);
+  static SizedBox get gapHorizontalXl => SizedBox(width: xl);
+  static SizedBox get gapHorizontalXxl => SizedBox(width: xxl);
 }
 
 // =============================================================================
@@ -287,30 +288,30 @@ class AppSpacing {
 class AppRadius {
   AppRadius._(); // Prevent instantiation
 
-  // Border radius values
-  static const double xs = 4.0;
-  static const double sm = 8.0;
-  static const double md = 12.0;
-  static const double lg = 16.0;
-  static const double xl = 20.0;
-  static const double xxl = 24.0;
-  static const double round = 100.0;
+  // Border radius values - Platform-adaptive
+  static double get xs => PlatformSizing.radius(4.0);    // 4.0px iOS, 3.4px Android
+  static double get sm => PlatformSizing.radius(8.0);    // 8.0px iOS, 6.8px Android
+  static double get md => PlatformSizing.radius(12.0);   // 12px iOS, 10.2px Android
+  static double get lg => PlatformSizing.radius(16.0);   // 16px iOS, 13.6px Android
+  static double get xl => PlatformSizing.radius(20.0);   // 20px iOS, 17px Android
+  static double get xxl => PlatformSizing.radius(24.0);  // 24px iOS, 20.4px Android
+  static double get round => PlatformSizing.radius(100.0); // 100px iOS, 85px Android
 
   // Legacy aliases
-  static const double radiusSmall = sm;
-  static const double radiusMedium = md;
-  static const double radiusLarge = lg;
-  static const double radiusXL = xl;
-  static const double radiusRound = round;
+  static double get radiusSmall => sm;
+  static double get radiusMedium => md;
+  static double get radiusLarge => lg;
+  static double get radiusXL => xl;
+  static double get radiusRound => round;
 
   // BorderRadius presets
-  static BorderRadius borderRadiusXs = BorderRadius.circular(xs);
-  static BorderRadius borderRadiusSm = BorderRadius.circular(sm);
-  static BorderRadius borderRadiusMd = BorderRadius.circular(md);
-  static BorderRadius borderRadiusLg = BorderRadius.circular(lg);
-  static BorderRadius borderRadiusXl = BorderRadius.circular(xl);
-  static BorderRadius borderRadiusXxl = BorderRadius.circular(xxl);
-  static BorderRadius borderRadiusRound = BorderRadius.circular(round);
+  static BorderRadius get borderRadiusXs => BorderRadius.circular(xs);
+  static BorderRadius get borderRadiusSm => BorderRadius.circular(sm);
+  static BorderRadius get borderRadiusMd => BorderRadius.circular(md);
+  static BorderRadius get borderRadiusLg => BorderRadius.circular(lg);
+  static BorderRadius get borderRadiusXl => BorderRadius.circular(xl);
+  static BorderRadius get borderRadiusXxl => BorderRadius.circular(xxl);
+  static BorderRadius get borderRadiusRound => BorderRadius.circular(round);
 }
 
 // =============================================================================
@@ -377,20 +378,21 @@ class AppShadows {
 class AppIconSizes {
   AppIconSizes._(); // Prevent instantiation
 
-  static const double xs = 12.0;
-  static const double sm = 16.0;
-  static const double md = 20.0;
-  static const double lg = 24.0;
-  static const double xl = 28.0;
-  static const double xxl = 32.0;
-  static const double huge = 40.0;
-  static const double massive = 48.0;
+  // Platform-adaptive icon sizes
+  static double get xs => PlatformSizing.iconSize(12.0);      // 12px iOS, 10.8px Android
+  static double get sm => PlatformSizing.iconSize(16.0);      // 16px iOS, 14.4px Android
+  static double get md => PlatformSizing.iconSize(20.0);      // 20px iOS, 18px Android
+  static double get lg => PlatformSizing.iconSize(24.0);      // 24px iOS, 21.6px Android
+  static double get xl => PlatformSizing.iconSize(28.0);      // 28px iOS, 25.2px Android
+  static double get xxl => PlatformSizing.iconSize(32.0);     // 32px iOS, 28.8px Android
+  static double get huge => PlatformSizing.iconSize(40.0);    // 40px iOS, 36px Android
+  static double get massive => PlatformSizing.iconSize(48.0); // 48px iOS, 43.2px Android
 
   // Specific use-case sizes
-  static const double navIcon = lg;
-  static const double actionIcon = md;
-  static const double buttonIcon = md;
-  static const double headerIcon = xxl;
+  static double get navIcon => lg;
+  static double get actionIcon => md;
+  static double get buttonIcon => md;
+  static double get headerIcon => xxl;
 }
 
 // =============================================================================
@@ -400,18 +402,18 @@ class AppIconSizes {
 class AppButtonSizes {
   AppButtonSizes._(); // Prevent instantiation
 
-  // Heights
-  static const double heightSm = 36.0;
-  static const double heightMd = 44.0;
-  static const double heightLg = 52.0;
-  static const double heightXl = 56.0;
+  // Heights - Platform-adaptive (Material 3 compliant on Android)
+  static double get heightSm => PlatformSizing.buttonHeight(36.0);  // 36px iOS, 36px Android
+  static double get heightMd => PlatformSizing.buttonHeight(44.0);  // 44px iOS, 44px Android
+  static double get heightLg => PlatformSizing.buttonHeight(52.0);  // 52px iOS, 48px Android
+  static double get heightXl => PlatformSizing.buttonHeight(56.0);  // 56px iOS, 48px Android
 
-  // Icon button sizes
-  static const double iconButtonSm = 36.0;
-  static const double iconButtonMd = 44.0;
-  static const double iconButtonLg = 52.0;
+  // Icon button sizes - Platform-adaptive
+  static double get iconButtonSm => PlatformSizing.buttonHeight(36.0);  // 36px iOS, 36px Android
+  static double get iconButtonMd => PlatformSizing.buttonHeight(44.0);  // 44px iOS, 44px Android
+  static double get iconButtonLg => PlatformSizing.buttonHeight(52.0);  // 52px iOS, 48px Android
 
-  // Minimum touch target (accessibility)
+  // Minimum touch target (accessibility) - constant across platforms
   static const double minTouchTarget = 44.0;
 }
 

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_platform_sizing.dart';
 import 'assessment_intro_screen.dart';
 import 'history/history_screen.dart';
 import 'analytics_screen.dart';
@@ -122,7 +123,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,  // 12px iOS, 9.6px Android
+            vertical: AppSpacing.sm,    // 8px iOS, 6.4px Android
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -169,16 +173,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
     return InkWell(
       onTap: () => _onTabSelected(index),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(PlatformSizing.radius(20)),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 16 : 12,
-          vertical: 8,
+          horizontal: isSelected ? AppSpacing.lg : AppSpacing.md,  // 16/12px iOS, 12.8/9.6px Android
+          vertical: AppSpacing.sm,  // 8px iOS, 6.4px Android
         ),
         decoration: BoxDecoration(
           color: isSelected ? tabBgColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(20)),  // 20px iOS, 16px Android
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -186,16 +190,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             Icon(
               isSelected ? activeIcon : icon,
               color: isSelected ? tabColor : AppColors.textSecondary,
-              size: 22,
+              size: PlatformSizing.iconSize(22),  // 22px iOS, 19.36px Android
             ),
             // Show label only when selected
             if (isSelected) ...[
-              const SizedBox(width: 8),
+              SizedBox(width: AppSpacing.sm),  // 8px iOS, 6.4px Android
               Text(
                 label,
                 style: TextStyle(
                   color: tabColor,
-                  fontSize: 13,
+                  fontSize: PlatformSizing.fontSize(13),  // 13px iOS, 11.44px Android
                   fontWeight: FontWeight.w600,
                 ),
               ),

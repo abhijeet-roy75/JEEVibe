@@ -8,6 +8,7 @@ import '../services/firebase/firestore_user_service.dart';
 import '../models/user_profile.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/buttons/gradient_button.dart';
 import 'daily_quiz_review_screen.dart';
@@ -489,8 +490,8 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
             children: [
               // Logo on left (circular)
               Container(
-                width: 48,
-                height: 48,
+                width: PlatformSizing.spacing(48),
+                height: PlatformSizing.spacing(48),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white,
@@ -554,11 +555,11 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
 
   Widget _buildQuizSummaryCard() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
+      padding: EdgeInsets.all(PlatformSizing.spacing(20)),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -771,7 +772,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
             final label = _getPerformanceLabel(correct, total);
 
             return Container(
-              margin: const EdgeInsets.only(bottom: 12),
+              margin: EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: bgColor,
@@ -836,11 +837,11 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
     final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
+      padding: EdgeInsets.all(PlatformSizing.spacing(20)),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -855,7 +856,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const PriyaAvatar(size: 48),
+              PriyaAvatar(size: PlatformSizing.spacing(48)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -971,10 +972,10 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
     final effectiveTextColor = textColor ?? Colors.white;
     return Container(
       width: double.infinity,
-      height: 56,
+      height: PlatformSizing.buttonHeight(56),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
       ),
       child: Material(
         color: Colors.transparent,

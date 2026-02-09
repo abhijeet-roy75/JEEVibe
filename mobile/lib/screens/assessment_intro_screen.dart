@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:screenshot/screenshot.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/app_header.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/buttons/gradient_button.dart';
@@ -529,7 +530,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
         textAlign: TextAlign.center,
       ),
       subtitle: Padding(
-        padding: const EdgeInsets.only(top: 4),
+        padding: EdgeInsets.only(top: 4),
         child: Text(
           _getFormattedDate(),
           style: AppTextStyles.bodyWhite.copyWith(

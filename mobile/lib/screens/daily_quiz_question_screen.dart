@@ -8,6 +8,7 @@ import '../providers/daily_quiz_provider.dart';
 import '../services/quiz_storage_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/daily_quiz/question_card_widget.dart';
 import '../widgets/daily_quiz/feedback_banner_widget.dart';
@@ -186,7 +187,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
         ),
         title: Row(
           children: [
@@ -599,15 +600,15 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 80,
-                height: 80,
+                width: PlatformSizing.spacing(80),
+                height: PlatformSizing.spacing(80),
                 decoration: BoxDecoration(
                   color: AppColors.errorRed.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   isOffline ? Icons.wifi_off_rounded : Icons.error_outline,
-                  size: 40,
+                  size: PlatformSizing.iconSize(40),
                   color: AppColors.errorRed,
                 ),
               ),
@@ -640,9 +641,9 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryPurple,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(14)),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                     ),
                   ),
                 ),
@@ -658,9 +659,9 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primaryPurple,
                     side: const BorderSide(color: AppColors.primaryPurple),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(14)),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                     ),
                   ),
                 ),
@@ -802,7 +803,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         ),
         child: Row(
           children: [
-            const PriyaAvatar(size: 48),
+            PriyaAvatar(size: PlatformSizing.spacing(48)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -844,14 +845,14 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
 
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: PlatformSizing.buttonHeight(56),
       child: ElevatedButton(
         onPressed: isLoading ? null : _handleNextQuestion,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryPurple,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
           ),
         ),
         child: isLoading

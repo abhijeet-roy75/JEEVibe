@@ -531,7 +531,7 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
     final difficulty = question['difficulty'] as String?;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,

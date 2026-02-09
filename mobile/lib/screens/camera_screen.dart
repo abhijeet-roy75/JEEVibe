@@ -282,7 +282,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 ),
                 // Header content
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16), // Reduced bottom from 48 to 16
+                  padding: EdgeInsets.fromLTRB(24, 24, 24, 16), // Reduced bottom from 48 to 16
                   child: Column(
                     children: [
                       // Top row: Back button, Snap counter, Bookmark

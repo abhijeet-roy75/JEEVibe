@@ -12,6 +12,7 @@ import '../services/offline/connectivity_service.dart';
 import '../services/quiz_storage_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/priya_avatar.dart';
 import '../utils/error_handler.dart';
 import 'daily_quiz_question_screen.dart';
@@ -210,15 +211,15 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
               children: [
                 // Icon based on error type
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: PlatformSizing.spacing(80),
+                  height: PlatformSizing.spacing(80),
                   decoration: BoxDecoration(
                     color: AppColors.errorRed.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     _isOffline ? Icons.wifi_off_rounded : Icons.error_outline,
-                    size: 40,
+                    size: PlatformSizing.iconSize(40),
                     color: AppColors.errorRed,
                   ),
                 ),
@@ -251,9 +252,9 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryPurple,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(14)),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                       ),
                     ),
                   ),
@@ -276,9 +277,9 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primaryPurple,
                       side: const BorderSide(color: AppColors.primaryPurple),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(14)),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                       ),
                     ),
                   ),
@@ -332,7 +333,7 @@ class _DailyQuizLoadingScreenState extends State<DailyQuizLoadingScreen>
                           ),
                         );
                       },
-                      child: const PriyaAvatar(size: 120),
+                      child: PriyaAvatar(size: PlatformSizing.spacing(120)),
                     ),
                     const SizedBox(height: 40),
                     // Message text (white for visibility on gradient)

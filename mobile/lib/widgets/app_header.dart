@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../theme/app_platform_sizing.dart';
 
 /// Shared header component for consistent sizing across all screens
 /// Reduced by ~50% from original sizes for better content space
@@ -45,7 +46,7 @@ class AppHeader extends StatelessWidget {
             // Top bar (leading, title, trailing)
             if (leading != null || title != null || trailing != null)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -58,11 +59,11 @@ class AppHeader extends StatelessWidget {
                       ],
                     ),
                     // Title centered
-                    if (title != null) 
+                    if (title != null)
                       Center(
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
-                            maxWidth: MediaQuery.of(context).size.width - 120, // Leave space for buttons
+                            maxWidth: MediaQuery.of(context).size.width - PlatformSizing.spacing(120), // Leave space for buttons
                           ),
                           child: title!,
                         ),
@@ -73,13 +74,13 @@ class AppHeader extends StatelessWidget {
 
             // Center content (icons, progress circles, etc.)
             if (centerContent != null) ...[
-              SizedBox(height: leading != null || title != null ? 8 : 0), // Further reduced from 12
+              SizedBox(height: leading != null || title != null ? PlatformSizing.spacing(8) : 0),
               centerContent!,
             ],
 
             // Subtitle
             if (subtitle != null) ...[
-              SizedBox(height: centerContent != null ? 4 : 0), // Further reduced from 8
+              SizedBox(height: centerContent != null ? PlatformSizing.spacing(4) : 0),
               subtitle!,
             ],
           ],
@@ -132,7 +133,7 @@ class AppHeaderWithIcon extends StatelessWidget {
           Container(
             width: iconSize,
             height: iconSize,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
             ),
@@ -145,7 +146,7 @@ class AppHeaderWithIcon extends StatelessWidget {
       title: title.isNotEmpty
           ? Text(
               title,
-              style: AppTextStyles.headerWhite.copyWith(fontSize: 20), // Reduced from 24
+              style: AppTextStyles.headerWhite.copyWith(fontSize: PlatformSizing.fontSize(20)),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -153,12 +154,12 @@ class AppHeaderWithIcon extends StatelessWidget {
           : null,
       subtitle: subtitle != null
           ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
               child: Text(
                 subtitle!,
                 style: AppTextStyles.bodyWhite.copyWith(
                   color: Colors.white.withValues(alpha: 0.9),
-                  fontSize: 13, // Slightly smaller subtitle
+                  fontSize: PlatformSizing.fontSize(13),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -201,7 +202,7 @@ class AppHeaderWithProgress extends StatelessWidget {
       // Removed centerContent (circle icon) since title already shows question number
       title: Text(
         title,
-        style: AppTextStyles.headerWhite.copyWith(fontSize: 18), // Reduced from default
+        style: AppTextStyles.headerWhite.copyWith(fontSize: PlatformSizing.fontSize(18)),
         textAlign: TextAlign.center,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -215,7 +216,7 @@ class AppHeaderWithProgress extends StatelessWidget {
               textAlign: TextAlign.center,
             )
           : null,
-      bottomPadding: 12, // Compact header
+      bottomPadding: PlatformSizing.spacing(12),
     );
   }
 }

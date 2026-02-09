@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../../providers/user_profile_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../utils/auth_error_helper.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/buttons/icon_button.dart';
@@ -313,7 +314,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   children: [
                     // Top bar with back button and logo
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: PlatformSizing.spacing(12), // 12→9.6px Android
+                      ),
                       child: Row(
                         children: [
                           AppIconButton.back(
@@ -323,8 +327,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           const Spacer(),
                           // Logo in circle (matching profile pages style)
                           Container(
-                            width: 40,
-                            height: 40,
+                            width: PlatformSizing.iconSize(40), // 40→35.2px Android
+                            height: PlatformSizing.iconSize(40), // 40→35.2px Android
                             decoration: BoxDecoration(
                               color: Colors.white,
                               shape: BoxShape.circle,
@@ -338,7 +342,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             ),
                             child: ClipOval(
                               child: Padding(
-                                padding: const EdgeInsets.all(6),
+                                padding: EdgeInsets.all(PlatformSizing.spacing(6)), // 6→4.8px Android
                                 child: Image.asset(
                                   'assets/images/JEEVibeLogo_240.png',
                                   fit: BoxFit.contain,
@@ -351,17 +355,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           ),
                           const Spacer(),
                           // Spacer to balance the back button
-                          const SizedBox(width: 48),
+                          SizedBox(width: PlatformSizing.spacing(48)), // 48→38.4px Android
                         ],
                       ),
                     ),
                     // Title in header
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 32.0),
+                      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(32)), // 32→25.6px Android
                       child: Text(
                         'Verification Code',
                         style: AppTextStyles.headerLarge.copyWith(
-                          fontSize: 28,
+                          fontSize: PlatformSizing.fontSize(28), // 28→24.64px Android
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -375,11 +379,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             // White Content Section
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
+                padding: EdgeInsets.all(AppSpacing.xxl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
               RichText(
                 text: TextSpan(
                   text: 'Please enter the code sent to\n',
@@ -395,8 +399,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 48),
-              
+              SizedBox(height: PlatformSizing.spacing(48)), // 48→38.4px Android
+
               PinCodeTextField(
                 appContext: context,
                 length: 6,
@@ -404,9 +408,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 animationType: AnimationType.fade,
                 pinTheme: PinTheme(
                   shape: PinCodeFieldShape.box,
-                  borderRadius: BorderRadius.circular(12),
-                  fieldHeight: 56,
-                  fieldWidth: 48,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                  fieldHeight: PlatformSizing.buttonHeight(56), // 56→48px Android (CRITICAL)
+                  fieldWidth: PlatformSizing.buttonHeight(48), // 48→44px Android (CRITICAL)
                   activeFillColor: Colors.white,
                   inactiveFillColor: Colors.white,
                   selectedFillColor: Colors.white,
@@ -444,17 +448,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   return true;
                 },
               ),
-              
-              const SizedBox(height: 24),
-              
+
+              SizedBox(height: AppSpacing.xxl),
+
               // Error message display
               if (_errorMessage != null) ...[
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     color: AppColors.errorRed.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                     border: Border.all(
                       color: AppColors.errorRed.withValues(alpha: 0.3),
                       width: 1,
@@ -468,9 +472,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           Icon(
                             Icons.error_outline,
                             color: AppColors.errorRed,
-                            size: 20,
+                            size: PlatformSizing.iconSize(20), // 20→17.6px Android
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
                               _errorMessage!,
@@ -483,9 +487,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         ],
                       ),
                       if (_errorSuggestion != null) ...[
-                        const SizedBox(height: 8),
+                        SizedBox(height: AppSpacing.sm),
                         Padding(
-                          padding: const EdgeInsets.only(left: 28),
+                          padding: EdgeInsets.only(left: PlatformSizing.spacing(28)), // 28→22.4px Android
                           child: Text(
                             _errorSuggestion!,
                             style: AppTextStyles.bodySmall.copyWith(
@@ -497,9 +501,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: AppSpacing.lg),
               ],
-              
+
               Center(
                 child: _secondsRemaining > 0
                     ? Text(
@@ -512,14 +516,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           'Resend Code',
                           style: AppTextStyles.labelMedium.copyWith(
                             color: AppColors.primaryPurple,
-                            fontSize: 16,
+                            fontSize: PlatformSizing.fontSize(16), // 16→14.08px Android
                           ),
                         ),
                       ),
               ),
-              
-              const SizedBox(height: 16),
-              
+
+              SizedBox(height: AppSpacing.lg),
+
               // Edit phone number link
               Center(
                 child: TextButton(
@@ -533,9 +537,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   ),
                 ),
               ),
-              
-              const SizedBox(height: 32),
-              
+
+              SizedBox(height: PlatformSizing.spacing(32)), // 32→25.6px Android
+
               GradientButton(
                 text: 'Verify',
                 onPressed: () => _verifyOTP(_otpController.text),

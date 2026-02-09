@@ -153,13 +153,13 @@ class PhotoReviewScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     _buildImagePreview(),
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildQualityCheck(),
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildPriyaMaamCard(),
-                    const SizedBox(height: AppSpacing.space32),
+                    SizedBox(height: AppSpacing.space32),
                     _buildButtons(context),
-                    const SizedBox(height: AppSpacing.space16),
+                    SizedBox(height: AppSpacing.space16),
                     _buildBottomText(),
                     // Bottom padding to account for Android navigation bar (using viewPadding for system UI)
                     SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 24),

@@ -3,6 +3,7 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import '../onboarding/onboarding_step1_screen.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../services/firebase/pin_service.dart';
 
 class CreatePinScreen extends StatefulWidget {
@@ -173,14 +174,17 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                   children: [
                     // Top bar with logo (no back button - cannot go back after OTP verification)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: PlatformSizing.spacing(12), // 12→9.6px Android
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           // Logo in circle (matching profile pages style)
                           Container(
-                            width: 40,
-                            height: 40,
+                            width: PlatformSizing.iconSize(40), // 40→35.2px Android
+                            height: PlatformSizing.iconSize(40), // 40→35.2px Android
                             decoration: BoxDecoration(
                               color: Colors.white,
                               shape: BoxShape.circle,
@@ -194,7 +198,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                             ),
                             child: ClipOval(
                               child: Padding(
-                                padding: const EdgeInsets.all(6),
+                                padding: EdgeInsets.all(PlatformSizing.spacing(6)), // 6→4.8px Android
                                 child: Image.asset(
                                   'assets/images/JEEVibeLogo_240.png',
                                   fit: BoxFit.contain,
@@ -210,11 +214,11 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                     ),
                     // Title in header
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 32.0),
+                      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(32)), // 32→25.6px Android
                       child: Text(
                         _isConfirming ? 'Confirm your PIN' : 'Create your PIN',
                         style: AppTextStyles.headerLarge.copyWith(
-                          fontSize: 28,
+                          fontSize: PlatformSizing.fontSize(28), // 28→24.64px Android
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -228,36 +232,36 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
             // White Content Section
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
+                padding: EdgeInsets.all(AppSpacing.xxl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 24),
+                    SizedBox(height: AppSpacing.xxl),
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: AppColors.primaryPurple.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.lock_outline_rounded,
-                        size: 48,
+                        size: AppIconSizes.massive, // 48→43.2px Android
                         color: AppColors.primaryPurple,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    const SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.xxl),
+                    SizedBox(height: AppSpacing.md),
               Text(
-                _isConfirming 
+                _isConfirming
                   ? 'Please re-enter your 4-digit PIN'
                   : 'Set a 4-digit PIN for quick access',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyMedium,
               ),
-              const SizedBox(height: 48),
-              
+              SizedBox(height: PlatformSizing.spacing(48)), // 48→38.4px Android
+
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 48.0),
+                padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(48)), // 48→38.4px Android
                 child: PinCodeTextField(
                   appContext: context,
                   length: 4,
@@ -265,8 +269,8 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                   animationType: AnimationType.fade,
                   pinTheme: PinTheme(
                     shape: PinCodeFieldShape.circle,
-                    fieldHeight: 56,
-                    fieldWidth: 56,
+                    fieldHeight: PlatformSizing.buttonHeight(56), // 56→48px Android (CRITICAL)
+                    fieldWidth: PlatformSizing.buttonHeight(56), // 56→48px Android (CRITICAL)
                     activeFillColor: Colors.grey.shade100,
                     inactiveFillColor: Colors.grey.shade100,
                     selectedFillColor: Colors.white,
@@ -299,7 +303,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                 ),
               ),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: PlatformSizing.spacing(32)), // 32→25.6px Android
                     // Biometric toggle removed as per plan
                   ],
                 ),

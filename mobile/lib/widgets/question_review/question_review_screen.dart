@@ -10,6 +10,7 @@ import '../../models/ai_tutor_models.dart';
 import '../../services/subscription_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../widgets/buttons/icon_button.dart';
 import '../../widgets/safe_svg_widget.dart';
 import '../../widgets/priya_avatar.dart';
@@ -164,16 +165,16 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
         backgroundColor: AppColors.backgroundLight,
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(PlatformSizing.spacing(24)),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, size: 64, color: AppColors.errorRed),
-                const SizedBox(height: 16),
+                Icon(Icons.error_outline, size: PlatformSizing.iconSize(64), color: AppColors.errorRed),
+                SizedBox(height: PlatformSizing.spacing(16)),
                 Text('Error', style: AppTextStyles.headerMedium),
-                const SizedBox(height: 8),
+                SizedBox(height: PlatformSizing.spacing(8)),
                 Text('No question to display', style: AppTextStyles.bodyMedium),
-                const SizedBox(height: 24),
+                SizedBox(height: PlatformSizing.spacing(24)),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Go Back'),
@@ -202,19 +203,19 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
               controller: _scrollController,
               child: Column(
                 children: [
-                  const SizedBox(height: 16),
+                  SizedBox(height: PlatformSizing.spacing(16)),
                   // Status banner
                   _buildStatusBanner(question, isCorrect),
-                  const SizedBox(height: 16),
+                  SizedBox(height: PlatformSizing.spacing(16)),
                   // Question card
                   _buildQuestionCard(question),
-                  const SizedBox(height: 16),
+                  SizedBox(height: PlatformSizing.spacing(16)),
                   // Detailed explanation
                   _buildDetailedExplanation(question),
-                  const SizedBox(height: 16),
+                  SizedBox(height: PlatformSizing.spacing(16)),
                   // Priya Ma'am message
                   _buildPriyaMaamMessage(question, isCorrect),
-                  const SizedBox(height: 16),
+                  SizedBox(height: PlatformSizing.spacing(16)),
                 ],
               ),
             ),
@@ -238,7 +239,10 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          padding: EdgeInsets.symmetric(
+            horizontal: PlatformSizing.spacing(16),
+            vertical: PlatformSizing.spacing(16),
+          ),
           child: Row(
             children: [
               AppIconButton.back(
@@ -250,18 +254,18 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                   children: [
                     Text(
                       'Question $questionNumber/$totalFiltered',
-                      style: AppTextStyles.headerWhite.copyWith(fontSize: 18),
+                      style: AppTextStyles.headerWhite.copyWith(fontSize: PlatformSizing.fontSize(18)),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: PlatformSizing.spacing(8)),
                     // Progress dots (limit to reasonable number)
                     if (totalFiltered <= 15)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(totalFiltered, (index) {
                           return Container(
-                            width: 8,
-                            height: 8,
-                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            width: PlatformSizing.spacing(8),
+                            height: PlatformSizing.spacing(8),
+                            margin: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(2)),
                             decoration: BoxDecoration(
                               color: index == _currentIndex
                                   ? Colors.white
@@ -274,7 +278,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                   ],
                 ),
               ),
-              const SizedBox(width: 48), // Balance back button
+              SizedBox(width: PlatformSizing.spacing(48)), // Balance back button
             ],
           ),
         ),
@@ -288,18 +292,18 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
     final timeTaken = question.timeTakenSeconds;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(PlatformSizing.spacing(16)),
         decoration: BoxDecoration(
           color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
         ),
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: PlatformSizing.spacing(40),
+              height: PlatformSizing.spacing(40),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
@@ -307,10 +311,10 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
               child: Icon(
                 isCorrect ? Icons.check : Icons.close,
                 color: isCorrect ? AppColors.successGreen : AppColors.errorRed,
-                size: 24,
+                size: PlatformSizing.iconSize(24),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: PlatformSizing.spacing(12)),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,7 +326,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: PlatformSizing.spacing(4)),
                   Text(
                     isCorrect
                         ? 'Well done! You got this right.'
@@ -337,8 +341,8 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
             if (timeTaken != null)
               Row(
                 children: [
-                  const Icon(Icons.access_time, color: Colors.white, size: 16),
-                  const SizedBox(width: 4),
+                  Icon(Icons.access_time, color: Colors.white, size: PlatformSizing.iconSize(16)),
+                  SizedBox(width: PlatformSizing.spacing(4)),
                   Text(
                     _formatTime(timeTaken),
                     style: AppTextStyles.bodySmall.copyWith(
@@ -368,12 +372,12 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
     final imageUrl = question.imageUrl;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(PlatformSizing.spacing(20)),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -390,14 +394,14 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
               Row(
                 children: [
                   Container(
-                    width: 8,
-                    height: 8,
+                    width: PlatformSizing.spacing(8),
+                    height: PlatformSizing.spacing(8),
                     decoration: BoxDecoration(
                       color: _getSubjectColor(subject),
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: PlatformSizing.spacing(8)),
                   Expanded(
                     child: Text(
                       [subject, chapter].where((s) => s != null).join(' • '),
@@ -410,17 +414,20 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                   ),
                 ],
               ),
-            const SizedBox(height: 16),
+            SizedBox(height: PlatformSizing.spacing(16)),
             // Tags (question number and difficulty)
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: PlatformSizing.spacing(8),
+              runSpacing: PlatformSizing.spacing(8),
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: PlatformSizing.spacing(12),
+                    vertical: PlatformSizing.spacing(4),
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primaryPurple.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                   ),
                   child: Text(
                     'Question ${_currentQuestionPosition}',
@@ -431,10 +438,13 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                 ),
                 if (difficulty != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: PlatformSizing.spacing(12),
+                      vertical: PlatformSizing.spacing(4),
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.warningAmber.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                     ),
                     child: Text(
                       _getDifficultyLabel(difficulty),
@@ -445,7 +455,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: PlatformSizing.spacing(16)),
             // Question text
             if (questionTextHtml != null)
               LaTeXWidget(
@@ -463,10 +473,10 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
               ),
             // Image if present
             if (imageUrl != null && imageUrl.isNotEmpty) ...[
-              const SizedBox(height: 16),
+              SizedBox(height: PlatformSizing.spacing(16)),
               SafeSvgWidget(url: imageUrl),
             ],
-            const SizedBox(height: 24),
+            SizedBox(height: PlatformSizing.spacing(24)),
             // Answer options
             ...options.map((opt) => _buildReviewOption(
                   opt,
@@ -513,19 +523,19 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(12)),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(PlatformSizing.spacing(16)),
         decoration: BoxDecoration(
           color: backgroundColor,
           border: Border.all(color: borderColor, width: 2),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
         ),
         child: Row(
           children: [
             Container(
-              width: 32,
-              height: 32,
+              width: PlatformSizing.spacing(32),
+              height: PlatformSizing.spacing(32),
               decoration: BoxDecoration(
                 color: borderColor.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
@@ -540,7 +550,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: PlatformSizing.spacing(12)),
             Expanded(
               child: optionHtml != null
                   ? LaTeXWidget(
@@ -553,7 +563,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                     ),
             ),
             if (trailingIcon != null) ...[
-              const SizedBox(width: 8),
+              SizedBox(width: PlatformSizing.spacing(8)),
               trailingIcon,
             ],
           ],
@@ -576,11 +586,11 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
           border: Border.all(color: AppColors.borderGray),
         ),
         child: Column(
@@ -593,15 +603,15 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                 });
               },
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(PlatformSizing.spacing(16)),
                 child: Row(
                   children: [
                     Icon(
                       Icons.lightbulb_outline,
                       color: AppColors.primaryPurple,
-                      size: 20,
+                      size: PlatformSizing.iconSize(20),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: PlatformSizing.spacing(8)),
                     Expanded(
                       child: Text(
                         _showDetailedExplanation
@@ -615,7 +625,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                     Icon(
                       _showDetailedExplanation ? Icons.remove : Icons.add,
                       color: AppColors.primaryPurple,
-                      size: 20,
+                      size: PlatformSizing.iconSize(20),
                     ),
                   ],
                 ),
@@ -625,7 +635,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
             if (_showDetailedExplanation) ...[
               Divider(height: 1, color: AppColors.borderGray),
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(PlatformSizing.spacing(16)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -637,12 +647,12 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                         title: 'Quick Explanation',
                         content: solutionText,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: PlatformSizing.spacing(16)),
                     ],
                     // Step-by-Step Solution
                     if (solutionSteps.isNotEmpty) ...[
                       _buildStepByStepSolution(solutionSteps),
-                      const SizedBox(height: 16),
+                      SizedBox(height: PlatformSizing.spacing(16)),
                     ],
                     // Why You Got This Wrong (only for incorrect)
                     if (!isCorrect) ...[
@@ -651,7 +661,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                         distractorAnalysis: distractorAnalysis,
                         commonMistakes: commonMistakes,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: PlatformSizing.spacing(16)),
                     ],
                     // Key Takeaway
                     if (keyInsight != null || solutionText != null)
@@ -675,8 +685,8 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: iconColor, size: 20),
-        const SizedBox(width: 8),
+        Icon(icon, color: iconColor, size: PlatformSizing.iconSize(20)),
+        SizedBox(width: PlatformSizing.spacing(8)),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -687,11 +697,11 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: PlatformSizing.spacing(8)),
               LaTeXWidget(
                 text: content,
                 textStyle: TextStyle(
-                  fontSize: 14,
+                  fontSize: PlatformSizing.fontSize(14),
                   height: 1.5,
                   color: AppColors.textMedium,
                 ),
@@ -707,8 +717,8 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.menu_book, color: AppColors.successGreen, size: 20),
-        const SizedBox(width: 8),
+        Icon(Icons.menu_book, color: AppColors.successGreen, size: PlatformSizing.iconSize(20)),
+        SizedBox(width: PlatformSizing.spacing(8)),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -719,20 +729,20 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: PlatformSizing.spacing(12)),
               ...steps.asMap().entries.map((entry) {
                 final index = entry.key;
                 final step = entry.value;
                 final stepText = step.displayText;
 
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
+                  padding: EdgeInsets.only(bottom: PlatformSizing.spacing(16)),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        width: 24,
-                        height: 24,
+                        width: PlatformSizing.spacing(24),
+                        height: PlatformSizing.spacing(24),
                         decoration: BoxDecoration(
                           color: AppColors.successGreen.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
@@ -747,7 +757,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: PlatformSizing.spacing(12)),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -755,14 +765,14 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                             LaTeXWidget(
                               text: stepText,
                               textStyle: TextStyle(
-                                fontSize: 16,
+                                fontSize: PlatformSizing.fontSize(16),
                                 height: 1.5,
                                 color: AppColors.textMedium,
                               ),
                             ),
                             // Formula
                             if (step.formula != null && step.formula!.isNotEmpty) ...[
-                              const SizedBox(height: 8),
+                              SizedBox(height: PlatformSizing.spacing(8)),
                               _buildStepBox(
                                 icon: Icons.functions,
                                 color: AppColors.primaryPurple,
@@ -771,7 +781,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                             ],
                             // Calculation
                             if (step.calculation != null && step.calculation!.isNotEmpty) ...[
-                              const SizedBox(height: 8),
+                              SizedBox(height: PlatformSizing.spacing(8)),
                               _buildStepBox(
                                 icon: Icons.calculate,
                                 color: AppColors.successGreen,
@@ -783,7 +793,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                             if (step.explanation != null &&
                                 step.explanation!.isNotEmpty &&
                                 step.explanation != step.description) ...[
-                              const SizedBox(height: 8),
+                              SizedBox(height: PlatformSizing.spacing(8)),
                               _buildStepBox(
                                 icon: Icons.lightbulb_outline,
                                 color: AppColors.warningAmber,
@@ -814,22 +824,22 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(PlatformSizing.spacing(12)),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 8),
+          Icon(icon, size: PlatformSizing.iconSize(16), color: color),
+          SizedBox(width: PlatformSizing.spacing(8)),
           Expanded(
             child: LaTeXWidget(
               text: content,
               textStyle: TextStyle(
-                fontSize: 15,
+                fontSize: PlatformSizing.fontSize(15),
                 height: 1.4,
                 color: fontFamily != null ? AppColors.textMedium : color,
                 fontFamily: fontFamily,
@@ -862,8 +872,8 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 20,
-          height: 20,
+          width: PlatformSizing.spacing(20),
+          height: PlatformSizing.spacing(20),
           decoration: BoxDecoration(
             color: AppColors.warningAmber.withValues(alpha: 0.2),
             shape: BoxShape.circle,
@@ -871,10 +881,10 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
           child: Icon(
             Icons.info_outline,
             color: AppColors.warningAmber,
-            size: 14,
+            size: PlatformSizing.iconSize(14),
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: PlatformSizing.spacing(8)),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -885,16 +895,19 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: PlatformSizing.spacing(8)),
               if (distractorExplanation != null) ...[
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: PlatformSizing.spacing(8),
+                        vertical: PlatformSizing.spacing(2),
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.errorRed.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(PlatformSizing.radius(4)),
                       ),
                       child: Text(
                         'Option ${studentAnswer.toUpperCase()}',
@@ -906,18 +919,18 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: PlatformSizing.spacing(8)),
                 LaTeXWidget(
                   text: distractorExplanation,
                   textStyle: TextStyle(
-                    fontSize: 16,
+                    fontSize: PlatformSizing.fontSize(16),
                     height: 1.5,
                     color: AppColors.textMedium,
                   ),
                 ),
               ] else if (hasCommonMistakes) ...[
                 ...commonMistakes.map((mistake) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
+                      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(8)),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -932,7 +945,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                             child: LaTeXWidget(
                               text: mistake,
                               textStyle: TextStyle(
-                                fontSize: 16,
+                                fontSize: PlatformSizing.fontSize(16),
                                 height: 1.5,
                                 color: AppColors.textMedium,
                               ),
@@ -958,8 +971,8 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.vpn_key, color: AppColors.primaryPurple, size: 20),
-        const SizedBox(width: 8),
+        Icon(Icons.vpn_key, color: AppColors.primaryPurple, size: PlatformSizing.iconSize(20)),
+        SizedBox(width: PlatformSizing.spacing(8)),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -971,11 +984,11 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                   color: AppColors.primaryPurple,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: PlatformSizing.spacing(8)),
               LaTeXWidget(
                 text: content,
                 textStyle: TextStyle(
-                  fontSize: 14,
+                  fontSize: PlatformSizing.fontSize(14),
                   height: 1.5,
                   color: AppColors.textMedium,
                 ),
@@ -1000,20 +1013,20 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
         subscriptionService.status?.limits.aiTutorEnabled ?? false;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(PlatformSizing.spacing(16)),
         decoration: BoxDecoration(
           color: AppColors.primaryPurple.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const PriyaAvatar(size: 48),
-                const SizedBox(width: 12),
+                PriyaAvatar(size: PlatformSizing.spacing(48)),
+                SizedBox(width: PlatformSizing.spacing(12)),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1027,11 +1040,11 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          const Text('✨', style: TextStyle(fontSize: 16)),
+                          SizedBox(width: PlatformSizing.spacing(4)),
+                          Text('✨', style: TextStyle(fontSize: PlatformSizing.fontSize(16))),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: PlatformSizing.spacing(4)),
                       Text(
                         message,
                         style: AppTextStyles.bodySmall.copyWith(
@@ -1044,7 +1057,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
               ],
             ),
             if (hasAiTutorAccess && widget.tutorContext != null) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: PlatformSizing.spacing(12)),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -1061,14 +1074,14 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                  icon: Icon(Icons.chat_bubble_outline, size: PlatformSizing.iconSize(18)),
                   label: const Text('Ask Priya Ma\'am'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primaryPurple,
                     side: const BorderSide(color: AppColors.primaryPurple),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(12)),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(PlatformSizing.radius(10)),
                     ),
                   ),
                 ),
@@ -1083,10 +1096,10 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
   Widget _buildNavigationButtons() {
     return Container(
       padding: EdgeInsets.fromLTRB(
-        16,
-        16,
-        16,
-        16 + MediaQuery.of(context).viewPadding.bottom,
+        PlatformSizing.spacing(16),
+        PlatformSizing.spacing(16),
+        PlatformSizing.spacing(16),
+        PlatformSizing.spacing(16) + MediaQuery.of(context).viewPadding.bottom,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1106,40 +1119,40 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.borderGray,
                 foregroundColor: AppColors.textDark,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: PlatformSizing.buttonHeight(16)),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                 ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.arrow_back, size: 20),
-                  const SizedBox(width: 8),
+                  Icon(Icons.arrow_back, size: PlatformSizing.iconSize(20)),
+                  SizedBox(width: PlatformSizing.spacing(8)),
                   const Text('Previous'),
                 ],
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: PlatformSizing.spacing(12)),
           Expanded(
             child: ElevatedButton(
               onPressed: _isLastQuestion ? _handleDone : _nextQuestion,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryPurple,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: PlatformSizing.buttonHeight(16)),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                 ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(_isLastQuestion ? 'Done' : 'Next'),
-                  const SizedBox(width: 8),
+                  SizedBox(width: PlatformSizing.spacing(8)),
                   Icon(_isLastQuestion ? Icons.check : Icons.arrow_forward,
-                      size: 20),
+                      size: PlatformSizing.iconSize(20)),
                 ],
               ),
             ),

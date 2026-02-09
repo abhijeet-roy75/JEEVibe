@@ -9,6 +9,7 @@ import '../../providers/chapter_practice_provider.dart';
 import '../../services/firebase/auth_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../../widgets/priya_avatar.dart';
 import '../../utils/error_handler.dart';
 import '../../utils/question_adapters.dart';
@@ -557,10 +558,10 @@ class _ChapterPracticeQuestionScreenState
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(PlatformSizing.spacing(20)),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -733,7 +734,7 @@ class _ChapterPracticeQuestionScreenState
               }
 
               return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.only(bottom: 12),
                 child: InkWell(
                   onTap: isAnswered
                       ? null
@@ -879,7 +880,7 @@ class _ChapterPracticeQuestionScreenState
         ),
         child: Row(
           children: [
-            const PriyaAvatar(size: 48),
+            PriyaAvatar(size: PlatformSizing.spacing(48)),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -985,14 +986,14 @@ class _ChapterPracticeQuestionScreenState
 
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: PlatformSizing.buttonHeight(56),
       child: ElevatedButton(
         onPressed: isLoading ? null : _handleNextQuestion,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryPurple,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
           ),
         ),
         child: isLoading
@@ -1102,15 +1103,15 @@ class _ChapterPracticeQuestionScreenState
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
               borderSide: const BorderSide(color: AppColors.borderGray),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
               borderSide: const BorderSide(color: AppColors.borderGray),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
               borderSide: const BorderSide(color: AppColors.primaryPurple, width: 2),
             ),
             contentPadding: const EdgeInsets.all(16),
@@ -1126,7 +1127,7 @@ class _ChapterPracticeQuestionScreenState
         // Submit button for numerical questions
         SizedBox(
           width: double.infinity,
-          height: 52,
+          height: PlatformSizing.buttonHeight(52),
           child: ElevatedButton(
             onPressed: hasAnswer && !isSubmitting ? _handleAnswerSubmission : null,
             style: ElevatedButton.styleFrom(

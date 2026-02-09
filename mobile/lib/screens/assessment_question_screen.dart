@@ -791,7 +791,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
             ),
             // Bottom row: Question count (left) and Subject (right)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -955,7 +955,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
         ...options.map((option) {
           final isSelected = selectedAnswer == option.optionId;
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: EdgeInsets.only(bottom: 12),
             child: InkWell(
               onTap: () {
                 _recordAnswer(option.optionId);

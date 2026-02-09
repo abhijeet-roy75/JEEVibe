@@ -136,20 +136,20 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
                 ),
                 child: Column(
                   children: [
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildQuestionCard(solution),
-                    const SizedBox(height: AppSpacing.space32),
+                    SizedBox(height: AppSpacing.space32),
                     _buildSolutionSteps(solution, context),
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildFinalAnswer(solution),
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildPriyaTip(solution),
                     // Only show "Back to Snap and Solve" when NOT coming from history tab
                     if (!widget.isFromHistoryTab) ...[
-                      const SizedBox(height: AppSpacing.space24),
+                      SizedBox(height: AppSpacing.space24),
                       _buildNavigationButtons(),
                     ],
-                    const SizedBox(height: AppSpacing.space32),
+                    SizedBox(height: AppSpacing.space32),
                   ],
                 ),
               ),
@@ -418,7 +418,7 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
 
   Widget _buildStepCard(int stepNumber, String stepContent, BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
@@ -428,7 +428,7 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
         data: ThemeData(dividerColor: Colors.transparent),
         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          childrenPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
           leading: Container(
             width: 32,
             height: 32,

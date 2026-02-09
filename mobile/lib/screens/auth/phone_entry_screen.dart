@@ -6,6 +6,7 @@ import '../../services/storage_service.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/buttons/icon_button.dart';
 
@@ -197,7 +198,10 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                   children: [
                     // Top bar with back button and logo
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: PlatformSizing.spacing(12), // 12→9.6px Android
+                      ),
                       child: Row(
                         children: [
                           AppIconButton.back(
@@ -207,8 +211,8 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                           const Spacer(),
                           // Logo in circle (matching profile pages style)
                           Container(
-                            width: 40,
-                            height: 40,
+                            width: PlatformSizing.iconSize(40), // 40→35.2px Android
+                            height: PlatformSizing.iconSize(40), // 40→35.2px Android
                             decoration: BoxDecoration(
                               color: Colors.white,
                               shape: BoxShape.circle,
@@ -222,7 +226,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                             ),
                             child: ClipOval(
                               child: Padding(
-                                padding: const EdgeInsets.all(6),
+                                padding: EdgeInsets.all(PlatformSizing.spacing(6)), // 6→4.8px Android
                                 child: Image.asset(
                                   'assets/images/JEEVibeLogo_240.png',
                                   fit: BoxFit.contain,
@@ -235,17 +239,17 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                           ),
                           const Spacer(),
                           // Spacer to balance the back button
-                          const SizedBox(width: 48),
+                          SizedBox(width: PlatformSizing.spacing(48)), // 48→38.4px Android
                         ],
                       ),
                     ),
                     // Title in header
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 32.0),
+                      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(32)), // 32→25.6px Android
                       child: Text(
                         'Phone Number',
                         style: AppTextStyles.headerLarge.copyWith(
-                          fontSize: 28,
+                          fontSize: PlatformSizing.fontSize(28), // 28→24.64px Android
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -259,29 +263,35 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
             // White Content Section
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+                padding: EdgeInsets.all(AppSpacing.xxl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Welcome to JEEVibe! 👋',
-                      style: AppTextStyles.headerLarge.copyWith(height: 1.2, fontSize: 24),
+                      style: AppTextStyles.headerLarge.copyWith(
+                        height: 1.2,
+                        fontSize: PlatformSizing.fontSize(24), // 24→21.12px Android
+                      ),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: AppSpacing.md),
                     Text(
                       'Enter your mobile number to get started',
                       style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textLight),
                     ),
-                    const SizedBox(height: 32),
+                    SizedBox(height: PlatformSizing.spacing(32)), // 32→25.6px Android
               
               Form(
                 key: _formKey,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: PlatformSizing.spacing(4), // 4→4px Android (min)
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     border: Border.all(color: AppColors.borderGray),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.md),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.05),
@@ -323,17 +333,17 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              SizedBox(height: AppSpacing.xxl),
 
               // OTP Rate Limit Info
               if (_remainingOtpRequests < 3)
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: _remainingOtpRequests > 0
                         ? AppColors.primaryPurple.withValues(alpha: 0.1)
                         : AppColors.errorRed.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(8)), // 8→6.4px Android
                     border: Border.all(
                       color: _remainingOtpRequests > 0
                           ? AppColors.primaryPurple.withValues(alpha: 0.3)
@@ -347,12 +357,12 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                         _remainingOtpRequests > 0
                             ? Icons.info_outline
                             : Icons.warning_amber_rounded,
-                        size: 20,
+                        size: PlatformSizing.iconSize(20), // 20→17.6px Android
                         color: _remainingOtpRequests > 0
                             ? AppColors.primaryPurple
                             : AppColors.errorRed,
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Text(
                           _remainingOtpRequests > 0
@@ -370,7 +380,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                   ),
                 ),
 
-              const SizedBox(height: 24),
+              SizedBox(height: AppSpacing.xxl),
 
               GradientButton(
                 text: 'Send Code',
@@ -378,7 +388,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                 isLoading: _isLoading,
                 size: GradientButtonSize.large,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg),
                     ],
                   ),
                 ),

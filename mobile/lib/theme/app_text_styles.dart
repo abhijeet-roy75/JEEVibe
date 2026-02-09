@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
+import 'app_platform_sizing.dart';
 
 class AppTextStyles {
   AppTextStyles._(); // Prevent instantiation
@@ -13,7 +14,7 @@ class AppTextStyles {
   // ===========================================================================
 
   static TextStyle get displayLarge => GoogleFonts.inter(
-        fontSize: 32,
+        fontSize: PlatformSizing.fontSize(32),  // 32px iOS, 28.8px Android
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         height: 1.2,
@@ -21,7 +22,7 @@ class AppTextStyles {
       );
 
   static TextStyle get displayMedium => GoogleFonts.inter(
-        fontSize: 28,
+        fontSize: PlatformSizing.fontSize(28),  // 28px iOS, 25.2px Android
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         height: 1.2,
@@ -29,7 +30,7 @@ class AppTextStyles {
       );
 
   static TextStyle get displaySmall => GoogleFonts.inter(
-        fontSize: 24,
+        fontSize: PlatformSizing.fontSize(24),  // 24px iOS, 21.6px Android
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         height: 1.2,
@@ -41,21 +42,21 @@ class AppTextStyles {
   // ===========================================================================
 
   static TextStyle get headerLarge => GoogleFonts.inter(
-        fontSize: 24,
+        fontSize: PlatformSizing.fontSize(24),  // 24px iOS, 21.6px Android
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         height: 1.2,
       );
 
   static TextStyle get headerMedium => GoogleFonts.inter(
-        fontSize: 20,
+        fontSize: PlatformSizing.fontSize(20),  // 20px iOS, 18px Android
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         height: 1.3,
       );
 
   static TextStyle get headerSmall => GoogleFonts.inter(
-        fontSize: 18,
+        fontSize: PlatformSizing.fontSize(18),  // 18px iOS, 16.2px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
         height: 1.4,
@@ -65,7 +66,7 @@ class AppTextStyles {
   static TextStyle get h1 => headerLarge;
   static TextStyle get h2 => headerMedium;
   static TextStyle get h3 => GoogleFonts.inter(
-        fontSize: 16,
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
       );
@@ -76,21 +77,21 @@ class AppTextStyles {
   // ===========================================================================
 
   static TextStyle get bodyLarge => GoogleFonts.inter(
-        fontSize: 17, // Updated: was 16, guideline says 16-17px
+        fontSize: PlatformSizing.fontSize(17),  // 17px iOS, 15.3px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textSecondary,
         height: 1.6,
       );
 
   static TextStyle get bodyMedium => GoogleFonts.inter(
-        fontSize: 16, // Updated: was 14, guideline says 16px for options/body
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textSecondary,
         height: 1.5,
       );
 
   static TextStyle get bodySmall => GoogleFonts.inter(
-        fontSize: 13, // Updated: was 12, guideline says 13px for bottom bar
+        fontSize: PlatformSizing.fontSize(13),  // 13px iOS, 11.7px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textTertiary,
         height: 1.5,
@@ -102,21 +103,21 @@ class AppTextStyles {
   // ===========================================================================
 
   static TextStyle get labelLarge => GoogleFonts.inter(
-        fontSize: 16, // Guideline: 15-16px for labels
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
         height: 1.4,
       );
 
   static TextStyle get labelMedium => GoogleFonts.inter(
-        fontSize: 15, // Updated: was 14, guideline says 15-16px for labels
+        fontSize: PlatformSizing.fontSize(15),  // 15px iOS, 13.5px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
         height: 1.4,
       );
 
   static TextStyle get labelSmall => GoogleFonts.inter(
-        fontSize: 13, // Updated: was 12, guideline says 12-13px for chips/badges
+        fontSize: PlatformSizing.fontSize(13),  // 13px iOS, 11.7px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textTertiary,
         height: 1.4,
@@ -128,21 +129,21 @@ class AppTextStyles {
   // ===========================================================================
 
   static TextStyle get buttonLarge => GoogleFonts.inter(
-        fontSize: 18,
+        fontSize: PlatformSizing.fontSize(18),  // 18px iOS, 16.2px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textWhite,
         height: 1.2,
       );
 
   static TextStyle get buttonMedium => GoogleFonts.inter(
-        fontSize: 16,
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textWhite,
         height: 1.2,
       );
 
   static TextStyle get buttonSmall => GoogleFonts.inter(
-        fontSize: 14,
+        fontSize: PlatformSizing.fontSize(14),  // 14px iOS, 12.6px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textWhite,
         height: 1.2,
@@ -156,21 +157,21 @@ class AppTextStyles {
   // ===========================================================================
 
   static TextStyle get caption => GoogleFonts.inter(
-        fontSize: 12,
+        fontSize: PlatformSizing.fontSize(12),  // 12px iOS, 10.8px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textTertiary,
         height: 1.4,
       );
 
   static TextStyle get metadata => GoogleFonts.inter(
-        fontSize: 14,
+        fontSize: PlatformSizing.fontSize(14),  // 14px iOS, 12.6px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textTertiary,
         height: 1.4,
       );
 
   static TextStyle get overline => GoogleFonts.inter(
-        fontSize: 10,
+        fontSize: PlatformSizing.fontSize(12),  // 12px iOS, 10.56px Android (was 10)
         fontWeight: FontWeight.w600,
         color: AppColors.textTertiary,
         height: 1.4,
@@ -182,56 +183,56 @@ class AppTextStyles {
   // ===========================================================================
 
   static TextStyle get headerWhite => GoogleFonts.inter(
-        fontSize: 24,
+        fontSize: PlatformSizing.fontSize(24),  // 24px iOS, 21.6px Android
         fontWeight: FontWeight.w700,
         color: AppColors.textWhite,
         height: 1.2,
       );
 
   static TextStyle get headerWhiteMedium => GoogleFonts.inter(
-        fontSize: 20,
+        fontSize: PlatformSizing.fontSize(20),  // 20px iOS, 18px Android
         fontWeight: FontWeight.w700,
         color: AppColors.textWhite,
         height: 1.3,
       );
 
   static TextStyle get headerWhiteSmall => GoogleFonts.inter(
-        fontSize: 18,
+        fontSize: PlatformSizing.fontSize(18),  // 18px iOS, 16.2px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textWhite,
         height: 1.4,
       );
 
   static TextStyle get bodyWhite => GoogleFonts.inter(
-        fontSize: 16, // Updated: was 14, aligning with bodyMedium
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textWhite,
         height: 1.5,
       );
 
   static TextStyle get bodyWhiteLarge => GoogleFonts.inter(
-        fontSize: 17, // Updated: aligning with bodyLarge
+        fontSize: PlatformSizing.fontSize(17),  // 17px iOS, 15.3px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textWhite,
         height: 1.6,
       );
 
   static TextStyle get subtitleWhite => GoogleFonts.inter(
-        fontSize: 16,
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textWhite90,
         height: 1.5,
       );
 
   static TextStyle get labelWhite => GoogleFonts.inter(
-        fontSize: 15, // Updated: was 14, aligning with labelMedium
+        fontSize: PlatformSizing.fontSize(15),  // 15px iOS, 13.5px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textWhite,
         height: 1.4,
       );
 
   static TextStyle get captionWhite => GoogleFonts.inter(
-        fontSize: 12,
+        fontSize: PlatformSizing.fontSize(12),  // 12px iOS, 10.8px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textWhite90,
         height: 1.4,
@@ -245,7 +246,7 @@ class AppTextStyles {
   /// Question text style (main question display) - CRITICAL for readability
   /// Guideline: 18-20px
   static TextStyle get question => GoogleFonts.inter(
-        fontSize: 18, // Guideline: 18-20px
+        fontSize: PlatformSizing.fontSize(18),  // 18px iOS, 16.2px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textPrimary,
         height: 1.6,
@@ -254,8 +255,8 @@ class AppTextStyles {
   /// Option text style (multiple choice options)
   /// Guideline: 16px for answer options
   static TextStyle get option => GoogleFonts.inter(
-        fontSize: 16, // Guideline: 16px
-        fontWeight: FontWeight.w500, // Updated: medium weight for better readability
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
+        fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
         height: 1.4,
       );
@@ -263,7 +264,7 @@ class AppTextStyles {
   /// Solution section header style (Quick Explanation, Step-by-Step, etc.)
   /// Guideline: 17px semibold for section headers
   static TextStyle get solutionHeader => GoogleFonts.inter(
-        fontSize: 17, // Guideline: 17px for section headers
+        fontSize: PlatformSizing.fontSize(17),  // 17px iOS, 15.3px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
         height: 1.3,
@@ -272,7 +273,7 @@ class AppTextStyles {
   /// Step/explanation text style
   /// Guideline: 16px for explanation body and step text
   static TextStyle get step => GoogleFonts.inter(
-        fontSize: 16, // Guideline: 16px for step text
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textSecondary,
         height: 1.6,
@@ -281,7 +282,7 @@ class AppTextStyles {
   /// Explanation body text style
   /// Guideline: 16px for explanation body
   static TextStyle get explanationBody => GoogleFonts.inter(
-        fontSize: 16, // Guideline: 16px
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textSecondary,
         height: 1.6,
@@ -290,7 +291,7 @@ class AppTextStyles {
   /// Step number circle text style
   /// Guideline: 14px for step numbers
   static TextStyle get stepNumber => GoogleFonts.inter(
-        fontSize: 14, // Guideline: 14px for step number circles
+        fontSize: PlatformSizing.fontSize(14),  // 14px iOS, 12.6px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
         height: 1.0,
@@ -298,7 +299,7 @@ class AppTextStyles {
 
   /// Final answer text style
   static TextStyle get finalAnswer => GoogleFonts.inter(
-        fontSize: 17,
+        fontSize: PlatformSizing.fontSize(17),  // 17px iOS, 15.3px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
         height: 1.5,
@@ -307,7 +308,7 @@ class AppTextStyles {
   /// Priya Ma'am header text style
   /// Guideline: 15px bold for "Priya Ma'am ✨"
   static TextStyle get priyaHeader => GoogleFonts.inter(
-        fontSize: 15, // Guideline: 15px for header
+        fontSize: PlatformSizing.fontSize(15),  // 15px iOS, 13.5px Android
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         height: 1.3,
@@ -316,7 +317,7 @@ class AppTextStyles {
   /// Priya Ma'am message text style
   /// Guideline: 16px for message body
   static TextStyle get priyaMessage => GoogleFonts.inter(
-        fontSize: 16, // Guideline: 16px for messages
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textPrimary,
         height: 1.5,
@@ -324,7 +325,7 @@ class AppTextStyles {
 
   /// Priya's tip text style (legacy, kept for compatibility)
   static TextStyle get priyaTip => GoogleFonts.inter(
-        fontSize: 16, // Updated: was 18, guideline says 16px
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textPrimary,
         height: 1.5,
@@ -335,21 +336,21 @@ class AppTextStyles {
   // ===========================================================================
 
   static TextStyle get input => GoogleFonts.inter(
-        fontSize: 16,
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textPrimary,
         height: 1.5,
       );
 
   static TextStyle get inputHint => GoogleFonts.inter(
-        fontSize: 16,
+        fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w400,
         color: AppColors.textDisabled,
         height: 1.5,
       );
 
   static TextStyle get inputError => GoogleFonts.inter(
-        fontSize: 12,
+        fontSize: PlatformSizing.fontSize(12),  // 12px iOS, 10.8px Android
         fontWeight: FontWeight.w400,
         color: AppColors.error,
         height: 1.4,
@@ -360,21 +361,21 @@ class AppTextStyles {
   // ===========================================================================
 
   static TextStyle get numericLarge => GoogleFonts.inter(
-        fontSize: 32,
+        fontSize: PlatformSizing.fontSize(32),  // 32px iOS, 28.8px Android
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         height: 1.0,
       );
 
   static TextStyle get numericMedium => GoogleFonts.inter(
-        fontSize: 24,
+        fontSize: PlatformSizing.fontSize(24),  // 24px iOS, 21.6px Android
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
         height: 1.0,
       );
 
   static TextStyle get numericSmall => GoogleFonts.inter(
-        fontSize: 18,
+        fontSize: PlatformSizing.fontSize(18),  // 18px iOS, 16.2px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
         height: 1.0,

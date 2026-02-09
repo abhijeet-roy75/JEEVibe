@@ -28,13 +28,13 @@ class OCRFailedScreen extends StatelessWidget {
                 padding: AppSpacing.screenPadding,
                 child: Column(
                   children: [
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildWhatWentWrong(),
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildPriyaMaamCard(),
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildQuickTips(),
-                    const SizedBox(height: AppSpacing.space32),
+                    SizedBox(height: AppSpacing.space32),
                     _buildButtons(context),
                     // Bottom padding to account for Android navigation bar (using viewPadding for system UI)
                     SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 24),

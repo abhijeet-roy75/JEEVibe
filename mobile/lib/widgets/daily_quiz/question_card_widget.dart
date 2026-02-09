@@ -5,6 +5,7 @@ import '../../models/daily_quiz_question.dart';
 import '../../models/assessment_question.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../safe_svg_widget.dart';
 import 'package:flutter_html/flutter_html.dart';
 
@@ -128,11 +129,11 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
     final showAnswerOptions = widget.showAnswerOptions;
     final onAnswerSelected = widget.onAnswerSelected;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
+      padding: EdgeInsets.all(PlatformSizing.spacing(20)),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -194,16 +195,19 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
               // Time display
               if (widget.elapsedSeconds != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: PlatformSizing.spacing(10),
+                    vertical: PlatformSizing.spacing(4),
+                  ),
                   decoration: BoxDecoration(
                     color: _getSubjectColor(question.subject).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.access_time,
-                        size: 14,
+                        size: PlatformSizing.iconSize(14),
                         color: _getSubjectColor(question.subject),
                       ),
                       const SizedBox(width: 4),
@@ -226,10 +230,13 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
             runSpacing: 8,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: EdgeInsets.symmetric(
+                  horizontal: PlatformSizing.spacing(12),
+                  vertical: PlatformSizing.spacing(4),
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primaryPurple.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                 ),
                 child: Text(
                   'Question ${widget.question.position}',
@@ -239,10 +246,13 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: EdgeInsets.symmetric(
+                  horizontal: PlatformSizing.spacing(12),
+                  vertical: PlatformSizing.spacing(4),
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.warningAmber.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                 ),
                 child: Text(
                   _getDifficultyLabel(null), // TODO: Add difficulty to model
@@ -294,7 +304,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              height: 48,
+              height: PlatformSizing.buttonHeight(48),
               child: ElevatedButton(
                 onPressed: widget.selectedAnswer != null && widget.selectedAnswer!.isNotEmpty && widget.onAnswerSubmitted != null
                     ? widget.onAnswerSubmitted
@@ -305,7 +315,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                       : AppColors.borderGray,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                   ),
                 ),
                 child: const Text('Submit Answer'),
@@ -325,7 +335,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                 final hasText = value.text.isNotEmpty;
                 return SizedBox(
                   width: double.infinity,
-                  height: 48,
+                  height: PlatformSizing.buttonHeight(48),
                   child: ElevatedButton(
                     onPressed: hasText && widget.onAnswerSubmitted != null
                         ? () {
@@ -340,7 +350,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                           : AppColors.borderGray,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                       ),
                     ),
                     child: const Text('Submit Answer'),
@@ -366,15 +376,15 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
         filled: true,
         fillColor: Colors.white,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
           borderSide: const BorderSide(color: AppColors.borderGray),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
           borderSide: const BorderSide(color: AppColors.borderGray),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
           borderSide: const BorderSide(color: AppColors.primaryPurple, width: 2),
         ),
         contentPadding: const EdgeInsets.all(16),
@@ -471,25 +481,25 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(12)),
       child: InkWell(
         onTap: widget.onAnswerSelected != null && !isReviewing ? () => widget.onAnswerSelected!(optionId) : null,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(PlatformSizing.spacing(16)),
           decoration: BoxDecoration(
             color: backgroundColor,
             border: Border.all(
               color: borderColor,
               width: (isReviewing && (isCorrectAnswer || isWrongAnswer)) || isSelected ? 2 : 1,
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
           ),
           child: Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: PlatformSizing.spacing(32),
+                height: PlatformSizing.spacing(32),
                 decoration: BoxDecoration(
                   color: circleColor,
                   shape: BoxShape.circle,
@@ -537,11 +547,11 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
               ),
               // Label for correct/wrong answers
               if (labelText != null && labelIcon != null && labelColor != null) ...[
-                const SizedBox(width: 8),
+                SizedBox(width: PlatformSizing.spacing(8)),
                 Icon(
                   labelIcon,
                   color: labelColor,
-                  size: 20,
+                  size: PlatformSizing.iconSize(20),
                 ),
                 const SizedBox(width: 4),
                 Text(

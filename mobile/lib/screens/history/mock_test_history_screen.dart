@@ -303,7 +303,7 @@ class _MockTestHistoryScreenState extends State<MockTestHistoryScreen> {
     final scoreColor = _getScoreColor(test.score ?? 0, test.maxScore ?? 300);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12),
       child: Material(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),

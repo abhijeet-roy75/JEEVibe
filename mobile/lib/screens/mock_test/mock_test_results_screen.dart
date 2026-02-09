@@ -230,7 +230,7 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 4, bottom: 6),
+                      padding: EdgeInsets.only(left: 4, bottom: 6),
                       child: Text(
                         '/ ${result.maxScore}',
                         style: const TextStyle(
@@ -519,7 +519,7 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
     final maxScore = score.total * 4; // 4 marks per question
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: 16),
       child: Column(
         children: [
           Row(

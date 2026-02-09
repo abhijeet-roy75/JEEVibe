@@ -88,15 +88,15 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
                 ),
                 child: Column(
                   children: [
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildQuestionCard(question),
-                    const SizedBox(height: AppSpacing.space20),
+                    SizedBox(height: AppSpacing.space20),
                     _buildOptionsReview(question),
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildConceptCard(question),
-                    const SizedBox(height: AppSpacing.space32),
+                    SizedBox(height: AppSpacing.space32),
                     _buildNavigationButtons(),
-                    const SizedBox(height: AppSpacing.space32),
+                    SizedBox(height: AppSpacing.space32),
                   ],
                 ),
               ),
@@ -196,7 +196,7 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
         }
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: backgroundColor,
@@ -383,7 +383,7 @@ class _ReviewQuestionsScreenState extends State<ReviewQuestionsScreen> {
                         final stepIndex = entry.key;
                         final stepContent = entry.value.toString();
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
+                          margin: EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.5),

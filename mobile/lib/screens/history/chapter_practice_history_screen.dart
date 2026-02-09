@@ -579,7 +579,7 @@ class _ChapterPracticeHistoryScreenState
     final subjectColor = _getSubjectColor(session.subject);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: 12),
       child: Material(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
@@ -713,7 +713,7 @@ class _ChapterPracticeHistoryScreenState
 
   Widget _buildUpgradeBanner() {
     return Container(
-      margin: const EdgeInsets.only(top: 8, bottom: 16),
+      margin: EdgeInsets.only(top: 8, bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(

@@ -11,6 +11,7 @@ import '../../models/user_profile.dart';
 import '../../models/subscription_models.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../widgets/app_header.dart';
 import '../auth/welcome_screen.dart';
 import '../subscription/paywall_screen.dart';
@@ -97,13 +98,13 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
   Widget _buildHeaderTierBadge() {
     if (_loadingSubscription) {
-      return const SizedBox(
-        width: 60,
-        height: 28,
+      return SizedBox(
+        width: PlatformSizing.spacing(60),
+        height: PlatformSizing.spacing(28),
         child: Center(
           child: SizedBox(
-            width: 16,
-            height: 16,
+            width: PlatformSizing.spacing(16),
+            height: PlatformSizing.spacing(16),
             child: CircularProgressIndicator(
               strokeWidth: 2,
               color: Colors.white,
@@ -119,14 +120,14 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     return GestureDetector(
       onTap: () => _onTierBadgeTap(tierEnum),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(12), vertical: PlatformSizing.spacing(6)),
         decoration: BoxDecoration(
           gradient: tierInfo.gradient,
           color: tierInfo.gradient == null ? tierInfo.backgroundColor : null,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
           border: Border.all(
             color: tierInfo.borderColor,
-            width: 1.5,
+            width: PlatformSizing.spacing(1.5),
           ),
         ),
         child: Row(
@@ -134,10 +135,10 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
           children: [
             Icon(
               tierInfo.icon,
-              size: 14,
+              size: PlatformSizing.iconSize(14),
               color: Colors.white,
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: PlatformSizing.spacing(6)),
             Text(
               tierInfo.label,
               style: AppTextStyles.caption.copyWith(
@@ -191,21 +192,21 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
         context: context,
         builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
           ),
           title: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(PlatformSizing.spacing(8)),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [AppColors.primary, AppColors.secondary],
                   ),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
                 ),
                 child: const Icon(Icons.star, color: Colors.white, size: 20),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: PlatformSizing.spacing(12)),
               const Text('Ultra Benefits'),
             ],
           ),
@@ -243,11 +244,11 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
   Widget _buildTierBenefitItem(String text) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(4)),
       child: Row(
         children: [
           const Icon(Icons.check_circle, color: AppColors.success, size: 18),
-          const SizedBox(width: 12),
+          SizedBox(width: PlatformSizing.spacing(12)),
           Text(
             text,
             style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
@@ -263,30 +264,30 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       gradient: AppColors.ctaGradient,
       leading: widget.isInBottomNav
           ? Container(
-              width: 40,
-              height: 40,
+              width: PlatformSizing.spacing(40),
+              height: PlatformSizing.spacing(40),
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withAlpha(25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    blurRadius: PlatformSizing.spacing(8),
+                    offset: Offset(PlatformSizing.spacing(0), PlatformSizing.spacing(2)),
                   ),
                 ],
               ),
               child: ClipOval(
                 child: Padding(
-                  padding: const EdgeInsets.all(6),
+                  padding: EdgeInsets.all(PlatformSizing.spacing(6)),
                   child: Image.asset(
                     'assets/images/JEEVibeLogo.png',
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) {
-                      return const Icon(
+                      return Icon(
                         Icons.person,
                         color: AppColors.primary,
-                        size: 22,
+                        size: PlatformSizing.iconSize(22),
                       );
                     },
                   ),
@@ -296,16 +297,16 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
           : Container(
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
               ),
               child: IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back,
                   color: Colors.white,
-                  size: 20,
+                  size: PlatformSizing.iconSize(20),
                 ),
                 onPressed: () => Navigator.of(context).pop(_profileWasUpdated),
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(PlatformSizing.spacing(8)),
                 constraints: const BoxConstraints(),
               ),
             ),
@@ -314,18 +315,18 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
           return Text(
             'Hi ${_getUserName(profileProvider)}! 👋',
             style: AppTextStyles.headerWhite.copyWith(
-              fontSize: 20,
+              fontSize: PlatformSizing.fontSize(20),
               fontWeight: FontWeight.bold,
             ),
           );
         },
       ),
       subtitle: Padding(
-        padding: const EdgeInsets.only(top: 4),
+        padding: EdgeInsets.only(top: PlatformSizing.spacing(4)),
         child: Text(
           'Profile',
           style: AppTextStyles.bodyWhite.copyWith(
-            fontSize: 14,
+            fontSize: PlatformSizing.fontSize(14),
             color: Colors.white.withAlpha(230),
           ),
           textAlign: TextAlign.center,
@@ -410,26 +411,26 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         const CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: PlatformSizing.spacing(16)),
                         Text(
                           'Loading profile...',
                           style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textLight),
                         ),
                       ] else ...[
-                        const Icon(
+                        Icon(
                           Icons.person_off_outlined,
-                          size: 64,
+                          size: PlatformSizing.iconSize(64),
                           color: AppColors.textLight,
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: PlatformSizing.spacing(16)),
                         Text(
                           'Profile not found',
                           style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textLight),
                         ),
                       ],
-                      const SizedBox(height: 32),
+                      SizedBox(height: PlatformSizing.spacing(32)),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(32)),
                         child: Container(
                           width: double.infinity,
                           decoration: BoxDecoration(
@@ -447,7 +448,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.white,
                               shadowColor: Colors.transparent,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(AppRadius.md),
                               ),
@@ -456,11 +457,11 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const Icon(Icons.logout, size: 20, color: Colors.white),
-                                const SizedBox(width: 8),
+                                SizedBox(width: PlatformSizing.spacing(8)),
                                 Text(
                                   'Sign Out & Retry',
                                   style: AppTextStyles.labelMedium.copyWith(
-                                    fontSize: 16,
+                                    fontSize: PlatformSizing.fontSize(16),
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -494,13 +495,13 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         // Enhanced Avatar and Name Card
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(20),
+                          padding: EdgeInsets.all(PlatformSizing.spacing(20)),
                           decoration: BoxDecoration(
                             color: AppColors.backgroundWhite,
                             borderRadius: BorderRadius.circular(AppRadius.lg),
                             border: Border.all(
                               color: AppColors.borderLight,
-                              width: 1,
+                              width: PlatformSizing.spacing(1),
                             ),
                             boxShadow: AppShadows.card,
                           ),
@@ -508,8 +509,8 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                             children: [
                               // Enhanced Avatar with shadow
                               Container(
-                                width: 72,
-                                height: 72,
+                                width: PlatformSizing.spacing(72),
+                                height: PlatformSizing.spacing(72),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   gradient: AppColors.ctaGradient,
@@ -521,14 +522,14 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                                         ? profile!.firstName![0].toUpperCase()
                                         : '?',
                                     style: AppTextStyles.headerLarge.copyWith(
-                                      fontSize: 32,
+                                      fontSize: PlatformSizing.fontSize(32),
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: AppSpacing.lg),
+                              SizedBox(width: AppSpacing.lg),
                               // Name and phone
                               Expanded(
                                 child: Column(
@@ -537,27 +538,27 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                                     Text(
                                       '${profile!.firstName ?? ''} ${profile!.lastName ?? ''}'.trim(),
                                       style: AppTextStyles.headerMedium.copyWith(
-                                        fontSize: 20,
+                                        fontSize: PlatformSizing.fontSize(20),
                                         color: AppColors.textDark,
                                         fontWeight: FontWeight.bold,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    const SizedBox(height: 6),
+                                    SizedBox(height: PlatformSizing.spacing(6)),
                                     Row(
                                       children: [
-                                        const Icon(
+                                        Icon(
                                           Icons.phone_outlined,
-                                          size: 16,
+                                          size: PlatformSizing.iconSize(16),
                                           color: AppColors.textMedium,
                                         ),
-                                        const SizedBox(width: 6),
+                                        SizedBox(width: PlatformSizing.spacing(6)),
                                         Text(
                                           profile!.phoneNumber,
                                           style: AppTextStyles.bodyMedium.copyWith(
                                             color: AppColors.textMedium,
-                                            fontSize: 14,
+                                            fontSize: PlatformSizing.fontSize(14),
                                           ),
                                         ),
                                       ],
@@ -569,14 +570,14 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               IconButton(
                                 onPressed: () => _navigateToEditProfile(),
                                 icon: Container(
-                                  padding: const EdgeInsets.all(8),
+                                  padding: EdgeInsets.all(PlatformSizing.spacing(8)),
                                   decoration: BoxDecoration(
                                     color: AppColors.primaryPurple.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
                                   ),
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.edit_outlined,
-                                    size: 20,
+                                    size: PlatformSizing.iconSize(20),
                                     color: AppColors.primaryPurple,
                                   ),
                                 ),
@@ -584,40 +585,40 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xxl),
+                        SizedBox(height: AppSpacing.xxl),
                         // Profile Information Section - Grouped Card
                         Text(
                           'JEE Preparation Details',
                           style: AppTextStyles.headerMedium.copyWith(
-                            fontSize: 18,
+                            fontSize: PlatformSizing.fontSize(18),
                             color: AppColors.textDark,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.lg),
+                        SizedBox(height: AppSpacing.lg),
 
                         // Unified Information Card
                         Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(20),
+                          padding: EdgeInsets.all(PlatformSizing.spacing(20)),
                           decoration: BoxDecoration(
                             color: AppColors.backgroundWhite,
                             borderRadius: BorderRadius.circular(AppRadius.lg),
                             border: Border.all(
                               color: AppColors.borderLight,
-                              width: 1,
+                              width: PlatformSizing.spacing(1),
                             ),
                             boxShadow: AppShadows.card,
                           ),
                           child: _buildGroupedProfileFields(profile),
                         ),
 
-                        const SizedBox(height: AppSpacing.xxl),
+                        SizedBox(height: AppSpacing.xxl),
 
                         // Subscription & Plan Section
                         _buildSubscriptionSection(),
 
-                        const SizedBox(height: AppSpacing.xxl),
+                        SizedBox(height: AppSpacing.xxl),
 
                         // Sign Out Button
                         Container(
@@ -637,7 +638,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.white,
                               shadowColor: Colors.transparent,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(AppRadius.md),
                               ),
@@ -646,11 +647,11 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const Icon(Icons.logout, size: 20, color: Colors.white),
-                                const SizedBox(width: 8),
+                                SizedBox(width: PlatformSizing.spacing(8)),
                                 Text(
                                   'Sign Out',
                                   style: AppTextStyles.labelMedium.copyWith(
-                                    fontSize: 16,
+                                    fontSize: PlatformSizing.fontSize(16),
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -659,7 +660,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xxl),
+                        SizedBox(height: AppSpacing.xxl),
 
                         // App Version
                         if (_appVersion.isNotEmpty)
@@ -668,11 +669,11 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               'JEEVibe $_appVersion',
                               style: AppTextStyles.bodySmall.copyWith(
                                 color: AppColors.textLight,
-                                fontSize: 12,
+                                fontSize: PlatformSizing.fontSize(12),
                               ),
                             ),
                           ),
-                        const SizedBox(height: AppSpacing.lg),
+                        SizedBox(height: AppSpacing.lg),
                       ],
                     ),
                   ),
@@ -691,8 +692,8 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     void addField(IconData icon, String label, String? value) {
       if (value != null && value.isNotEmpty) {
         if (fieldCount > 0) {
-          fields.add(const Divider(
-            height: 24,
+          fields.add(Divider(
+            height: PlatformSizing.spacing(24),
             thickness: 1,
             color: AppColors.borderLight,
           ));
@@ -733,7 +734,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
     if (fields.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Center(
           child: Text(
             'No profile information available',
@@ -756,19 +757,19 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 40,
-          height: 40,
+          width: PlatformSizing.spacing(40),
+          height: PlatformSizing.spacing(40),
           decoration: BoxDecoration(
             color: AppColors.primaryPurple.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppRadius.sm),
           ),
           child: Icon(
             icon,
-            size: 20,
+            size: PlatformSizing.iconSize(20),
             color: AppColors.primaryPurple,
           ),
         ),
-        const SizedBox(width: AppSpacing.lg),
+        SizedBox(width: AppSpacing.lg),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -777,16 +778,16 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                 label,
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textMedium,
-                  fontSize: 12,
+                  fontSize: PlatformSizing.fontSize(12),
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: PlatformSizing.spacing(4)),
               Text(
                 value,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: AppColors.textDark,
-                  fontSize: 15,
+                  fontSize: PlatformSizing.fontSize(15),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -805,17 +806,17 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
         Text(
           'Subscription & Plan',
           style: AppTextStyles.headerMedium.copyWith(
-            fontSize: 18,
+            fontSize: PlatformSizing.fontSize(18),
             color: AppColors.textDark,
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: AppSpacing.lg),
 
         // Tier Badge Card
         _buildTierBadge(),
 
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: AppSpacing.lg),
 
         // Upgrade or Manage Button
         _buildSubscriptionCTA(),
@@ -827,17 +828,17 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     if (_loadingSubscription) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(PlatformSizing.spacing(20)),
         decoration: BoxDecoration(
           color: AppColors.backgroundWhite,
           borderRadius: BorderRadius.circular(AppRadius.lg),
           border: Border.all(color: AppColors.borderLight, width: 1),
           boxShadow: AppShadows.soft,
         ),
-        child: const Center(
+        child: Center(
           child: SizedBox(
-            height: 24,
-            width: 24,
+            height: PlatformSizing.spacing(24),
+            width: PlatformSizing.spacing(24),
             child: CircularProgressIndicator(
               strokeWidth: 2,
               color: AppColors.primaryPurple,
@@ -904,7 +905,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(PlatformSizing.spacing(20)),
       decoration: BoxDecoration(
         gradient: badgeGradient,
         color: badgeGradient == null ? AppColors.backgroundWhite : null,
@@ -917,21 +918,21 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: PlatformSizing.spacing(48),
+            height: PlatformSizing.spacing(48),
             decoration: BoxDecoration(
               color: badgeGradient != null
                   ? Colors.white.withValues(alpha: 0.2)
                   : badgeColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
             ),
             child: Icon(
               tierIcon,
               color: badgeGradient != null ? Colors.white : badgeColor,
-              size: 28,
+              size: PlatformSizing.iconSize(28),
             ),
           ),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -941,16 +942,16 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   style: AppTextStyles.headerSmall.copyWith(
                     color: textColor,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: PlatformSizing.fontSize(16),
                   ),
                 ),
                 if (expiryText != null) ...[
-                  const SizedBox(height: 4),
+                  SizedBox(height: PlatformSizing.spacing(4)),
                   Text(
                     expiryText,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: textColor.withValues(alpha: 0.8),
-                      fontSize: 12,
+                      fontSize: PlatformSizing.fontSize(12),
                     ),
                   ),
                 ],
@@ -990,7 +991,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
             backgroundColor: Colors.transparent,
             foregroundColor: Colors.white,
             shadowColor: Colors.transparent,
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
@@ -999,11 +1000,11 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.auto_awesome, size: 20, color: Colors.white),
-              const SizedBox(width: 8),
+              SizedBox(width: PlatformSizing.spacing(8)),
               Text(
                 'Upgrade to Pro',
                 style: AppTextStyles.labelMedium.copyWith(
-                  fontSize: 16,
+                  fontSize: PlatformSizing.fontSize(16),
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1021,7 +1022,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
         borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(
           color: AppColors.primaryPurple,
-          width: 1.5,
+          width: PlatformSizing.spacing(1.5),
         ),
         boxShadow: AppShadows.soft,
       ),
@@ -1039,7 +1040,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
           backgroundColor: Colors.transparent,
           foregroundColor: AppColors.primaryPurple,
           shadowColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
@@ -1048,11 +1049,11 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.settings_outlined, size: 20, color: AppColors.primaryPurple),
-            const SizedBox(width: 8),
+            SizedBox(width: PlatformSizing.spacing(8)),
             Text(
               'Manage Subscription',
               style: AppTextStyles.labelMedium.copyWith(
-                fontSize: 16,
+                fontSize: PlatformSizing.fontSize(16),
                 color: AppColors.primaryPurple,
                 fontWeight: FontWeight.w600,
               ),

@@ -12,6 +12,7 @@ import '../widgets/offline/offline_banner.dart';
 import '../widgets/offline/cached_image_widget.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../theme/app_platform_sizing.dart';
 import 'solution_review_screen.dart';
 import '../widgets/subject_icon_widget.dart';
 import '../widgets/subject_filter_bar.dart';
@@ -117,7 +118,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
       title: 'Snap & Solve History',
       subtitle: subtitle,
       iconColor: AppColors.primaryPurple,
-      iconSize: 36,
+      iconSize: PlatformSizing.spacing(36),
       onClose: () {
         bool found = false;
         Navigator.of(context).popUntil((route) {
@@ -161,10 +162,10 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
       ),
       child: Container(
         width: double.infinity,
-        height: 48,
+        height: PlatformSizing.buttonHeight(48),
         decoration: BoxDecoration(
           gradient: AppColors.ctaGradient,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
           boxShadow: AppShadows.buttonShadow,
         ),
         child: Material(
@@ -179,7 +180,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
                 }
                 return route.isFirst;
               });
-              
+
               if (!found) {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -189,17 +190,17 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
                 );
               }
             },
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.camera_alt, color: Colors.white, size: 20),
-                const SizedBox(width: 12),
+                Icon(Icons.camera_alt, color: Colors.white, size: PlatformSizing.iconSize(20)),
+                SizedBox(width: PlatformSizing.spacing(12)),
                 Text(
                   widget.isInHistoryTab ? 'Go to Snap & Solve' : 'Back to Snap & Solve',
                   style: AppTextStyles.labelMedium.copyWith(
                     color: Colors.white,
-                    fontSize: 16,
+                    fontSize: PlatformSizing.fontSize(16),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -265,7 +266,10 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
     return SubjectFilterBar(
       selectedSubject: _selectedSubject,
       onSubjectChanged: _onFilterChanged,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: PlatformSizing.spacing(16),
+        vertical: PlatformSizing.spacing(12),
+      ),
     );
   }
 
@@ -279,17 +283,17 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
           children: [
             Icon(
               Icons.search_off,
-              size: 64,
+              size: PlatformSizing.iconSize(64),
               color: AppColors.textGray.withValues(alpha: 0.5),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: PlatformSizing.spacing(24)),
             Text(
               'No snaps yet',
               style: AppTextStyles.headerMedium.copyWith(
                 color: AppColors.textMedium,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: PlatformSizing.spacing(8)),
             Text(
               'Start snapping questions to see them here!',
               style: AppTextStyles.bodyLarge,
@@ -305,7 +309,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
     return RefreshIndicator(
       onRefresh: _loadSolutions,
       child: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+        padding: EdgeInsets.fromLTRB(24, 12, 24, 24),
         itemCount: _filteredSolutions.length,
         itemBuilder: (context, index) {
           final solution = _filteredSolutions[index];
@@ -345,13 +349,13 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
           },
           borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(PlatformSizing.spacing(12)),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Image Thumbnail or Icon
                 _buildThumbnail(solution),
-                const SizedBox(width: 12),
+                SizedBox(width: PlatformSizing.spacing(12)),
                 // Details
                 Expanded(
                   child: Column(
@@ -364,7 +368,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
                             child: Text(
                               solution.subject,
                               style: AppTextStyles.headerSmall.copyWith(
-                                fontSize: 15,
+                                fontSize: PlatformSizing.fontSize(15),
                                 fontWeight: FontWeight.bold,
                               ),
                               maxLines: 1,
@@ -375,15 +379,15 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
                             solution.getTimeAgo(),
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.textGray,
-                              fontSize: 10,
+                              fontSize: PlatformSizing.fontSize(12),  // 12px iOS, 10.56px Android (was 10)
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: PlatformSizing.spacing(4)),
                       // Use LaTeXWidget to properly render LaTeX/mathematical notation
                       SizedBox(
-                        height: 34, // Approximate height for 2 lines (17px per line)
+                        height: PlatformSizing.spacing(34), // Approximate height for 2 lines
                         child: ClipRect(
                           child: Align(
                             alignment: Alignment.topLeft,
@@ -392,37 +396,40 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
                               textStyle: AppTextStyles.bodySmall.copyWith(
                                 color: AppColors.textMedium,
                                 height: 1.3,
-                                fontSize: 13, // Slightly smaller for preview
+                                fontSize: PlatformSizing.fontSize(13),
                               ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: PlatformSizing.spacing(8)),
                       // Topic Badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: PlatformSizing.spacing(8),
+                          vertical: PlatformSizing.spacing(4),
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primaryPurple.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(PlatformSizing.radius(6)),
                         ),
                         child: Text(
                           solution.topic.isNotEmpty ? solution.topic : 'General',
                           style: AppTextStyles.labelSmall.copyWith(
                             color: AppColors.primaryPurple,
                             fontWeight: FontWeight.w600,
-                            fontSize: 10,
+                            fontSize: PlatformSizing.fontSize(12),  // 12px iOS, 10.56px Android (was 10)
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 4),
-                const Icon(
+                SizedBox(width: PlatformSizing.spacing(4)),
+                Icon(
                   Icons.chevron_right,
                   color: AppColors.textGray,
-                  size: 18,
+                  size: PlatformSizing.iconSize(18),
                 ),
               ],
             ),
@@ -435,29 +442,29 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
   Widget _buildThumbnail(RecentSolution solution) {
     if (solution.imageUrl == null) {
       return Container(
-        width: 60,
-        height: 60,
+        width: PlatformSizing.spacing(60),
+        height: PlatformSizing.spacing(60),
         decoration: BoxDecoration(
           color: AppColors.backgroundLight,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
         ),
         child: Center(
-          child: SubjectIconWidget(subject: solution.subject, size: 24),
+          child: SubjectIconWidget(subject: solution.subject, size: PlatformSizing.iconSize(24)),
         ),
       );
     }
 
     return Container(
-      width: 60,
-      height: 60,
+      width: PlatformSizing.spacing(60),
+      height: PlatformSizing.spacing(60),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
         border: Border.all(color: AppColors.borderLight),
       ),
       child: OfflineAwareImage(
         imageUrl: solution.imageUrl,
-        width: 60,
-        height: 60,
+        width: PlatformSizing.spacing(60),
+        height: PlatformSizing.spacing(60),
         fit: BoxFit.cover,
       ),
     );

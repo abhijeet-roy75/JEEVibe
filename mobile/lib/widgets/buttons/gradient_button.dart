@@ -141,11 +141,20 @@ class GradientButton extends StatelessWidget {
   EdgeInsets _getPadding() {
     switch (size) {
       case GradientButtonSize.small:
-        return const EdgeInsets.symmetric(horizontal: 16, vertical: 8);
+        return EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,  // 16px iOS, 13.6px Android
+          vertical: AppSpacing.sm,    // 8px iOS, 6.8px Android
+        );
       case GradientButtonSize.medium:
-        return const EdgeInsets.symmetric(horizontal: 20, vertical: 12);
+        return EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,  // 20px iOS, 17px Android
+          vertical: AppSpacing.md,    // 12px iOS, 10.2px Android
+        );
       case GradientButtonSize.large:
-        return const EdgeInsets.symmetric(horizontal: 24, vertical: 16);
+        return EdgeInsets.symmetric(
+          horizontal: AppSpacing.xxl, // 24px iOS, 20.4px Android
+          vertical: AppSpacing.lg,    // 16px iOS, 13.6px Android
+        );
     }
   }
 
@@ -163,22 +172,22 @@ class GradientButton extends StatelessWidget {
   double _getIconSize() {
     switch (size) {
       case GradientButtonSize.small:
-        return 16;
+        return AppIconSizes.sm;  // 16px iOS, 14.4px Android
       case GradientButtonSize.medium:
-        return 20;
+        return AppIconSizes.md;  // 20px iOS, 18px Android
       case GradientButtonSize.large:
-        return 24;
+        return AppIconSizes.lg;  // 24px iOS, 21.6px Android
     }
   }
 
   double _getIconSpacing() {
     switch (size) {
       case GradientButtonSize.small:
-        return 6;
+        return AppSpacing.xs;    // 4px iOS, 3.4px Android (was 6px)
       case GradientButtonSize.medium:
-        return 8;
+        return AppSpacing.sm;    // 8px iOS, 6.8px Android
       case GradientButtonSize.large:
-        return 10;
+        return AppSpacing.md;    // 12px iOS, 10.2px Android (was 10px)
     }
   }
 
@@ -339,28 +348,28 @@ class AppOutlinedButton extends StatelessWidget {
   double _getIconSize() {
     switch (size) {
       case GradientButtonSize.small:
-        return 16;
+        return AppIconSizes.sm;  // 16px iOS, 14.4px Android
       case GradientButtonSize.medium:
-        return 20;
+        return AppIconSizes.md;  // 20px iOS, 18px Android
       case GradientButtonSize.large:
-        return 24;
+        return AppIconSizes.lg;  // 24px iOS, 21.6px Android
     }
   }
 
   double _getIconSpacing() {
     switch (size) {
       case GradientButtonSize.small:
-        return 6;
+        return AppSpacing.xs;    // 4px iOS, 3.4px Android (was 6px)
       case GradientButtonSize.medium:
-        return 8;
+        return AppSpacing.sm;    // 8px iOS, 6.8px Android
       case GradientButtonSize.large:
-        return 10;
+        return AppSpacing.md;    // 12px iOS, 10.2px Android (was 10px)
     }
   }
 }
 
 /// Text-only button variant
-class AppTextButton extends StatelessWidget {
+class AppTextButton extends StatelessWidget{
   final String text;
   final VoidCallback? onPressed;
   final bool isDisabled;
@@ -390,21 +399,32 @@ class AppTextButton extends StatelessWidget {
         onTap: isEnabled ? onPressed : null,
         borderRadius: BorderRadius.circular(AppRadius.sm),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,  // 8px iOS, 6.8px Android
+            vertical: AppSpacing.xxs,   // 2px iOS, 1.7px Android (was 4px)
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (leadingIcon != null) ...[
-                Icon(leadingIcon, color: color, size: 18),
-                const SizedBox(width: 6),
+                Icon(
+                  leadingIcon,
+                  color: color,
+                  size: AppIconSizes.sm,  // 16px iOS, 14.4px Android (was 18px)
+                ),
+                SizedBox(width: AppSpacing.xs),  // 4px iOS, 3.4px Android (was 6px)
               ],
               Text(
                 text,
                 style: AppTextStyles.labelMedium.copyWith(color: color),
               ),
               if (trailingIcon != null) ...[
-                const SizedBox(width: 6),
-                Icon(trailingIcon, color: color, size: 18),
+                SizedBox(width: AppSpacing.xs),  // 4px iOS, 3.4px Android (was 6px)
+                Icon(
+                  trailingIcon,
+                  color: color,
+                  size: AppIconSizes.sm,  // 16px iOS, 14.4px Android (was 18px)
+                ),
               ],
             ],
           ),

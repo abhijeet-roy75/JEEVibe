@@ -945,7 +945,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
                   Expanded(
                     child: Container(
                       height: 2,
-                      margin: const EdgeInsets.only(bottom: 20),
+                      margin: EdgeInsets.only(bottom: 20),
                       color: isCompleted 
                           ? AppColors.primaryPurple 
                           : AppColors.borderGray,

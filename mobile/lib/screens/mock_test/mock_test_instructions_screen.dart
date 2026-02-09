@@ -74,7 +74,7 @@ class _MockTestInstructionsScreenState
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Row(
             children: [
               // Back button
@@ -505,12 +505,12 @@ class _MockTestInstructionsScreenState
 
   Widget _buildTipItem(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: const EdgeInsets.only(top: 6),
+            margin: EdgeInsets.only(top: 6),
             width: 6,
             height: 6,
             decoration: const BoxDecoration(
@@ -537,7 +537,7 @@ class _MockTestInstructionsScreenState
   Widget _buildInstructionItem(String number, String text,
       {List<String>? subItems}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -574,7 +574,7 @@ class _MockTestInstructionsScreenState
                 if (subItems != null) ...[
                   const SizedBox(height: 8),
                   ...subItems.map((item) => Padding(
-                        padding: const EdgeInsets.only(left: 8, bottom: 4),
+                        padding: EdgeInsets.only(left: 8, bottom: 4),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

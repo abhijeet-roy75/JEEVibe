@@ -58,11 +58,11 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
                 padding: AppSpacing.screenPadding,
                 child: Column(
                   children: [
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildPriyaCard(),
-                    const SizedBox(height: AppSpacing.space24),
+                    SizedBox(height: AppSpacing.space24),
                     _buildDidYouKnow(),
-                    const SizedBox(height: AppSpacing.space32),
+                    SizedBox(height: AppSpacing.space32),
                   ],
                 ),
               ),

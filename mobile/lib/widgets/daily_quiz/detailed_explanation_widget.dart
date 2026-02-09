@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../models/daily_quiz_question.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../latex_widget.dart';
 
 class DetailedExplanationWidget extends StatefulWidget {
@@ -34,11 +35,11 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
           border: Border.all(color: AppColors.borderGray),
         ),
         child: Column(
@@ -51,15 +52,15 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                 });
               },
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(PlatformSizing.spacing(16)),
                 child: Row(
                   children: [
                     Icon(
                       Icons.lightbulb_outline,
                       color: AppColors.primaryPurple,
-                      size: 20,
+                      size: PlatformSizing.iconSize(20),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: PlatformSizing.spacing(8)),
                     Expanded(
                       child: Text(
                         _showDetailedExplanation ? 'Hide Detailed Explanation' : 'Show Detailed Explanation',
@@ -71,7 +72,7 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                     Icon(
                       _showDetailedExplanation ? Icons.remove : Icons.add,
                       color: AppColors.primaryPurple,
-                      size: 20,
+                      size: PlatformSizing.iconSize(20),
                     ),
                   ],
                 ),
@@ -81,7 +82,7 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
             if (_showDetailedExplanation) ...[
               Divider(height: 1, color: AppColors.borderGray),
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(PlatformSizing.spacing(16)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -93,17 +94,17 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                         title: 'Quick Explanation',
                         content: widget.feedback.explanation ?? widget.feedback.solutionText ?? '',
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: PlatformSizing.spacing(16)),
                     ],
                     // Step-by-Step Solution
                     if (widget.feedback.solutionSteps != null && widget.feedback.solutionSteps!.isNotEmpty) ...[
                       _buildStepByStepSolution(widget.feedback.solutionSteps!),
-                      const SizedBox(height: 16),
+                      SizedBox(height: PlatformSizing.spacing(16)),
                     ],
                     // Why You Got This Wrong (only for incorrect)
                     if (!widget.isCorrect) ...[
                       _buildWhyWrongSection(),
-                      const SizedBox(height: 16),
+                      SizedBox(height: PlatformSizing.spacing(16)),
                     ],
                     // Key Takeaway - Use keyInsight from metadata, fallback to solutionText
                     if (widget.feedback.keyInsight != null || widget.feedback.solutionText != null)
@@ -129,8 +130,8 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: iconColor, size: 20),
-        const SizedBox(width: 8),
+        Icon(icon, color: iconColor, size: PlatformSizing.iconSize(20)),
+        SizedBox(width: PlatformSizing.spacing(8)),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,11 +140,11 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                 title,
                 style: AppTextStyles.solutionHeader, // Guideline: 17px for section headers
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: PlatformSizing.spacing(8)),
               LaTeXWidget(
                 text: content,
                 textStyle: TextStyle(
-                  fontSize: 16, // Guideline: 16px for explanation body
+                  fontSize: PlatformSizing.fontSize(16), // Guideline: 16px for explanation body
                   height: 1.6,
                   color: AppColors.textSecondary,
                 ),
@@ -159,8 +160,8 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.menu_book, color: AppColors.successGreen, size: 20),
-        const SizedBox(width: 8),
+        Icon(Icons.menu_book, color: AppColors.successGreen, size: PlatformSizing.iconSize(20)),
+        SizedBox(width: PlatformSizing.spacing(8)),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,20 +170,20 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                 'Step-by-Step Solution',
                 style: AppTextStyles.solutionHeader, // Guideline: 17px for section headers
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: PlatformSizing.spacing(12)),
               ...steps.asMap().entries.map((entry) {
                 final index = entry.key;
                 final step = entry.value;
                 final stepText = step.displayText;
 
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
+                  padding: EdgeInsets.only(bottom: PlatformSizing.spacing(16)),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        width: 24,
-                        height: 24,
+                        width: PlatformSizing.spacing(24),
+                        height: PlatformSizing.spacing(24),
                         decoration: BoxDecoration(
                           color: AppColors.successGreen.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
@@ -196,7 +197,7 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: PlatformSizing.spacing(8)),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,20 +206,20 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                             LaTeXWidget(
                               text: stepText,
                               textStyle: TextStyle(
-                                fontSize: 16, // Guideline: 16-17px for step text
+                                fontSize: PlatformSizing.fontSize(16), // Guideline: 16-17px for step text
                                 height: 1.5,
                                 color: AppColors.textSecondary,
                               ),
                             ),
                             // Formula (if exists)
                             if (step.formula != null && step.formula!.isNotEmpty) ...[
-                              const SizedBox(height: 8),
+                              SizedBox(height: PlatformSizing.spacing(8)),
                               Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.all(12),
+                                padding: EdgeInsets.all(PlatformSizing.spacing(12)),
                                 decoration: BoxDecoration(
                                   color: AppColors.primaryPurple.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
                                   border: Border.all(
                                     color: AppColors.primaryPurple.withValues(alpha: 0.2),
                                   ),
@@ -228,15 +229,15 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                                   children: [
                                     Icon(
                                       Icons.functions,
-                                      size: 16,
+                                      size: PlatformSizing.iconSize(16),
                                       color: AppColors.primaryPurple,
                                     ),
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: PlatformSizing.spacing(8)),
                                     Expanded(
                                       child: LaTeXWidget(
                                         text: step.formula!,
                                         textStyle: TextStyle(
-                                          fontSize: 15,
+                                          fontSize: PlatformSizing.fontSize(15),
                                           height: 1.4,
                                           color: AppColors.primaryPurple,
                                           fontWeight: FontWeight.w500,
@@ -249,13 +250,13 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                             ],
                             // Calculation (if exists)
                             if (step.calculation != null && step.calculation!.isNotEmpty) ...[
-                              const SizedBox(height: 8),
+                              SizedBox(height: PlatformSizing.spacing(8)),
                               Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.all(12),
+                                padding: EdgeInsets.all(PlatformSizing.spacing(12)),
                                 decoration: BoxDecoration(
                                   color: AppColors.successGreen.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
                                   border: Border.all(
                                     color: AppColors.successGreen.withValues(alpha: 0.2),
                                   ),
@@ -265,15 +266,15 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                                   children: [
                                     Icon(
                                       Icons.calculate,
-                                      size: 16,
+                                      size: PlatformSizing.iconSize(16),
                                       color: AppColors.successGreen,
                                     ),
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: PlatformSizing.spacing(8)),
                                     Expanded(
                                       child: LaTeXWidget(
                                         text: step.calculation!,
                                         textStyle: TextStyle(
-                                          fontSize: 15,
+                                          fontSize: PlatformSizing.fontSize(15),
                                           height: 1.4,
                                           color: AppColors.textSecondary,
                                           fontFamily: 'monospace',
@@ -288,13 +289,13 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                             if (step.explanation != null &&
                                 step.explanation!.isNotEmpty &&
                                 step.explanation != step.description) ...[
-                              const SizedBox(height: 8),
+                              SizedBox(height: PlatformSizing.spacing(8)),
                               Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.all(12),
+                                padding: EdgeInsets.all(PlatformSizing.spacing(12)),
                                 decoration: BoxDecoration(
                                   color: AppColors.warningAmber.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
                                   border: Border.all(
                                     color: AppColors.warningAmber.withValues(alpha: 0.2),
                                   ),
@@ -304,15 +305,15 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                                   children: [
                                     Icon(
                                       Icons.lightbulb_outline,
-                                      size: 16,
+                                      size: PlatformSizing.iconSize(16),
                                       color: AppColors.warningAmber,
                                     ),
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: PlatformSizing.spacing(8)),
                                     Expanded(
                                       child: LaTeXWidget(
                                         text: step.explanation!,
                                         textStyle: TextStyle(
-                                          fontSize: 15,
+                                          fontSize: PlatformSizing.fontSize(15),
                                           height: 1.4,
                                           color: AppColors.textSecondary,
                                           fontStyle: FontStyle.italic,
@@ -362,8 +363,8 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 20,
-          height: 20,
+          width: PlatformSizing.iconSize(20),
+          height: PlatformSizing.iconSize(20),
           decoration: BoxDecoration(
             color: AppColors.warningAmber.withValues(alpha: 0.2),
             shape: BoxShape.circle,
@@ -371,10 +372,10 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
           child: Icon(
             Icons.info_outline,
             color: AppColors.warningAmber,
-            size: 14,
+            size: PlatformSizing.iconSize(14),
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: PlatformSizing.spacing(8)),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,17 +384,17 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                 'Why You Got This Wrong',
                 style: AppTextStyles.solutionHeader,
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: PlatformSizing.spacing(8)),
               if (distractorExplanation != null) ...[
                 // MCQ: Show why the selected wrong option is incorrect
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(8), vertical: PlatformSizing.spacing(2)),
                       decoration: BoxDecoration(
                         color: AppColors.errorRed.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(PlatformSizing.radius(4)),
                       ),
                       child: Text(
                         'Option ${widget.feedback.studentAnswer?.toUpperCase() ?? ""}',
@@ -405,11 +406,11 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: PlatformSizing.spacing(8)),
                 LaTeXWidget(
                   text: distractorExplanation,
                   textStyle: TextStyle(
-                    fontSize: 16,
+                    fontSize: PlatformSizing.fontSize(16),
                     height: 1.5,
                     color: AppColors.textSecondary,
                   ),
@@ -417,7 +418,7 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
               ] else if (hasCommonMistakes) ...[
                 // Numerical: Show common mistakes
                 ...widget.feedback.commonMistakes!.map((mistake) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: EdgeInsets.only(bottom: PlatformSizing.spacing(8)),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -432,7 +433,7 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                         child: LaTeXWidget(
                           text: mistake,
                           textStyle: TextStyle(
-                            fontSize: 16,
+                            fontSize: PlatformSizing.fontSize(16),
                             height: 1.5,
                             color: AppColors.textSecondary,
                           ),
@@ -459,8 +460,8 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.vpn_key, color: AppColors.primaryPurple, size: 20),
-        const SizedBox(width: 8),
+        Icon(Icons.vpn_key, color: AppColors.primaryPurple, size: PlatformSizing.iconSize(20)),
+        SizedBox(width: PlatformSizing.spacing(8)),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,11 +472,11 @@ class _DetailedExplanationWidgetState extends State<DetailedExplanationWidget> {
                   color: AppColors.primaryPurple,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: PlatformSizing.spacing(8)),
               LaTeXWidget(
                 text: content,
                 textStyle: TextStyle(
-                  fontSize: 16, // Guideline: 16px for body text
+                  fontSize: PlatformSizing.fontSize(16), // Guideline: 16px for body text
                   height: 1.5,
                   color: AppColors.textSecondary,
                 ),

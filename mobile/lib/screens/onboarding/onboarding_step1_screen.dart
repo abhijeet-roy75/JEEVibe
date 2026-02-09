@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../constants/profile_constants.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import 'onboarding_step2_screen.dart';
 
@@ -89,20 +90,23 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
             child: SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: PlatformSizing.spacing(12), // 12→9.6px Android
+                ),
                 child: Row(
                   children: [
                     // Wave emoji + Title inline
-                    const Text(
+                    Text(
                       '👋',
-                      style: TextStyle(fontSize: 28),
+                      style: TextStyle(fontSize: PlatformSizing.fontSize(28)), // 28→24.64px Android
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Text(
                         "Let's Get to Know You!",
                         style: AppTextStyles.headerLarge.copyWith(
-                          fontSize: 20,
+                          fontSize: PlatformSizing.fontSize(20), // 20→17.6px Android
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -112,20 +116,20 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                     Row(
                       children: [
                         Container(
-                          width: 20,
-                          height: 4,
+                          width: PlatformSizing.spacing(20), // 20→16px Android
+                          height: PlatformSizing.spacing(4), // 4→4px Android (min)
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(2),
+                            borderRadius: BorderRadius.circular(PlatformSizing.radius(2)), // 2→1.6px Android
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: PlatformSizing.spacing(4)), // 4→4px Android (min)
                         Container(
-                          width: 20,
-                          height: 4,
+                          width: PlatformSizing.spacing(20), // 20→16px Android
+                          height: PlatformSizing.spacing(4), // 4→4px Android (min)
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(2),
+                            borderRadius: BorderRadius.circular(PlatformSizing.radius(2)), // 2→1.6px Android
                           ),
                         ),
                       ],
@@ -139,7 +143,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
           // White Content Section - Everything scrollable
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(AppSpacing.xxl),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -153,7 +157,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: AppSpacing.xxl),
 
                       // First Name (required)
                       Text(
@@ -163,7 +167,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       TextFormField(
                         controller: _firstNameController,
                         focusNode: _firstNameFocusNode,
@@ -180,36 +184,36 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           filled: true,
                           fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.borderGray,
                               width: 1,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.borderGray,
                               width: 1,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.primaryPurple,
                               width: 2,
                             ),
                           ),
                           errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.errorRed,
                               width: 1,
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                            vertical: PlatformSizing.spacing(14), // 14→11.2px Android
                           ),
                         ),
                         style: AppTextStyles.bodyMedium,
@@ -225,7 +229,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                         onSaved: (value) => _firstName = value?.trim(),
                       ),
 
-                      const SizedBox(height: 24),
+                      SizedBox(height: AppSpacing.xxl),
 
                       // Last Name (required)
                       Text(
@@ -252,36 +256,36 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           filled: true,
                           fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.borderGray,
                               width: 1,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.borderGray,
                               width: 1,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.primaryPurple,
                               width: 2,
                             ),
                           ),
                           errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.errorRed,
                               width: 1,
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                            vertical: PlatformSizing.spacing(14), // 14→11.2px Android
                           ),
                         ),
                         style: AppTextStyles.bodyMedium,
@@ -297,7 +301,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                         onSaved: (value) => _lastName = value?.trim(),
                       ),
 
-                      const SizedBox(height: 24),
+                      SizedBox(height: AppSpacing.xxl),
 
                       // Email (required)
                       Text(
@@ -324,36 +328,36 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           filled: true,
                           fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.borderGray,
                               width: 1,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.borderGray,
                               width: 1,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.primaryPurple,
                               width: 2,
                             ),
                           ),
                           errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.errorRed,
                               width: 1,
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                            vertical: PlatformSizing.spacing(14), // 14→11.2px Android
                           ),
                         ),
                         style: AppTextStyles.bodyMedium,
@@ -372,7 +376,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                         onSaved: (value) => _email = value?.trim(),
                       ),
 
-                      const SizedBox(height: 24),
+                      SizedBox(height: AppSpacing.xxl),
 
                       // Phone Number (verified, read-only)
                       Text(
@@ -382,46 +386,46 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: AppSpacing.sm),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                          vertical: PlatformSizing.spacing(14), // 14→11.2px Android
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.backgroundLight,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppRadius.md),
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.check_circle,
                               color: AppColors.successGreen,
-                              size: 20,
+                              size: PlatformSizing.iconSize(20), // 20→17.6px Android
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: AppSpacing.md),
                             Text(
                               _phoneNumber ?? 'Not available',
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: AppColors.textDark,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: AppSpacing.sm),
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: AppSpacing.sm,
+                                vertical: PlatformSizing.spacing(2), // 2→1.6px Android
                               ),
                               decoration: BoxDecoration(
                                 color: AppColors.successGreen.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(PlatformSizing.radius(4)), // 4→3.2px Android
                               ),
                               child: Text(
                                 'Verified',
                                 style: AppTextStyles.bodySmall.copyWith(
                                   color: AppColors.successGreen,
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 11,
+                                  fontSize: PlatformSizing.fontSize(12),  // 12px iOS, 10.56px Android (was 11)
                                 ),
                               ),
                             ),
@@ -429,7 +433,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      SizedBox(height: AppSpacing.xxl),
 
                       // JEE Target Exam Date (required)
                       Text(
@@ -451,36 +455,36 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                           filled: true,
                           fillColor: AppColors.cardWhite,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.borderGray,
                               width: 1,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.borderGray,
                               width: 1,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.primaryPurple,
                               width: 2,
                             ),
                           ),
                           errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             borderSide: const BorderSide(
                               color: AppColors.errorRed,
                               width: 1,
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg,
+                            vertical: PlatformSizing.spacing(14), // 14→11.2px Android
                           ),
                         ),
                         dropdownColor: Colors.white,
@@ -503,7 +507,7 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                         onSaved: (value) => _jeeTargetExamDate = value,
                       ),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: PlatformSizing.spacing(32)), // 32→25.6px Android
 
                     // Continue button with gradient (now inside scroll)
                     GradientButton(

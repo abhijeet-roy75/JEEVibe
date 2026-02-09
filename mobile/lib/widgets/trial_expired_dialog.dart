@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import '../theme/app_platform_sizing.dart';
 import '../screens/subscription/paywall_screen.dart';
 
 /// Dialog shown when user's trial expires
@@ -41,41 +42,41 @@ class TrialExpiredDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.lg), // 16→12.8px Android
       ),
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(AppSpacing.xxl), // 24→19.2px Android
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Icon
+              // Icon - CRITICAL sizing for dialog prominence
               Container(
-                width: 64,
-                height: 64,
+                width: PlatformSizing.iconSize(64), // 64→56.32px Android
+                height: PlatformSizing.iconSize(64), // 64→56.32px Android
                 decoration: BoxDecoration(
                   color: Colors.orange.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.timer_off,
-                  size: 32,
+                  size: AppIconSizes.xxl, // 32→28.8px Android
                   color: Colors.orange,
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: AppSpacing.lg), // 16→12.8px Android
 
               // Title
               Text(
                 'Your Pro Trial Has Ended',
                 style: AppTextStyles.headerMedium.copyWith(
-                  fontSize: 20,
+                  fontSize: PlatformSizing.fontSize(20), // 20→17.6px Android
                   fontWeight: FontWeight.bold,
                   color: AppColors.textDark,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: AppSpacing.xs), // 8→6.4px Android
 
               // Subtitle
               Text(
@@ -85,7 +86,7 @@ class TrialExpiredDialog extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: AppSpacing.xl), // 20→16px Android
 
               // Before/After comparison
               Text(
@@ -95,18 +96,18 @@ class TrialExpiredDialog extends StatelessWidget {
                   color: AppColors.textDark,
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: AppSpacing.md), // 12→9.6px Android
 
               _buildLimitComparison('Snap & Solve', '15/day', '5/day'),
               _buildLimitComparison('Daily Quiz', '10/day', '1/day'),
               _buildLimitComparison('Offline Mode', 'Enabled', 'Disabled'),
               _buildLimitComparison('Solution History', '90 days', '7 days'),
 
-              const SizedBox(height: 20),
+              SizedBox(height: AppSpacing.xl), // 20→16px Android
 
               // Discount offer banner
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(AppSpacing.lg), // 16→12.8px Android
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -114,7 +115,7 @@ class TrialExpiredDialog extends StatelessWidget {
                       Colors.orange.shade100,
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.md), // 12→9.6px Android
                   border: Border.all(
                     color: Colors.orange.shade200,
                     width: 1,
@@ -125,12 +126,12 @@ class TrialExpiredDialog extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.local_offer,
                           color: Colors.orange,
-                          size: 20,
+                          size: AppIconSizes.md, // 20→17.6px Android
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.xs), // 8→6.4px Android
                         Text(
                           'Special Offer: 20% OFF',
                           style: AppTextStyles.labelMedium.copyWith(
@@ -140,29 +141,29 @@ class TrialExpiredDialog extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: AppSpacing.xs), // 8→6.4px Android
                     Text(
                       'Use code: TRIAL2PRO',
                       style: AppTextStyles.bodyLarge.copyWith(
-                        fontSize: 18,
+                        fontSize: PlatformSizing.fontSize(18), // 18→15.84px Android
                         fontWeight: FontWeight.bold,
                         color: Colors.orange.shade900,
                         letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.xxs), // 4→3.2px Android
                     Text(
                       'Valid for 7 days',
                       style: AppTextStyles.caption.copyWith(
                         color: Colors.orange.shade700,
-                        fontSize: 12,
+                        fontSize: PlatformSizing.fontSize(12), // 12→10.56px Android
                       ),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 20),
+              SizedBox(height: AppSpacing.xl), // 20→16px Android
 
               // Upgrade button
               SizedBox(
@@ -172,23 +173,23 @@ class TrialExpiredDialog extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryPurple,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.sm), // 14→11.2px Android
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.md), // 12→9.6px Android
                     ),
                     elevation: 2,
                   ),
                   child: Text(
                     'Claim Discount & Upgrade',
                     style: AppTextStyles.labelMedium.copyWith(
-                      fontSize: 16,
+                      fontSize: PlatformSizing.fontSize(16), // 16→14.08px Android
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: AppSpacing.md), // 12→9.6px Android
 
               // Continue with free button
               TextButton(
@@ -210,7 +211,7 @@ class TrialExpiredDialog extends StatelessWidget {
 
   Widget _buildLimitComparison(String feature, String proLimit, String freeLimit) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.xxs + 2), // 6→4.8px Android
       child: Row(
         children: [
           Expanded(
@@ -222,7 +223,7 @@ class TrialExpiredDialog extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: AppSpacing.xs), // 8→6.4px Android
           Expanded(
             flex: 2,
             child: Text(
@@ -234,13 +235,13 @@ class TrialExpiredDialog extends StatelessWidget {
               textAlign: TextAlign.right,
             ),
           ),
-          const SizedBox(width: 4),
-          const Icon(
+          SizedBox(width: AppSpacing.xxs), // 4→3.2px Android
+          Icon(
             Icons.arrow_forward,
-            size: 14,
+            size: PlatformSizing.iconSize(14), // 14→12.32px Android
             color: AppColors.textLight,
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: AppSpacing.xxs), // 4→3.2px Android
           Expanded(
             flex: 2,
             child: Text(

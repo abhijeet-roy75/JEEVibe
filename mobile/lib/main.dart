@@ -43,6 +43,9 @@ import 'services/firebase/pin_service.dart';
 // Widgets
 import 'widgets/trial_expired_dialog.dart';
 
+// Theme
+import 'theme/app_platform_sizing.dart';
+
 // Global navigator key for navigation and in-app notifications
 final GlobalKey<NavigatorState> globalNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -361,6 +364,11 @@ class _JEEVibeAppState extends State<JEEVibeApp> with WidgetsBindingObserver {
         ),
         useMaterial3: true,
         fontFamily: 'Inter',
+        // Platform-adaptive Material 3 properties
+        visualDensity: PlatformSizing.isAndroid
+            ? VisualDensity.compact  // Tighter Material 3 on Android
+            : VisualDensity.standard, // iOS keeps standard density
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap, // Reduce padding around buttons/chips
       ),
       home: const AppInitializer(),
     );

@@ -306,7 +306,7 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                         children: ProfileConstants.examTypes.map((examType) {
                           final isSelected = _examType == examType;
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
+                            padding: EdgeInsets.only(bottom: 12),
                             child: InkWell(
                               onTap: () => setState(() {
                                 _examType = isSelected ? null : examType;

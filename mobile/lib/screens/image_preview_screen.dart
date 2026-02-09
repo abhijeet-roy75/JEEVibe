@@ -440,7 +440,7 @@ class _ImagePreviewScreenState extends State<ImagePreviewScreen> {
 
   Widget _buildBottomButtons() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
       color: Colors.black,
       child: _isCropMode ? _buildCropModeButtons() : _buildPreviewModeButtons(),
     );

@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
+import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/subject_icon_widget.dart';
 import '../widgets/app_header.dart';
 import 'assessment_intro_screen.dart';
@@ -233,7 +234,7 @@ class _ChapterListScreenState extends State<ChapterListScreen>
             ),
             subtitle: !_isLoadingUnlockData && _monthsUntilExam > 0
                 ? Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: EdgeInsets.only(top: 8),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -463,10 +464,10 @@ class _ChapterListScreenState extends State<ChapterListScreen>
     final subject = chapter.chapterKey.split('_')[0];
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: PlatformSizing.spacing(12)),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
         border: Border.all(
           color: isUnlocked ? AppColors.borderDefault : AppColors.textTertiary.withOpacity(0.3),
         ),
@@ -493,18 +494,18 @@ class _ChapterListScreenState extends State<ChapterListScreen>
               children: [
                 // Lock/Unlock Icon
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: PlatformSizing.spacing(40),
+                  height: PlatformSizing.spacing(40),
                   decoration: BoxDecoration(
                     color: isUnlocked
                         ? AppColors.success.withOpacity(0.1)
                         : AppColors.textTertiary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
                   ),
                   child: Icon(
                     isUnlocked ? Icons.lock_open : Icons.lock,
                     color: isUnlocked ? AppColors.success : AppColors.textTertiary,
-                    size: 20,
+                    size: PlatformSizing.iconSize(20),
                   ),
                 ),
                 const SizedBox(width: 12),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../services/firebase/pin_service.dart';
 import 'forgot_pin_screen.dart';
 
@@ -138,14 +139,17 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                 children: [
                   // Top bar with logo (no back button - PIN required)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: PlatformSizing.spacing(12), // 12→9.6px Android
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // Logo in circle (matching profile pages style)
                         Container(
-                          width: 40,
-                          height: 40,
+                          width: PlatformSizing.iconSize(40), // 40→35.2px Android
+                          height: PlatformSizing.iconSize(40), // 40→35.2px Android
                           decoration: BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
@@ -159,7 +163,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                           ),
                           child: ClipOval(
                             child: Padding(
-                              padding: const EdgeInsets.all(6),
+                              padding: EdgeInsets.all(PlatformSizing.spacing(6)), // 6→4.8px Android
                               child: Image.asset(
                                 'assets/images/JEEVibeLogo_240.png',
                                 fit: BoxFit.contain,
@@ -175,11 +179,11 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                   ),
                   // Title in header
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 32.0),
+                    padding: EdgeInsets.only(bottom: PlatformSizing.spacing(32)), // 32→25.6px Android
                     child: Text(
                       'Enter your PIN',
                       style: AppTextStyles.headerLarge.copyWith(
-                        fontSize: 28,
+                        fontSize: PlatformSizing.fontSize(28), // 28→24.64px Android
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -193,45 +197,48 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
           // White Content Section
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(AppSpacing.xxl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 24),
+                  SizedBox(height: AppSpacing.xxl),
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(AppSpacing.lg),
                     decoration: BoxDecoration(
                       color: AppColors.primaryPurple.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.lock_outline_rounded,
-                      size: 48,
+                      size: AppIconSizes.massive, // 48→43.2px Android
                       color: AppColors.primaryPurple,
                     ),
                   ),
-                  const SizedBox(height: 36),
+                  SizedBox(height: PlatformSizing.spacing(36)), // 36→28.8px Android
                   Text(
                     'Enter your 4-digit PIN to continue',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.bodyMedium,
                   ),
                   if (_errorMessage != null) ...[
-                    const SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.lg),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.md,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.errorBackground,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(PlatformSizing.radius(8)), // 8→6.4px Android
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.error_outline,
                             color: AppColors.errorRed,
-                            size: 20,
+                            size: PlatformSizing.iconSize(20), // 20→17.6px Android
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
                               _errorMessage!,
@@ -244,10 +251,10 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 48),
-                  
+                  SizedBox(height: PlatformSizing.spacing(48)), // 48→38.4px Android
+
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 48.0),
+                    padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(48)), // 48→38.4px Android
                     child: PinCodeTextField(
                       appContext: context,
                       length: 4,
@@ -255,8 +262,8 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                       animationType: AnimationType.fade,
                       pinTheme: PinTheme(
                         shape: PinCodeFieldShape.circle,
-                        fieldHeight: 56,
-                        fieldWidth: 56,
+                        fieldHeight: PlatformSizing.buttonHeight(56), // 56→48px Android
+                        fieldWidth: PlatformSizing.buttonHeight(56), // 56→48px Android
                         activeFillColor: Colors.grey.shade100,
                         inactiveFillColor: Colors.grey.shade100,
                         selectedFillColor: Colors.white,
@@ -286,7 +293,7 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  SizedBox(height: PlatformSizing.spacing(32)), // 32→25.6px Android
 
                   // Forgot PIN button
                   TextButton(
@@ -300,7 +307,10 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.textMedium,
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                      padding: EdgeInsets.symmetric(
+                        vertical: AppSpacing.md,
+                        horizontal: AppSpacing.xxl,
+                      ),
                     ),
                     child: Text(
                       'Forgot PIN?',

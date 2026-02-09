@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 
 class StatCard extends StatelessWidget {
   final IconData icon;
@@ -26,10 +27,13 @@ class StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bgColor = iconBackgroundColor ?? iconColor;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: PlatformSizing.spacing(12),
+        vertical: PlatformSizing.spacing(10),
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -51,38 +55,38 @@ class StatCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: PlatformSizing.spacing(32),
+                height: PlatformSizing.spacing(32),
                 decoration: BoxDecoration(
                   color: bgColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
                 ),
                 child: Icon(
                   icon,
                   color: bgColor,
-                  size: 18,
+                  size: PlatformSizing.iconSize(18),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: PlatformSizing.spacing(8)),
               Expanded(
                 child: Text(
                   value,
                   style: AppTextStyles.numericMedium.copyWith(
                     color: valueColor ?? AppColors.textPrimary,
-                    fontSize: 18,
+                    fontSize: PlatformSizing.fontSize(18),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: PlatformSizing.spacing(4)),
           // Row 2: Label
           Text(
             label,
             style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.textTertiary,
-              fontSize: 11,
+              fontSize: PlatformSizing.fontSize(12),  // 12px iOS, 10.56px Android (was 11)
             ),
           ),
         ],
@@ -111,19 +115,19 @@ class StatCardHorizontal extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 44,
-          height: 44,
+          width: PlatformSizing.spacing(44),
+          height: PlatformSizing.spacing(44),
           decoration: BoxDecoration(
             color: iconColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
           ),
           child: Icon(
             icon,
             color: iconColor,
-            size: 24,
+            size: PlatformSizing.iconSize(24),
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: PlatformSizing.spacing(12)),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

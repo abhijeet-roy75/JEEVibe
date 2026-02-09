@@ -8,6 +8,7 @@ import '../../providers/chapter_practice_provider.dart';
 import '../../services/subscription_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../../widgets/priya_avatar.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../main_navigation_screen.dart';
@@ -178,7 +179,7 @@ class ChapterPracticeResultScreen extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
           child: Column(
             children: [
               // Title
@@ -217,8 +218,8 @@ class ChapterPracticeResultScreen extends StatelessWidget {
               const SizedBox(height: 16),
               // Score circle
               Container(
-                width: 100,
-                height: 100,
+                width: PlatformSizing.spacing(100),
+                height: PlatformSizing.spacing(100),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
@@ -274,7 +275,7 @@ class ChapterPracticeResultScreen extends StatelessWidget {
                 Icons.quiz_outlined,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: PlatformSizing.spacing(12)),
             Expanded(
               child: _buildSummaryCard(
                 'Correct',
@@ -301,10 +302,13 @@ class ChapterPracticeResultScreen extends StatelessWidget {
   Widget _buildSummaryCard(
       String label, String value, Color color, IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      padding: EdgeInsets.symmetric(
+        vertical: PlatformSizing.spacing(12),
+        horizontal: PlatformSizing.spacing(12),
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
         border: Border.all(
           color: color.withValues(alpha: 0.3),
         ),
@@ -312,7 +316,7 @@ class ChapterPracticeResultScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: color, size: 24),
+          Icon(icon, color: color, size: PlatformSizing.iconSize(24)),
           const SizedBox(height: 6),
           Text(
             value,
@@ -337,15 +341,15 @@ class ChapterPracticeResultScreen extends StatelessWidget {
 
   Widget _buildPriyaMaamMessage() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
+      padding: EdgeInsets.all(PlatformSizing.spacing(16)),
       decoration: BoxDecoration(
         color: AppColors.primaryPurple.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
       ),
       child: Row(
         children: [
-          const PriyaAvatar(size: 56),
+          PriyaAvatar(size: PlatformSizing.spacing(56)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -451,7 +455,7 @@ class ChapterPracticeResultScreen extends StatelessWidget {
               ('🚀', 'Practice unlimited chapters daily'),
               ('📊', 'Full analytics & progress tracking'),
             ].map((benefit) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
                   Text(
@@ -475,7 +479,7 @@ class ChapterPracticeResultScreen extends StatelessWidget {
             // Upgrade button
             SizedBox(
               width: double.infinity,
-              height: 48,
+              height: PlatformSizing.buttonHeight(48),
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.push(
@@ -535,7 +539,7 @@ class ChapterPracticeResultScreen extends StatelessWidget {
           // Practice Again button (secondary)
           SizedBox(
             width: double.infinity,
-            height: 56,
+            height: PlatformSizing.buttonHeight(56),
             child: OutlinedButton.icon(
               onPressed: () => _practiceAgain(context),
               icon: const Icon(Icons.refresh),
@@ -565,10 +569,10 @@ class ChapterPracticeResultScreen extends StatelessWidget {
     final effectiveTextColor = textColor ?? Colors.white;
     return Container(
       width: double.infinity,
-      height: 56,
+      height: PlatformSizing.buttonHeight(56),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
       ),
       child: Material(
         color: Colors.transparent,

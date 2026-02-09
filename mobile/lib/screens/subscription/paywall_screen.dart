@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../models/subscription_models.dart';
 import '../../services/subscription_service.dart';
 import '../../widgets/app_header.dart';
@@ -89,18 +90,18 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   leading: GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
                     child: Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: EdgeInsets.all(AppSpacing.xs), // 8→6.4px Android
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white24,
                       ),
-                      child: const Icon(Icons.close, color: Colors.white, size: 20),
+                      child: Icon(Icons.close, color: Colors.white, size: AppIconSizes.md), // 20→17.6px Android
                     ),
                   ),
                   title: Text(
                     'Upgrade',
                     style: AppTextStyles.headerWhite.copyWith(
-                      fontSize: 20,
+                      fontSize: PlatformSizing.fontSize(20), // 20→17.6px Android
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
@@ -110,41 +111,41 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.xxl), // 24→19.2px Android
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 16),
+                          SizedBox(height: AppSpacing.lg), // 16→12.8px Android
 
                           // Hero section
                           _buildHeroSection(),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: AppSpacing.xxl), // 24→19.2px Android
 
                     // Tier selector tabs
                     _buildTierSelector(),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: AppSpacing.xxl), // 24→19.2px Android
 
                     // Current tier badge
                     _buildCurrentTierBadge(),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: AppSpacing.xxl), // 24→19.2px Android
 
                     // Features comparison
                     _buildFeaturesComparison(),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: AppSpacing.xxxl), // 32→25.6px Android
 
                     // Pricing cards
                     if (_selectedPlan != null) _buildPricingSection(_selectedPlan!),
 
-                    const SizedBox(height: 24),
+                    SizedBox(height: AppSpacing.xxl), // 24→19.2px Android
 
                           // Coming soon notice
                           _buildComingSoonNotice(),
 
-                          const SizedBox(height: 48),
+                          SizedBox(height: PlatformSizing.buttonHeight(48)), // 48→44px Android
                         ],
                       ),
                     ),
@@ -162,27 +163,27 @@ class _PaywallScreenState extends State<PaywallScreen> {
         if (widget.limitReachedMessage != null) ...[
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(AppSpacing.lg), // 16→12.8px Android
             decoration: BoxDecoration(
               color: AppColors.warningAmber.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.md), // 12→9.6px Android
               border: Border.all(
                 color: AppColors.warningAmber.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.info_outline,
                   color: AppColors.warningAmber,
-                  size: 24,
+                  size: AppIconSizes.lg, // 24→21.12px Android
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: AppSpacing.md), // 12→9.6px Android
                 Expanded(
                   child: Text(
                     widget.limitReachedMessage!,
-                    style: const TextStyle(
-                      fontSize: 14,
+                    style: TextStyle(
+                      fontSize: PlatformSizing.fontSize(14), // 14→12.32px Android
                       fontWeight: FontWeight.w500,
                       color: AppColors.textPrimary,
                     ),
@@ -191,34 +192,34 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: AppSpacing.xxl), // 24→19.2px Android
         ],
-        // Animated icon based on selected tier
+        // Animated icon based on selected tier - CRITICAL sizing (most prominent element)
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          width: 80,
-          height: 80,
+          width: PlatformSizing.iconSize(80), // 80→70.4px Android
+          height: PlatformSizing.iconSize(80), // 80→70.4px Android
           decoration: BoxDecoration(
             gradient: _isUltraSelected ? _ultraGradient : AppColors.ctaGradient,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppRadius.xl), // 20→16px Android
             boxShadow: AppShadows.button,
           ),
           child: Icon(
             _isUltraSelected ? Icons.diamond_outlined : Icons.workspace_premium_rounded,
             color: Colors.white,
-            size: 44,
+            size: PlatformSizing.iconSize(44), // 44→38.72px Android
           ),
         ),
-        const SizedBox(height: 24),
-        const Text(
+        SizedBox(height: AppSpacing.xxl), // 24→19.2px Android
+        Text(
           'Unlock Your Potential',
           style: TextStyle(
-            fontSize: 28,
+            fontSize: PlatformSizing.fontSize(28), // 28→24.64px Android
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: AppSpacing.xs), // 8→6.4px Android
         Text(
           widget.featureName != null
               ? 'Upgrade to get more ${widget.featureName} and unlock your potential'
@@ -226,8 +227,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   ? 'Get maximum access with AI Tutor support'
                   : 'Upgrade to Pro for enhanced features',
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 16,
+          style: TextStyle(
+            fontSize: PlatformSizing.fontSize(16), // 16→14.08px Android
             color: AppColors.textSecondary,
           ),
         ),
@@ -237,10 +238,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   Widget _buildTierSelector() {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: EdgeInsets.all(AppSpacing.xxs), // 4→3.2px Android
       decoration: BoxDecoration(
         color: AppColors.backgroundLight,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md), // 12→9.6px Android
       ),
       child: Row(
         children: [
@@ -279,11 +280,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
       onTap: () => setState(() => _selectedTierIndex = index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        padding: EdgeInsets.symmetric(
+          vertical: AppSpacing.md, // 12→9.6px Android
+          horizontal: AppSpacing.lg, // 16→12.8px Android
+        ),
         decoration: BoxDecoration(
           gradient: isSelected ? gradient : null,
           color: isSelected ? null : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.sm), // 10→8px Android
           boxShadow: isSelected ? AppShadows.button : null,
         ),
         child: Row(
@@ -291,30 +295,33 @@ class _PaywallScreenState extends State<PaywallScreen> {
           children: [
             Icon(
               icon,
-              size: 20,
+              size: AppIconSizes.md, // 20→17.6px Android
               color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: AppSpacing.xs), // 8→6.4px Android
             Text(
               title,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: PlatformSizing.fontSize(16), // 16→14.08px Android
                 fontWeight: FontWeight.w600,
                 color: isSelected ? Colors.white : AppColors.textSecondary,
               ),
             ),
             if (badge != null && isSelected) ...[
-              const SizedBox(width: 8),
+              SizedBox(width: AppSpacing.xs), // 8→6.4px Android
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xxs + 2, // 6→4.8px Android
+                  vertical: AppSpacing.xxs / 2, // 2→1.6px Android
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppRadius.xs), // 8→6.4px Android
                 ),
                 child: Text(
                   badge,
-                  style: const TextStyle(
-                    fontSize: 9,
+                  style: TextStyle(
+                    fontSize: PlatformSizing.fontSize(9), // 9→7.92px Android
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -330,20 +337,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget _buildCurrentTierBadge() {
     final tier = _subscriptionService.currentTier;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg, // 16→12.8px Android
+        vertical: AppSpacing.xs, // 8→6.4px Android
+      ),
       decoration: BoxDecoration(
         color: AppColors.cardLightPurple,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppRadius.xl), // 20→16px Android
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.person_outline, size: 18, color: AppColors.primary),
-          const SizedBox(width: 8),
+          Icon(Icons.person_outline, size: PlatformSizing.fontSize(18), color: AppColors.primary), // 18→15.84px Android
+          SizedBox(width: AppSpacing.xs), // 8→6.4px Android
           Text(
             'Current: ${tier.name.toUpperCase()}',
-            style: const TextStyle(
-              fontSize: 14,
+            style: TextStyle(
+              fontSize: PlatformSizing.fontSize(14), // 14→12.32px Android
               fontWeight: FontWeight.w600,
               color: AppColors.primary,
             ),
@@ -359,10 +369,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
     final tierBgColor = _isUltraSelected ? _ultraLightColor : AppColors.cardLightGreen;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(AppSpacing.xl), // 20→16px Android
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.lg), // 16→12.8px Android
         boxShadow: AppShadows.card,
       ),
       child: Column(
@@ -370,37 +380,37 @@ class _PaywallScreenState extends State<PaywallScreen> {
         children: [
           Text(
             'What you get with $tierName',
-            style: const TextStyle(
-              fontSize: 18,
+            style: TextStyle(
+              fontSize: PlatformSizing.fontSize(18), // 18→15.84px Android
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: AppSpacing.lg), // 16→12.8px Android
           // Column headers
           Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: EdgeInsets.only(bottom: AppSpacing.xs), // 8→6.4px Android
             child: Row(
               children: [
-                const SizedBox(width: 34), // Icon space
-                const Expanded(
+                SizedBox(width: PlatformSizing.iconSize(34)), // 34→29.92px Android - Icon space
+                Expanded(
                   flex: 3,
                   child: Text(
                     'Feature',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: PlatformSizing.fontSize(12), // 12→10.56px Android
                       fontWeight: FontWeight.w600,
                       color: AppColors.textTertiary,
                     ),
                   ),
                 ),
-                const Expanded(
+                Expanded(
                   flex: 2,
                   child: Text(
                     'Free',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: PlatformSizing.fontSize(12), // 12→10.56px Android
                       fontWeight: FontWeight.w600,
                       color: AppColors.textTertiary,
                     ),
@@ -412,7 +422,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     tierName,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: PlatformSizing.fontSize(12), // 12→10.56px Android
                       fontWeight: FontWeight.w600,
                       color: tierColor,
                     ),
@@ -422,7 +432,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             ),
           ),
           const Divider(height: 1),
-          const SizedBox(height: 8),
+          SizedBox(height: AppSpacing.xs), // 8→6.4px Android
 
           // Features - different values for Pro vs Ultra
           // Ultra tier has soft caps (50/25/100) instead of truly unlimited
@@ -516,17 +526,17 @@ class _PaywallScreenState extends State<PaywallScreen> {
     bool highlight = false,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.sm - 4), // 10→8px Android
       child: Row(
         children: [
-          Icon(icon, size: 22, color: highlight ? tierColor : AppColors.primary),
-          const SizedBox(width: 12),
+          Icon(icon, size: PlatformSizing.iconSize(22), color: highlight ? tierColor : AppColors.primary), // 22→19.36px Android
+          SizedBox(width: AppSpacing.md), // 12→9.6px Android
           Expanded(
             flex: 3,
             child: Text(
               feature,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: PlatformSizing.fontSize(14), // 14→12.32px Android
                 color: AppColors.textPrimary,
                 fontWeight: highlight ? FontWeight.w600 : FontWeight.normal,
               ),
@@ -537,8 +547,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
             child: Text(
               free,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 13,
+              style: TextStyle(
+                fontSize: PlatformSizing.fontSize(13), // 13→11.44px Android
                 color: AppColors.textTertiary,
               ),
             ),
@@ -546,17 +556,20 @@ class _PaywallScreenState extends State<PaywallScreen> {
           Expanded(
             flex: 2,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.xs, // 8→6.4px Android
+                vertical: AppSpacing.xxs, // 4→3.2px Android
+              ),
               decoration: BoxDecoration(
                 color: tierBgColor,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppRadius.xs), // 8→6.4px Android
                 border: highlight ? Border.all(color: tierColor, width: 1.5) : null,
               ),
               child: Text(
                 tierValue,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: PlatformSizing.fontSize(13), // 13→11.44px Android
                   fontWeight: FontWeight.w600,
                   color: tierColor,
                 ),
@@ -579,24 +592,27 @@ class _PaywallScreenState extends State<PaywallScreen> {
           children: [
             Text(
               'Choose Your ${_isUltraSelected ? "Ultra" : "Pro"} Plan',
-              style: const TextStyle(
-                fontSize: 18,
+              style: TextStyle(
+                fontSize: PlatformSizing.fontSize(18), // 18→15.84px Android
                 fontWeight: FontWeight.bold,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: AppSpacing.xs), // 8→6.4px Android
             if (_isUltraSelected)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xs, // 8→6.4px Android
+                  vertical: AppSpacing.xxs / 2, // 2→1.6px Android
+                ),
                 decoration: BoxDecoration(
                   gradient: _ultraGradient,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.sm), // 10→8px Android
                 ),
-                child: const Text(
+                child: Text(
                   'RECOMMENDED',
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: PlatformSizing.fontSize(9), // 9→7.92px Android
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -604,7 +620,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: AppSpacing.lg), // 16→12.8px Android
         _buildPricingCard(
           'Monthly',
           '\u20B9${plan.monthly.price}',
@@ -614,7 +630,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           tierColor,
           tierLightColor,
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: AppSpacing.md), // 12→9.6px Android
         _buildPricingCard(
           'Quarterly',
           '\u20B9${plan.quarterly.price}',
@@ -624,7 +640,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           tierColor,
           tierLightColor,
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: AppSpacing.md), // 12→9.6px Android
         _buildPricingCard(
           'Annual',
           '\u20B9${plan.annual.price}',
@@ -648,10 +664,10 @@ class _PaywallScreenState extends State<PaywallScreen> {
     Color tierLightColor,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg), // 16→12.8px Android
       decoration: BoxDecoration(
         color: isPopular ? tierLightColor : AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md), // 12→9.6px Android
         border: Border.all(
           color: isPopular ? tierColor : AppColors.borderDefault,
           width: isPopular ? 2 : 1,
@@ -668,23 +684,26 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     Text(
                       duration,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: PlatformSizing.fontSize(16), // 16→14.08px Android
                         fontWeight: FontWeight.w600,
                         color: isPopular ? tierColor : AppColors.textPrimary,
                       ),
                     ),
                     if (badge != null) ...[
-                      const SizedBox(width: 8),
+                      SizedBox(width: AppSpacing.xs), // 8→6.4px Android
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs, // 8→6.4px Android
+                          vertical: AppSpacing.xxs / 2, // 2→1.6px Android
+                        ),
                         decoration: BoxDecoration(
                           color: isPopular ? tierColor : AppColors.success,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppRadius.sm), // 10→8px Android
                         ),
                         child: Text(
                           badge,
-                          style: const TextStyle(
-                            fontSize: 10,
+                          style: TextStyle(
+                            fontSize: PlatformSizing.fontSize(12),  // 12px iOS, 10.56px Android (was 10)
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -693,11 +712,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     ],
                   ],
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: AppSpacing.xxs), // 4→3.2px Android
                 Text(
                   perMonth,
-                  style: const TextStyle(
-                    fontSize: 13,
+                  style: TextStyle(
+                    fontSize: PlatformSizing.fontSize(13), // 13→11.44px Android
                     color: AppColors.textTertiary,
                   ),
                 ),
@@ -707,7 +726,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           Text(
             price,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: PlatformSizing.fontSize(20), // 20→17.6px Android
               fontWeight: FontWeight.bold,
               color: isPopular ? tierColor : AppColors.textPrimary,
             ),
@@ -719,15 +738,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
 
   Widget _buildComingSoonNotice() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg), // 16→12.8px Android
       decoration: BoxDecoration(
         color: AppColors.cardLightAmber,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md), // 12→9.6px Android
       ),
-      child: const Row(
+      child: Row(
         children: [
           Icon(Icons.construction_rounded, color: AppColors.warning),
-          SizedBox(width: 12),
+          SizedBox(width: AppSpacing.md), // 12→9.6px Android
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -735,16 +754,16 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 Text(
                   'Payments Coming Soon',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: PlatformSizing.fontSize(14), // 14→12.32px Android
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: AppSpacing.xxs), // 4→3.2px Android
                 Text(
                   'We\'re setting up payments. Stay tuned!',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: PlatformSizing.fontSize(12), // 12→10.56px Android
                     color: AppColors.textSecondary,
                   ),
                 ),

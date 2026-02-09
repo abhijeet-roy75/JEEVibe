@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 
 class FormTextField extends StatefulWidget {
   final String? label;
@@ -293,7 +294,7 @@ class _FormTextFieldState extends State<FormTextField> {
             widget.label!,
             style: AppTextStyles.labelMedium,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: AppSpacing.sm),  // 8px iOS, 6.4px Android
         ],
         TextFormField(
           controller: widget.controller,
@@ -326,7 +327,10 @@ class _FormTextFieldState extends State<FormTextField> {
             prefixText: widget.prefixText,
             suffixText: widget.suffixText,
             contentPadding: widget.contentPadding ??
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,  // 16px iOS, 12.8px Android
+                  vertical: AppSpacing.lg,    // 16px iOS, 12.8px Android
+                ),
             filled: true,
             fillColor: widget.enabled
                 ? AppColors.surface
@@ -403,7 +407,7 @@ class _PasswordTextFieldState extends _FormTextFieldState {
             widget.label!,
             style: AppTextStyles.labelMedium,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: AppSpacing.sm),  // 8px iOS, 6.4px Android
         ],
         TextFormField(
           controller: widget.controller,
@@ -435,9 +439,9 @@ class _PasswordTextFieldState extends _FormTextFieldState {
                 });
               },
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,  // 16px iOS, 12.8px Android
+              vertical: AppSpacing.lg,    // 16px iOS, 12.8px Android
             ),
             filled: true,
             fillColor: widget.enabled

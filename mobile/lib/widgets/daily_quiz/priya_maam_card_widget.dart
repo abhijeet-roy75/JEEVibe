@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../priya_avatar.dart';
 
 class PriyaMaamCardWidget extends StatelessWidget {
@@ -16,23 +17,23 @@ class PriyaMaamCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
+      padding: EdgeInsets.all(PlatformSizing.spacing(16)),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: Offset(0, PlatformSizing.spacing(4)),
           ),
         ],
       ),
       child: Row(
         children: [
-          const PriyaAvatar(size: 48),
-          const SizedBox(width: 12),
+          PriyaAvatar(size: PlatformSizing.spacing(48)),
+          SizedBox(width: PlatformSizing.spacing(12)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,11 +46,11 @@ class PriyaMaamCardWidget extends StatelessWidget {
                         color: AppColors.primaryPurple,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    const Text('✨', style: TextStyle(fontSize: 14)), // Slightly smaller emoji
+                    SizedBox(width: PlatformSizing.spacing(4)),
+                    Text('✨', style: TextStyle(fontSize: PlatformSizing.fontSize(14))), // Slightly smaller emoji
                   ],
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: PlatformSizing.spacing(4)),
                 _buildFormattedMessage(message),
               ],
             ),

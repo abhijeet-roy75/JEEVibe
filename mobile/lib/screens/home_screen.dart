@@ -181,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
                   child: Column(
                     children: [
                       // Top row: Back button | Title with icon | Remaining counter

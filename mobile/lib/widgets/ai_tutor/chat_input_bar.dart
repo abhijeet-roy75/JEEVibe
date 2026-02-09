@@ -2,6 +2,7 @@
 /// Text input field with send button for chat
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_platform_sizing.dart';
 
 class ChatInputBar extends StatefulWidget {
   final Function(String) onSend;
@@ -59,7 +60,10 @@ class _ChatInputBarState extends State<ChatInputBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: PlatformSizing.spacing(16),
+        vertical: PlatformSizing.spacing(12),
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -77,10 +81,10 @@ class _ChatInputBarState extends State<ChatInputBar> {
           children: [
             Expanded(
               child: Container(
-                constraints: const BoxConstraints(maxHeight: 120),
+                constraints: BoxConstraints(maxHeight: PlatformSizing.spacing(120)),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceGrey,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(PlatformSizing.radius(24)),
                   border: Border.all(
                     color: _focusNode.hasFocus
                         ? AppColors.primary.withValues(alpha: 0.5)
@@ -94,20 +98,20 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   maxLines: 4,
                   minLines: 1,
                   textCapitalization: TextCapitalization.sentences,
-                  style: const TextStyle(
-                    fontSize: 15,
+                  style: TextStyle(
+                    fontSize: PlatformSizing.fontSize(15),
                     color: AppColors.textPrimary,
                   ),
                   decoration: InputDecoration(
                     hintText: widget.hintText ?? 'Ask Priya Ma\'am...',
                     hintStyle: TextStyle(
                       color: AppColors.textTertiary.withValues(alpha: 0.7),
-                      fontSize: 15,
+                      fontSize: PlatformSizing.fontSize(15),
                     ),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: PlatformSizing.spacing(16),
+                      vertical: PlatformSizing.spacing(12),
                     ),
                   ),
                   onSubmitted: (_) => _handleSend(),
@@ -116,26 +120,26 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: PlatformSizing.spacing(8)),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               child: Material(
                 color: _hasText && !widget.isLoading
                     ? AppColors.primary
                     : AppColors.disabled,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(PlatformSizing.radius(24)),
                 child: InkWell(
                   onTap: _hasText && !widget.isLoading ? _handleSend : null,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(PlatformSizing.radius(24)),
                   child: Container(
-                    width: 44,
-                    height: 44,
+                    width: PlatformSizing.spacing(44),
+                    height: PlatformSizing.spacing(44),
                     alignment: Alignment.center,
                     child: widget.isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
+                        ? SizedBox(
+                            width: PlatformSizing.iconSize(20),
+                            height: PlatformSizing.iconSize(20),
+                            child: const CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor:
                                   AlwaysStoppedAnimation<Color>(Colors.white),
@@ -144,7 +148,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                         : Icon(
                             Icons.send_rounded,
                             color: _hasText ? Colors.white : AppColors.textTertiary,
-                            size: 20,
+                            size: PlatformSizing.iconSize(20),
                           ),
                   ),
                 ),

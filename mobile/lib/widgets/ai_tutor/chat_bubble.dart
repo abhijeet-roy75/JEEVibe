@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../../models/ai_tutor_models.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../priya_avatar.dart';
 import '../latex_widget.dart';
 
@@ -27,11 +28,11 @@ class ChatBubble extends StatelessWidget {
 
   Widget _buildUserBubble(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        left: 48,
-        right: 16,
-        top: 4,
-        bottom: 4,
+      padding: EdgeInsets.only(
+        left: PlatformSizing.spacing(48),
+        right: PlatformSizing.spacing(16),
+        top: PlatformSizing.spacing(4),
+        bottom: PlatformSizing.spacing(4),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -39,17 +40,17 @@ class ChatBubble extends StatelessWidget {
         children: [
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
+              padding: EdgeInsets.symmetric(
+                horizontal: PlatformSizing.spacing(16),
+                vertical: PlatformSizing.spacing(12),
               ),
               decoration: BoxDecoration(
                 gradient: AppColors.ctaGradient,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(4),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(PlatformSizing.radius(20)),
+                  topRight: Radius.circular(PlatformSizing.radius(20)),
+                  bottomLeft: Radius.circular(PlatformSizing.radius(20)),
+                  bottomRight: Radius.circular(PlatformSizing.radius(4)),
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -61,9 +62,9 @@ class ChatBubble extends StatelessWidget {
               ),
               child: LaTeXWidget(
                 text: message.content ?? '',
-                textStyle: const TextStyle(
+                textStyle: TextStyle(
                   color: Colors.white,
-                  fontSize: 15,
+                  fontSize: PlatformSizing.fontSize(15),
                   height: 1.4,
                 ),
                 allowWrapping: true,
@@ -77,33 +78,33 @@ class ChatBubble extends StatelessWidget {
 
   Widget _buildAssistantBubble(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        left: 16,
-        right: 48,
-        top: 4,
-        bottom: 4,
+      padding: EdgeInsets.only(
+        left: PlatformSizing.spacing(16),
+        right: PlatformSizing.spacing(48),
+        top: PlatformSizing.spacing(4),
+        bottom: PlatformSizing.spacing(4),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (showAvatar) ...[
-            const PriyaAvatar(size: 36, showShadow: false),
-            const SizedBox(width: 8),
+            PriyaAvatar(size: PlatformSizing.spacing(36), showShadow: false),
+            SizedBox(width: PlatformSizing.spacing(8)),
           ] else
-            const SizedBox(width: 44), // Space for alignment when no avatar
+            SizedBox(width: PlatformSizing.spacing(44)), // Space for alignment when no avatar
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
+              padding: EdgeInsets.symmetric(
+                horizontal: PlatformSizing.spacing(16),
+                vertical: PlatformSizing.spacing(12),
               ),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4),
-                  topRight: Radius.circular(20),
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(PlatformSizing.radius(4)),
+                  topRight: Radius.circular(PlatformSizing.radius(20)),
+                  bottomLeft: Radius.circular(PlatformSizing.radius(20)),
+                  bottomRight: Radius.circular(PlatformSizing.radius(20)),
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -128,9 +129,9 @@ class ChatBubble extends StatelessWidget {
   /// Build formatted content that preserves paragraph structure
   /// and handles steps/lists properly
   Widget _buildFormattedContent(String content) {
-    const textStyle = TextStyle(
+    final textStyle = TextStyle(
       color: AppColors.textPrimary,
-      fontSize: 15,
+      fontSize: PlatformSizing.fontSize(15),
       height: 1.5,
     );
 
@@ -158,12 +159,12 @@ class ChatBubble extends StatelessWidget {
         final paragraph = entry.value.trim();
 
         if (paragraph.isEmpty) {
-          return const SizedBox(height: 8);
+          return SizedBox(height: PlatformSizing.spacing(8));
         }
 
         return Padding(
           padding: EdgeInsets.only(
-            bottom: index < paragraphs.length - 1 ? 12 : 0,
+            bottom: index < paragraphs.length - 1 ? PlatformSizing.spacing(12) : 0,
           ),
           child: LaTeXWidget(
             text: paragraph,

@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../widgets/latex_widget.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/offline/cached_image_widget.dart';
@@ -105,7 +106,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              padding: EdgeInsets.fromLTRB(PlatformSizing.spacing(16), PlatformSizing.spacing(8), PlatformSizing.spacing(16), PlatformSizing.spacing(12)),
               child: Column(
                 children: [
                   // Timer and section row
@@ -115,27 +116,27 @@ class _MockTestScreenState extends State<MockTestScreen> {
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(PlatformSizing.radius(10)),
                         ),
                         child: IconButton(
                           icon: const Icon(Icons.close, color: Colors.white, size: 20),
                           onPressed: () => _showExitDialog(),
-                          padding: const EdgeInsets.all(8),
+                          padding: EdgeInsets.all(PlatformSizing.spacing(8)),
                           constraints: const BoxConstraints(),
                           tooltip: 'Exit Test',
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: PlatformSizing.spacing(8)),
                       // Question palette button
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(PlatformSizing.radius(10)),
                         ),
                         child: IconButton(
                           icon: const Icon(Icons.grid_view, color: Colors.white, size: 20),
                           onPressed: () => _showQuestionPalette(),
-                          padding: const EdgeInsets.all(8),
+                          padding: EdgeInsets.all(PlatformSizing.spacing(8)),
                           constraints: const BoxConstraints(),
                           tooltip: 'Question Palette',
                         ),
@@ -144,9 +145,9 @@ class _MockTestScreenState extends State<MockTestScreen> {
                       Expanded(
                         child: Text(
                           sectionName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
+                            fontSize: PlatformSizing.fontSize(16),
                             fontWeight: FontWeight.w600,
                           ),
                           textAlign: TextAlign.center,
@@ -154,28 +155,28 @@ class _MockTestScreenState extends State<MockTestScreen> {
                       ),
                       // Timer
                       Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
                           color: _getTimerColor(provider.timeRemainingSeconds),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(PlatformSizing.radius(20)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.timer,
                               color: Colors.white,
-                              size: 16,
+                              size: PlatformSizing.iconSize(16),
                             ),
-                            const SizedBox(width: 4),
+                            SizedBox(width: PlatformSizing.spacing(4)),
                             Text(
                               _formatTime(provider.timeRemainingSeconds),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 14,
+                                fontSize: PlatformSizing.fontSize(14),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -184,31 +185,31 @@ class _MockTestScreenState extends State<MockTestScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: PlatformSizing.spacing(8)),
                   // Progress
                   Row(
                     children: [
                       Text(
                         'Q ${provider.currentQuestionIndex + 1} of ${provider.totalQuestions}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white70,
-                          fontSize: 12,
+                          fontSize: PlatformSizing.fontSize(12),
                         ),
                       ),
                       const Spacer(),
                       Text(
                         '${provider.answeredCount} answered',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white70,
-                          fontSize: 12,
+                          fontSize: PlatformSizing.fontSize(12),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: PlatformSizing.spacing(8)),
                   // Progress bar
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(4)),
                     child: LinearProgressIndicator(
                       value: (provider.currentQuestionIndex + 1) /
                           provider.totalQuestions,
@@ -233,22 +234,22 @@ class _MockTestScreenState extends State<MockTestScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(PlatformSizing.spacing(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Question card
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(PlatformSizing.spacing(16)),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
+                  blurRadius: PlatformSizing.spacing(10),
+                  offset: Offset(PlatformSizing.spacing(0), PlatformSizing.spacing(2)),
                 ),
               ],
             ),
@@ -259,20 +260,20 @@ class _MockTestScreenState extends State<MockTestScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         horizontal: 10,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: _getSubjectColor(question.subject)
                             .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
                       ),
                       child: Text(
                         question.subject,
                         style: TextStyle(
                           color: _getSubjectColor(question.subject),
-                          fontSize: 12,
+                          fontSize: PlatformSizing.fontSize(12),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -291,21 +292,21 @@ class _MockTestScreenState extends State<MockTestScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: PlatformSizing.spacing(16)),
                 // Question text - prefer HTML, fallback to plain text
                 _buildQuestionText(question),
                 // Question image (debug logging removed - was causing spam on every rebuild)
                 if (question.hasImage) ...[
-                  const SizedBox(height: 16),
+                  SizedBox(height: PlatformSizing.spacing(16)),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
                     child: _buildQuestionImage(question.imageUrl!),
                   ),
                 ],
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: PlatformSizing.spacing(16)),
           // Answer section
           _buildAnswerSection(question, provider),
         ],
@@ -336,12 +337,12 @@ class _MockTestScreenState extends State<MockTestScreen> {
         final isSelected = _selectedAnswer == optionId;
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: EdgeInsets.only(bottom: PlatformSizing.spacing(12)),
           decoration: BoxDecoration(
             color: isSelected
                 ? AppColors.primary.withOpacity(0.1)
                 : AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
             border: Border.all(
               color: isSelected ? AppColors.primary : AppColors.borderDefault,
               width: isSelected ? 2 : 1,
@@ -351,14 +352,14 @@ class _MockTestScreenState extends State<MockTestScreen> {
             color: Colors.transparent,
             child: InkWell(
               onTap: () => _selectOption(optionId, provider),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(PlatformSizing.spacing(16)),
                 child: Row(
                   children: [
                     Container(
-                      width: 32,
-                      height: 32,
+                      width: PlatformSizing.spacing(32),
+                      height: PlatformSizing.spacing(32),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.primary
@@ -377,7 +378,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    SizedBox(width: PlatformSizing.spacing(12)),
                     Expanded(
                       child: _buildOptionText(option),
                     ),
@@ -393,10 +394,10 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
   Widget _buildNumericalInput(MockTestProvider provider) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(PlatformSizing.spacing(16)),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
         border: Border.all(color: AppColors.borderDefault),
       ),
       child: Column(
@@ -409,7 +410,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
               color: AppColors.textSecondary,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: PlatformSizing.spacing(12)),
           TextField(
             controller: _numericalController,
             keyboardType: const TextInputType.numberWithOptions(
@@ -421,7 +422,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
               filled: true,
               fillColor: AppColors.background,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                 borderSide: BorderSide.none,
               ),
               contentPadding: const EdgeInsets.symmetric(
@@ -430,11 +431,11 @@ class _MockTestScreenState extends State<MockTestScreen> {
               ),
             ),
             style: AppTextStyles.bodyMedium.copyWith(
-              fontSize: 18,
+              fontSize: PlatformSizing.fontSize(18),
             ),
             onChanged: (value) => _saveNumericalAnswer(value, provider),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: PlatformSizing.spacing(8)),
           Text(
             'Note: Numerical questions have no negative marking',
             style: AppTextStyles.bodySmall.copyWith(
@@ -473,8 +474,8 @@ class _MockTestScreenState extends State<MockTestScreen> {
       return LaTeXWidget(
         text: question.questionText,
         textStyle: AppTextStyles.bodyMedium.copyWith(
-          fontSize: 16,
-          height: 1.6,
+          fontSize: PlatformSizing.fontSize(16),
+          height: PlatformSizing.spacing(1.6),
         ),
       );
     }
@@ -512,8 +513,8 @@ class _MockTestScreenState extends State<MockTestScreen> {
     return LaTeXWidget(
       text: option.text,
       textStyle: AppTextStyles.bodyMedium.copyWith(
-        fontSize: 15,
-        height: 1.5,
+        fontSize: PlatformSizing.fontSize(15),
+        height: PlatformSizing.spacing(1.5),
       ),
     );
   }
@@ -541,16 +542,16 @@ class _MockTestScreenState extends State<MockTestScreen> {
   static Widget _buildImageError() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
       decoration: BoxDecoration(
         color: AppColors.backgroundLight,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.image_not_supported_outlined,
+          const Icon(Icons.image_not_supported_outlined,
               color: AppColors.textLight, size: 28),
-          SizedBox(height: 4),
+          SizedBox(height: PlatformSizing.spacing(4)),
           Text(
             'Image could not be loaded',
             style: TextStyle(color: AppColors.textLight, fontSize: 12),
@@ -579,8 +580,8 @@ class _MockTestScreenState extends State<MockTestScreen> {
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
+                blurRadius: PlatformSizing.spacing(10),
+                offset: Offset(0, -2),
               ),
             ],
           ),
@@ -603,7 +604,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
               ),
               // Clear button (center)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(12)),
                 child: TextButton(
                   onPressed: () => _clearAnswer(provider),
                   child: Text(
@@ -611,7 +612,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                      fontSize: PlatformSizing.fontSize(14),
                     ),
                   ),
                 ),
@@ -776,11 +777,11 @@ class _MockTestScreenState extends State<MockTestScreen> {
             if (unanswered > 0)
               Text(
                 '$unanswered questions unanswered',
-                style: const TextStyle(color: AppColors.error),
+                style: TextStyle(color: AppColors.error),
               ),
             if (session.markedCount > 0)
               Text('${session.markedCount} marked for review'),
-            const SizedBox(height: 16),
+            SizedBox(height: PlatformSizing.spacing(16)),
             const Text(
               'Are you sure you want to submit? This cannot be undone.',
               style: TextStyle(fontWeight: FontWeight.w500),
@@ -796,7 +797,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
             text: 'Submit',
             size: GradientButtonSize.small,
             trailingIcon: Icons.check,
-            width: 120,
+            width: PlatformSizing.spacing(120),
             onPressed: () {
               Navigator.pop(context);
               _submitTest();
@@ -814,12 +815,12 @@ class _MockTestScreenState extends State<MockTestScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const AlertDialog(
+      builder: (context) => AlertDialog(
         content: Row(
           children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
-            Text('Submitting...'),
+            const CircularProgressIndicator(),
+            SizedBox(width: PlatformSizing.spacing(16)),
+            const Text('Submitting...'),
           ],
         ),
       ),
@@ -880,28 +881,28 @@ class _QuestionPaletteSheet extends StatelessWidget {
         children: [
           // Handle
           Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
+            margin: EdgeInsets.only(top: PlatformSizing.spacing(12)),
+            width: PlatformSizing.spacing(40),
+            height: PlatformSizing.spacing(4),
             decoration: BoxDecoration(
               color: AppColors.textLight,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(PlatformSizing.radius(2)),
             ),
           ),
           // Title
-          const Padding(
-            padding: EdgeInsets.all(16),
+          Padding(
+            padding: EdgeInsets.all(PlatformSizing.spacing(16)),
             child: Text(
               'Question Palette',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: PlatformSizing.fontSize(18),
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
           // Legend
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
             child: Wrap(
               spacing: 16,
               runSpacing: 8,
@@ -917,7 +918,7 @@ class _QuestionPaletteSheet extends StatelessWidget {
           // Question grid
           Expanded(
             child: GridView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(PlatformSizing.spacing(16)),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 6,
                 mainAxisSpacing: 8,
@@ -934,7 +935,7 @@ class _QuestionPaletteSheet extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       color: _getStateColor(state),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
                       border: isCurrent
                           ? Border.all(color: AppColors.primary, width: 2)
                           : null,
@@ -979,17 +980,17 @@ class _QuestionPaletteSheet extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 16,
-          height: 16,
+          width: PlatformSizing.spacing(16),
+          height: PlatformSizing.spacing(16),
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(PlatformSizing.radius(4)),
           ),
         ),
-        const SizedBox(width: 4),
+        SizedBox(width: PlatformSizing.spacing(4)),
         Text(
           label,
-          style: const TextStyle(fontSize: 11),
+          style: TextStyle(fontSize: 11),
         ),
       ],
     );

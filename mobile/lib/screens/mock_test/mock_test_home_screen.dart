@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../providers/mock_test_provider.dart';
 import '../../models/mock_test_models.dart';
@@ -64,19 +65,19 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          padding: EdgeInsets.fromLTRB(PlatformSizing.spacing(20), PlatformSizing.spacing(16), PlatformSizing.spacing(20), PlatformSizing.spacing(20)),
           child: Row(
             children: [
               // Back button with semi-transparent background
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                  icon: Icon(Icons.arrow_back, color: Colors.white, size: 20),
                   onPressed: () => Navigator.pop(context),
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.all(PlatformSizing.spacing(8)),
                   constraints: const BoxConstraints(),
                 ),
               ),
@@ -85,13 +86,13 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
                 child: Text(
                   'JEE Main Simulations',
                   style: AppTextStyles.headerWhite.copyWith(
-                    fontSize: 20,
+                    fontSize: PlatformSizing.fontSize(20),
                   ),
                   textAlign: TextAlign.center,
                 ),
               ),
               // Balance spacer (same width as back button)
-              const SizedBox(width: 36),
+              SizedBox(width: PlatformSizing.spacing(36)),
             ],
           ),
         ),
@@ -105,34 +106,34 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
         final usage = provider.usage;
 
         return Container(
-          margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          padding: const EdgeInsets.all(16),
+          margin: EdgeInsets.fromLTRB(PlatformSizing.spacing(16), PlatformSizing.spacing(16), PlatformSizing.spacing(16), PlatformSizing.spacing(8)),
+          padding: EdgeInsets.all(PlatformSizing.spacing(16)),
           decoration: BoxDecoration(
             gradient: AppColors.ctaGradient,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
             boxShadow: [
               BoxShadow(
                 color: AppColors.primary.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                blurRadius: PlatformSizing.spacing(12),
+                offset: Offset(PlatformSizing.spacing(0), PlatformSizing.spacing(4)),
               ),
             ],
           ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(PlatformSizing.spacing(12)),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.assignment,
                   color: AppColors.primary,
-                  size: 24,
+                  size: PlatformSizing.iconSize(24),
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: PlatformSizing.spacing(16)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,16 +142,16 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
                       'Monthly Usage',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
-                        fontSize: 13,
+                        fontSize: PlatformSizing.fontSize(13),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: PlatformSizing.spacing(4)),
                     Text(
                       usage?.hasUnlimited == true
                           ? 'Unlimited tests'
                           : '${usage?.used ?? 0} / ${usage?.limit ?? 1} tests used',
                       style: AppTextStyles.headerSmall.copyWith(
-                        fontSize: 16,
+                        fontSize: PlatformSizing.fontSize(16),
                         color: Colors.white,
                       ),
                     ),
@@ -159,20 +160,20 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
               ),
               if (usage != null && !usage.hasUnlimited)
                 Container(
-                  padding: const EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(20)),
                   ),
                   child: Text(
                     '${usage.remaining} left',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                      fontSize: PlatformSizing.fontSize(13),
                     ),
                   ),
                 ),
@@ -203,10 +204,10 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
               children: [
                 Icon(
                   Icons.assignment_outlined,
-                  size: 64,
+                  size: PlatformSizing.iconSize(64),
                   color: AppColors.textLight.withOpacity(0.5),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: PlatformSizing.spacing(16)),
                 Text(
                   'No mock tests available',
                   style: AppTextStyles.bodyMedium.copyWith(
@@ -221,7 +222,7 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
         return RefreshIndicator(
           onRefresh: () => provider.loadTemplates(),
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(PlatformSizing.spacing(16)),
             itemCount: provider.templates.length,
             itemBuilder: (context, index) {
               return _buildTemplateCard(provider.templates[index]);
@@ -234,47 +235,47 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
 
   Widget _buildActiveTestCard(MockTestSession session) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(PlatformSizing.spacing(16)),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(PlatformSizing.spacing(24)),
             decoration: BoxDecoration(
               color: AppColors.warning.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(PlatformSizing.radius(16)),
               border: Border.all(
                 color: AppColors.warning.withOpacity(0.3),
               ),
             ),
             child: Column(
               children: [
-                const Icon(
+                Icon(
                   Icons.pending_actions,
-                  size: 48,
+                  size: PlatformSizing.iconSize(48),
                   color: AppColors.warning,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: PlatformSizing.spacing(16)),
                 Text(
                   'Test in Progress',
                   style: AppTextStyles.headerSmall.copyWith(
                     color: AppColors.warning,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: PlatformSizing.spacing(8)),
                 Text(
                   session.templateName,
                   style: AppTextStyles.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: PlatformSizing.spacing(8)),
                 Text(
                   '${session.answeredCount}/${session.totalQuestions} answered',
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: PlatformSizing.spacing(8)),
                 Text(
                   'Time remaining: ${_formatTime(session.timeRemainingSeconds)}',
                   style: AppTextStyles.bodySmall.copyWith(
@@ -282,13 +283,13 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: PlatformSizing.spacing(24)),
                 GradientButton(
                   text: 'Resume Test',
                   onPressed: () => _resumeTest(session),
                   leadingIcon: Icons.play_arrow,
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: PlatformSizing.spacing(12)),
                 TextButton(
                   onPressed: () => _showAbandonDialog(session),
                   child: Text(
@@ -362,15 +363,15 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
 
   Widget _buildTemplateCard(MockTestTemplate template) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: PlatformSizing.spacing(12)),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: PlatformSizing.spacing(10),
+            offset: Offset(PlatformSizing.spacing(0), PlatformSizing.spacing(4)),
           ),
         ],
       ),
@@ -378,26 +379,26 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _showStartTestDialog(template),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(PlatformSizing.spacing(16)),
             child: Row(
               children: [
                 // Test icon
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: PlatformSizing.spacing(44),
+                  height: PlatformSizing.spacing(44),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(10)),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.assignment,
                     color: AppColors.primary,
-                    size: 22,
+                    size: PlatformSizing.iconSize(22),
                   ),
                 ),
-                const SizedBox(width: 14),
+                SizedBox(width: PlatformSizing.spacing(14)),
                 // Test info
                 Expanded(
                   child: Column(
@@ -412,7 +413,7 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: PlatformSizing.spacing(4)),
                       if (template.completed)
                         Row(
                           children: [
@@ -423,9 +424,9 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
                               ),
                             ),
                             Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 6),
-                              width: 3,
-                              height: 3,
+                              margin: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(6)),
+                              width: PlatformSizing.spacing(3),
+                              height: PlatformSizing.spacing(3),
                               decoration: const BoxDecoration(
                                 color: AppColors.textTertiary,
                                 shape: BoxShape.circle,
@@ -454,7 +455,7 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
                 Icon(
                   Icons.chevron_right,
                   color: AppColors.textTertiary.withValues(alpha: 0.5),
-                  size: 24,
+                  size: PlatformSizing.iconSize(24),
                 ),
               ],
             ),

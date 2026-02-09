@@ -15,6 +15,7 @@ import '../widgets/ai_tutor/chat_input_bar.dart';
 import '../widgets/ai_tutor/quick_actions_row.dart';
 import '../widgets/ai_tutor/typing_indicator.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_platform_sizing.dart';
 
 /// Animation timing constants
 const Duration kScrollDelayDuration = Duration(milliseconds: 100);
@@ -278,15 +279,15 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
       ),
       title: Text(
         'Priya Ma\'am',
-        style: AppTextStyles.headerWhite.copyWith(fontSize: 20),
+        style: AppTextStyles.headerWhite.copyWith(fontSize: PlatformSizing.fontSize(20)),
       ),
       subtitle: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
         child: Text(
           'Your AI Tutor',
           style: AppTextStyles.bodyWhite.copyWith(
             color: Colors.white.withValues(alpha: 0.9),
-            fontSize: 14,
+            fontSize: PlatformSizing.fontSize(14),
           ),
           textAlign: TextAlign.center,
         ),
@@ -297,7 +298,7 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
         variant: AppIconButtonVariant.glass,
         iconColor: Colors.white,
       ),
-      bottomPadding: 16,
+      bottomPadding: PlatformSizing.spacing(16),
     );
   }
 
@@ -312,18 +313,18 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 8),
+            SizedBox(height: PlatformSizing.spacing(8)),
             Container(
-              width: 40,
-              height: 4,
+              width: PlatformSizing.spacing(40),
+              height: PlatformSizing.spacing(4),
               decoration: BoxDecoration(
                 color: AppColors.borderLight,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(PlatformSizing.radius(2)),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: PlatformSizing.spacing(16)),
             ListTile(
-              leading: const Icon(Icons.delete_outline, color: AppColors.error),
+              leading: Icon(Icons.delete_outline, color: AppColors.error, size: PlatformSizing.iconSize(24)),
               title: const Text('Clear Chat'),
               subtitle: const Text('Delete all messages'),
               onTap: () {
@@ -331,7 +332,7 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
                 _handleClearChat();
               },
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: PlatformSizing.spacing(8)),
           ],
         ),
       ),
@@ -345,8 +346,8 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
         children: [
           // Priya avatar with pulsing effect
           Container(
-            width: 80,
-            height: 80,
+            width: PlatformSizing.spacing(80),
+            height: PlatformSizing.spacing(80),
             decoration: BoxDecoration(
               gradient: AppColors.ctaGradient,
               shape: BoxShape.circle,
@@ -358,18 +359,18 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
                 ),
               ],
             ),
-            child: const Center(
-              child: PriyaAvatar(size: 48, showShadow: false),
+            child: Center(
+              child: PriyaAvatar(size: PlatformSizing.spacing(48), showShadow: false),
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: PlatformSizing.spacing(24)),
           const CircularProgressIndicator(color: AppColors.primary),
-          const SizedBox(height: 16),
+          SizedBox(height: PlatformSizing.spacing(16)),
           Text(
             message,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textSecondary,
-              fontSize: 14,
+              fontSize: PlatformSizing.fontSize(14),
             ),
           ),
         ],
@@ -380,7 +381,10 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
   Widget _buildContextLoadingBanner() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: PlatformSizing.spacing(16),
+        vertical: PlatformSizing.spacing(10),
+      ),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.1),
         border: Border(
@@ -394,19 +398,19 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SizedBox(
-            width: 16,
-            height: 16,
+            width: PlatformSizing.iconSize(16),
+            height: PlatformSizing.iconSize(16),
             child: CircularProgressIndicator(
               strokeWidth: 2,
               color: AppColors.primary.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: PlatformSizing.spacing(10)),
           Text(
             'Loading context...',
             style: TextStyle(
               color: AppColors.primary.withValues(alpha: 0.8),
-              fontSize: 13,
+              fontSize: PlatformSizing.fontSize(13),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -426,7 +430,10 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: PlatformSizing.spacing(16),
+        vertical: PlatformSizing.spacing(12),
+      ),
       decoration: BoxDecoration(
         color: AppColors.error.withValues(alpha: 0.1),
         border: Border(
@@ -440,29 +447,29 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
         children: [
           Icon(
             Icons.error_outline,
-            size: 20,
+            size: PlatformSizing.iconSize(20),
             color: AppColors.error.withValues(alpha: 0.8),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: PlatformSizing.spacing(12)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
+                Text(
                   'Message failed to send',
                   style: TextStyle(
                     color: AppColors.error,
-                    fontSize: 13,
+                    fontSize: PlatformSizing.fontSize(13),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: PlatformSizing.spacing(2)),
                 Text(
                   displayContent,
                   style: TextStyle(
                     color: AppColors.textSecondary.withValues(alpha: 0.8),
-                    fontSize: 12,
+                    fontSize: PlatformSizing.fontSize(12),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -470,12 +477,15 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: PlatformSizing.spacing(8)),
           TextButton(
             onPressed: _handleRetryMessage,
             style: TextButton.styleFrom(
               foregroundColor: AppColors.error,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: EdgeInsets.symmetric(
+                horizontal: PlatformSizing.spacing(12),
+                vertical: PlatformSizing.spacing(6),
+              ),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
@@ -483,10 +493,13 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
           ),
           IconButton(
             onPressed: () => provider.clearFailedMessage(),
-            icon: const Icon(Icons.close, size: 18),
+            icon: Icon(Icons.close, size: PlatformSizing.iconSize(18)),
             color: AppColors.textSecondary,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            constraints: BoxConstraints(
+              minWidth: PlatformSizing.spacing(32),
+              minHeight: PlatformSizing.spacing(32),
+            ),
           ),
         ],
       ),
@@ -496,34 +509,34 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
   Widget _buildErrorState(String error) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(PlatformSizing.spacing(24)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.error_outline,
-              size: 48,
+              size: PlatformSizing.iconSize(48),
               color: AppColors.error.withValues(alpha: 0.7),
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: PlatformSizing.spacing(16)),
+            Text(
               'Something went wrong',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: PlatformSizing.fontSize(18),
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: PlatformSizing.spacing(8)),
             Text(
               error,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: PlatformSizing.fontSize(14),
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: PlatformSizing.spacing(24)),
             ElevatedButton(
               onPressed: () {
                 _resetInitialization();
@@ -550,7 +563,7 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
 
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
       itemCount: messages.length + (provider.isSendingMessage ? 1 : 0),
       itemBuilder: (context, index) {
         // Show typing indicator at the end while sending
@@ -584,13 +597,13 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(PlatformSizing.spacing(32)),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 80,
-              height: 80,
+              width: PlatformSizing.spacing(80),
+              height: PlatformSizing.spacing(80),
               decoration: BoxDecoration(
                 gradient: AppColors.ctaGradient,
                 shape: BoxShape.circle,
@@ -602,27 +615,27 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.chat_bubble_outline,
                 color: Colors.white,
-                size: 36,
+                size: PlatformSizing.iconSize(36),
               ),
             ),
-            const SizedBox(height: 24),
-            const Text(
+            SizedBox(height: PlatformSizing.spacing(24)),
+            Text(
               'Chat with Priya Ma\'am',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: PlatformSizing.fontSize(20),
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            SizedBox(height: PlatformSizing.spacing(8)),
+            Text(
               'Ask questions about concepts, get study tips,\nor discuss your JEE preparation!',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: PlatformSizing.fontSize(14),
                 color: AppColors.textSecondary,
                 height: 1.5,
               ),

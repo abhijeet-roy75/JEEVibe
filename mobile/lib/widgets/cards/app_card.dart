@@ -11,6 +11,8 @@
 /// ```
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_platform_sizing.dart';
+import '../../theme/app_text_styles.dart';
 
 enum AppCardVariant {
   /// Default: white background with shadow
@@ -79,18 +81,18 @@ class AppCard extends StatelessWidget {
       key: key,
       variant: AppCardVariant.outlined,
       onTap: onTap,
-      padding: padding ?? const EdgeInsets.all(16),
-      margin: margin ?? const EdgeInsets.only(bottom: 12),
+      padding: padding ?? EdgeInsets.all(AppSpacing.lg),  // 16px iOS, 12.8px Android
+      margin: margin ?? EdgeInsets.only(bottom: AppSpacing.md),  // 12px iOS, 9.6px Android
       isSelected: isSelected,
       child: Row(
         children: [
           if (leading != null) ...[
             leading,
-            const SizedBox(width: 12),
+            SizedBox(width: AppSpacing.md),  // 12px iOS, 9.6px Android
           ],
           Expanded(child: child),
           if (trailing != null) ...[
-            const SizedBox(width: 12),
+            SizedBox(width: AppSpacing.md),  // 12px iOS, 9.6px Android
             trailing,
           ],
         ],
@@ -110,7 +112,7 @@ class AppCard extends StatelessWidget {
     return AppCard(
       key: key,
       variant: variant,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.lg),  // 16px iOS, 12.8px Android
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -119,22 +121,17 @@ class AppCard extends StatelessWidget {
             Icon(
               icon,
               color: iconColor ?? AppColors.primary,
-              size: 24,
+              size: AppIconSizes.lg,  // 24px iOS, 21.12px Android
             ),
-          if (icon != null) const SizedBox(height: 8),
+          if (icon != null) SizedBox(height: AppSpacing.sm),  // 8px iOS, 6.4px Android
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
+            style: AppTextStyles.displaySmall,  // Platform-adaptive font size
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: AppSpacing.xs),  // 4px iOS, 3.2px Android
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
+            style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
           ),
@@ -161,7 +158,7 @@ class AppCard extends StatelessWidget {
             children: [
               if (header != null) header!,
               Padding(
-                padding: padding ?? const EdgeInsets.all(16),
+                padding: padding ?? EdgeInsets.all(AppSpacing.lg),  // 16px iOS, 12.8px Android
                 child: child,
               ),
               if (footer != null) footer!,
@@ -317,24 +314,25 @@ class SectionCard extends StatelessWidget {
       margin: margin,
       padding: EdgeInsets.zero,
       header: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.lg,   // 16px iOS, 12.8px Android
+          AppSpacing.lg,   // 16px iOS, 12.8px Android
+          AppSpacing.lg,   // 16px iOS, 12.8px Android
+          0,
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
+              style: AppTextStyles.headingSmall,  // Platform-adaptive font size
             ),
             if (trailing != null) trailing!,
           ],
         ),
       ),
       child: Padding(
-        padding: padding ?? const EdgeInsets.all(16),
+        padding: padding ?? EdgeInsets.all(AppSpacing.lg),  // 16px iOS, 12.8px Android
         child: child,
       ),
     );
