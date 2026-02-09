@@ -710,29 +710,33 @@ async function getUserDetails(userId) {
     logger.warn('Failed to fetch mock tests for user', { userId, error: err.message });
   }
 
-  // Calculate percentile history (from daily quizzes over time)
+  // Calculate percentile history from daily theta snapshots
   const percentileHistory = [];
-  if (dailyQuizzes.length > 0) {
-    // Group by month and calculate average percentile
-    const monthlyData = {};
-    dailyQuizzes.forEach(quiz => {
-      if (quiz.completedAt) {
-        const date = quiz.completedAt.toDate ? quiz.completedAt.toDate() : new Date(quiz.completedAt);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        if (!monthlyData[monthKey]) {
-          monthlyData[monthKey] = { total: 0, count: 0 };
-        }
-        monthlyData[monthKey].total += quiz.accuracy * 100;
-        monthlyData[monthKey].count += 1;
+  try {
+    const snapshotsSnapshot = await db
+      .collection('theta_snapshots')
+      .doc(userId)
+      .collection('daily')
+      .orderBy('captured_at', 'desc')
+      .limit(90) // Last 90 days
+      .get();
+
+    snapshotsSnapshot.forEach(doc => {
+      const snapshot = doc.data();
+      if (snapshot.overall_percentile !== undefined && snapshot.captured_at) {
+        const date = snapshot.captured_at.toDate ? snapshot.captured_at.toDate() : new Date(snapshot.captured_at);
+        percentileHistory.push({
+          date: date.toISOString().split('T')[0], // YYYY-MM-DD format
+          percentile: Math.round(snapshot.overall_percentile || 0),
+          theta: snapshot.overall_theta ? parseFloat(snapshot.overall_theta.toFixed(2)) : null
+        });
       }
     });
 
-    Object.keys(monthlyData).sort().forEach(month => {
-      percentileHistory.push({
-        month,
-        averagePercentile: Math.round(monthlyData[month].total / monthlyData[month].count)
-      });
-    });
+    // Sort chronologically (oldest first)
+    percentileHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+  } catch (err) {
+    logger.warn('Failed to fetch theta snapshots for user', { userId, error: err.message });
   }
 
   // Convert assessment timestamps
