@@ -243,6 +243,11 @@ router.post('/generate', authenticateUser, validateGenerate, async (req, res, ne
     const activeSession = await getActiveSession(userId, chapter_key);
 
     if (activeSession) {
+      // Check tier-based question count limit first
+      const tierQuestionLimit = limits.chapter_practice_per_chapter || 15;
+      const sessionQuestionCount = activeSession.total_questions || activeSession.questions?.length || 0;
+      const exceedsTierLimit = sessionQuestionCount > tierQuestionLimit;
+
       // Check if session has expired
       const expiresAt = activeSession.expires_at ? new Date(activeSession.expires_at) : null;
       const isExpired = expiresAt && new Date() > expiresAt;
@@ -256,15 +261,16 @@ router.post('/generate', authenticateUser, validateGenerate, async (req, res, ne
           q.options.every(opt => opt && opt.option_id && opt.text && opt.text.trim() !== '');
       });
 
-      if (isExpired || !hasValidQuestions) {
-        // Mark corrupted/expired session as invalidated and generate new one
-        const reason = isExpired ? 'expired' : 'invalid_questions';
+      if (isExpired || !hasValidQuestions || exceedsTierLimit) {
+        // Mark corrupted/expired/over-limit session as invalidated and generate new one
+        const reason = isExpired ? 'expired' : !hasValidQuestions ? 'invalid_questions' : 'exceeds_tier_limit';
         logger.info('Active session invalidated, marking and generating new one', {
           userId,
           sessionId: activeSession.session_id,
           reason,
           expiresAt: activeSession.expires_at,
-          questionCount: activeSession.questions?.length || 0
+          questionCount: sessionQuestionCount,
+          tierLimit: tierQuestionLimit
         });
 
         const invalidSessionRef = db.collection('chapter_practice_sessions')
@@ -283,7 +289,8 @@ router.post('/generate', authenticateUser, validateGenerate, async (req, res, ne
         logger.info('Returning existing active session', {
           userId,
           sessionId: activeSession.session_id,
-          chapterKey: chapter_key
+          chapterKey: chapter_key,
+          questionCount: sessionQuestionCount
         });
 
         return res.json({
