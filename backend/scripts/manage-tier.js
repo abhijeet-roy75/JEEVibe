@@ -170,9 +170,16 @@ async function grantAccess(db, userId, tier, days, reason) {
 
 // Revoke tier access (back to free)
 async function revokeAccess(db, userId) {
+  // Remove override AND expire trial by setting ends_at to past date
+  const pastDate = new Date();
+  pastDate.setDate(pastDate.getDate() - 1); // Yesterday
+
   await db.collection('users').doc(userId).update({
     'subscription.tier': 'free',
-    'subscription.override': admin.firestore.FieldValue.delete()
+    'subscription.override': admin.firestore.FieldValue.delete(),
+    'trial.is_active': false,
+    'trial.ends_at': admin.firestore.Timestamp.fromDate(pastDate),
+    'trialEndsAt': admin.firestore.Timestamp.fromDate(pastDate) // Support old format too
   });
 
   // Force cache invalidation by calling the subscription service
