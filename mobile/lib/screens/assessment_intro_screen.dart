@@ -1635,12 +1635,12 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl), // 20px iOS, 16px Android (was 24px)
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(AppSpacing.lg), // 16px iOS, 12.8px Android (was 20px)
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg), // Platform-adaptive radius
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
@@ -1657,8 +1657,8 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const PriyaAvatar(size: 56),
-                const SizedBox(width: 12),
+                PriyaAvatar(size: PlatformSizing.iconSize(56)), // 56px iOS, 49.28px Android
+                SizedBox(width: AppSpacing.md), // 12px iOS, 9.6px Android
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1666,16 +1666,16 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
                       Text(
                         message.title,
                         style: AppTextStyles.headerSmall.copyWith(
-                          fontSize: 20,
+                          fontSize: PlatformSizing.fontSize(20), // 20px iOS, 17.6px Android
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.xxs), // 2px iOS, 1.6px Android (was 4px)
                       Text(
                         message.subtitle,
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.textLight,
-                          fontSize: 14,
+                          fontSize: PlatformSizing.fontSize(14), // 14px iOS, 12.32px Android
                         ),
                       ),
                     ],
@@ -1683,14 +1683,14 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg), // 16px iOS, 12.8px Android
             // Message bubble
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(AppSpacing.lg), // 16px iOS, 12.8px Android
               decoration: BoxDecoration(
                 color: AppColors.cardLightPurple,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md), // Platform-adaptive radius
               ),
               child: Text(
                 message.message,
@@ -1699,8 +1699,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
                   color: AppColors.textMedium,
                   height: 1.5,
                 ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
+                // Removed maxLines and overflow to allow full message to display
               ),
             ),
             // Chat with Priya button (Ultra tier only)
