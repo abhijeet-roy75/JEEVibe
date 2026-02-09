@@ -548,11 +548,11 @@ async function getUsers(options = {}) {
     );
   }
 
-  // Sort by lastActive (most recent first)
+  // Sort alphabetically by name (firstName, then lastName)
   users.sort((a, b) => {
-    const aTime = a.lastActive?.toDate ? a.lastActive.toDate() : new Date(a.lastActive || 0);
-    const bTime = b.lastActive?.toDate ? b.lastActive.toDate() : new Date(b.lastActive || 0);
-    return bTime - aTime;
+    const aName = `${a.firstName || ''} ${a.lastName || ''}`.trim().toLowerCase();
+    const bName = `${b.firstName || ''} ${b.lastName || ''}`.trim().toLowerCase();
+    return aName.localeCompare(bName);
   });
 
   // Format dates for response
