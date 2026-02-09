@@ -546,6 +546,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 isLoading: _isLoading,
                 size: GradientButtonSize.large,
               ),
+
+              // Bottom safe area padding to prevent Android nav bar covering content
+              SizedBox(height: MediaQuery.of(context).padding.bottom),
                     ],
                   ),
                 ),

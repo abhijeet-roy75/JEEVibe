@@ -305,6 +305,9 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
 
                     SizedBox(height: PlatformSizing.spacing(32)), // 32→25.6px Android
                     // Biometric toggle removed as per plan
+
+                    // Bottom safe area padding to prevent Android nav bar covering content
+                    SizedBox(height: MediaQuery.of(context).padding.bottom),
                   ],
                 ),
               ),

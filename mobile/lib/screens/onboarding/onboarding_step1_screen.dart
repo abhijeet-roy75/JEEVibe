@@ -517,6 +517,9 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                     ),
 
                     const SizedBox(height: 24),
+
+                    // Bottom safe area padding to prevent Android nav bar covering content
+                    SizedBox(height: MediaQuery.of(context).padding.bottom),
                     ],
                   ),
                 ),

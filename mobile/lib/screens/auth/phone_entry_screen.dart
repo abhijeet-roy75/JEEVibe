@@ -389,6 +389,9 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                 size: GradientButtonSize.large,
               ),
               SizedBox(height: AppSpacing.lg),
+
+              // Bottom safe area padding to prevent Android nav bar covering content
+              SizedBox(height: MediaQuery.of(context).padding.bottom),
                     ],
                   ),
                 ),
