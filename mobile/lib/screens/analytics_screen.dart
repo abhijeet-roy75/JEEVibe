@@ -331,6 +331,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           ),
           unselectedLabelStyle: AppTextStyles.labelMedium,
           padding: EdgeInsets.all(PlatformSizing.spacing(4)),
+          // Reduce tab height on Android for more compact appearance
+          labelPadding: EdgeInsets.symmetric(
+            horizontal: PlatformSizing.spacing(16),
+            vertical: PlatformSizing.spacing(12),
+          ),
           tabs: const [
             Tab(text: 'Overview'),
             Tab(text: 'Mastery'),
