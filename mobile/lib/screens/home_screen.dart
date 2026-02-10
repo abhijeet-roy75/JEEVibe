@@ -2208,7 +2208,7 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                       if (isFree)
                         Text(
-                          '1 chapter/week per subject',
+                          '5 chapters/day • 5 questions/chapter',
                           style: AppTextStyles.caption.copyWith(
                             color: AppColors.textTertiary,
                             fontSize: 11,
@@ -2238,28 +2238,22 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
               )
-            // Show focus areas for all users (free tier with weekly limits, paid with unlimited)
+            // Show focus areas for all users (Free tier: 5 questions/chapter, 5 chapters/day)
             else if (hasChapterPractice && focusAreas.isNotEmpty)
-              // Focus areas list with individual Practise links (with lock status for free users)
+              // Focus areas list with individual Practice links (no tier-based locks)
               Column(
                 children: [
                   ...focusAreas.asMap().entries.map((entry) {
                     final index = entry.key;
                     final area = entry.value;
                     final isLast = index == focusAreas.length - 1;
-                    // Check if this subject is locked (only applies to free tier)
-                    final isSubjectLocked = isFree && subscriptionService.isSubjectLocked(area.subject);
-                    final unlockInfo = isFree ? subscriptionService.getSubjectUnlockInfo(area.subject) : null;
-                    return _buildFocusAreaRow(area, isLast, isSubjectLocked, unlockInfo);
+                    // No subject locks - all unlocked chapters are practisable
+                    // Free tier has daily limits (5 chapters/day) enforced by backend
+                    return _buildFocusAreaRow(area, isLast, false, null);
                   }),
                   // Show "Practice any chapter" link for all users (Free users can unlock chapters)
                   const SizedBox(height: 12),
                   _buildPracticeAnyChapterLink(),
-                  // Show upgrade button at bottom if any subject is locked (free tier only)
-                  if (isFree && hasAnySubjectLocked) ...[
-                    const SizedBox(height: 12),
-                    _buildFocusAreasUpgradeButton(),
-                  ],
                 ],
               )
             else if (focusAreas.isEmpty && hasChapterPractice)
