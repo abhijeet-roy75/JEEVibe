@@ -421,7 +421,7 @@ class _ChapterListScreenState extends State<ChapterListScreen>
     final sortedChapters = _sortChaptersByUnlockOrder(chapters);
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100), // Extra bottom padding for nav bar
       itemCount: sortedChapters.length,
       itemBuilder: (context, index) {
         final chapter = sortedChapters[index];
