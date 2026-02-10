@@ -36,7 +36,7 @@ import 'models/subscription_models.dart';
 import 'screens/auth/welcome_screen.dart'; // The new Auth Wrapper
 import 'screens/auth/pin_verification_screen.dart'; // PIN verification
 import 'screens/onboarding/onboarding_step1_screen.dart'; // Onboarding for new users
-import 'screens/assessment_intro_screen.dart'; // Home dashboard (used in bottom nav)
+import 'screens/home_screen.dart'; // Home dashboard (used in bottom nav)
 import 'screens/main_navigation_screen.dart'; // Main navigation with bottom nav
 // Services
 import 'services/firebase/pin_service.dart';

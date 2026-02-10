@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_platform_sizing.dart';
-import 'assessment_intro_screen.dart';
+import 'home_screen.dart';
 import 'history/history_screen.dart';
 import 'analytics_screen.dart';
 import 'profile/profile_view_screen.dart';
@@ -33,7 +33,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Widget _buildScreen(int index) {
     switch (index) {
       case 0:
-        return const AssessmentIntroScreen(isInBottomNav: true);
+        return const HomeScreen(isInBottomNav: true);
       case 1:
         return const HistoryScreen();
       case 2:
@@ -61,7 +61,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       // Small delay to ensure widget is built
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) {
-          AssessmentIntroScreen.refreshIfNeeded(context);
+          HomeScreen.refreshIfNeeded(context);
         }
       });
     }

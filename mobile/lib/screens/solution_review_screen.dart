@@ -17,7 +17,7 @@ import '../theme/app_text_styles.dart';
 import '../config/content_config.dart';
 import '../utils/text_preprocessor.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'home_screen.dart';
+import 'snap_home_screen.dart';
 import 'ai_tutor_chat_screen.dart';
 import '../services/localization_service.dart';
 import '../services/subscription_service.dart';
@@ -184,7 +184,7 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
           if (!found) {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => HomeScreen(),
+                builder: (context) => const SnapHomeScreen(),
                 settings: const RouteSettings(name: '/snap_home'),
               ),
             );
@@ -777,7 +777,7 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
             if (!found) {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => HomeScreen(),
+                  builder: (context) => const SnapHomeScreen(),
                   settings: const RouteSettings(name: '/snap_home'),
                 ),
               );

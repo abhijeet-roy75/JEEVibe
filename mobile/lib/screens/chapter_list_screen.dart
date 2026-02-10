@@ -11,7 +11,7 @@ import '../theme/app_text_styles.dart';
 import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/subject_icon_widget.dart';
 import '../widgets/app_header.dart';
-import 'assessment_intro_screen.dart';
+import 'home_screen.dart';
 import 'chapter_practice/chapter_practice_loading_screen.dart';
 import 'unlock_quiz/unlock_quiz_loading_screen.dart';
 

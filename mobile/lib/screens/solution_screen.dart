@@ -8,7 +8,7 @@ import '../models/snap_data_model.dart';
 import 'followup_quiz_screen.dart';
 import 'ocr_failed_screen.dart';
 import 'processing_screen.dart';
-import 'home_screen.dart';
+import 'snap_home_screen.dart';
 import '../widgets/latex_widget.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/app_header.dart';
@@ -359,7 +359,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
         if (!found) {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => HomeScreen(),
+              builder: (context) => const SnapHomeScreen(),
               settings: const RouteSettings(name: '/snap_home'),
             ),
           );
@@ -1141,7 +1141,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
                     if (!found) {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => HomeScreen(),
+                          builder: (context) => const SnapHomeScreen(),
                           settings: const RouteSettings(name: '/snap_home'),
                         ),
                       );

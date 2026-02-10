@@ -18,7 +18,7 @@ import '../widgets/subject_icon_widget.dart';
 import '../widgets/subject_filter_bar.dart';
 import '../widgets/latex_widget.dart';
 import '../utils/text_preprocessor.dart';
-import 'home_screen.dart';
+import 'snap_home_screen.dart';
 
 class AllSolutionsScreen extends StatefulWidget {
   final bool isInHistoryTab;
@@ -132,7 +132,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
         if (!found) {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => HomeScreen(),
+              builder: (context) => const SnapHomeScreen(),
               settings: const RouteSettings(name: '/snap_home'),
             ),
           );
@@ -184,7 +184,7 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
               if (!found) {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => HomeScreen(),
+                    builder: (context) => const SnapHomeScreen(),
                     settings: const RouteSettings(name: '/snap_home'),
                   ),
                 );
