@@ -35,9 +35,10 @@ class QuestionCardWidget extends StatefulWidget {
 
 class _QuestionCardWidgetState extends State<QuestionCardWidget> {
   late TextEditingController _numericalController;
+  late FocusNode _numericalFocusNode;
   String? _lastQuestionId; // Track question ID to reinitialize controller on question change
   bool _controllerInitialized = false; // Track if controller has been initialized for current question
-  
+
   @override
   void initState() {
     super.initState();
@@ -45,7 +46,17 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
     // Initialize controller - only use selectedAnswer if it exists (for restoring saved state)
     // Once initialized, controller is completely independent
     _numericalController = TextEditingController(text: widget.selectedAnswer ?? '');
+    _numericalFocusNode = FocusNode();
     _controllerInitialized = true;
+
+    // Auto-focus numerical input after widget builds
+    if (widget.question.isNumerical) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.showAnswerOptions) {
+          _numericalFocusNode.requestFocus();
+        }
+      });
+    }
   }
   
   @override
@@ -58,6 +69,15 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
       _controllerInitialized = false; // Reset flag for new question
       _numericalController.text = widget.selectedAnswer ?? '';
       _controllerInitialized = true;
+
+      // Auto-focus numerical input when question changes
+      if (widget.question.isNumerical) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && widget.showAnswerOptions) {
+            _numericalFocusNode.requestFocus();
+          }
+        });
+      }
     }
     // CRITICAL: DO NOT sync controller with selectedAnswer changes
     // Controller is the source of truth while user is editing
@@ -67,6 +87,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
   @override
   void dispose() {
     _numericalController.dispose();
+    _numericalFocusNode.dispose();
     super.dispose();
   }
 
@@ -367,6 +388,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
   Widget _buildNumericalInput() {
     return TextField(
       controller: _numericalController,
+      focusNode: _numericalFocusNode,
       keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
       decoration: InputDecoration(
         hintText: 'Enter your answer',

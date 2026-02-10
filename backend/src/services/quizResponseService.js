@@ -34,20 +34,20 @@ function validateAnswer(questionData, studentAnswer) {
   
   let isCorrect = false;
   
-  if (questionType === 'mcq_single') {
-    // MCQ: Exact match with correct_answer
+  if (questionType === 'mcq_single' || questionType === 'assertion_reason') {
+    // MCQ and Assertion-Reason: Exact match with correct_answer
     if (!questionData.correct_answer) {
-      throw new Error(`Question ${questionId} (MCQ) missing correct_answer field`);
+      throw new Error(`Question ${questionId} (${questionType}) missing correct_answer field`);
     }
-    
+
     // Check against correct_answer and alternate_correct_answers
     const correctAnswers = [
       questionData.correct_answer,
       ...(questionData.alternate_correct_answers || [])
     ].map(a => String(a).trim().toUpperCase());
-    
+
     isCorrect = correctAnswers.includes(validatedAnswer.trim().toUpperCase());
-    
+
   } else if (questionType === 'numerical') {
     // Numerical: Check if within range or exact match
     const studentAnswerNum = parseFloat(validatedAnswer);
@@ -108,7 +108,7 @@ function validateAnswer(questionData, studentAnswer) {
   } else {
     throw new Error(
       `Question ${questionId} has unknown question_type: "${questionType}". ` +
-      `Expected 'mcq_single' or 'numerical'.`
+      `Expected 'mcq_single', 'assertion_reason', or 'numerical'.`
     );
   }
   
