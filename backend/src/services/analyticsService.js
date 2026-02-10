@@ -14,6 +14,7 @@ const { db, admin } = require('../config/firebase');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
 const { getDatabaseNames, initializeMappings } = require('./chapterMappingService');
+const { getUnlockedChapters } = require('./chapterUnlockService');
 const fs = require('fs');
 const path = require('path');
 
@@ -571,6 +572,37 @@ async function getAnalyticsOverview(userId) {
     const thetaBySubject = userData.theta_by_subject || {};
     const subtopicAccuracy = userData.subtopic_accuracy || {};
 
+    // NEW: Filter thetaByChapter to only include unlocked chapters
+    // This ensures Focus Areas only shows chapters from the current timeline
+    let filteredThetaByChapter = thetaByChapter;
+    try {
+      const unlockResult = await getUnlockedChapters(userId);
+      const unlockedChapterKeys = new Set(unlockResult.unlockedChapterKeys);
+
+      // Filter theta chapters to only unlocked ones
+      filteredThetaByChapter = {};
+      for (const [chapterKey, data] of Object.entries(thetaByChapter)) {
+        if (unlockedChapterKeys.has(chapterKey)) {
+          filteredThetaByChapter[chapterKey] = data;
+        }
+      }
+
+      logger.info('Filtered focus areas by unlock status', {
+        userId,
+        currentMonth: unlockResult.currentMonth,
+        totalChaptersInTheta: Object.keys(thetaByChapter).length,
+        unlockedChaptersInTheta: Object.keys(filteredThetaByChapter).length,
+        filteredOut: Object.keys(thetaByChapter).length - Object.keys(filteredThetaByChapter).length
+      });
+    } catch (unlockError) {
+      logger.warn('Failed to filter by unlock status, using all theta chapters', {
+        userId,
+        error: unlockError.message
+      });
+      // Fall back to all chapters if unlock check fails
+      filteredThetaByChapter = thetaByChapter;
+    }
+
     // Pre-load chapter mappings once for efficiency
     let chapterMappings;
     try {
@@ -580,8 +612,9 @@ async function getAnalyticsOverview(userId) {
       chapterMappings = new Map();
     }
 
-    const chaptersMastered = countMasteredChapters(thetaByChapter);
-    const focusAreas = await calculateFocusAreas(thetaByChapter, chapterMappings, subtopicAccuracy);
+    // Use filtered theta for focus areas calculation
+    const chaptersMastered = countMasteredChapters(filteredThetaByChapter);
+    const focusAreas = await calculateFocusAreas(filteredThetaByChapter, chapterMappings, subtopicAccuracy);
 
     // Build subject progress with status labels and accuracy
     const subjectAccuracy = userData.subject_accuracy || {};
