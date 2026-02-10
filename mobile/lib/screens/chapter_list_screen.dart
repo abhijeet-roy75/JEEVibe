@@ -485,17 +485,6 @@ class _ChapterListScreenState extends State<ChapterListScreen>
             : AppColors.primary.withOpacity(0.3), // Purple border for locked chapters
           width: isUnlocked ? 1.0 : 1.5, // Thicker border for locked to draw attention
         ),
-        // Add subtle gradient background for locked chapters
-        gradient: !isUnlocked
-          ? LinearGradient(
-              colors: [
-                AppColors.primaryLight.withOpacity(0.03),
-                AppColors.surface,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            )
-          : null,
       ),
       child: Material(
         color: Colors.transparent,
