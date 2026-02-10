@@ -1190,8 +1190,8 @@ async function generateWeeklyMPAEmailContent(userData, report) {
     <div class="section" style="text-align: center; border-bottom: none;">
       <p style="font-size: 18px; font-weight: 600; color: #333; margin: 0 0 24px 0;">Three priorities. Your timeline. Real improvement.</p>
       <div>
-        <a href="https://jeevibe.com" class="cta-button">Start Today's Quiz</a>
-        <a href="https://jeevibe.com" class="cta-button">Practice Physics</a>
+        <a href="https://jeevibe.com" class="cta-button" style="color: #ffffff !important;">Start Today's Quiz</a>
+        <a href="https://jeevibe.com" class="cta-button" style="color: #ffffff !important;">Practice Physics</a>
       </div>
       <p style="font-size: 14px; color: #666; margin-top: 24px;">Questions? Reply anytime.<br>- Priya Ma'am</p>
     </div>
@@ -1280,7 +1280,7 @@ Questions? Reply anytime.
  */
 async function generateDailyMPAEmailContent(userData, report, streakData) {
   const firstName = userData.firstName || 'Student';
-  const { summary, win, issue, streak } = report;
+  const { summary, win, issue, streak, hadActivity } = report;
 
   // Streak emoji
   let streakEmoji = '';
@@ -1289,7 +1289,10 @@ async function generateDailyMPAEmailContent(userData, report, streakData) {
   else if (streak >= 7) streakEmoji = '🔥';
   else if (streak > 0) streakEmoji = '✨';
 
-  const subject = `Day ${streak} ${streakEmoji} | Found your top mistake from yesterday`;
+  // Dynamic subject based on activity
+  const subject = hadActivity
+    ? `Day ${streak} ${streakEmoji} | ${summary.total_questions} questions | ${Math.round(summary.accuracy)}%`
+    : `${firstName}, we missed you yesterday! 📚 Time to practice`;
 
   const html = `
 <!DOCTYPE html>
@@ -1318,7 +1321,12 @@ async function generateDailyMPAEmailContent(userData, report, streakData) {
 
     <div class="section">
       <p style="font-size: 16px; color: #333; margin: 0 0 12px 0;">👩‍🏫 Hi ${firstName},</p>
-      <p style="font-size: 15px; color: #666; margin: 0;">Yesterday you completed ${summary.total_questions} questions with ${summary.accuracy}% accuracy.</p>
+      ${hadActivity
+        ? `<p style="font-size: 15px; color: #666; margin: 0;">Yesterday you completed ${summary.total_questions} questions with ${Math.round(summary.accuracy)}% accuracy.</p>`
+        : `<div style="background: #fff3e0; border-radius: 8px; padding: 16px; border-left: 4px solid #ff9800;">
+             <p style="font-size: 15px; color: #bf360c; margin: 0; line-height: 1.5;"><strong>We missed you yesterday!</strong><br>Even 10 minutes of daily practice can make a huge difference in your JEE prep. Come back today!</p>
+           </div>`
+      }
     </div>
 
     ${win ? `
@@ -1366,8 +1374,8 @@ async function generateDailyMPAEmailContent(userData, report, streakData) {
     </div>
 
     <div class="section" style="text-align: center; border-bottom: none;">
-      <a href="https://jeevibe.com" class="cta-button">Start Today's Quiz</a>
-      ${issue ? `<a href="https://jeevibe.com" class="cta-button">Practice ${issue.affected_chapters?.[0] || 'Focus Chapter'}</a>` : ''}
+      <a href="https://jeevibe.com" class="cta-button" style="color: #ffffff !important;">Start Today's Quiz</a>
+      ${issue ? `<a href="https://jeevibe.com" class="cta-button" style="color: #ffffff !important;">Practice ${issue.affected_chapters?.[0] || 'Focus Chapter'}</a>` : ''}
     </div>
 
     <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #888;">
@@ -1383,7 +1391,10 @@ async function generateDailyMPAEmailContent(userData, report, streakData) {
 Day ${streak} | ${report.date}
 
 👩‍🏫 Hi ${firstName},
-Yesterday you completed ${summary.total_questions} questions with ${summary.accuracy}% accuracy.
+${hadActivity
+  ? `Yesterday you completed ${summary.total_questions} questions with ${Math.round(summary.accuracy)}% accuracy.`
+  : `We missed you yesterday! Even 10 minutes of daily practice can make a huge difference in your JEE prep. Come back today!`
+}
 
 ${win ? `
 ━━━ 🎉 YESTERDAY'S WIN ━━━

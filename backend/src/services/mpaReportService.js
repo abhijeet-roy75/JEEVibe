@@ -119,10 +119,8 @@ async function generateDailyReport(userId, date) {
     // Fetch yesterday's responses
     const responses = await fetchWeekResponses(userId, startOfDay, endOfDay);
 
-    if (responses.length < 5) {
-      console.log(`Insufficient data for daily report ${userId}: ${responses.length} questions`);
-      return null;
-    }
+    // Always generate a report (even for 0 questions - re-engagement email)
+    const hadActivity = responses.length > 0;
 
     const summary = calculateSummary(responses);
     const userDoc = await db.collection('users').doc(userId).get();
@@ -147,12 +145,24 @@ async function generateDailyReport(userId, date) {
     const streakDoc = await db.collection('practice_streaks').doc(userId).get();
     const streak = streakDoc.exists ? streakDoc.data() : { current_streak: 0 };
 
+    // For zero activity, create a re-engagement win
+    let finalWin = topWin;
+    if (!hadActivity) {
+      finalWin = {
+        type: 'comeback',
+        title: 'Time to Come Back!',
+        metric: 'No practice yesterday',
+        insight: 'Every day you skip makes it harder to build momentum. Even just 1 quiz can restart your progress!'
+      };
+    }
+
     return {
       date: moment(date).format('YYYY-MM-DD'),
       summary,
-      win: topWin,
-      issue: topIssue,
+      win: finalWin,
+      issue: hadActivity ? topIssue : null,
       streak: streak.current_streak || 0,
+      hadActivity,
       cta: generateCTA(topIssue?.affected_chapters?.[0])
     };
   } catch (error) {
