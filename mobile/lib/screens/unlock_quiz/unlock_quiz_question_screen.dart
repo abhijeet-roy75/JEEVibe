@@ -55,17 +55,29 @@ class _UnlockQuizQuestionScreenState extends State<UnlockQuizQuestionScreen> {
         return PopScope(
           canPop: false, // Prevent back navigation
           child: Scaffold(
-            backgroundColor: AppColors.background,
             appBar: _buildAppBar(provider),
-            body: SingleChildScrollView(
-              controller: _scrollController,
-              child: Column(
-                children: [
-                  // Progress indicator
-                  _buildProgressIndicator(provider),
+            body: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.background,
+                    AppColors.surface,
+                    AppColors.background,
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.0, 0.5, 1.0],
+                ),
+              ),
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                child: Column(
+                  children: [
+                    // Progress indicator
+                    _buildProgressIndicator(provider),
 
-                  // Question Card
-                  _buildQuestionCard(question, isAnswered),
+                    // Question Card
+                    _buildQuestionCard(question, isAnswered),
 
                   // Feedback Banner (if answered)
                   if (isAnswered && answerResult != null)
@@ -115,11 +127,12 @@ class _UnlockQuizQuestionScreenState extends State<UnlockQuizQuestionScreen> {
                       isCorrect: answerResult.isCorrect,
                     ),
 
-                  // Action Buttons
-                  if (isAnswered) _buildNavigationButtons(provider),
+                    // Action Buttons
+                    if (isAnswered) _buildNavigationButtons(provider),
 
-                  const SizedBox(height: 24),
-                ],
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             ),
           ),
@@ -132,17 +145,33 @@ class _UnlockQuizQuestionScreenState extends State<UnlockQuizQuestionScreen> {
     return AppBar(
       backgroundColor: AppColors.surface,
       elevation: 0,
-      leading: Container(), // Remove back button
+      leading: IconButton(
+        icon: const Icon(Icons.close, color: AppColors.textDark),
+        onPressed: () {
+          // Show confirmation dialog before closing
+          _showExitConfirmation();
+        },
+      ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Unlock Quiz',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textDark,
-            ),
+          Row(
+            children: [
+              const Icon(
+                Icons.lock_open,
+                size: 18,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              const Text(
+                'Unlock Quiz',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ],
           ),
           Text(
             provider.session?.chapterName ?? '',
@@ -176,6 +205,53 @@ class _UnlockQuizQuestionScreenState extends State<UnlockQuizQuestionScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showExitConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text(
+          'Exit Unlock Quiz?',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        content: const Text(
+          'Your progress will be lost. You can try again anytime.',
+          style: TextStyle(fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Continue Quiz',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Close quiz screen
+            },
+            child: const Text(
+              'Exit',
+              style: TextStyle(
+                color: AppColors.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
