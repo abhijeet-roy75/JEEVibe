@@ -1050,14 +1050,14 @@ async function generateWeeklyMPAEmailContent(userData, report) {
     .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
     .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; text-align: center; color: #ffffff; }
     .section { padding: 24px; border-bottom: 1px solid #eee; }
-    .section-title { font-size: 16px; font-weight: 700; color: #667eea; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 1px; }
+    .section-title { font-size: 16px; font-weight: 700; color: #9333EA; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 1px; }
     .win-card { background: #f0fdf4; border-radius: 8px; padding: 16px; margin-bottom: 16px; border-left: 4px solid #22c55e; }
     .issue-card { background: #fef3c7; border-radius: 8px; padding: 16px; margin-bottom: 20px; border-left: 4px solid #f59e0b; }
-    .priority-badge { display: inline-block; background: #667eea; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 8px; }
+    .priority-badge { display: inline-block; background: #9333EA; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 8px; }
     .stat-row { display: flex; justify-content: space-between; margin: 8px 0; }
-    .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 8px; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #9333EA 0%, #EC4899 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 8px; }
     .progress-bar { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; margin: 8px 0; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #9333EA 0%, #EC4899 100%); }
   </style>
 </head>
 <body>
@@ -1301,12 +1301,12 @@ async function generateDailyMPAEmailContent(userData, report, streakData) {
   <style>
     body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; }
     .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center; color: #ffffff; }
+    .header { background: linear-gradient(135deg, #9333EA 0%, #EC4899 100%); padding: 20px; text-align: center; color: #ffffff; }
     .section { padding: 20px; border-bottom: 1px solid #eee; }
     .win-card { background: #f0fdf4; border-radius: 8px; padding: 16px; border-left: 4px solid #22c55e; }
     .issue-card { background: #fef3c7; border-radius: 8px; padding: 16px; border-left: 4px solid #f59e0b; }
     .streak-card { background: linear-gradient(135deg, #fef3cd 0%, #fff3cd 100%); border-radius: 8px; padding: 16px; border-left: 4px solid #ffc107; }
-    .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; margin: 8px; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #9333EA 0%, #EC4899 100%); color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; margin: 8px; }
   </style>
 </head>
 <body>
