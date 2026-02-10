@@ -53,6 +53,9 @@ class _ChapterListScreenState extends State<ChapterListScreen>
     'maths': null,
   };
 
+  // Flag to track if widget is disposed
+  bool _isDisposed = false;
+
   static const List<String> _subjects = ['physics', 'chemistry', 'maths'];
   static const List<String> _subjectLabels = ['Physics', 'Chemistry', 'Mathematics'];
 
@@ -69,13 +72,14 @@ class _ChapterListScreenState extends State<ChapterListScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     // Refresh unlock data when app comes to foreground
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && !_isDisposed) {
       _loadUnlockData();
     }
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     WidgetsBinding.instance.removeObserver(this);
@@ -86,19 +90,23 @@ class _ChapterListScreenState extends State<ChapterListScreen>
     final authService = Provider.of<AuthService>(context, listen: false);
     final token = await authService.getIdToken();
 
-    if (!mounted) return;
+    if (_isDisposed || !mounted) return;
 
     if (token == null) {
-      setState(() {
-        _errorState['physics'] = 'Authentication required';
-        _isLoadingUnlockData = false;
-      });
+      if (!_isDisposed && mounted) {
+        setState(() {
+          _errorState['physics'] = 'Authentication required';
+          _isLoadingUnlockData = false;
+        });
+      }
       return;
     }
 
-    setState(() {
-      _authToken = token;
-    });
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _authToken = token;
+      });
+    }
 
     // Load unlock data first (needed to show lock states)
     await _loadUnlockData();
@@ -108,33 +116,33 @@ class _ChapterListScreenState extends State<ChapterListScreen>
   }
 
   Future<void> _loadUnlockData() async {
-    if (_authToken == null) return;
+    if (_authToken == null || _isDisposed) return;
 
     try {
       final unlockData = await ApiService.getUnlockedChapters(
         authToken: _authToken!,
       );
 
-      if (mounted) {
-        final unlockedList = unlockData['unlockedChapters'] as List? ?? [];
-        debugPrint('📊 ChapterListScreen: Received ${unlockedList.length} unlocked chapters');
-        if (unlockedList.isNotEmpty) {
-          debugPrint('📊 First 3 unlocked keys: ${unlockedList.take(3).join(", ")}');
-        }
+      if (_isDisposed || !mounted) return;
 
-        setState(() {
-          _unlockData = unlockData;
-          _unlockedChapterKeys = Set<String>.from(unlockedList);
-          _fullChapterOrder = List<String>.from(
-            unlockData['fullChapterOrder'] as List? ?? []
-          );
-          _currentMonth = unlockData['currentMonth'] as int? ?? 0;
-          _monthsUntilExam = unlockData['monthsUntilExam'] as int? ?? 0;
-          _isLoadingUnlockData = false;
-        });
+      final unlockedList = unlockData['unlockedChapters'] as List? ?? [];
+      debugPrint('📊 ChapterListScreen: Received ${unlockedList.length} unlocked chapters');
+      if (unlockedList.isNotEmpty) {
+        debugPrint('📊 First 3 unlocked keys: ${unlockedList.take(3).join(", ")}');
       }
+
+      setState(() {
+        _unlockData = unlockData;
+        _unlockedChapterKeys = Set<String>.from(unlockedList);
+        _fullChapterOrder = List<String>.from(
+          unlockData['fullChapterOrder'] as List? ?? []
+        );
+        _currentMonth = unlockData['currentMonth'] as int? ?? 0;
+        _monthsUntilExam = unlockData['monthsUntilExam'] as int? ?? 0;
+        _isLoadingUnlockData = false;
+      });
     } catch (e) {
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         setState(() {
           _isLoadingUnlockData = false;
           // Default to all unlocked on error
@@ -154,13 +162,15 @@ class _ChapterListScreenState extends State<ChapterListScreen>
   }
 
   Future<void> _loadChaptersForSubject(String subject) async {
-    if (_authToken == null) return;
+    if (_authToken == null || _isDisposed) return;
     if (_loadingState[subject] == true) return;
 
-    setState(() {
-      _loadingState[subject] = true;
-      _errorState[subject] = null;
-    });
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _loadingState[subject] = true;
+        _errorState[subject] = null;
+      });
+    }
 
     try {
       final chapters = await AnalyticsService.getChaptersBySubject(
@@ -168,19 +178,19 @@ class _ChapterListScreenState extends State<ChapterListScreen>
         subject: subject,
       );
 
-      if (mounted) {
-        // Debug: Log first few chapter keys from mastery data
-        if (chapters.isNotEmpty) {
-          debugPrint('📚 Chapter mastery data ($subject): ${chapters.take(3).map((c) => c.chapterKey).join(", ")}');
-        }
+      if (_isDisposed || !mounted) return;
 
-        setState(() {
-          _chaptersCache[subject] = chapters;
-          _loadingState[subject] = false;
-        });
+      // Debug: Log first few chapter keys from mastery data
+      if (chapters.isNotEmpty) {
+        debugPrint('📚 Chapter mastery data ($subject): ${chapters.take(3).map((c) => c.chapterKey).join(", ")}');
       }
+
+      setState(() {
+        _chaptersCache[subject] = chapters;
+        _loadingState[subject] = false;
+      });
     } catch (e) {
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         setState(() {
           _errorState[subject] = e.toString().replaceFirst('Exception: ', '');
           _loadingState[subject] = false;

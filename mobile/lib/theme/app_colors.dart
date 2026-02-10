@@ -210,8 +210,8 @@ class AppSpacing {
   AppSpacing._(); // Prevent instantiation
 
   // Base spacing values (4px grid) - Platform-adaptive
-  static double get xxs => PlatformSizing.spacing(2.0);   // 2.0px iOS, 1.7px Android
-  static double get xs => PlatformSizing.spacing(4.0);    // 4.0px iOS, 3.4px Android
+  static double get xxs => PlatformSizing.spacing(2.5);   // 2.5px iOS, 2.0px Android (meets 2px minimum)
+  static double get xs => PlatformSizing.spacing(4.0);    // 4.0px iOS, 3.2px Android
   static double get sm => PlatformSizing.spacing(8.0);    // 8.0px iOS, 6.8px Android
   static double get md => PlatformSizing.spacing(12.0);   // 12px iOS, 10.2px Android
   static double get lg => PlatformSizing.spacing(16.0);   // 16px iOS, 13.6px Android

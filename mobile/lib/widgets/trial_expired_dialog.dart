@@ -211,7 +211,7 @@ class TrialExpiredDialog extends StatelessWidget {
 
   Widget _buildLimitComparison(String feature, String proLimit, String freeLimit) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: AppSpacing.xxs + 2), // 6→4.8px Android
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.xxs + 2), // 4.5→4.0px Android (xxs=2.5→2.0, +2 hardcoded)
       child: Row(
         children: [
           Expanded(

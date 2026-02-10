@@ -93,6 +93,12 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
   // Store reference to UserProfileProvider for safe disposal
   UserProfileProvider? _userProfileProvider;
 
+  // Store AuthService reference to avoid accessing context after disposal
+  AuthService? _authService;
+
+  // Flag to track if widget is disposed
+  bool _isDisposed = false;
+
   @override
   bool get wantKeepAlive => true; // Keep state alive in IndexedStack
 
@@ -106,12 +112,16 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
     _userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
     _userProfileProvider?.addListener(_onProfileChanged);
 
+    // Store AuthService reference for safe access after disposal
+    _authService = Provider.of<AuthService>(context, listen: false);
+
     // Listen for app lifecycle changes to refresh when screen becomes visible
     WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
     _userProfileProvider?.removeListener(_onProfileChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -121,32 +131,35 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     // Refresh data when app comes to foreground
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && !_isDisposed) {
       _maybeRefreshData();
     }
   }
 
   /// Called when profile changes (e.g., JEE target date updated)
   void _onProfileChanged() {
+    if (_isDisposed) return;
     debugPrint('🔄 Profile changed detected, refreshing chapter unlock data...');
     _refreshChapterUnlockData();
   }
 
   /// Refresh data when tab becomes visible
   Future<void> _maybeRefreshData() async {
+    if (_isDisposed) return;
     debugPrint('🔄 Refreshing home screen data...');
     await _loadData();
   }
 
   /// Refresh chapter unlock data (called when returning from profile edit)
   Future<void> _refreshChapterUnlockData() async {
-    final authService = Provider.of<AuthService>(context, listen: false);
-    final token = await authService.getIdToken();
+    if (_isDisposed || _authService == null) return;
 
-    if (token != null) {
+    final token = await _authService!.getIdToken();
+
+    if (token != null && !_isDisposed) {
       try {
         final unlockData = await ApiService.getUnlockedChapters(authToken: token);
-        if (mounted && unlockData.isNotEmpty) {
+        if (!_isDisposed && mounted && unlockData.isNotEmpty) {
           setState(() {
             _chapterUnlockData = unlockData;
           });
@@ -236,7 +249,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
               }),
             ]);
 
-            if (!mounted) return;
+            if (_isDisposed || !mounted) return;
 
             // Process assessment results
             final assessmentResult = results[0] as AssessmentResult;
@@ -280,14 +293,14 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
 
             // Process quiz summary
             final summary = results[1] as Map<String, dynamic>;
-            if (summary.isNotEmpty && mounted) {
+            if (summary.isNotEmpty && !_isDisposed && mounted) {
               _quizSummary = summary;
               debugPrint('Quiz summary loaded: streak=${summary['streak']?['current_streak']}, today_accuracy=${summary['today_stats']?['accuracy']}');
             }
 
             // Process analytics overview
             final overview = results[2] as AnalyticsOverview?;
-            if (overview != null && mounted) {
+            if (overview != null && !_isDisposed && mounted) {
               _analyticsOverview = overview;
               debugPrint('Analytics overview loaded: quizzes=${overview.stats.quizzesCompleted}, questions=${overview.stats.questionsSolved}');
             }
@@ -295,7 +308,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
             // Process chapter unlock data
             final unlockData = results[3] as Map<String, dynamic>?;
             debugPrint('📊 Chapter unlock API response: ${unlockData?.keys.toList()}');
-            if (unlockData != null && unlockData.isNotEmpty && mounted) {
+            if (unlockData != null && unlockData.isNotEmpty && !_isDisposed && mounted) {
               setState(() {
                 _chapterUnlockData = unlockData;
               });
@@ -315,13 +328,13 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
         // Using cached data to avoid duplicate API calls
 
         // Load mock test templates to get usage data for the card
-        if (mounted) {
+        if (!_isDisposed && mounted) {
           final mockTestProvider = context.read<MockTestProvider>();
           mockTestProvider.loadTemplates();
         }
       }
 
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         // Generate dynamic Priya message based on quiz data
         PriyaMessage? priyaMessage;
         if (status == 'completed') {
@@ -342,7 +355,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
       }
     } catch (e) {
       debugPrint('Error loading assessment intro data: $e');
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         setState(() {
           _isLoading = false;
         });
@@ -796,11 +809,11 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
                 Expanded(
                   child: _buildDetailChip('✏️ 30 questions', isPending: isPending),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4), // Reduced from 6px to prevent overflow on small screens
                 Expanded(
                   child: _buildDetailChip('⏱️ 45 minutes', isPending: isPending),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4), // Reduced from 6px to prevent overflow on small screens
                 Expanded(
                   child: _buildDetailChip('📚 All subjects', isPending: isPending),
                 ),
@@ -836,7 +849,7 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
 
   Widget _buildDetailChip(String text, {bool isPending = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6), // Reduced from 8px to prevent overflow
       decoration: BoxDecoration(
         color: isPending ? Colors.white.withValues(alpha: 0.8) : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(20),
@@ -943,11 +956,11 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
                 Expanded(
                   child: _buildDetailChip('✏️ 10 questions'),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4), // Reduced from 6px to prevent overflow on small screens
                 Expanded(
                   child: _buildDetailChip('⏱️ ~15 min'),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4), // Reduced from 6px to prevent overflow on small screens
                 Expanded(
                   child: _buildDetailChip('📚 Mixed subjects'),
                 ),
@@ -1100,11 +1113,11 @@ class _AssessmentIntroScreenState extends State<AssessmentIntroScreen>
                     Expanded(
                       child: _buildDetailChip('✏️ 90 questions'),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4), // Reduced from 6px to prevent overflow on small screens
                     Expanded(
                       child: _buildDetailChip('⏱️ 3 hours'),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4), // Reduced from 6px to prevent overflow on small screens
                     Expanded(
                       child: _buildDetailChip('📊 300 marks'),
                     ),

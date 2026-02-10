@@ -43,6 +43,9 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
   bool _isOffline = false; // Track if error is due to being offline
   final AssessmentStorageService _storageService = AssessmentStorageService();
 
+  // Flag to track if widget is disposed
+  bool _isDisposed = false;
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +55,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
 
   @override
   void dispose() {
+    _isDisposed = true;
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
     _autoSaveTimer?.cancel();
@@ -66,12 +70,12 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && !_isDisposed) {
       // App came back from background - recalculate timer based on wall clock
       if (mounted) {
         _recalculateRemainingTime();
       }
-    } else if (state == AppLifecycleState.paused) {
+    } else if (state == AppLifecycleState.paused && !_isDisposed) {
       // App going to background - save state immediately
       if (mounted) {
         _saveState();
@@ -82,13 +86,13 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
   /// Recalculate remaining time based on wall clock time
   /// This ensures timer continues even when app is backgrounded or device sleeps
   void _recalculateRemainingTime() {
-    if (_assessmentStartTime == null) return;
+    if (_assessmentStartTime == null || _isDisposed) return;
 
     final now = DateTime.now();
     final elapsedSeconds = now.difference(_assessmentStartTime!).inSeconds;
     final newRemainingSeconds = _totalAssessmentSeconds - elapsedSeconds;
 
-    if (mounted) {
+    if (!_isDisposed && mounted) {
       setState(() {
         _remainingSeconds = newRemainingSeconds;
       });
@@ -101,7 +105,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
     // Try to restore saved state first
     final savedState = await _storageService.loadAssessmentState();
 
-    if (!mounted) return; // Check after async operation
+    if (_isDisposed || !mounted) return; // Check after async operation
 
     if (savedState != null) {
       // Validate saved state has required data
@@ -111,7 +115,8 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
         // Will fall through to load questions normally below
       } else {
         // Restore from saved state
-        setState(() {
+        if (!_isDisposed && mounted) {
+          setState(() {
           _currentQuestionIndex = savedState.currentIndex;
           _assessmentStartTime = savedState.startTime;
           _questionStartTimes = savedState.questionStartTimes;
@@ -126,11 +131,12 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
               timeTakenSeconds: 0, // Will be recalculated
             ),
           ));
-        });
+          });
 
-        // Recalculate remaining time based on elapsed wall clock time
-        // This ensures timer is accurate even if app was killed/backgrounded
-        _recalculateRemainingTime();
+          // Recalculate remaining time based on elapsed wall clock time
+          // This ensures timer is accurate even if app was killed/backgrounded
+          _recalculateRemainingTime();
+        }
       }
 
       print('[Timer] Restored state: startTime=${savedState.startTime}, savedRemaining=${savedState.remainingSeconds}s, recalculated=${_remainingSeconds}s');
@@ -140,10 +146,10 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
     }
 
     await _loadQuestions();
-    if (!mounted) return; // Check before starting timers
+    if (_isDisposed || !mounted) return; // Check before starting timers
 
     _startTimer();
-    if (!mounted) return; // Check before starting auto-save
+    if (_isDisposed || !mounted) return; // Check before starting auto-save
 
     _startAutoSave();
   }
@@ -155,7 +161,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
       final isOnline = await connectivityService.checkRealConnectivity();
 
       if (!isOnline) {
-        if (mounted) {
+        if (!_isDisposed && mounted) {
           setState(() {
             _isOffline = true;
             _error = 'No internet connection';
@@ -169,16 +175,18 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
       final token = await authService.getIdToken();
 
       if (token == null) {
-        setState(() {
-          _error = 'Authentication required. Please log in again.';
-          _isLoading = false;
-        });
+        if (!_isDisposed && mounted) {
+          setState(() {
+            _error = 'Authentication required. Please log in again.';
+            _isLoading = false;
+          });
+        }
         return;
       }
 
       final questions = await ApiService.getAssessmentQuestions(authToken: token);
 
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         setState(() {
           _questions = questions;
           _isLoading = false;
@@ -205,7 +213,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         // Check if error is due to network issue
         final errorMsg = e.toString().toLowerCase();
         final isNetworkError = errorMsg.contains('socketexception') ||
@@ -227,6 +235,10 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_isDisposed) {
+        timer.cancel();
+        return;
+      }
       if (mounted && _assessmentStartTime != null) {
         // Recalculate based on wall clock time to ensure accuracy
         // This way the timer continues correctly even if app was paused/resumed
@@ -355,23 +367,27 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
 
     if (_responses.length != _questions?.length) {
       // Show error - not all questions answered
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please answer all questions before submitting.'),
-          backgroundColor: AppColors.errorRed,
-        ),
-      );
+      if (!_isDisposed && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please answer all questions before submitting.'),
+            backgroundColor: AppColors.errorRed,
+          ),
+        );
+      }
       return;
     }
 
-    setState(() {
-      _isSubmitting = true;
-    });
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _isSubmitting = true;
+      });
+    }
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final token = await authService.getIdToken();
-      
+
       if (token == null) {
         throw Exception('Authentication required');
       }
@@ -385,6 +401,8 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
         authToken: token,
         responses: responsesList,
       );
+
+      if (_isDisposed || !mounted) return;
 
       if (mounted) {
         if (result.success && result.data != null) {
@@ -421,7 +439,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
         }
       }
     } catch (e) {
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         setState(() {
           _isSubmitting = false;
         });

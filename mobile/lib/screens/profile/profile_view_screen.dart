@@ -35,17 +35,28 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   SubscriptionStatus? _subscriptionStatus;
   bool _loadingSubscription = true;
   bool _profileWasUpdated = false; // Track if profile was edited
+  bool _isDisposed = false; // Track disposal state for async safety
 
   @override
   void initState() {
     super.initState();
     _loadAppVersion();
     _loadSubscriptionStatus();
-    _ensureProfileLoaded();
+    // Defer profile loading to after the frame is built to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _ensureProfileLoaded();
+    });
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
   }
 
   /// Ensure profile is loaded - fetch if null
   Future<void> _ensureProfileLoaded() async {
+    if (!mounted) return;
     final profileProvider = Provider.of<UserProfileProvider>(context, listen: false);
     if (profileProvider.profile == null) {
       debugPrint('Profile is null, loading...');
@@ -382,7 +393,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
     await authService.signOut();
 
-    if (mounted) {
+    if (!_isDisposed && mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const WelcomeScreen()),
         (route) => false,

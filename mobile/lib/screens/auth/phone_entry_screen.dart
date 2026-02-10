@@ -26,12 +26,20 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
   String? _phoneNumber;
   bool _isLoading = false;
   int _remainingOtpRequests = 3;
+  bool _isDisposed = false; // Track disposal state for async safety
 
   @override
   void initState() {
     super.initState();
     _loadCountryCode();
     _loadRemainingOtpRequests();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCountryCode() async {
@@ -145,33 +153,41 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
         phoneNumber: _phoneNumber!,
         verificationCompleted: (credential) async {
            // Auto-verification (rare on this step, usually on OTP step)
-           setState(() => _isLoading = false);
+           if (!_isDisposed && mounted) {
+             setState(() => _isLoading = false);
+           }
         },
         verificationFailed: (e) {
-          setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Verification Failed: ${e.message}'),
-              backgroundColor: AppColors.errorRed,
-            ),
-          );
+          if (!_isDisposed && mounted) {
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Verification Failed: ${e.message}'),
+                backgroundColor: AppColors.errorRed,
+              ),
+            );
+          }
         },
         codeSent: (verificationId, resendToken) async {
+          if (_isDisposed) return;
+
           // Record successful OTP request
           await storageService.recordOtpRequest();
 
           // Update remaining requests count
           await _loadRemainingOtpRequests();
 
-          setState(() => _isLoading = false);
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => OtpVerificationScreen(
-                verificationId: verificationId,
-                phoneNumber: _phoneNumber!,
+          if (!_isDisposed && mounted) {
+            setState(() => _isLoading = false);
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => OtpVerificationScreen(
+                  verificationId: verificationId,
+                  phoneNumber: _phoneNumber!,
+                ),
               ),
-            ),
-          );
+            );
+          }
         },
         codeAutoRetrievalTimeout: (verificationId) {
            // Timeout handling
@@ -205,7 +221,11 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                       child: Row(
                         children: [
                           AppIconButton.back(
-                            onPressed: () => Navigator.of(context).pop(),
+                            onPressed: () {
+                              if (Navigator.of(context).canPop()) {
+                                Navigator.of(context).pop();
+                              }
+                            },
                             color: Colors.white,
                           ),
                           const Spacer(),

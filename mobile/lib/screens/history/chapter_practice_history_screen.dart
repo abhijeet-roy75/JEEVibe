@@ -42,6 +42,7 @@ class _ChapterPracticeHistoryScreenState
   int? _historyDaysLimit;
   bool _isUnlimited = false;
   String _selectedSubject = 'Physics';
+  bool _isDisposed = false; // Track disposal state for async safety
 
   @override
   void initState() {
@@ -52,6 +53,7 @@ class _ChapterPracticeHistoryScreenState
 
   @override
   void dispose() {
+    _isDisposed = true;
     _scrollController.dispose();
     super.dispose();
   }
@@ -66,13 +68,15 @@ class _ChapterPracticeHistoryScreenState
   }
 
   Future<void> _loadPracticeHistory() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-      _allSessions.clear();
-      _filteredSessions = [];
-      _offset = 0;
-    });
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+        _allSessions.clear();
+        _filteredSessions = [];
+        _offset = 0;
+      });
+    }
 
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -104,18 +108,22 @@ class _ChapterPracticeHistoryScreenState
 
       final historyResponse = ChapterPracticeHistoryResponse.fromJson(response);
 
-      setState(() {
-        _allSessions.addAll(historyResponse.sessions);
-        _hasMore = historyResponse.hasMore;
-        _offset = _limit;
-        _filterSessions();
-        _isLoading = false;
-      });
+      if (!_isDisposed && mounted) {
+        setState(() {
+          _allSessions.addAll(historyResponse.sessions);
+          _hasMore = historyResponse.hasMore;
+          _offset = _limit;
+          _filterSessions();
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
-        _isLoading = false;
-      });
+      if (!_isDisposed && mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -132,9 +140,11 @@ class _ChapterPracticeHistoryScreenState
   Future<void> _loadMoreSessions() async {
     if (_isLoadingMore || !_hasMore) return;
 
-    setState(() {
-      _isLoadingMore = true;
-    });
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _isLoadingMore = true;
+      });
+    }
 
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -155,17 +165,21 @@ class _ChapterPracticeHistoryScreenState
 
       final historyResponse = ChapterPracticeHistoryResponse.fromJson(response);
 
-      setState(() {
-        _allSessions.addAll(historyResponse.sessions);
-        _hasMore = historyResponse.hasMore;
-        _offset += _limit;
-        _filterSessions();
-        _isLoadingMore = false;
-      });
+      if (!_isDisposed && mounted) {
+        setState(() {
+          _allSessions.addAll(historyResponse.sessions);
+          _hasMore = historyResponse.hasMore;
+          _offset += _limit;
+          _filterSessions();
+          _isLoadingMore = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoadingMore = false;
-      });
+      if (!_isDisposed && mounted) {
+        setState(() {
+          _isLoadingMore = false;
+        });
+      }
     }
   }
 
@@ -174,7 +188,7 @@ class _ChapterPracticeHistoryScreenState
   }
 
   void _onSubjectFilterChanged(String subject) {
-    if (_selectedSubject != subject) {
+    if (_selectedSubject != subject && !_isDisposed && mounted) {
       setState(() {
         _selectedSubject = subject;
         _filterSessions();
