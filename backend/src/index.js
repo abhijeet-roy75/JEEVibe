@@ -283,6 +283,9 @@ app.use('/api/teachers', teachersRouter);
 const chaptersRouter = require('./routes/chapters');
 app.use('/api/chapters', chaptersRouter);
 
+const unlockQuizRouter = require('./routes/unlockQuiz');
+app.use('/api/unlock-quiz', unlockQuizRouter);
+
 // Test endpoints (only in development)
 if (process.env.NODE_ENV !== 'production') {
   const testFirebaseRouter = require('./routes/test-firebase');
