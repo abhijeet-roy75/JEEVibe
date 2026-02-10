@@ -860,9 +860,9 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     return Container(
       padding: EdgeInsets.fromLTRB(
         16,
-        12,
+        8,  // Reduced from 12 to 8
         16,
-        MediaQuery.of(context).viewPadding.bottom + 12,
+        MediaQuery.of(context).viewPadding.bottom + 8,  // Reduced from 12 to 8
       ),
       decoration: BoxDecoration(
         color: Colors.white,
