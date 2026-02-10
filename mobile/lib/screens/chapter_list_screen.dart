@@ -225,7 +225,7 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                   Future.delayed(const Duration(milliseconds: 100), () {
                     if (context.mounted) {
                       try {
-                        AssessmentIntroScreen.refreshIfNeeded(context);
+                        HomeScreen.refreshIfNeeded(context);
                       } catch (e) {
                         // Ignore if home screen is not in widget tree
                       }
