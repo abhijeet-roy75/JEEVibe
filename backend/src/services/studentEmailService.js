@@ -1023,6 +1023,616 @@ Team JEEVibe
   };
 }
 
+/**
+ * Generate Weekly MPA Email Content
+ * Based on: /docs/11-reports/JEEVibe_Weekly_MPA_Report_Specification.md
+ */
+async function generateWeeklyMPAEmailContent(userData, report) {
+  const firstName = userData.firstName || 'Student';
+  const { summary, wins, top_issues, potential_improvement, tone } = report;
+
+  // Format date range
+  const dateRange = `${report.week_start} to ${report.week_end}`;
+
+  // Subject line
+  const subject = `Your JEEVibe Weekly Report - ${dateRange}`;
+
+  // Build HTML
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JEEVibe Weekly Report</title>
+  <style>
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px; text-align: center; color: #ffffff; }
+    .section { padding: 24px; border-bottom: 1px solid #eee; }
+    .section-title { font-size: 16px; font-weight: 700; color: #667eea; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 1px; }
+    .win-card { background: #f0fdf4; border-radius: 8px; padding: 16px; margin-bottom: 16px; border-left: 4px solid #22c55e; }
+    .issue-card { background: #fef3c7; border-radius: 8px; padding: 16px; margin-bottom: 20px; border-left: 4px solid #f59e0b; }
+    .priority-badge { display: inline-block; background: #667eea; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-right: 8px; }
+    .stat-row { display: flex; justify-content: space-between; margin: 8px 0; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin: 8px; }
+    .progress-bar { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1 style="margin: 0; font-size: 24px;">━━━ JEEVIBE WEEKLY REPORT ━━━</h1>
+      <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">Week of ${dateRange}</p>
+    </div>
+
+    <!-- Greeting -->
+    <div class="section">
+      <p style="font-size: 16px; color: #333; margin: 0 0 16px 0;">👩‍🏫 Hi ${firstName},</p>
+      <p style="font-size: 15px; color: #666; margin: 0;">${tone.greeting} You completed ${summary.total_questions} questions and I found some clear wins and areas to focus on.</p>
+      <p style="font-size: 15px; color: #666; margin: 8px 0 0 0;">Let me show you what's working and where to improve.</p>
+      <p style="font-size: 14px; color: #888; margin: 16px 0 0 0; font-style: italic;">- Priya Ma'am</p>
+    </div>
+
+    <!-- Wins Section -->
+    <div class="section">
+      <div class="section-title">🎉 YOUR WINS THIS WEEK</div>
+      ${wins.map(win => `
+        <div class="win-card">
+          <div style="font-size: 16px; font-weight: 600; color: #15803d; margin-bottom: 8px;">${win.title}</div>
+          <div style="font-size: 14px; color: #166534; margin-bottom: 8px;">${win.metric}</div>
+          <div style="font-size: 14px; color: #166534; line-height: 1.5;">${win.details || ''}</div>
+          ${win.top_chapters && win.top_chapters.length > 0 ? `
+            <div style="margin-top: 12px; font-size: 13px; color: #166534;">
+              <strong>Top chapters:</strong><br>
+              ${win.top_chapters.map(ch => `• ${ch.chapter}: ${ch.accuracy}%`).join('<br>')}
+            </div>
+          ` : ''}
+          <div style="font-size: 13px; color: #166534; margin-top: 12px; font-style: italic;">${win.insight}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- Overall Performance -->
+    <div class="section">
+      <div class="section-title">📊 OVERALL PERFORMANCE</div>
+      <div style="font-size: 15px; color: #333; margin-bottom: 16px;">
+        <strong>${summary.total_questions} questions</strong> | <strong>${summary.accuracy}% accuracy</strong> (${summary.correct} correct, ${summary.incorrect} incorrect)
+      </div>
+      <div style="font-size: 14px; color: #666;">
+        <strong>By Subject:</strong><br>
+        ${Object.entries(summary.by_subject).map(([subject, stats]) => {
+          const statusIcon = stats.accuracy >= 60 ? '✓' : stats.accuracy >= 40 ? '⚠️' : '❌';
+          return `• ${subject.charAt(0).toUpperCase() + subject.slice(1)}: ${Math.round(stats.accuracy)}% ${statusIcon} (${stats.correct}/${stats.total})`;
+        }).join('<br>')}
+      </div>
+    </div>
+
+    <!-- Top 3 Issues -->
+    <div class="section">
+      <div class="section-title">🎯 YOUR TOP 3 ISSUES TO FIX</div>
+      <p style="font-size: 14px; color: #666; margin: 0 0 20px 0;">Fix these in priority order for maximum improvement:</p>
+
+      ${top_issues.map((issue, index) => `
+        <div class="issue-card">
+          <div style="font-size: 18px; margin-bottom: 12px;">
+            ${issue.icon} <strong>${issue.title}</strong>
+          </div>
+          <div style="font-size: 13px; color: #92400e; margin-bottom: 12px;">
+            <strong>Impact:</strong> ${issue.frequency} out of ${summary.incorrect} mistakes (${issue.percentage}%)<br>
+            <strong>Potential gain:</strong> +${issue.potential_gain}% accuracy
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <strong style="color: #b45309;">What's wrong:</strong><br>
+            <span style="color: #92400e;">${issue.what_wrong}</span>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <strong style="color: #b45309;">Root cause:</strong><br>
+            <span style="color: #92400e;">${issue.root_cause}</span>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <strong style="color: #b45309;">What to study:</strong><br>
+            ${issue.what_to_study.map(topic => `• ${topic}`).join('<br>')}
+          </div>
+
+          <div>
+            <strong style="color: #b45309;">Suggested practice:</strong><br>
+            <span style="color: #92400e;">${issue.suggested_practice}</span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- How to Use -->
+    <div class="section">
+      <div class="section-title">💡 HOW TO USE THIS REPORT</div>
+      <div style="font-size: 14px; color: #666; line-height: 1.6;">
+        <p><strong>Option 1: Fix Priority 1 first (recommended)</strong><br>
+        Focus all your study time on Priority 1 until you see improvement, then move to Priority 2.</p>
+
+        <p><strong>Option 2: Work on all 3 simultaneously</strong><br>
+        Spend 60% time on Priority 1, 25% on Priority 2, 15% on Priority 3.</p>
+
+        <p><strong>Option 3: Pick what feels right</strong><br>
+        You know your strengths. Start where you feel most motivated or where you have upcoming tests.</p>
+
+        <p style="margin-top: 16px;">No matter which approach you choose, these 3 areas give you the clearest path to improvement.</p>
+      </div>
+    </div>
+
+    <!-- Potential Improvement -->
+    <div class="section">
+      <div class="section-title">📈 POTENTIAL IMPROVEMENT</div>
+      <div style="font-size: 14px; color: #666;">
+        <p>If you address these 3 issues:</p>
+        <div style="margin: 16px 0;">
+          <div style="margin-bottom: 8px;">Current accuracy: <strong>${potential_improvement.current_accuracy}%</strong></div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${potential_improvement.current_accuracy}%;"></div>
+          </div>
+        </div>
+        <div style="margin: 16px 0;">
+          <div style="margin-bottom: 8px;">Potential accuracy: <strong>${potential_improvement.potential_accuracy}%</strong></div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${potential_improvement.potential_accuracy}%;"></div>
+          </div>
+        </div>
+        <p style="margin-top: 16px; font-weight: 600; color: #667eea;">This would put you in the top ${potential_improvement.percentile_projection}% of JEEVibe students.</p>
+      </div>
+    </div>
+
+    <!-- Footer Message -->
+    <div class="section" style="text-align: center; border-bottom: none;">
+      <p style="font-size: 18px; font-weight: 600; color: #333; margin: 0 0 24px 0;">Three priorities. Your timeline. Real improvement.</p>
+      <div>
+        <a href="https://jeevibe.com" class="cta-button">Start Today's Quiz</a>
+        <a href="https://jeevibe.com" class="cta-button">Practice Physics</a>
+      </div>
+      <p style="font-size: 14px; color: #666; margin-top: 24px;">Questions? Reply anytime.<br>- Priya Ma'am</p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #888;">
+      <p style="margin: 0 0 8px 0;">JEEVibe - Honest EdTech for JEE Preparation</p>
+      <p style="margin: 0;">support@jeevibe.app | jeevibe.app</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  // Plain text version
+  const text = `
+━━━ JEEVIBE WEEKLY REPORT ━━━
+Week of ${dateRange}
+
+👩‍🏫 Hi ${firstName},
+
+${tone.greeting} You completed ${summary.total_questions} questions and I found some clear wins and areas to focus on.
+
+━━━ 🎉 YOUR WINS THIS WEEK ━━━
+
+${wins.map((win, i) => `
+${i + 1}. ${win.title}
+${win.metric}
+${win.details || ''}
+${win.insight}
+`).join('\n')}
+
+━━━ 📊 OVERALL PERFORMANCE ━━━
+
+${summary.total_questions} questions | ${summary.accuracy}% accuracy (${summary.correct} correct, ${summary.incorrect} incorrect)
+
+By Subject:
+${Object.entries(summary.by_subject).map(([subject, stats]) =>
+  `• ${subject.charAt(0).toUpperCase() + subject.slice(1)}: ${Math.round(stats.accuracy)}% (${stats.correct}/${stats.total})`
+).join('\n')}
+
+━━━ 🎯 YOUR TOP 3 ISSUES TO FIX ━━━
+
+${top_issues.map((issue, i) => `
+${issue.icon} PRIORITY ${i + 1}: ${issue.title}
+
+Impact: ${issue.frequency} mistakes (${issue.percentage}%)
+Potential gain: +${issue.potential_gain}% accuracy
+
+What's wrong: ${issue.what_wrong}
+
+Root cause: ${issue.root_cause}
+
+What to study:
+${issue.what_to_study.map(t => `• ${t}`).join('\n')}
+
+Suggested practice: ${issue.suggested_practice}
+`).join('\n─────────────────────────────\n')}
+
+━━━ 💡 HOW TO USE THIS REPORT ━━━
+
+Option 1: Fix Priority 1 first (recommended)
+Option 2: Work on all 3 simultaneously
+Option 3: Pick what feels right
+
+━━━ 📈 POTENTIAL IMPROVEMENT ━━━
+
+Current accuracy:    ${potential_improvement.current_accuracy}%
+Potential accuracy:  ${potential_improvement.potential_accuracy}%
+
+This would put you in the top ${potential_improvement.percentile_projection}% of JEEVibe students.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Three priorities. Your timeline. Real improvement.
+
+Start Today's Quiz: https://jeevibe.com
+Questions? Reply anytime.
+- Priya Ma'am
+  `.trim();
+
+  return { subject, html, text };
+}
+
+/**
+ * Generate Daily MPA Email Content
+ */
+async function generateDailyMPAEmailContent(userData, report, streakData) {
+  const firstName = userData.firstName || 'Student';
+  const { summary, win, issue, streak } = report;
+
+  // Streak emoji
+  let streakEmoji = '';
+  if (streak >= 30) streakEmoji = '🏆';
+  else if (streak >= 14) streakEmoji = '🌟';
+  else if (streak >= 7) streakEmoji = '🔥';
+  else if (streak > 0) streakEmoji = '✨';
+
+  const subject = `Day ${streak} ${streakEmoji} | Found your top mistake from yesterday`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JEEVibe Daily Report</title>
+  <style>
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center; color: #ffffff; }
+    .section { padding: 20px; border-bottom: 1px solid #eee; }
+    .win-card { background: #f0fdf4; border-radius: 8px; padding: 16px; border-left: 4px solid #22c55e; }
+    .issue-card { background: #fef3c7; border-radius: 8px; padding: 16px; border-left: 4px solid #f59e0b; }
+    .streak-card { background: linear-gradient(135deg, #fef3cd 0%, #fff3cd 100%); border-radius: 8px; padding: 16px; border-left: 4px solid #ffc107; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; margin: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 style="margin: 0; font-size: 20px;">━━━ JEEVIBE DAILY REPORT ━━━</h1>
+      <p style="margin: 8px 0 0 0; font-size: 14px; opacity: 0.9;">Day ${streak} | ${report.date}</p>
+    </div>
+
+    <div class="section">
+      <p style="font-size: 16px; color: #333; margin: 0 0 12px 0;">👩‍🏫 Hi ${firstName},</p>
+      <p style="font-size: 15px; color: #666; margin: 0;">Yesterday you completed ${summary.total_questions} questions with ${summary.accuracy}% accuracy.</p>
+    </div>
+
+    ${win ? `
+    <div class="section">
+      <div style="font-size: 14px; font-weight: 700; color: #667eea; margin: 0 0 12px 0;">🎉 YESTERDAY'S WIN</div>
+      <div class="win-card">
+        <div style="font-size: 15px; font-weight: 600; color: #15803d; margin-bottom: 8px;">${win.title}</div>
+        <div style="font-size: 14px; color: #166534;">${win.metric}</div>
+        <div style="font-size: 13px; color: #166534; margin-top: 8px; font-style: italic;">${win.insight}</div>
+      </div>
+    </div>
+    ` : ''}
+
+    ${issue ? `
+    <div class="section">
+      <div style="font-size: 14px; font-weight: 700; color: #667eea; margin: 0 0 12px 0;">🎯 TOP ISSUE TO FIX TODAY</div>
+      <div class="issue-card">
+        <div style="font-size: 15px; font-weight: 600; color: #b45309; margin-bottom: 8px;">${issue.title}</div>
+        <div style="font-size: 13px; color: #92400e; margin-bottom: 12px;">
+          <strong>Impact:</strong> ${issue.frequency} mistakes
+        </div>
+        <div style="margin-bottom: 12px;">
+          <strong style="color: #b45309;">Quick fix:</strong><br>
+          ${issue.what_to_study.slice(0, 3).map(topic => `• ${topic}`).join('<br>')}
+        </div>
+        <div>
+          <strong style="color: #b45309;">Practice:</strong><br>
+          <span style="color: #92400e;">${issue.suggested_practice}</span>
+        </div>
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="section">
+      <div style="font-size: 14px; font-weight: 700; color: #667eea; margin: 0 0 12px 0;">📊 YOUR STREAK</div>
+      <div class="streak-card">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 32px;">${streakEmoji}</span>
+          <div>
+            <div style="font-size: 18px; font-weight: bold; color: #856404;">${streak} days</div>
+            <div style="font-size: 13px; color: #856404;">Keep going!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" style="text-align: center; border-bottom: none;">
+      <a href="https://jeevibe.com" class="cta-button">Start Today's Quiz</a>
+      ${issue ? `<a href="https://jeevibe.com" class="cta-button">Practice ${issue.affected_chapters?.[0] || 'Focus Chapter'}</a>` : ''}
+    </div>
+
+    <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #888;">
+      <p style="margin: 0;">JEEVibe - Your AI-Powered JEE Prep Companion</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  const text = `
+━━━ JEEVIBE DAILY REPORT ━━━
+Day ${streak} | ${report.date}
+
+👩‍🏫 Hi ${firstName},
+Yesterday you completed ${summary.total_questions} questions with ${summary.accuracy}% accuracy.
+
+${win ? `
+━━━ 🎉 YESTERDAY'S WIN ━━━
+${win.title}
+${win.metric}
+${win.insight}
+` : ''}
+
+${issue ? `
+━━━ 🎯 TOP ISSUE TO FIX TODAY ━━━
+${issue.title}
+Impact: ${issue.frequency} mistakes
+
+Quick fix:
+${issue.what_to_study.slice(0, 3).map(t => `• ${t}`).join('\n')}
+
+Practice: ${issue.suggested_practice}
+` : ''}
+
+━━━ 📊 YOUR STREAK ━━━
+${streak} days ${streakEmoji} | Keep going!
+
+Start Today's Quiz: https://jeevibe.com
+  `.trim();
+
+  return { subject, html, text };
+}
+
+/**
+ * Send Weekly MPA Email
+ */
+async function sendWeeklyMPAEmail(user, report) {
+  if (!resend) {
+    logger.warn('Resend client not initialized. Skipping weekly MPA email.');
+    return { success: false, error: 'Resend not configured' };
+  }
+
+  try {
+    const { subject, html, text } = await generateWeeklyMPAEmailContent(user, report);
+
+    const emailData = {
+      from: FROM_EMAIL,
+      to: user.email,
+      subject,
+      html,
+      text
+    };
+
+    const result = await resend.emails.send(emailData);
+    logger.info(`Weekly MPA email sent to ${user.email}`, { messageId: result.id });
+
+    return { success: true, messageId: result.id };
+  } catch (error) {
+    logger.error(`Error sending weekly MPA email to ${user.email}:`, error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send Weekly MPA Email to All Users
+ * Replaces sendAllWeeklyEmails with MPA report generation
+ */
+async function sendAllWeeklyMPAEmails() {
+  const mpaService = require('./mpaReportService');
+  const results = { sent: 0, skipped: 0, failed: 0, errors: [] };
+
+  try {
+    logger.info('Starting weekly MPA email batch');
+
+    // Get all users
+    const usersSnapshot = await db.collection('users').limit(1000).get();
+
+    // Calculate week range (last Monday to Sunday)
+    const { start: weekStart, end: weekEnd } = require('./studentEmailService').getLastWeekRange?.() || getLastWeekRange();
+
+    for (const userDoc of usersSnapshot.docs) {
+      const userId = userDoc.id;
+      const userData = userDoc.data();
+
+      try {
+        // Check if user opted out
+        if (userData.email_preferences?.weekly_digest === false) {
+          results.skipped++;
+          logger.debug('User opted out of weekly emails', { userId });
+          continue;
+        }
+
+        // Check if user has email
+        if (!userData.email) {
+          results.skipped++;
+          logger.debug('User has no email address', { userId });
+          continue;
+        }
+
+        // Generate MPA report
+        const report = await mpaService.generateWeeklyReport(userId, weekStart, weekEnd);
+
+        if (!report) {
+          results.skipped++;
+          logger.debug('Insufficient data for weekly MPA report', { userId, reason: 'Less than 40 questions' });
+          continue;
+        }
+
+        // Store report
+        await mpaService.storeWeeklyReport(userId, report);
+
+        // Send email
+        const emailResult = await sendWeeklyMPAEmail(userData, report);
+
+        if (emailResult.success) {
+          results.sent++;
+          // Update report with email sent status
+          await db.collection('users').doc(userId)
+            .collection('weekly_reports').doc(report.week_id)
+            .update({
+              email_sent: true,
+              email_sent_at: require('firebase-admin').firestore.FieldValue.serverTimestamp()
+            });
+        } else {
+          results.failed++;
+          results.errors.push({ userId, reason: emailResult.error });
+          logger.warn('Failed to send weekly MPA email', { userId, error: emailResult.error });
+        }
+
+      } catch (error) {
+        results.failed++;
+        results.errors.push({ userId, reason: error.message });
+        logger.error('Error processing weekly MPA email for user', { userId, error: error.message });
+      }
+    }
+
+    logger.info('Weekly MPA email batch complete', results);
+    return results;
+
+  } catch (error) {
+    logger.error('Error in weekly MPA email batch', { error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Send Daily MPA Email
+ */
+async function sendDailyMPAEmail(user, report, streakData) {
+  if (!resend) {
+    logger.warn('Resend client not initialized. Skipping daily MPA email.');
+    return { success: false, error: 'Resend not configured' };
+  }
+
+  try {
+    const { subject, html, text } = await generateDailyMPAEmailContent(user, report, streakData);
+
+    const emailData = {
+      from: FROM_EMAIL,
+      to: user.email,
+      subject,
+      html,
+      text
+    };
+
+    const result = await resend.emails.send(emailData);
+    logger.info(`Daily MPA email sent to ${user.email}`, { messageId: result.id });
+
+    return { success: true, messageId: result.id };
+  } catch (error) {
+    logger.error(`Error sending daily MPA email to ${user.email}:`, error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send Daily MPA Email to All Users
+ * Replaces sendAllDailyEmails with MPA report generation
+ */
+async function sendAllDailyMPAEmails() {
+  const mpaService = require('./mpaReportService');
+  const results = { sent: 0, skipped: 0, failed: 0, errors: [] };
+
+  try {
+    logger.info('Starting daily MPA email batch');
+
+    // Get all users
+    const usersSnapshot = await db.collection('users').limit(1000).get();
+
+    // Calculate yesterday's date
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    for (const userDoc of usersSnapshot.docs) {
+      const userId = userDoc.id;
+      const userData = userDoc.data();
+
+      try {
+        // Check if user opted out
+        if (userData.email_preferences?.daily_digest === false) {
+          results.skipped++;
+          logger.debug('User opted out of daily emails', { userId });
+          continue;
+        }
+
+        // Check if user has email
+        if (!userData.email) {
+          results.skipped++;
+          logger.debug('User has no email address', { userId });
+          continue;
+        }
+
+        // Get streak data
+        const streakDoc = await db.collection('practice_streaks').doc(userId).get();
+        const streakData = streakDoc.exists ? streakDoc.data() : { current_streak: 0 };
+
+        // Generate daily MPA report
+        const report = await mpaService.generateDailyReport(userId, yesterday);
+
+        if (!report) {
+          // No report generated (less than 5 questions yesterday)
+          // Optionally send a streak reminder instead
+          results.skipped++;
+          logger.debug('Insufficient data for daily MPA report', { userId, reason: 'Less than 5 questions' });
+          continue;
+        }
+
+        // Send email
+        const emailResult = await sendDailyMPAEmail(userData, report, streakData);
+
+        if (emailResult.success) {
+          results.sent++;
+        } else {
+          results.failed++;
+          results.errors.push({ userId, reason: emailResult.error });
+          logger.warn('Failed to send daily MPA email', { userId, error: emailResult.error });
+        }
+
+      } catch (error) {
+        results.failed++;
+        results.errors.push({ userId, reason: error.message });
+        logger.error('Error processing daily MPA email for user', { userId, error: error.message });
+      }
+    }
+
+    logger.info('Daily MPA email batch complete', results);
+    return results;
+
+  } catch (error) {
+    logger.error('Error in daily MPA email batch', { error: error.message });
+    throw error;
+  }
+}
+
 module.exports = {
   sendDailyEmail,
   sendWeeklyEmail,
@@ -1031,5 +1641,13 @@ module.exports = {
   generateDailyEmailContent,
   generateWeeklyEmailContent,
   sendTrialEmail,
-  generateTrialEmailContent
+  generateTrialEmailContent,
+  getLastWeekRange, // Export for use in MPA batch functions
+  // MPA Email functions
+  generateWeeklyMPAEmailContent,
+  generateDailyMPAEmailContent,
+  sendWeeklyMPAEmail,
+  sendDailyMPAEmail,
+  sendAllWeeklyMPAEmails,
+  sendAllDailyMPAEmails
 };

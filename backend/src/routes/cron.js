@@ -9,7 +9,12 @@
 const express = require('express');
 const router = express.Router();
 const { createWeeklySnapshotsForAllUsers } = require('../services/weeklySnapshotService');
-const { sendAllDailyEmails, sendAllWeeklyEmails } = require('../services/studentEmailService');
+const {
+  sendAllDailyEmails,
+  sendAllWeeklyEmails,
+  sendAllDailyMPAEmails,
+  sendAllWeeklyMPAEmails
+} = require('../services/studentEmailService');
 const { runAlertChecks } = require('../services/alertService');
 const logger = require('../utils/logger');
 const { withTimeout } = require('../utils/timeout');
@@ -527,6 +532,174 @@ router.post('/weekly-teacher-reports', verifyCronRequest, async (req, res) => {
     });
   }
 });
+
+// ============================================================================
+// MPA EMAIL ENDPOINTS (New Weekly Reports with Pattern Analytics)
+// ============================================================================
+
+/**
+ * POST /api/cron/weekly-mpa-emails
+ *
+ * Sends weekly MPA (Mistake Pattern Analytics) reports to all active students
+ * Replaces basic weekly emails with detailed pattern analysis and ROI-prioritized issues
+ * Should be called on Sunday at 6 PM IST
+ */
+router.post('/weekly-mpa-emails', verifyCronRequest, async (req, res) => {
+  try {
+    logger.info('Weekly MPA emails cron job triggered', { requestId: req.id });
+
+    const results = await withTimeout(
+      sendAllWeeklyMPAEmails(),
+      EMAIL_BATCH_TIMEOUT,
+      'Weekly MPA email job timed out'
+    );
+
+    res.json({
+      success: true,
+      message: 'Weekly MPA emails sent',
+      results,
+      requestId: req.id
+    });
+  } catch (error) {
+    const isTimeout = error.message.includes('timed out');
+    logger.error('Error in weekly MPA emails cron job', {
+      error: error.message,
+      isTimeout,
+      stack: error.stack,
+      requestId: req.id
+    });
+
+    res.status(isTimeout ? 504 : 500).json({
+      success: false,
+      error: isTimeout ? 'Weekly MPA email job timed out' : 'Failed to send weekly MPA emails',
+      message: error.message,
+      requestId: req.id
+    });
+  }
+});
+
+/**
+ * GET /api/cron/weekly-mpa-emails
+ *
+ * Same as POST, but for GET requests
+ */
+router.get('/weekly-mpa-emails', verifyCronRequest, async (req, res) => {
+  try {
+    logger.info('Weekly MPA emails cron job triggered (GET)', { requestId: req.id });
+
+    const results = await withTimeout(
+      sendAllWeeklyMPAEmails(),
+      EMAIL_BATCH_TIMEOUT,
+      'Weekly MPA email job timed out'
+    );
+
+    res.json({
+      success: true,
+      message: 'Weekly MPA emails sent',
+      results,
+      requestId: req.id
+    });
+  } catch (error) {
+    const isTimeout = error.message.includes('timed out');
+    logger.error('Error in weekly MPA emails cron job', {
+      error: error.message,
+      isTimeout,
+      stack: error.stack,
+      requestId: req.id
+    });
+
+    res.status(isTimeout ? 504 : 500).json({
+      success: false,
+      error: isTimeout ? 'Weekly MPA email job timed out' : 'Failed to send weekly MPA emails',
+      message: error.message,
+      requestId: req.id
+    });
+  }
+});
+
+/**
+ * POST /api/cron/daily-mpa-emails
+ *
+ * Sends daily MPA (Mistake Pattern Analytics) reports to all active students
+ * Condensed version with 1 win + 1 issue from yesterday
+ * Should be called at 8 AM IST daily
+ */
+router.post('/daily-mpa-emails', verifyCronRequest, async (req, res) => {
+  try {
+    logger.info('Daily MPA emails cron job triggered', { requestId: req.id });
+
+    const results = await withTimeout(
+      sendAllDailyMPAEmails(),
+      EMAIL_BATCH_TIMEOUT,
+      'Daily MPA email job timed out'
+    );
+
+    res.json({
+      success: true,
+      message: 'Daily MPA emails sent',
+      results,
+      requestId: req.id
+    });
+  } catch (error) {
+    const isTimeout = error.message.includes('timed out');
+    logger.error('Error in daily MPA emails cron job', {
+      error: error.message,
+      isTimeout,
+      stack: error.stack,
+      requestId: req.id
+    });
+
+    res.status(isTimeout ? 504 : 500).json({
+      success: false,
+      error: isTimeout ? 'Daily MPA email job timed out' : 'Failed to send daily MPA emails',
+      message: error.message,
+      requestId: req.id
+    });
+  }
+});
+
+/**
+ * GET /api/cron/daily-mpa-emails
+ *
+ * Same as POST, but for GET requests
+ */
+router.get('/daily-mpa-emails', verifyCronRequest, async (req, res) => {
+  try {
+    logger.info('Daily MPA emails cron job triggered (GET)', { requestId: req.id });
+
+    const results = await withTimeout(
+      sendAllDailyMPAEmails(),
+      EMAIL_BATCH_TIMEOUT,
+      'Daily MPA email job timed out'
+    );
+
+    res.json({
+      success: true,
+      message: 'Daily MPA emails sent',
+      results,
+      requestId: req.id
+    });
+  } catch (error) {
+    const isTimeout = error.message.includes('timed out');
+    logger.error('Error in daily MPA emails cron job', {
+      error: error.message,
+      isTimeout,
+      stack: error.stack,
+      requestId: req.id
+    });
+
+    res.status(isTimeout ? 504 : 500).json({
+      success: false,
+      error: isTimeout ? 'Daily MPA email job timed out' : 'Failed to send daily MPA emails',
+      message: error.message,
+      requestId: req.id
+    });
+  }
+});
+
+// ============================================================================
+// HEALTH CHECK
+// ============================================================================
 
 /**
  * GET /api/cron/health
