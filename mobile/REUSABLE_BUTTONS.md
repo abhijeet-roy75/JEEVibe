@@ -124,6 +124,18 @@ SecondaryButton(
 6. **Follow-up Quiz Screen** - Uses `PrimaryButton` (Go Back) + `SecondaryButton` (Try Again)
 7. **Chapter Practice Result Screen** - Uses `PrimaryButton` (Upgrade) + `SecondaryButton` (Practice Again)
 8. **Daily Quiz Result Screen** - Uses `PrimaryButton` (Go Back) + `SecondaryButton` (Discuss with Priya)
+9. **Daily Quiz Loading Screen** - Uses `PrimaryButton`/`SecondaryButton` in error states + `QuizLoadingScreen` widget
+10. **Chapter Practice Loading Screen** - Uses `PrimaryButton`/`SecondaryButton` in error states + `QuizLoadingScreen` widget
+11. **Unlock Quiz Loading Screen** - Uses `QuizLoadingScreen` widget
+
+**Reusable Loading Widget Created:**
+- **QuizLoadingScreen** (`lib/widgets/quiz_loading_screen.dart`) - Reusable loading widget with:
+  - Priya Ma'am avatar with pulsing animation
+  - Purple-to-pink gradient background
+  - Subject badge and chapter name
+  - Custom message and badge
+  - Used by all 3 quiz loading screens (Daily, Chapter Practice, Unlock Quiz)
+  - Eliminated ~350 lines of duplicate code
 
 **Notes:**
 - Review Questions Screen: No buttons to update (navigation only)
@@ -137,7 +149,8 @@ All quiz, practice, and result screens now use the reusable button components. T
 - ✅ Consistent platform-adaptive sizing (48px iOS → ~42px Android)
 - ✅ Unified button styling across all flows
 - ✅ Built-in loading states and disabled handling
-- ✅ 84% reduction in button boilerplate code
+- ✅ Unified quiz loading UX with Priya Ma'am avatar
+- ✅ ~85% reduction in button boilerplate code (~512 lines eliminated)
 - ✅ Easier maintenance (update one file, fixes everywhere)
 
 ---
@@ -234,16 +247,19 @@ PrimaryButton(
 ## Migration Summary
 
 1. ✅ Create `PrimaryButton` and `SecondaryButton` widgets
-2. ✅ Update Unlock Quiz screens to use new buttons
-3. ✅ Update Daily Quiz screen
-4. ✅ Update Chapter Practice screen
-5. ✅ Update Assessment screen
-6. ✅ Update Follow-up Quiz screen
-7. ✅ Update Chapter Practice Result screen
-8. ✅ Update Daily Quiz Result screen
-9. ✅ All quiz/practice screens migrated successfully!
+2. ✅ Create `QuizLoadingScreen` reusable widget
+3. ✅ Update Unlock Quiz screens to use new buttons
+4. ✅ Update Daily Quiz screen and loading screen
+5. ✅ Update Chapter Practice screen and loading screen
+6. ✅ Update Assessment screen
+7. ✅ Update Follow-up Quiz screen
+8. ✅ Update Chapter Practice Result screen
+9. ✅ Update Daily Quiz Result screen
+10. ✅ All quiz/practice screens migrated successfully!
 
-**Code Reduction**: ~162 lines of button boilerplate removed across 8 screens (84% reduction)
+**Code Reduction**: ~512 lines of boilerplate removed across 11 screens (85% reduction)
+- Button code: ~162 lines eliminated (84% reduction)
+- Loading screen code: ~350 lines eliminated (duplicate animations, gradients, avatars)
 
 ---
 
