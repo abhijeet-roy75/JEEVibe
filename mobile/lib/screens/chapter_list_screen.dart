@@ -480,8 +480,22 @@ class _ChapterListScreenState extends State<ChapterListScreen>
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
         border: Border.all(
-          color: isUnlocked ? AppColors.borderDefault : AppColors.textTertiary.withOpacity(0.3),
+          color: isUnlocked
+            ? AppColors.borderDefault
+            : AppColors.primary.withOpacity(0.3), // Purple border for locked chapters
+          width: isUnlocked ? 1.0 : 1.5, // Thicker border for locked to draw attention
         ),
+        // Add subtle gradient background for locked chapters
+        gradient: !isUnlocked
+          ? LinearGradient(
+              colors: [
+                AppColors.primaryLight.withOpacity(0.03),
+                AppColors.surface,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            )
+          : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -510,21 +524,41 @@ class _ChapterListScreenState extends State<ChapterListScreen>
               children: [
                 // Lock/Unlock Icon
                 Container(
-                  width: PlatformSizing.spacing(40),
-                  height: PlatformSizing.spacing(40),
+                  width: PlatformSizing.spacing(48),
+                  height: PlatformSizing.spacing(48),
                   decoration: BoxDecoration(
-                    color: isUnlocked
-                        ? AppColors.success.withOpacity(0.1)
-                        : AppColors.textTertiary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(PlatformSizing.radius(8)),
+                    gradient: isUnlocked
+                        ? LinearGradient(
+                            colors: [
+                              AppColors.success.withOpacity(0.15),
+                              AppColors.success.withOpacity(0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : LinearGradient(
+                            colors: [
+                              AppColors.primary.withOpacity(0.15),
+                              AppColors.primaryLight.withOpacity(0.08),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(10)),
+                    border: Border.all(
+                      color: isUnlocked
+                        ? AppColors.success.withOpacity(0.2)
+                        : AppColors.primary.withOpacity(0.3),
+                      width: 1.5,
+                    ),
                   ),
                   child: Icon(
-                    isUnlocked ? Icons.lock_open : Icons.lock,
-                    color: isUnlocked ? AppColors.success : AppColors.textTertiary,
-                    size: PlatformSizing.iconSize(20),
+                    isUnlocked ? Icons.lock_open : Icons.lock_outline,
+                    color: isUnlocked ? AppColors.success : AppColors.primary,
+                    size: PlatformSizing.iconSize(24),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 // Chapter Info
                 Expanded(
                   child: Column(
@@ -534,10 +568,10 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                         chapter.chapterName,
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: isUnlocked ? AppColors.textPrimary : AppColors.textTertiary,
+                          color: isUnlocked ? AppColors.textPrimary : AppColors.textPrimary, // Keep same for readability
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       if (isUnlocked) ...[
                         // Show accuracy for unlocked chapters
                         Row(
@@ -572,25 +606,34 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                           ],
                         ),
                       ] else ...[
-                        // Show lock message for locked chapters
-                        Text(
-                          'Unlocks as you progress',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textTertiary,
-                            fontStyle: FontStyle.italic,
-                          ),
+                        // Show interactive unlock prompt for locked chapters
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.quiz_outlined,
+                              size: 16,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Tap to unlock with quiz',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ],
                   ),
                 ),
-                // Arrow icon for unlocked chapters
-                if (isUnlocked)
-                  const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
+                // Icon on the right
+                Icon(
+                  isUnlocked ? Icons.arrow_forward_ios : Icons.touch_app,
+                  size: isUnlocked ? 16 : 20,
+                  color: isUnlocked ? AppColors.textSecondary : AppColors.primary,
+                ),
               ],
             ),
           ),
