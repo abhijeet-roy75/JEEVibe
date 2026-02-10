@@ -80,10 +80,22 @@ void main() async {
 
   // Initialize Firebase Crashlytics
   FlutterError.onError = (errorDetails) {
+    // Filter out non-critical SVG parsing errors (handled gracefully by SafeSvgWidget)
+    if (errorDetails.exception.toString().contains('Invalid SVG data') ||
+        errorDetails.exception.toString().contains('unhandled element <ns0:svg')) {
+      debugPrint('SVG parsing error (handled gracefully): ${errorDetails.exception}');
+      return;
+    }
     FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
   };
   // Pass all uncaught asynchronous errors to Crashlytics
   PlatformDispatcher.instance.onError = (error, stack) {
+    // Filter out non-critical SVG parsing errors
+    if (error.toString().contains('Invalid SVG data') ||
+        error.toString().contains('unhandled element <ns0:svg')) {
+      debugPrint('SVG parsing error (handled gracefully): $error');
+      return true;
+    }
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     return true;
   };

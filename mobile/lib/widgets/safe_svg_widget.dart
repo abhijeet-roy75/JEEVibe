@@ -34,6 +34,10 @@ class SafeSvgWidget extends StatelessWidget {
       height: height,
       placeholderBuilder: placeholderBuilder,
       errorBuilder: errorBuilder ?? (BuildContext context, Object error, StackTrace stackTrace) {
+        // Log SVG errors to console but don't report to Crashlytics (handled gracefully)
+        debugPrint('⚠️ SVG failed to load: $url');
+        debugPrint('Error: $error');
+
         return Container(
           width: width ?? 200,
           height: height ?? 200,
