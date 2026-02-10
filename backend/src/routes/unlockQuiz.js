@@ -6,7 +6,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateUser } = require('../middleware/auth');
 const {
   generateUnlockQuiz,
   submitUnlockQuizAnswer,
@@ -30,7 +30,7 @@ const logger = require('../utils/logger');
  *   - subject: string
  *   - questions: Array of 5 questions (sanitized, no correct_answer)
  */
-router.post('/generate', authenticateToken, async (req, res) => {
+router.post('/generate', authenticateUser, async (req, res) => {
   try {
     const { chapterKey } = req.body;
     const userId = req.user.uid;
@@ -84,7 +84,7 @@ router.post('/generate', authenticateToken, async (req, res) => {
  *   - distractorAnalysis: Object
  *   - commonMistakes: Array
  */
-router.post('/submit-answer', authenticateToken, async (req, res) => {
+router.post('/submit-answer', authenticateUser, async (req, res) => {
   try {
     const { sessionId, questionId, selectedOption, timeTakenSeconds } = req.body;
     const userId = req.user.uid;
@@ -143,7 +143,7 @@ router.post('/submit-answer', authenticateToken, async (req, res) => {
  *   - passed: boolean
  *   - canRetry: boolean
  */
-router.post('/complete', authenticateToken, async (req, res) => {
+router.post('/complete', authenticateUser, async (req, res) => {
   try {
     const { sessionId } = req.body;
     const userId = req.user.uid;
@@ -183,7 +183,7 @@ router.post('/complete', authenticateToken, async (req, res) => {
  * Response:
  *   - Full session object
  */
-router.get('/session/:sessionId', authenticateToken, async (req, res) => {
+router.get('/session/:sessionId', authenticateUser, async (req, res) => {
   try {
     const { sessionId } = req.params;
     const userId = req.user.uid;
