@@ -75,6 +75,7 @@ class _UnlockQuizLoadingScreenState extends State<UnlockQuizLoadingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background, // Set scaffold background
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
