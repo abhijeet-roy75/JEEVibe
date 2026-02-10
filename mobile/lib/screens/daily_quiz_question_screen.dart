@@ -858,7 +858,12 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     final correctCount = quiz.questions.where((q) => q.isCorrect == true).length;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        12,
+        16,
+        MediaQuery.of(context).viewPadding.bottom + 12,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [

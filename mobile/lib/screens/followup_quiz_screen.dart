@@ -534,7 +534,7 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
                     _buildSubmitButton(),
                     SizedBox(height: AppSpacing.space12),
                     _buildSkipButton(),
-                    SizedBox(height: AppSpacing.space32),
+                    SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 24),
                   ],
                 ),
               ),
