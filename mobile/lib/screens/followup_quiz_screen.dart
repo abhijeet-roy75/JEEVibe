@@ -10,6 +10,8 @@ import '../widgets/chemistry_text.dart';
 import '../widgets/app_header.dart';
 import '../widgets/daily_quiz/feedback_banner_widget.dart';
 import '../widgets/daily_quiz/detailed_explanation_widget.dart';
+import '../widgets/buttons/primary_button.dart';
+import '../widgets/buttons/secondary_button.dart';
 import '../services/api_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../theme/app_colors.dart';
@@ -1152,39 +1154,18 @@ class _FollowUpQuizScreenState extends State<FollowUpQuizScreen> {
               ),
               const SizedBox(height: 32),
               // Go Back button (primary)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Go Back'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryPurple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
+              PrimaryButton(
+                text: 'Go Back',
+                onPressed: () => Navigator.of(context).pop(),
+                icon: Icons.arrow_back,
+                backgroundColor: AppColors.primaryPurple,
               ),
               const SizedBox(height: 12),
               // Try Again button (secondary)
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => _loadQuestion(currentQuestionIndex),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Try Again'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primaryPurple,
-                    side: const BorderSide(color: AppColors.primaryPurple),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
+              SecondaryButton(
+                text: 'Try Again',
+                onPressed: () => _loadQuestion(currentQuestionIndex),
+                icon: Icons.refresh,
               ),
             ],
           ),

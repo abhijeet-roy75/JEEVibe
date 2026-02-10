@@ -11,6 +11,8 @@ import '../theme/app_text_styles.dart';
 import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/buttons/gradient_button.dart';
+import '../widgets/buttons/primary_button.dart';
+import '../widgets/buttons/secondary_button.dart';
 import 'daily_quiz_review_screen.dart';
 import 'main_navigation_screen.dart';
 import 'ai_tutor_chat_screen.dart';
@@ -394,9 +396,9 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
                 const SizedBox(height: 8),
                 Text(_error ?? 'Failed to load quiz results', style: AppTextStyles.bodyMedium),
                 const SizedBox(height: 24),
-                ElevatedButton(
+                PrimaryButton(
+                  text: 'Go Back',
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Go Back'),
                 ),
               ],
             ),
@@ -884,35 +886,24 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
           // Discuss with Priya Ma'am button (Ultra tier only)
           if (hasAiTutorAccess) ...[
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  final quizNumber = _quizResult?['quiz']?['quiz_number'];
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AiTutorChatScreen(
-                        injectContext: TutorContext(
-                          type: TutorContextType.quiz,
-                          id: widget.quizId,
-                          title: 'Daily Quiz ${quizNumber ?? ''}',
-                        ),
+            SecondaryButton(
+              text: 'Discuss with Priya Ma\'am',
+              onPressed: () {
+                final quizNumber = _quizResult?['quiz']?['quiz_number'];
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AiTutorChatScreen(
+                      injectContext: TutorContext(
+                        type: TutorContextType.quiz,
+                        id: widget.quizId,
+                        title: 'Daily Quiz ${quizNumber ?? ''}',
                       ),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                label: const Text('Discuss with Priya Ma\'am'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primaryPurple,
-                  side: const BorderSide(color: AppColors.primaryPurple),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
                   ),
-                ),
-              ),
+                );
+              },
+              icon: Icons.chat_bubble_outline,
             ),
           ],
         ],

@@ -11,6 +11,8 @@ import '../../theme/app_text_styles.dart';
 import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../../widgets/priya_avatar.dart';
 import '../../widgets/buttons/gradient_button.dart';
+import '../../widgets/buttons/primary_button.dart';
+import '../../widgets/buttons/secondary_button.dart';
 import '../main_navigation_screen.dart';
 import '../subscription/paywall_screen.dart';
 import 'chapter_practice_review_screen.dart';
@@ -477,37 +479,21 @@ class ChapterPracticeResultScreen extends StatelessWidget {
             )),
             const SizedBox(height: 16),
             // Upgrade button
-            SizedBox(
-              width: double.infinity,
-              height: PlatformSizing.buttonHeight(48),
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PaywallScreen(
-                        featureName: 'Chapter Practice',
-                        limitReachedMessage: 'You\'ve completed 5 questions. Upgrade for 15 questions per chapter!',
-                      ),
+            PrimaryButton(
+              text: 'Upgrade to Pro',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PaywallScreen(
+                      featureName: 'Chapter Practice',
+                      limitReachedMessage: 'You\'ve completed 5 questions. Upgrade for 15 questions per chapter!',
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF9333EA),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-                child: const Text(
-                  'Upgrade to Pro',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+                );
+              },
+              backgroundColor: Colors.white,
+              height: PlatformSizing.buttonHeight(48),
             ),
           ],
         ),
@@ -537,21 +523,11 @@ class ChapterPracticeResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           // Practice Again button (secondary)
-          SizedBox(
-            width: double.infinity,
+          SecondaryButton(
+            text: 'Practice Again',
+            onPressed: () => _practiceAgain(context),
+            icon: Icons.refresh,
             height: PlatformSizing.buttonHeight(56),
-            child: OutlinedButton.icon(
-              onPressed: () => _practiceAgain(context),
-              icon: const Icon(Icons.refresh),
-              label: const Text('Practice Again'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primaryPurple,
-                side: const BorderSide(color: AppColors.primaryPurple),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
           ),
         ],
       ),

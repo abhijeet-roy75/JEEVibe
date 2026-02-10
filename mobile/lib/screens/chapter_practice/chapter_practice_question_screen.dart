@@ -16,6 +16,7 @@ import '../../utils/question_adapters.dart';
 import '../../widgets/daily_quiz/feedback_banner_widget.dart';
 import '../../widgets/daily_quiz/detailed_explanation_widget.dart';
 import '../../widgets/buttons/icon_button.dart';
+import '../../widgets/buttons/primary_button.dart';
 import 'chapter_practice_result_screen.dart';
 
 class ChapterPracticeQuestionScreen extends StatefulWidget {
@@ -681,25 +682,10 @@ class _ChapterPracticeQuestionScreenState
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _handleNextQuestion,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.warningAmber,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          provider.hasMoreQuestions ? 'Skip to Next Question' : 'Complete Practice',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                    PrimaryButton(
+                      text: provider.hasMoreQuestions ? 'Skip to Next Question' : 'Complete Practice',
+                      onPressed: _handleNextQuestion,
+                      backgroundColor: AppColors.warningAmber,
                     ),
                   ],
                 ),
@@ -984,35 +970,12 @@ class _ChapterPracticeQuestionScreenState
     final isLastQuestion = !provider.hasMoreQuestions;
     final isLoading = provider.isLoading || _isCompletingSession;
 
-    return SizedBox(
-      width: double.infinity,
+    return PrimaryButton(
+      text: isLastQuestion ? 'Complete Practice' : 'Next Question',
+      onPressed: _handleNextQuestion,
+      isLoading: isLoading,
+      backgroundColor: AppColors.primaryPurple,
       height: PlatformSizing.buttonHeight(56),
-      child: ElevatedButton(
-        onPressed: isLoading ? null : _handleNextQuestion,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryPurple,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
-          ),
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : Text(
-                isLastQuestion ? 'Complete Practice' : 'Next Question',
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-      ),
     );
   }
 

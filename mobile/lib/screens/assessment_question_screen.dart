@@ -16,6 +16,7 @@ import '../theme/app_text_styles.dart';
 import '../widgets/latex_widget.dart';
 import '../widgets/app_header.dart';
 import '../widgets/safe_svg_widget.dart';
+import '../widgets/buttons/primary_button.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'assessment_loading_screen.dart';
 
@@ -1151,68 +1152,16 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
 
   Widget _buildNavigationButtons() {
     final canProceed = _hasAnswer && !_isSubmitting;
-    
+
     return SafeArea(
       top: false,
-      child: Container(
+      child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-        child: SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: canProceed ? _nextQuestion : null,
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: canProceed
-                      ? const LinearGradient(
-                          colors: [Color(0xFF9333EA), Color(0xFFEC4899)], // Purple to pink
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        )
-                      : LinearGradient(
-                          colors: [
-                            Colors.grey.shade400,
-                            Colors.grey.shade500,
-                          ], // Gray when disabled
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _isLastQuestion ? 'Submit Assessment' : 'Next Question',
-                              style: AppTextStyles.labelMedium.copyWith(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            if (!_isLastQuestion) ...[
-                              const SizedBox(width: 6),
-                              const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
-                            ],
-                          ],
-                        ),
-                ),
-              ),
-            ),
-          ),
+        child: PrimaryButton(
+          text: _isLastQuestion ? 'Submit Assessment' : 'Next Question',
+          onPressed: canProceed ? _nextQuestion : null,
+          isLoading: _isSubmitting,
+          icon: _isLastQuestion ? null : Icons.arrow_forward,
         ),
       ),
     );

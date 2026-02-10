@@ -14,6 +14,7 @@ import '../widgets/daily_quiz/question_card_widget.dart';
 import '../widgets/daily_quiz/feedback_banner_widget.dart';
 import '../widgets/daily_quiz/detailed_explanation_widget.dart';
 import '../widgets/buttons/icon_button.dart';
+import '../widgets/buttons/primary_button.dart';
 import '../utils/error_handler.dart';
 import 'daily_quiz_result_screen.dart';
 
@@ -843,35 +844,12 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     // Include local _isCompletingQuiz flag to prevent double-tap
     final isLoading = provider.isSubmittingAnswer || provider.isCompletingQuiz || _isCompletingQuiz;
 
-    return SizedBox(
-      width: double.infinity,
+    return PrimaryButton(
+      text: isLastQuestion ? 'Complete Quiz' : 'Next Question',
+      onPressed: _handleNextQuestion,
+      isLoading: isLoading,
+      backgroundColor: AppColors.primaryPurple,
       height: PlatformSizing.buttonHeight(56),
-      child: ElevatedButton(
-        onPressed: isLoading ? null : _handleNextQuestion,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryPurple,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
-          ),
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : Text(
-                isLastQuestion ? 'Complete Quiz' : 'Next Question',
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-      ),
     );
   }
 
