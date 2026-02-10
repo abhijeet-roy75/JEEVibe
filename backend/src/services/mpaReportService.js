@@ -49,9 +49,12 @@ async function generateWeeklyReport(userId, weekStart, weekEnd) {
     // 1. Fetch all responses from the week
     const responses = await fetchWeekResponses(userId, weekStart, weekEnd);
 
-    if (responses.length < 40) {
-      console.log(`Insufficient data for ${userId}: ${responses.length} questions`);
-      return null;
+    // Always generate a report (even for low activity - engagement focus)
+    const hadActivity = responses.length > 0;
+
+    if (!hadActivity) {
+      console.log(`No activity for ${userId} this week`);
+      return null; // Skip if truly zero activity for weekly
     }
 
     // 2. Calculate summary statistics
