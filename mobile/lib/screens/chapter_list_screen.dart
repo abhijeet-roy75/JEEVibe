@@ -617,12 +617,13 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                     ],
                   ),
                 ),
-                // Icon on the right
-                Icon(
-                  isUnlocked ? Icons.arrow_forward_ios : Icons.touch_app,
-                  size: isUnlocked ? 16 : 20,
-                  color: isUnlocked ? AppColors.textSecondary : AppColors.primary,
-                ),
+                // Arrow icon for unlocked chapters only
+                if (isUnlocked)
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
               ],
             ),
           ),
