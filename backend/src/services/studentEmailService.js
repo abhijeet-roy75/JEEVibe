@@ -1498,7 +1498,7 @@ async function sendAllWeeklyMPAEmails() {
 
         if (!report) {
           results.skipped++;
-          logger.debug('Insufficient data for weekly MPA report', { userId, reason: 'Less than 40 questions' });
+          logger.debug('No weekly MPA report generated', { userId, reason: 'No activity this week' });
           continue;
         }
 
