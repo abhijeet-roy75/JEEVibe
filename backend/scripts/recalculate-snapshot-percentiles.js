@@ -41,19 +41,20 @@ async function recalculateSnapshotPercentiles(dryRun = false) {
   console.log('');
 
   try {
-    // Get all users with theta snapshots
-    console.log('Fetching users with theta snapshots...');
-    const snapshotUsersSnapshot = await db.collection('theta_snapshots').get();
-    console.log(`Found ${snapshotUsersSnapshot.size} users with snapshots\n`);
+    // Get all users and check each for snapshots
+    console.log('Fetching all users...');
+    const usersSnapshot = await db.collection('users').get();
+    console.log(`Found ${usersSnapshot.size} users\n`);
 
     let totalSnapshots = 0;
     let updatedSnapshots = 0;
     let unchangedSnapshots = 0;
     let errorCount = 0;
+    let usersWithSnapshots = 0;
 
     // Process each user
-    for (const userSnapshotDoc of snapshotUsersSnapshot.docs) {
-      const userId = userSnapshotDoc.id;
+    for (const userDoc of usersSnapshot.docs) {
+      const userId = userDoc.id;
 
       try {
         // Get all daily snapshots for this user
@@ -63,13 +64,15 @@ async function recalculateSnapshotPercentiles(dryRun = false) {
           .collection('daily')
           .get();
 
-        console.log(`User ${userId}: ${dailySnapshotsSnapshot.size} snapshots`);
+        if (dailySnapshotsSnapshot.size > 0) {
+          usersWithSnapshots++;
+          console.log(`User ${userId}: ${dailySnapshotsSnapshot.size} snapshots`);
+        }
 
         // Process each daily snapshot
         for (const snapshotDoc of dailySnapshotsSnapshot.docs) {
           totalSnapshots++;
           const snapshotData = snapshotDoc.data();
-          const snapshotId = snapshotDoc.id;
 
           // Get theta value
           const theta = snapshotData.overall_theta;
@@ -88,14 +91,9 @@ async function recalculateSnapshotPercentiles(dryRun = false) {
 
           if (needsUpdate) {
             if (!dryRun) {
-              await db
-                .collection('theta_snapshots')
-                .doc(userId)
-                .collection('daily')
-                .doc(snapshotId)
-                .update({
-                  overall_percentile: correctPercentile
-                });
+              await snapshotDoc.ref.update({
+                overall_percentile: correctPercentile
+              });
             }
             updatedSnapshots++;
           } else {
@@ -107,6 +105,8 @@ async function recalculateSnapshotPercentiles(dryRun = false) {
         errorCount++;
       }
     }
+
+    console.log(`\nUsers with snapshots: ${usersWithSnapshots}`);
 
     // Display results
     console.log('');
