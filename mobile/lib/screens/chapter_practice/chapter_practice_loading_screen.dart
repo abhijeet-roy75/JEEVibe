@@ -9,7 +9,10 @@ import '../../services/subscription_service.dart';
 import '../../services/offline/connectivity_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../../widgets/priya_avatar.dart';
+import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
+import '../../widgets/buttons/primary_button.dart';
+import '../../widgets/buttons/secondary_button.dart';
+import '../../widgets/quiz_loading_screen.dart';
 import '../../utils/error_handler.dart';
 import '../subscription/paywall_screen.dart';
 import '../daily_quiz_loading_screen.dart';
@@ -33,29 +36,14 @@ class ChapterPracticeLoadingScreen extends StatefulWidget {
 }
 
 class _ChapterPracticeLoadingScreenState
-    extends State<ChapterPracticeLoadingScreen>
-    with SingleTickerProviderStateMixin {
+    extends State<ChapterPracticeLoadingScreen> {
   String? _error;
   bool _isOffline = false;
-  late AnimationController _avatarAnimationController;
 
   @override
   void initState() {
     super.initState();
-
-    // Avatar pulsing animation
-    _avatarAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
     _startPractice();
-  }
-
-  @override
-  void dispose() {
-    _avatarAnimationController.dispose();
-    super.dispose();
   }
 
   Future<void> _startPractice() async {
@@ -321,15 +309,15 @@ class _ChapterPracticeLoadingScreenState
               children: [
                 // Icon based on error type
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: PlatformSizing.spacing(80),
+                  height: PlatformSizing.spacing(80),
                   decoration: BoxDecoration(
                     color: AppColors.errorRed.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     _isOffline ? Icons.wifi_off_rounded : Icons.error_outline,
-                    size: 40,
+                    size: PlatformSizing.iconSize(40),
                     color: AppColors.errorRed,
                   ),
                 ),
@@ -353,45 +341,23 @@ class _ChapterPracticeLoadingScreenState
                 ),
                 const SizedBox(height: 32),
                 // Go Back button (primary)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Go Back'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryPurple,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
+                PrimaryButton(
+                  text: 'Go Back',
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: Icons.arrow_back,
                 ),
                 const SizedBox(height: 12),
                 // Try Again button (secondary)
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _error = null;
-                        _isOffline = false;
-                      });
-                      _startPractice();
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Try Again'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primaryPurple,
-                      side: const BorderSide(color: AppColors.primaryPurple),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
+                SecondaryButton(
+                  text: 'Try Again',
+                  onPressed: () {
+                    setState(() {
+                      _error = null;
+                      _isOffline = false;
+                    });
+                    _startPractice();
+                  },
+                  icon: Icons.refresh,
                 ),
               ],
             ),
@@ -400,152 +366,13 @@ class _ChapterPracticeLoadingScreenState
       );
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF9333EA), Color(0xFFEC4899)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 40),
-                    // Priya Ma'am Avatar with pulsing animation
-                    AnimatedBuilder(
-                      animation: _avatarAnimationController,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale:
-                              1.0 + (_avatarAnimationController.value * 0.05),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.white.withValues(
-                                    alpha: 0.3 +
-                                        (_avatarAnimationController.value *
-                                            0.2),
-                                  ),
-                                  blurRadius: 40,
-                                  spreadRadius: 15,
-                                ),
-                              ],
-                            ),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: const PriyaAvatar(size: 120),
-                    ),
-                    const SizedBox(height: 32),
-                    // Chapter info card
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        children: [
-                          // Subject badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              widget.subject,
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // Chapter name
-                          Text(
-                            widget.chapterName,
-                            style: AppTextStyles.headerMedium.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    // Message text
-                    Text(
-                      'Preparing your practice questions for ${widget.chapterName}. This will help strengthen your understanding!',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: Colors.white.withValues(alpha: 0.95),
-                        fontSize: 15,
-                        height: 1.5,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 40),
-                    // Loading spinner
-                    const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      strokeWidth: 3,
-                    ),
-                    const SizedBox(height: 20),
-                    // Practice mode badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.timer_off_outlined,
-                            color: Colors.white.withValues(alpha: 0.9),
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'No Timer - Practice at your pace',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+    return QuizLoadingScreen(
+      subject: widget.subject,
+      chapterName: widget.chapterName,
+      message:
+          'Preparing your practice questions for ${widget.chapterName}. This will help strengthen your understanding!',
+      badgeText: 'No Timer - Practice at your pace',
+      badgeIcon: Icons.timer_off_outlined,
     );
   }
 }

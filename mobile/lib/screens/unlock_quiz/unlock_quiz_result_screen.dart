@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
 import 'package:jeevibe_mobile/models/unlock_quiz_models.dart';
 import 'package:jeevibe_mobile/theme/app_colors.dart';
+import 'package:jeevibe_mobile/widgets/buttons/primary_button.dart';
+import 'package:jeevibe_mobile/widgets/buttons/secondary_button.dart';
 import 'package:jeevibe_mobile/screens/chapter_practice/chapter_practice_loading_screen.dart';
 
 /// Unlock Quiz Result Screen
@@ -45,7 +47,6 @@ class _UnlockQuizResultScreenState extends State<UnlockQuizResultScreen> {
     return PopScope(
       canPop: true,
       child: Scaffold(
-        backgroundColor: AppColors.background,
         appBar: AppBar(
           backgroundColor: AppColors.surface,
           elevation: 0,
@@ -57,11 +58,25 @@ class _UnlockQuizResultScreenState extends State<UnlockQuizResultScreen> {
             ),
           ),
         ),
-        body: Stack(
-          children: [
-            _buildContent(),
-            if (widget.result.passed) _buildConfetti(),
-          ],
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.background,
+                AppColors.surface,
+                AppColors.background,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: [0.0, 0.5, 1.0],
+            ),
+          ),
+          child: Stack(
+            children: [
+              _buildContent(),
+              if (widget.result.passed) _buildConfetti(),
+            ],
+          ),
         ),
       ),
     );
@@ -69,43 +84,43 @@ class _UnlockQuizResultScreenState extends State<UnlockQuizResultScreen> {
 
   Widget _buildContent() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100), // Bottom padding for OS nav bar
       child: Column(
         children: [
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // Icon & Title
           Icon(
             widget.result.passed ? Icons.lock_open : Icons.lock,
-            size: 80,
+            size: 64,
             color: widget.result.passed ? Colors.green : Colors.orange,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           Text(
             widget.result.passed ? '🎉 Chapter Unlocked!' : 'Almost there!',
             style: const TextStyle(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
               color: AppColors.textDark,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
 
           Text(
             widget.result.chapterName,
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               color: AppColors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
 
-          // Score Card
+          // Score Card (reduced size)
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: widget.result.passed
@@ -118,28 +133,28 @@ class _UnlockQuizResultScreenState extends State<UnlockQuizResultScreen> {
               children: [
                 const Text(
                   'Score',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  style: TextStyle(color: Colors.white, fontSize: 14),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   '${widget.result.correctCount} / ${widget.result.totalQuestions}',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 48,
+                    fontSize: 36,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   widget.result.passed
                       ? 'You passed! 🎊'
                       : 'Need ${3 - widget.result.correctCount} more correct',
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
 
           // Message
           Container(
@@ -179,94 +194,45 @@ class _UnlockQuizResultScreenState extends State<UnlockQuizResultScreen> {
       children: [
         // Retry Button (if failed)
         if (!widget.result.passed)
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                // Pop back to chapter list, which will allow retry
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Try Again with New Questions',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+          PrimaryButton(
+            text: 'Try Again with New Questions',
+            onPressed: () {
+              // Pop back to chapter list, which will allow retry
+              Navigator.pop(context);
+            },
+            backgroundColor: AppColors.primary,
           ),
 
         const SizedBox(height: 12),
 
         // Back to Chapters Button
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: () {
-              // Navigate back to chapter list
-              Navigator.popUntil(context, (route) => route.isFirst);
-            },
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              side: const BorderSide(color: AppColors.borderDefault, width: 2),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text(
-              'Back to Chapters',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
-            ),
-          ),
+        SecondaryButton(
+          text: 'Back to Chapters',
+          onPressed: () {
+            // Navigate back to chapter list
+            Navigator.popUntil(context, (route) => route.isFirst);
+          },
         ),
 
         // Start Practicing Button (if passed)
         if (widget.result.passed) ...[
           const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                // Navigate to chapter practice for this chapter
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChapterPracticeLoadingScreen(
-                      chapterKey: widget.result.chapterKey,
-                      chapterName: widget.result.chapterName,
-                      subject: widget.result.subject,
-                    ),
+          PrimaryButton(
+            text: 'Start Practicing Now!',
+            onPressed: () {
+              // Navigate to chapter practice for this chapter
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChapterPracticeLoadingScreen(
+                    chapterKey: widget.result.chapterKey,
+                    chapterName: widget.result.chapterName,
+                    subject: widget.result.subject,
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
                 ),
-              ),
-              child: const Text(
-                'Start Practicing Now!',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
+              );
+            },
+            backgroundColor: Colors.green,
           ),
         ],
       ],
