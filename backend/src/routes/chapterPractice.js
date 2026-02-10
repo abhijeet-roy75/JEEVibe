@@ -30,7 +30,6 @@ const { getDatabaseNames } = require('../services/chapterMappingService');
 // Subscription & Tier Services
 const { getEffectiveTier } = require('../services/subscriptionService');
 const { getTierLimits } = require('../services/tierConfigService');
-const { canPracticeSubject, recordCompletion } = require('../services/weeklyChapterPracticeService');
 
 const {
   calculateChapterThetaUpdate,
@@ -163,35 +162,49 @@ router.post('/generate', authenticateUser, validateGenerate, async (req, res, ne
       });
     }
 
-    // Check weekly limit per subject (for free tier)
-    const weeklyLimit = limits.chapter_practice_weekly_per_subject ?? -1;
-    if (weeklyLimit !== -1) {
-      // Get subject from chapter_key
-      const mapping = await getDatabaseNames(chapter_key);
-      const subject = mapping?.subject || chapter_key.split('_')[0];
+    // Check daily limit for chapter practice (Free tier: 5 chapters/day)
+    const dailyLimit = limits.chapter_practice_daily_limit ?? -1;
+    if (dailyLimit !== -1) {
+      // Get today's date in IST (YYYY-MM-DD format)
+      const getTodayIST = () => {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Kolkata',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+        return formatter.format(new Date());
+      };
 
-      const canPractice = await canPracticeSubject(userId, subject);
+      const todayKey = getTodayIST();
+      const dailyUsageRef = db.collection('users').doc(userId)
+        .collection('daily_usage').doc(todayKey);
 
-      if (!canPractice.allowed) {
-        logger.warn('Chapter practice weekly limit reached', {
+      const usageDoc = await retryFirestoreOperation(async () => {
+        return await dailyUsageRef.get();
+      });
+
+      const usageData = usageDoc.exists ? usageDoc.data() : {};
+      const chaptersCompletedToday = usageData.chapter_practice_count || 0;
+
+      if (chaptersCompletedToday >= dailyLimit) {
+        logger.warn('Chapter practice daily limit reached', {
           userId,
-          subject,
           tier: tierInfo.tier,
-          lastChapter: canPractice.last_chapter_name,
-          unlocksAt: canPractice.unlocks_at
+          chaptersCompletedToday,
+          dailyLimit,
+          date: todayKey
         });
 
         return res.status(403).json({
           success: false,
           error: {
-            code: 'WEEKLY_LIMIT_REACHED',
-            message: `You practiced ${canPractice.last_chapter_name} this week. Practice unlocks in ${canPractice.days_remaining} day${canPractice.days_remaining === 1 ? '' : 's'}.`,
-            details: 'Free tier allows 1 chapter practice per subject per week'
+            code: 'DAILY_LIMIT_REACHED',
+            message: `You've practiced ${dailyLimit} chapters today. Come back tomorrow for more!`,
+            details: `Free tier allows ${dailyLimit} chapter practices per day`
           },
-          subject: subject,
-          last_chapter_name: canPractice.last_chapter_name,
-          unlocks_at: canPractice.unlocks_at,
-          days_remaining: canPractice.days_remaining,
+          chapters_completed_today: chaptersCompletedToday,
+          daily_limit: dailyLimit,
           tier: tierInfo.tier,
           upgrade_prompt: {
             message: 'Upgrade to Pro for unlimited chapter practice',
@@ -1027,17 +1040,39 @@ router.post('/complete', authenticateUser, validateSessionId, async (req, res, n
       });
     }
 
-    // Record weekly usage for free tier (if weekly limit applies)
+    // Record daily usage for tier limit tracking (Free tier: 5 chapters/day)
     const tierInfo = await getEffectiveTier(userId);
     const limits = await getTierLimits(tierInfo.tier);
-    const weeklyLimit = limits.chapter_practice_weekly_per_subject ?? -1;
-    if (weeklyLimit !== -1) {
-      await recordCompletion(
+    const dailyLimit = limits.chapter_practice_daily_limit ?? -1;
+    if (dailyLimit !== -1) {
+      // Get today's date in IST
+      const getTodayIST = () => {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Asia/Kolkata',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+        return formatter.format(new Date());
+      };
+
+      const todayKey = getTodayIST();
+      const dailyUsageRef = db.collection('users').doc(userId)
+        .collection('daily_usage').doc(todayKey);
+
+      // Increment chapter practice count for today
+      await retryFirestoreOperation(async () => {
+        await dailyUsageRef.set({
+          chapter_practice_count: admin.firestore.FieldValue.increment(1),
+          updated_at: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      });
+
+      logger.info('Recorded daily chapter practice completion', {
         userId,
-        sessionData.subject,
-        sessionData.chapter_key,
-        sessionData.chapter_name
-      );
+        date: todayKey,
+        chapterKey: sessionData.chapter_key
+      });
     }
 
     logger.info('Chapter practice session completed', {
