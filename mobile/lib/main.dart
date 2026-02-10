@@ -8,6 +8,7 @@ import 'providers/daily_quiz_provider.dart';
 import 'providers/ai_tutor_provider.dart';
 import 'providers/chapter_practice_provider.dart';
 import 'providers/mock_test_provider.dart';
+import 'providers/unlock_quiz_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -195,6 +196,9 @@ void main() async {
 
         // Chapter Practice State
         ChangeNotifierProvider(create: (_) => ChapterPracticeProvider()),
+
+        // Unlock Quiz State
+        ChangeNotifierProvider(create: (_) => UnlockQuizProvider()),
 
         // Offline Mode Provider
         ChangeNotifierProvider(create: (_) => OfflineProvider()),

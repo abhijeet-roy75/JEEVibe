@@ -13,6 +13,7 @@ import '../widgets/subject_icon_widget.dart';
 import '../widgets/app_header.dart';
 import 'assessment_intro_screen.dart';
 import 'chapter_practice/chapter_practice_loading_screen.dart';
+import 'unlock_quiz/unlock_quiz_loading_screen.dart';
 
 class ChapterListScreen extends StatefulWidget {
   const ChapterListScreen({super.key});
@@ -486,18 +487,23 @@ class _ChapterListScreenState extends State<ChapterListScreen>
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: isUnlocked ? () {
-            // Navigate to chapter practice (existing flow)
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => ChapterPracticeLoadingScreen(
-                  chapterKey: chapter.chapterKey,
-                  chapterName: chapter.chapterName,
-                  subject: subject,
+          onTap: () {
+            if (isUnlocked) {
+              // Navigate to chapter practice (existing flow)
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ChapterPracticeLoadingScreen(
+                    chapterKey: chapter.chapterKey,
+                    chapterName: chapter.chapterName,
+                    subject: subject,
+                  ),
                 ),
-              ),
-            );
-          } : null,
+              );
+            } else {
+              // Show unlock quiz dialog for locked chapters
+              _showUnlockQuizDialog(context, chapter, subject);
+            }
+          },
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -597,5 +603,135 @@ class _ChapterListScreenState extends State<ChapterListScreen>
     if (accuracy >= 70) return AppColors.success;
     if (accuracy >= 40) return AppColors.warning;
     return AppColors.error;
+  }
+
+  /// Show unlock quiz dialog for locked chapters
+  Future<void> _showUnlockQuizDialog(
+    BuildContext context,
+    ChapterMastery chapter,
+    String subject,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.lock_open, color: AppColors.primary, size: 28),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Unlock "${chapter.chapterName}"?',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Take a quick 5-question quiz to unlock this chapter early.',
+              style: TextStyle(fontSize: 15),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(0.2),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInfoRow(
+                    Icons.quiz,
+                    'Answer 3 out of 5 correctly to unlock',
+                  ),
+                  const SizedBox(height: 8),
+                  _buildInfoRow(
+                    Icons.refresh,
+                    'Can retry immediately with new questions',
+                  ),
+                  const SizedBox(height: 8),
+                  _buildInfoRow(
+                    Icons.timer_off,
+                    'No time limit, no pressure!',
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Start Quiz',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      // Navigate to unlock quiz loading screen
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UnlockQuizLoadingScreen(
+            chapterKey: chapter.chapterKey,
+            chapterName: chapter.chapterName,
+            subject: subject,
+          ),
+        ),
+      );
+
+      // Refresh chapter unlock data after quiz completion
+      if (result == true && mounted) {
+        _loadUnlockData();
+      }
+    }
+  }
+
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppColors.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 13, color: AppColors.textDark),
+          ),
+        ),
+      ],
+    );
   }
 }
