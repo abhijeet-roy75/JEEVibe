@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:confetti/confetti.dart';
-import 'package:jeevibe/models/unlock_quiz_models.dart';
-import 'package:jeevibe/theme/app_colors.dart';
-import 'package:jeevibe/screens/chapter_practice/chapter_practice_loading_screen.dart';
+import 'package:jeevibe_mobile/models/unlock_quiz_models.dart';
+import 'package:jeevibe_mobile/theme/app_colors.dart';
+import 'package:jeevibe_mobile/screens/chapter_practice/chapter_practice_loading_screen.dart';
 
 /// Unlock Quiz Result Screen
 /// Shows pass/fail result with confetti animation for success
@@ -216,7 +216,7 @@ class _UnlockQuizResultScreenState extends State<UnlockQuizResultScreen> {
             },
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
-              side: const BorderSide(color: AppColors.border, width: 2),
+              side: const BorderSide(color: AppColors.borderDefault, width: 2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -247,7 +247,6 @@ class _UnlockQuizResultScreenState extends State<UnlockQuizResultScreen> {
                       chapterKey: widget.result.chapterKey,
                       chapterName: widget.result.chapterName,
                       subject: widget.result.subject,
-                      questionCount: 15, // Default for unlocked chapters
                     ),
                   ),
                 );

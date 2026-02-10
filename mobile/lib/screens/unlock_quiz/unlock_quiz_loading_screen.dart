@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:jeevibe/providers/unlock_quiz_provider.dart';
-import 'package:jeevibe/services/firebase/auth_service.dart';
-import 'package:jeevibe/theme/app_colors.dart';
-import 'package:jeevibe/screens/unlock_quiz/unlock_quiz_question_screen.dart';
+import 'package:jeevibe_mobile/providers/unlock_quiz_provider.dart';
+import 'package:jeevibe_mobile/services/firebase/auth_service.dart';
+import 'package:jeevibe_mobile/theme/app_colors.dart';
+import 'package:jeevibe_mobile/screens/unlock_quiz/unlock_quiz_question_screen.dart';
 
 /// Unlock Quiz Loading Screen
 /// Generates quiz session and navigates to question screen

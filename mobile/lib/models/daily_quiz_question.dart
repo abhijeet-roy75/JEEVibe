@@ -290,5 +290,16 @@ class SolutionStep {
 
   /// Get display text (prioritize description, fallback to explanation)
   String get displayText => description ?? explanation ?? '';
+
+  Map<String, dynamic> toJson() {
+    return {
+      'step_number': stepNumber,
+      'description': description,
+      'explanation': explanation,
+      'formula': formula,
+      'calculation': calculation,
+      'result': result,
+    };
+  }
 }
 

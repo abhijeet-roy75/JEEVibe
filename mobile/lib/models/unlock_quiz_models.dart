@@ -1,4 +1,5 @@
-import 'package:jeevibe/models/daily_quiz_models.dart';
+import 'package:jeevibe_mobile/models/daily_quiz_question.dart' show SolutionStep;
+import 'package:jeevibe_mobile/models/assessment_question.dart' show QuestionOption;
 
 /// Unlock Quiz Session
 /// Represents a 5-question quiz session for unlocking a locked chapter
@@ -59,7 +60,7 @@ class UnlockQuizQuestion {
   final String questionType;
   final String questionText;
   final String? questionTextHtml;
-  final List<UnlockQuizOption> options;
+  final List<QuestionOption> options;
   final String? imageUrl;
 
   // Answer state (mutable)
@@ -100,7 +101,7 @@ class UnlockQuizQuestion {
       questionText: json['question_text'] ?? '',
       questionTextHtml: json['question_text_html'],
       options: (json['options'] as List?)
-              ?.map((o) => UnlockQuizOption.fromJson(o))
+              ?.map((o) => QuestionOption.fromJson(o))
               .toList() ??
           [],
       imageUrl: json['image_url'],
@@ -129,35 +130,6 @@ class UnlockQuizQuestion {
       'correct_answer': correctAnswer,
       'is_correct': isCorrect,
       'time_taken_seconds': timeTakenSeconds,
-    };
-  }
-}
-
-/// Unlock Quiz Option
-class UnlockQuizOption {
-  final String optionId;
-  final String text;
-  final String? html;
-
-  UnlockQuizOption({
-    required this.optionId,
-    required this.text,
-    this.html,
-  });
-
-  factory UnlockQuizOption.fromJson(Map<String, dynamic> json) {
-    return UnlockQuizOption(
-      optionId: json['option_id'] ?? '',
-      text: json['text'] ?? '',
-      html: json['html'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'option_id': optionId,
-      'text': text,
-      'html': html,
     };
   }
 }

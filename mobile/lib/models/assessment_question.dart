@@ -101,4 +101,12 @@ class QuestionOption {
       html: json['html'] as String?,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'option_id': optionId,
+      'text': text,
+      'html': html,
+    };
+  }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:jeevibe/models/unlock_quiz_models.dart';
-import 'package:jeevibe/services/api_service.dart';
+import 'package:jeevibe_mobile/models/unlock_quiz_models.dart';
+import 'package:jeevibe_mobile/services/api_service.dart';
 
 /// Unlock Quiz Provider
 /// Manages state for the chapter unlock quiz feature
@@ -35,10 +35,9 @@ class UnlockQuizProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.post(
-        '/unlock-quiz/generate',
-        {'chapterKey': chapterKey},
-        authToken,
+      final response = await ApiService.generateUnlockQuiz(
+        authToken: authToken,
+        chapterKey: chapterKey,
       );
 
       if (response['success']) {
@@ -72,15 +71,12 @@ class UnlockQuizProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.post(
-        '/unlock-quiz/submit-answer',
-        {
-          'sessionId': _session!.sessionId,
-          'questionId': currentQuestion!.questionId,
-          'selectedOption': selectedOption,
-          'timeTakenSeconds': timeTakenSeconds,
-        },
-        authToken,
+      final response = await ApiService.submitUnlockQuizAnswer(
+        authToken: authToken,
+        sessionId: _session!.sessionId,
+        questionId: currentQuestion!.questionId,
+        selectedOption: selectedOption,
+        timeTakenSeconds: timeTakenSeconds,
       );
 
       if (response['success']) {
@@ -128,10 +124,9 @@ class UnlockQuizProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.post(
-        '/unlock-quiz/complete',
-        {'sessionId': _session!.sessionId},
-        authToken,
+      final response = await ApiService.completeUnlockQuiz(
+        authToken: authToken,
+        sessionId: _session!.sessionId,
       );
 
       if (response['success']) {

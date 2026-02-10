@@ -2194,5 +2194,125 @@ class ApiService {
       }
     });
   }
+
+  // ============================================================================
+  // UNLOCK QUIZ ENDPOINTS
+  // ============================================================================
+
+  /// Generate unlock quiz for a locked chapter
+  static Future<Map<String, dynamic>> generateUnlockQuiz({
+    required String authToken,
+    required String chapterKey,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/unlock-quiz/generate'),
+          headers: headers,
+          body: json.encode({'chapterKey': chapterKey}),
+        ).timeout(const Duration(seconds: 30));
+
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          }
+          throw Exception(jsonData['error'] ?? 'Failed to generate unlock quiz');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to generate unlock quiz');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
+
+  /// Submit answer for unlock quiz question
+  static Future<Map<String, dynamic>> submitUnlockQuizAnswer({
+    required String authToken,
+    required String sessionId,
+    required String questionId,
+    required String selectedOption,
+    required int timeTakenSeconds,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/unlock-quiz/submit-answer'),
+          headers: headers,
+          body: json.encode({
+            'sessionId': sessionId,
+            'questionId': questionId,
+            'selectedOption': selectedOption,
+            'timeTakenSeconds': timeTakenSeconds,
+          }),
+        ).timeout(const Duration(seconds: 30));
+
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          }
+          throw Exception(jsonData['error'] ?? 'Failed to submit answer');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to submit answer');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
+
+  /// Complete unlock quiz and get results
+  static Future<Map<String, dynamic>> completeUnlockQuiz({
+    required String authToken,
+    required String sessionId,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/unlock-quiz/complete'),
+          headers: headers,
+          body: json.encode({'sessionId': sessionId}),
+        ).timeout(const Duration(seconds: 30));
+
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          }
+          throw Exception(jsonData['error'] ?? 'Failed to complete quiz');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to complete quiz');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
 }
 

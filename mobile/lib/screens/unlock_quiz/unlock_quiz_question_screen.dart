@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:jeevibe/providers/unlock_quiz_provider.dart';
-import 'package:jeevibe/services/firebase/auth_service.dart';
-import 'package:jeevibe/theme/app_colors.dart';
-import 'package:jeevibe/widgets/daily_quiz/feedback_banner_widget.dart';
-import 'package:jeevibe/widgets/daily_quiz/detailed_explanation_widget.dart';
-import 'package:jeevibe/screens/unlock_quiz/unlock_quiz_result_screen.dart';
-import 'package:jeevibe/models/unlock_quiz_models.dart';
+import 'package:jeevibe_mobile/providers/unlock_quiz_provider.dart';
+import 'package:jeevibe_mobile/services/firebase/auth_service.dart';
+import 'package:jeevibe_mobile/theme/app_colors.dart';
+import 'package:jeevibe_mobile/widgets/daily_quiz/feedback_banner_widget.dart';
+import 'package:jeevibe_mobile/widgets/daily_quiz/detailed_explanation_widget.dart';
+import 'package:jeevibe_mobile/screens/unlock_quiz/unlock_quiz_result_screen.dart';
+import 'package:jeevibe_mobile/models/unlock_quiz_models.dart';
+import 'package:jeevibe_mobile/models/daily_quiz_question.dart' show AnswerFeedback;
+import 'package:jeevibe_mobile/models/assessment_question.dart' show QuestionOption;
 
 /// Unlock Quiz Question Screen
 /// Displays questions and handles answer submission
@@ -68,20 +70,49 @@ class _UnlockQuizQuestionScreenState extends State<UnlockQuizQuestionScreen> {
                   // Feedback Banner (if answered)
                   if (isAnswered && answerResult != null)
                     FeedbackBannerWidget(
-                      isCorrect: answerResult.isCorrect,
-                      correctAnswer:
-                          answerResult.correctAnswerText ?? answerResult.correctAnswer,
-                      studentAnswer: answerResult.studentAnswer,
+                      feedback: AnswerFeedback(
+                        questionId: question.questionId,
+                        isCorrect: answerResult.isCorrect,
+                        correctAnswer: answerResult.correctAnswer,
+                        correctAnswerText: answerResult.correctAnswerText,
+                        explanation: answerResult.keyInsight,
+                        solutionText: answerResult.solutionText,
+                        solutionSteps: answerResult.solutionSteps,
+                        timeTakenSeconds: _questionStartTime != null
+                            ? DateTime.now().difference(_questionStartTime!).inSeconds
+                            : 0,
+                        studentAnswer: answerResult.studentAnswer,
+                        keyInsight: answerResult.keyInsight,
+                        commonMistakes: answerResult.commonMistakes,
+                        distractorAnalysis: answerResult.distractorAnalysis,
+                        questionType: question.questionType,
+                      ),
+                      timeTakenSeconds: _questionStartTime != null
+                          ? DateTime.now().difference(_questionStartTime!).inSeconds
+                          : 0,
                     ),
 
                   // Detailed Explanation (if answered)
                   if (isAnswered && answerResult != null)
                     DetailedExplanationWidget(
-                      solutionSteps: answerResult.solutionSteps,
-                      keyInsight: answerResult.keyInsight,
-                      distractorAnalysis: answerResult.distractorAnalysis,
-                      commonMistakes: answerResult.commonMistakes,
-                      motivationalMessage: _getMotivationalMessage(answerResult.isCorrect),
+                      feedback: AnswerFeedback(
+                        questionId: question.questionId,
+                        isCorrect: answerResult.isCorrect,
+                        correctAnswer: answerResult.correctAnswer,
+                        correctAnswerText: answerResult.correctAnswerText,
+                        explanation: answerResult.keyInsight,
+                        solutionText: answerResult.solutionText,
+                        solutionSteps: answerResult.solutionSteps,
+                        timeTakenSeconds: _questionStartTime != null
+                            ? DateTime.now().difference(_questionStartTime!).inSeconds
+                            : 0,
+                        studentAnswer: answerResult.studentAnswer,
+                        keyInsight: answerResult.keyInsight,
+                        commonMistakes: answerResult.commonMistakes,
+                        distractorAnalysis: answerResult.distractorAnalysis,
+                        questionType: question.questionType,
+                      ),
+                      isCorrect: answerResult.isCorrect,
                     ),
 
                   // Action Buttons
@@ -179,7 +210,7 @@ class _UnlockQuizQuestionScreenState extends State<UnlockQuizQuestionScreen> {
           const SizedBox(height: 8),
           LinearProgressIndicator(
             value: progress,
-            backgroundColor: AppColors.border.withOpacity(0.3),
+            backgroundColor: AppColors.borderDefault.withOpacity(0.3),
             valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
             minHeight: 6,
           ),
@@ -277,7 +308,7 @@ class _UnlockQuizQuestionScreenState extends State<UnlockQuizQuestionScreen> {
   }
 
   Widget _buildOption(
-    UnlockQuizOption option,
+    QuestionOption option,
     bool isAnswered,
     UnlockQuizQuestion question,
   ) {
@@ -287,7 +318,7 @@ class _UnlockQuizQuestionScreenState extends State<UnlockQuizQuestionScreen> {
         isSelected &&
         option.optionId != question.correctAnswer;
 
-    Color borderColor = AppColors.border;
+    Color borderColor = AppColors.borderDefault;
     Color backgroundColor = AppColors.background;
 
     if (isAnswered) {
@@ -329,10 +360,10 @@ class _UnlockQuizQuestionScreenState extends State<UnlockQuizQuestionScreen> {
                         ? Colors.green
                         : isWrongAnswer
                             ? Colors.red
-                            : AppColors.border.withOpacity(0.3))
+                            : AppColors.borderDefault.withOpacity(0.3))
                     : (isSelected
                         ? AppColors.primary
-                        : AppColors.border.withOpacity(0.3)),
+                        : AppColors.borderDefault.withOpacity(0.3)),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
