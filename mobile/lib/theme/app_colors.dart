@@ -402,16 +402,16 @@ class AppIconSizes {
 class AppButtonSizes {
   AppButtonSizes._(); // Prevent instantiation
 
-  // Heights - Platform-adaptive (Material 3 compliant on Android)
-  static double get heightSm => PlatformSizing.buttonHeight(36.0);  // 36px iOS, 36px Android
-  static double get heightMd => PlatformSizing.buttonHeight(44.0);  // 44px iOS, 44px Android
-  static double get heightLg => PlatformSizing.buttonHeight(52.0);  // 52px iOS, 48px Android
-  static double get heightXl => PlatformSizing.buttonHeight(56.0);  // 56px iOS, 48px Android
+  // Heights - Platform-adaptive (matches PrimaryButton/SecondaryButton sizing)
+  static double get heightSm => PlatformSizing.buttonHeight(36.0);  // 36px iOS, ~32px Android
+  static double get heightMd => PlatformSizing.buttonHeight(44.0);  // 44px iOS, ~39px Android
+  static double get heightLg => PlatformSizing.buttonHeight(48.0);  // 48px iOS, ~42px Android (was 52px)
+  static double get heightXl => PlatformSizing.buttonHeight(56.0);  // 56px iOS, ~49px Android
 
   // Icon button sizes - Platform-adaptive
-  static double get iconButtonSm => PlatformSizing.buttonHeight(36.0);  // 36px iOS, 36px Android
-  static double get iconButtonMd => PlatformSizing.buttonHeight(44.0);  // 44px iOS, 44px Android
-  static double get iconButtonLg => PlatformSizing.buttonHeight(52.0);  // 52px iOS, 48px Android
+  static double get iconButtonSm => PlatformSizing.buttonHeight(36.0);  // 36px iOS, ~32px Android
+  static double get iconButtonMd => PlatformSizing.buttonHeight(44.0);  // 44px iOS, ~39px Android
+  static double get iconButtonLg => PlatformSizing.buttonHeight(48.0);  // 48px iOS, ~42px Android (was 52px)
 
   // Minimum touch target (accessibility) - constant across platforms
   static const double minTouchTarget = 44.0;
