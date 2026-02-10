@@ -1201,7 +1201,7 @@ async function generateWeeklyMPAEmailContent(userData, report) {
     <!-- Footer -->
     <div style="background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #888;">
       <p style="margin: 0 0 8px 0;">JEEVibe - Honest EdTech for JEE Preparation</p>
-      <p style="margin: 0 0 8px 0;">support@jeevibe.app | jeevibe.app</p>
+      <p style="margin: 0 0 8px 0;">support@jeevibe.com | jeevibe.com</p>
       <p style="margin: 0; font-size: 11px; color: #999;">© ${new Date().getFullYear()} JEEVibe. All rights reserved.</p>
     </div>
   </div>
