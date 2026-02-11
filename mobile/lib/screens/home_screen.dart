@@ -1125,21 +1125,9 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 const SizedBox(height: 20),
                 GradientButton(
-                  text: 'Start Simulation',
-                  onPressed: isUnlocked
-                      ? () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const MockTestHomeScreen(),
-                            ),
-                          ).then((_) {
-                            // Refresh data when returning
-                            _loadData();
-                          });
-                        }
-                      : null,
-                  isDisabled: !isUnlocked,
+                  text: 'Coming Soon',
+                  isDisabled: true,
+                  onPressed: null,
                   size: GradientButtonSize.large,
                   trailingIcon: Icons.arrow_forward,
                 ),
