@@ -132,21 +132,21 @@ class AppTextStyles {
         fontSize: PlatformSizing.fontSize(18),  // 18px iOS, 16.2px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textWhite,
-        height: 1.4,  // Increased from 1.2 to prevent text cutoff
+        height: 1.0,  // Changed from 1.2 - use tight height, let padding handle spacing
       );
 
   static TextStyle get buttonMedium => GoogleFonts.inter(
         fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textWhite,
-        height: 1.4,  // Increased from 1.2 to prevent text cutoff
+        height: 1.0,  // Changed from 1.2 - use tight height, let padding handle spacing
       );
 
   static TextStyle get buttonSmall => GoogleFonts.inter(
         fontSize: PlatformSizing.fontSize(14),  // 14px iOS, 12.6px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textWhite,
-        height: 1.4,  // Increased from 1.2 to prevent text cutoff
+        height: 1.0,  // Changed from 1.2 - use tight height, let padding handle spacing
       );
 
   // Legacy alias from JVStyles

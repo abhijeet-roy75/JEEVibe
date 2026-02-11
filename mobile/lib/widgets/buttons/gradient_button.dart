@@ -143,17 +143,17 @@ class GradientButton extends StatelessWidget {
       case GradientButtonSize.small:
         return EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,  // 16px iOS, 13.6px Android
-          vertical: AppSpacing.sm,    // 8px iOS, 6.8px Android
+          vertical: 0,    // No vertical padding - height is fixed
         );
       case GradientButtonSize.medium:
         return EdgeInsets.symmetric(
           horizontal: AppSpacing.xl,  // 20px iOS, 17px Android
-          vertical: AppSpacing.md,    // 12px iOS, 10.2px Android
+          vertical: 0,    // No vertical padding - height is fixed
         );
       case GradientButtonSize.large:
         return EdgeInsets.symmetric(
           horizontal: AppSpacing.xxl, // 24px iOS, 20.4px Android
-          vertical: AppSpacing.lg,    // 16px iOS, 13.6px Android
+          vertical: 0,    // No vertical padding - height is fixed
         );
     }
   }
