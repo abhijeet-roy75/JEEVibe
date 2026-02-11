@@ -60,6 +60,7 @@ class PrimaryButton extends StatelessWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
+                          height: 1.4,  // Prevent text cutoff
                         ),
                       ),
                     ],
@@ -70,6 +71,7 @@ class PrimaryButton extends StatelessWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      height: 1.4,  // Prevent text cutoff
                     ),
                   ),
       ),
