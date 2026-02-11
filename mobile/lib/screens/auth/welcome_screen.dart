@@ -38,9 +38,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       backgroundColor: AppColors.backgroundWhite,
       body: Column(
         children: [
-            // Gradient Header Section - Full Width (reduced from flex: 2)
+            // Gradient Header Section - Full Width
             Expanded(
-              flex: 1,
+              flex: 2,
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
@@ -107,19 +107,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: AppSpacing.sm),
-                        Flexible(
-                          child: Text(
-                            'Your AI-powered path to JEE success',
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.bodyLarge.copyWith(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              height: 1.4,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                        SizedBox(height: PlatformSizing.spacing(12)), // 12→9.6px Android
+                        Text(
+                          'Your AI-powered path to JEE success',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.bodyLarge.copyWith(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            height: 1.4,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.visible,
                         ),
+                        SizedBox(height: PlatformSizing.spacing(8)), // Add bottom padding to prevent cutoff
                       ],
                     ),
                   ),
