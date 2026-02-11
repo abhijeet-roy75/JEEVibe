@@ -193,13 +193,36 @@ This shows:
 
 ## Deployment
 
+### Phase 1: Analytics Unlock Filtering
 **Commit:** `88ffc4c`
 **Deployed to:** Render.com (auto-deploy from `main` branch)
-**Status:** Live
+**Status:** ✅ Live
 
 **Files Changed:**
 1. `backend/src/services/analyticsService.js` - Added unlock filtering
 2. `docs/03-features/REUSABLE_BUTTONS.md` - Moved from mobile/ (unrelated cleanup)
+
+### Phase 2: Remove Weekly Rotation UI
+**Commit:** `b4735a6`
+**Deployed to:** Mobile app (requires rebuild)
+**Status:** ⏳ Pending rebuild
+
+**Files Changed:**
+1. `mobile/lib/screens/home_screen.dart` - Removed subject lock UI logic
+2. `docs/FOCUS-AREAS-UNLOCK-FIX.md` - Full documentation
+
+### Phase 3: Remove Weekly Rotation Backend
+**Commit:** `b55d8c1`
+**Deployed to:** Render.com (auto-deploy from `main` branch)
+**Status:** ✅ Live
+
+**Changes:**
+1. Firestore `tier_config/active` updated:
+   - `chapter_practice_weekly_per_subject`: 1 → -1 (unlimited)
+   - Added `chapter_practice_daily_limit`: 5
+2. `backend/src/routes/chapterPractice.js` - Daily limit enforcement
+   - Removed weekly subject checks
+   - Track daily chapter count in `users/{userId}/daily_usage/{date}`
 
 ---
 
