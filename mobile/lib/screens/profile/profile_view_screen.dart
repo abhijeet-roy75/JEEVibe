@@ -444,6 +444,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(32)),
                         child: Container(
                           width: double.infinity,
+                          height: AppButtonSizes.heightLg, // Match standard button height (48px iOS, ~42px Android)
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(AppRadius.md),
                             gradient: const LinearGradient(
@@ -459,7 +460,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.white,
                               shadowColor: Colors.transparent,
-                              padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
+                              padding: EdgeInsets.zero, // Remove padding since height is fixed
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(AppRadius.md),
                               ),
@@ -634,6 +635,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         // Sign Out Button
                         Container(
                           width: double.infinity,
+                          height: AppButtonSizes.heightLg, // Match standard button height (48px iOS, ~42px Android)
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(AppRadius.md),
                             gradient: const LinearGradient(
@@ -649,7 +651,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               backgroundColor: Colors.transparent,
                               foregroundColor: Colors.white,
                               shadowColor: Colors.transparent,
-                              padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
+                              padding: EdgeInsets.zero, // Remove padding since height is fixed
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(AppRadius.md),
                               ),
@@ -982,6 +984,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       // Show upgrade button for free tier
       return Container(
         width: double.infinity,
+        height: AppButtonSizes.heightLg, // Match standard button height (48px iOS, ~42px Android)
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.md),
           gradient: AppColors.ctaGradient,
@@ -1002,7 +1005,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
             backgroundColor: Colors.transparent,
             foregroundColor: Colors.white,
             shadowColor: Colors.transparent,
-            padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
+            padding: EdgeInsets.zero, // Remove padding since height is fixed
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
