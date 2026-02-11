@@ -86,6 +86,12 @@ void main() async {
       debugPrint('SVG parsing error (handled gracefully): ${errorDetails.exception}');
       return;
     }
+    // Filter out phone number validation errors (handled by form validation)
+    if (errorDetails.exception.toString().contains('ErrorType.notANumber') ||
+        errorDetails.exception.toString().contains('not seem to be a phone number')) {
+      debugPrint('Phone validation error (handled by form): ${errorDetails.exception}');
+      return;
+    }
     FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
   };
   // Pass all uncaught asynchronous errors to Crashlytics
@@ -94,6 +100,12 @@ void main() async {
     if (error.toString().contains('Invalid SVG data') ||
         error.toString().contains('unhandled element <ns0:svg')) {
       debugPrint('SVG parsing error (handled gracefully): $error');
+      return true;
+    }
+    // Filter out phone number validation errors
+    if (error.toString().contains('ErrorType.notANumber') ||
+        error.toString().contains('not seem to be a phone number')) {
+      debugPrint('Phone validation error (handled by form): $error');
       return true;
     }
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
