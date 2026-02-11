@@ -1156,7 +1156,7 @@ class _AssessmentQuestionScreenState extends State<AssessmentQuestionScreen> wit
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0), // Reduced from 12.0 to 8.0 to prevent RenderFlex overflow with images
         child: PrimaryButton(
           text: _isLastQuestion ? 'Submit Assessment' : 'Next Question',
           onPressed: canProceed ? _nextQuestion : null,
