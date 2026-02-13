@@ -91,17 +91,16 @@ function getChapterDisplayName(chapterKey) {
 }
 
 /**
- * Format chapter key to display name (fallback)
+ * Format chapter key to display name
+ *
+ * NOTE (2026-02-13): Now using centralized utility
  *
  * @param {string} chapterKey - Chapter key
  * @returns {string} Formatted display name
  */
 function formatChapterKeyToDisplayName(chapterKey) {
-  return chapterKey
-    .replace(/^(physics|chemistry|maths|mathematics)_/, '')
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  const { chapterKeyToDisplayName } = require('../utils/chapterKeyFormatter');
+  return chapterKeyToDisplayName(chapterKey);
 }
 
 /**
@@ -574,9 +573,10 @@ async function getAnalyticsOverview(userId) {
 
     // NEW: Filter thetaByChapter to only include unlocked chapters
     // This ensures Focus Areas only shows chapters from the current timeline
+    // FIX (2026-02-13): Pass userData to avoid N+1 query (user fetched twice)
     let filteredThetaByChapter = thetaByChapter;
     try {
-      const unlockResult = await getUnlockedChapters(userId);
+      const unlockResult = await getUnlockedChapters(userId, userData);
       const unlockedChapterKeys = new Set(unlockResult.unlockedChapterKeys);
 
       // Filter theta chapters to only unlocked ones

@@ -241,9 +241,15 @@ async function getEffectiveTier(userId, options = {}) {
           days_remaining: daysRemaining
         });
       } else {
-        // Trial expired - trigger async downgrade
+        // Trial expired - trigger sync downgrade and invalidate cache
+        logger.info('Trial expired, expiring now', { userId });
         const { expireTrialAsync } = require('./trialService');
-        expireTrialAsync(userId);
+
+        // AWAIT the expiry to ensure consistency
+        await expireTrialAsync(userId);
+
+        // Invalidate cache immediately after expiry
+        invalidateTierCache(userId);
       }
     }
 

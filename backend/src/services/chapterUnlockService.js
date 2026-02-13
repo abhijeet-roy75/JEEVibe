@@ -99,18 +99,33 @@ async function getAllChapterKeys() {
 
 /**
  * Get unlocked chapters for a user
+ *
+ * NOTE (2026-02-13): Now accepts optional userData to avoid N+1 query
+ *
  * @param {string} userId - User ID
- * @param {Date} referenceDate - Date to use (defaults to now)
+ * @param {Object|Date} userDataOrDate - CHANGED: Either user data object OR reference date
+ * @param {Date} referenceDate - Date to use (defaults to now) - ONLY if second param is userData
  * @returns {Object} { unlockedChapterKeys, currentMonth, monthsUntilExam, isPostExam, usingHighWaterMark }
  */
-async function getUnlockedChapters(userId, referenceDate = new Date()) {
-  // Get user data
-  const userDoc = await db.collection('users').doc(userId).get();
-  if (!userDoc.exists) {
-    throw new Error(`User ${userId} not found`);
-  }
+async function getUnlockedChapters(userId, userDataOrDate = null, referenceDate = new Date()) {
+  let userData;
 
-  const userData = userDoc.data();
+  // Backward compatible: If second param is Date or null, fetch user data
+  if (!userDataOrDate || userDataOrDate instanceof Date) {
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      throw new Error(`User ${userId} not found`);
+    }
+    userData = userDoc.data();
+
+    // If Date was passed as second param, use it as referenceDate
+    if (userDataOrDate instanceof Date) {
+      referenceDate = userDataOrDate;
+    }
+  } else {
+    // New pattern: userData passed directly
+    userData = userDataOrDate;
+  }
 
   // Backward compatibility: users without jeeTargetExamDate get all chapters
   if (!userData.jeeTargetExamDate) {

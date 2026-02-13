@@ -232,18 +232,25 @@ async function expireTrial(userId) {
 }
 
 /**
- * Async wrapper for trial expiry (non-blocking)
+ * Async wrapper for trial expiry
  * Used by subscriptionService when detecting expired trials
  *
+ * NOTE: This function now RETURNS the promise for proper awaiting
+ * Caller should await this to ensure trial expiry completes
+ *
  * @param {string} userId - User ID
+ * @returns {Promise<Object>} Result of expireTrial
  */
-function expireTrialAsync(userId) {
-  expireTrial(userId).catch(error => {
-    logger.error('Failed to expire trial asynchronously', {
+async function expireTrialAsync(userId) {
+  try {
+    return await expireTrial(userId);
+  } catch (error) {
+    logger.error('Failed to expire trial', {
       userId,
       error: error.message
     });
-  });
+    throw error; // Re-throw so caller knows it failed
+  }
 }
 
 /**
