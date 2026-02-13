@@ -3,7 +3,7 @@
  * Tests the critical backend logic for processing assessments
  */
 
-const { processInitialAssessment, validateAssessmentResponses, groupResponsesByChapter } = require('../../src/services/assessmentService');
+const { processInitialAssessment, validateAssessmentResponses, groupResponsesByChapter } = require('../../../src/services/assessmentService');
 
 describe('AssessmentService', () => {
   describe('validateAssessmentResponses', () => {
