@@ -15,7 +15,7 @@ describe('Chapter Key Formatter', () => {
   describe('formatChapterKey()', () => {
     it('should format basic chapter keys correctly', () => {
       expect(formatChapterKey('Physics', 'Laws of Motion')).toBe('physics_laws_of_motion');
-      expect(formatChapterKey('Chemistry', 'Chemical Bonding')).toBe('physics_chemical_bonding');
+      expect(formatChapterKey('Chemistry', 'Chemical Bonding')).toBe('chemistry_chemical_bonding');
       expect(formatChapterKey('Mathematics', 'Complex Numbers')).toBe('mathematics_complex_numbers');
     });
 
@@ -26,7 +26,7 @@ describe('Chapter Key Formatter', () => {
 
     it('should remove special characters from chapter names', () => {
       expect(formatChapterKey('Physics', 'Law\'s of Motion')).toBe('physics_laws_of_motion');
-      expect(formatChapterKey('Chemistry', 'S-Block Elements')).toBe('chemistry_s_block_elements');
+      expect(formatChapterKey('Chemistry', 'S-Block Elements')).toBe('chemistry_sblock_elements');
     });
 
     it('should apply chapter name normalizations', () => {
