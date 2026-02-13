@@ -3,6 +3,27 @@
  * Tests the critical backend logic for processing assessments
  */
 
+// Mock Firebase before requiring the service
+jest.mock('../../../src/config/firebase', () => ({
+  db: {
+    collection: jest.fn(() => ({
+      doc: jest.fn(() => ({
+        get: jest.fn(() => Promise.resolve({ exists: false })),
+        set: jest.fn(() => Promise.resolve()),
+        update: jest.fn(() => Promise.resolve()),
+      })),
+    })),
+  },
+  admin: {
+    firestore: {
+      FieldValue: {
+        serverTimestamp: jest.fn(() => new Date()),
+        increment: jest.fn((value) => value),
+      },
+    },
+  },
+}));
+
 const { processInitialAssessment, validateAssessmentResponses, groupResponsesByChapter } = require('../../../src/services/assessmentService');
 
 describe('AssessmentService', () => {
@@ -80,31 +101,31 @@ describe('AssessmentService', () => {
   describe('groupResponsesByChapter', () => {
     it('should group responses by chapter correctly', () => {
       const responses = [
-        { question_id: 'q1', subject: 'physics', chapter: 'mechanics', is_correct: true },
-        { question_id: 'q2', subject: 'physics', chapter: 'mechanics', is_correct: false },
-        { question_id: 'q3', subject: 'chemistry', chapter: 'organic', is_correct: true },
-        { question_id: 'q4', subject: 'mathematics', chapter: 'calculus', is_correct: true },
+        { question_id: 'q1', subject: 'physics', chapter: 'Kinematics', is_correct: true },
+        { question_id: 'q2', subject: 'physics', chapter: 'Kinematics', is_correct: false },
+        { question_id: 'q3', subject: 'chemistry', chapter: 'Thermodynamics', is_correct: true },
+        { question_id: 'q4', subject: 'mathematics', chapter: 'Probability', is_correct: true },
       ];
 
       const groups = groupResponsesByChapter(responses);
 
       expect(Object.keys(groups)).toHaveLength(3);
-      expect(groups['physics_mechanics']).toHaveLength(2);
-      expect(groups['chemistry_organic']).toHaveLength(1);
-      expect(groups['mathematics_calculus']).toHaveLength(1);
+      expect(groups['physics_kinematics']).toHaveLength(2);
+      expect(groups['chemistry_thermodynamics']).toHaveLength(1);
+      expect(groups['mathematics_probability']).toHaveLength(1);
     });
 
     it('should skip responses with missing subject or chapter', () => {
       const responses = [
-        { question_id: 'q1', subject: 'physics', chapter: 'mechanics', is_correct: true },
-        { question_id: 'q2', subject: null, chapter: 'mechanics', is_correct: false },
+        { question_id: 'q1', subject: 'physics', chapter: 'Kinematics', is_correct: true },
+        { question_id: 'q2', subject: null, chapter: 'Kinematics', is_correct: false },
         { question_id: 'q3', subject: 'chemistry', chapter: null, is_correct: true },
       ];
 
       const groups = groupResponsesByChapter(responses);
 
       expect(Object.keys(groups)).toHaveLength(1);
-      expect(groups['physics_mechanics']).toHaveLength(1);
+      expect(groups['physics_kinematics']).toHaveLength(1);
     });
 
     it('should handle empty responses array', () => {
@@ -115,13 +136,13 @@ describe('AssessmentService', () => {
 
     it('should generate valid chapter keys', () => {
       const responses = [
-        { question_id: 'q1', subject: 'Physics', chapter: 'Mechanics', is_correct: true },
+        { question_id: 'q1', subject: 'Physics', chapter: 'Kinematics', is_correct: true },
       ];
 
       const groups = groupResponsesByChapter(responses);
 
-      // Should be lowercase
-      expect(groups['physics_mechanics']).toBeDefined();
+      // Should be lowercase with underscores
+      expect(groups['physics_kinematics']).toBeDefined();
     });
   });
 
