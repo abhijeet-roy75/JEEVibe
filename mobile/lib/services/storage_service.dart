@@ -26,7 +26,7 @@ class StorageService {
   // Constants
   static const int defaultSnapLimit = 5;
   static const int maxRecentSolutions = 3;
-  static const int maxOtpRequestsPerHour = 10; // Increased for testing (was 3)
+  static const int maxOtpRequestsPerHour = 3; // Production limit
 
   // Singleton pattern
   static final StorageService _instance = StorageService._internal();

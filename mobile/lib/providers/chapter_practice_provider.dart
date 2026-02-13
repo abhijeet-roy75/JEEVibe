@@ -22,6 +22,9 @@ class ChapterPracticeProvider extends ChangeNotifier {
   bool _isSubmitting = false;
   String? _errorMessage;
 
+  // Disposal flag to prevent notifyListeners after dispose
+  bool _isDisposed = false;
+
   // Last answer result (for feedback)
   PracticeAnswerResult? _lastAnswerResult;
 
@@ -88,7 +91,7 @@ class ChapterPracticeProvider extends ChangeNotifier {
     _lastAnswerResult = null;
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _notifyListeners();
 
     try {
       final response = await _apiService.generateChapterPractice(
@@ -127,7 +130,7 @@ class ChapterPracticeProvider extends ChangeNotifier {
         await _storageService.saveSession(_session!);
 
         _isLoading = false;
-        notifyListeners();
+        _notifyListeners();
         return true;
       } else {
         // Extract error message from response
@@ -138,7 +141,7 @@ class ChapterPracticeProvider extends ChangeNotifier {
           _errorMessage = errorData?.toString() ?? 'Failed to start practice';
         }
         _isLoading = false;
-        notifyListeners();
+        _notifyListeners();
         return false;
       }
     } catch (e) {
@@ -152,7 +155,7 @@ class ChapterPracticeProvider extends ChangeNotifier {
         _errorMessage = e.toString().replaceFirst('Exception: ', '');
       }
       _isLoading = false;
-      notifyListeners();
+      _notifyListeners();
       return false;
     }
   }
@@ -167,7 +170,7 @@ class ChapterPracticeProvider extends ChangeNotifier {
 
     _isSubmitting = true;
     _errorMessage = null;
-    notifyListeners();
+    _notifyListeners();
 
     try {
       final response = await _apiService.submitChapterPracticeAnswer(
@@ -214,18 +217,18 @@ class ChapterPracticeProvider extends ChangeNotifier {
         );
 
         _isSubmitting = false;
-        notifyListeners();
+        _notifyListeners();
         return _lastAnswerResult;
       } else {
         _errorMessage = response['error'] ?? 'Failed to submit answer';
         _isSubmitting = false;
-        notifyListeners();
+        _notifyListeners();
         return null;
       }
     } catch (e) {
       _errorMessage = e.toString();
       _isSubmitting = false;
-      notifyListeners();
+      _notifyListeners();
       return null;
     }
   }
@@ -235,7 +238,7 @@ class ChapterPracticeProvider extends ChangeNotifier {
     if (hasMoreQuestions) {
       _currentQuestionIndex++;
       _lastAnswerResult = null;
-      notifyListeners();
+      _notifyListeners();
     }
   }
 
@@ -245,7 +248,7 @@ class ChapterPracticeProvider extends ChangeNotifier {
 
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _notifyListeners();
 
     try {
       final response = await _apiService.completeChapterPractice(
@@ -260,18 +263,18 @@ class ChapterPracticeProvider extends ChangeNotifier {
         await _storageService.clearSession(_session!.sessionId);
 
         _isLoading = false;
-        notifyListeners();
+        _notifyListeners();
         return summary;
       } else {
         _errorMessage = response['error'] ?? 'Failed to complete session';
         _isLoading = false;
-        notifyListeners();
+        _notifyListeners();
         return null;
       }
     } catch (e) {
       _errorMessage = e.toString();
       _isLoading = false;
-      notifyListeners();
+      _notifyListeners();
       return null;
     }
   }
@@ -285,7 +288,7 @@ class ChapterPracticeProvider extends ChangeNotifier {
     _isLoading = false;
     _isSubmitting = false;
     _errorMessage = null;
-    notifyListeners();
+    _notifyListeners();
   }
 
   /// Try to resume an existing session
@@ -348,7 +351,7 @@ class ChapterPracticeProvider extends ChangeNotifier {
       // Update local storage with backend data
       await _storageService.saveSession(_session!);
 
-      notifyListeners();
+      _notifyListeners();
       return true;
     } catch (e) {
       // Network error or other issue - try loading from local storage as fallback
@@ -423,8 +426,21 @@ class ChapterPracticeProvider extends ChangeNotifier {
         }
       }
 
-      notifyListeners();
+      _notifyListeners();
       return true;
+    }
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  /// Safe wrapper for notifyListeners that checks disposal state
+  void _notifyListeners() {
+    if (!_isDisposed) {
+      _notifyListeners();
     }
   }
 }

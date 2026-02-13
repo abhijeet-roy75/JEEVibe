@@ -13,6 +13,9 @@ class UnlockQuizProvider with ChangeNotifier {
   bool _isSubmitting = false;
   String? _errorMessage;
 
+  // Disposal flag to prevent notifyListeners after dispose
+  bool _isDisposed = false;
+
   // Getters
   UnlockQuizSession? get session => _session;
   int get currentQuestionIndex => _currentQuestionIndex;
@@ -32,7 +35,7 @@ class UnlockQuizProvider with ChangeNotifier {
   Future<void> startUnlockQuiz(String chapterKey, String authToken) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _notifyListeners();
 
     try {
       final response = await ApiService.generateUnlockQuiz(
@@ -52,7 +55,7 @@ class UnlockQuizProvider with ChangeNotifier {
       rethrow;
     } finally {
       _isLoading = false;
-      notifyListeners();
+      _notifyListeners();
     }
   }
 
@@ -68,7 +71,7 @@ class UnlockQuizProvider with ChangeNotifier {
 
     _isSubmitting = true;
     _errorMessage = null;
-    notifyListeners();
+    _notifyListeners();
 
     try {
       final response = await ApiService.submitUnlockQuizAnswer(
@@ -90,7 +93,7 @@ class UnlockQuizProvider with ChangeNotifier {
         currentQuestion!.isCorrect = result.isCorrect;
         currentQuestion!.timeTakenSeconds = timeTakenSeconds;
 
-        notifyListeners();
+        _notifyListeners();
         return result;
       } else {
         throw Exception(response['error'] ?? 'Failed to submit answer');
@@ -100,7 +103,7 @@ class UnlockQuizProvider with ChangeNotifier {
       rethrow;
     } finally {
       _isSubmitting = false;
-      notifyListeners();
+      _notifyListeners();
     }
   }
 
@@ -109,7 +112,7 @@ class UnlockQuizProvider with ChangeNotifier {
     if (hasMoreQuestions) {
       _currentQuestionIndex++;
       _lastAnswerResult = null;
-      notifyListeners();
+      _notifyListeners();
     }
   }
 
@@ -121,7 +124,7 @@ class UnlockQuizProvider with ChangeNotifier {
 
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _notifyListeners();
 
     try {
       final response = await ApiService.completeUnlockQuiz(
@@ -132,7 +135,7 @@ class UnlockQuizProvider with ChangeNotifier {
       if (response['success']) {
         final result = UnlockQuizResult.fromJson(response['data']);
         _session = null; // Clear session
-        notifyListeners();
+        _notifyListeners();
         return result;
       } else {
         throw Exception(response['error'] ?? 'Failed to complete quiz');
@@ -142,7 +145,7 @@ class UnlockQuizProvider with ChangeNotifier {
       rethrow;
     } finally {
       _isLoading = false;
-      notifyListeners();
+      _notifyListeners();
     }
   }
 
@@ -154,6 +157,19 @@ class UnlockQuizProvider with ChangeNotifier {
     _isLoading = false;
     _isSubmitting = false;
     _errorMessage = null;
-    notifyListeners();
+    _notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  /// Safe wrapper for notifyListeners that checks disposal state
+  void _notifyListeners() {
+    if (!_isDisposed) {
+      _notifyListeners();
+    }
   }
 }
