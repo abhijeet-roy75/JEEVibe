@@ -507,7 +507,7 @@ function moderateMessage() {
         // Log the flagged content
         const flagId = await logFlaggedContent(userId, message, analysis, {
           endpoint: req.path,
-          requestId: req.requestId
+          requestId: req.id
         });
 
         req.moderationFlagId = flagId;
