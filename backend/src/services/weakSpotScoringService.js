@@ -257,19 +257,18 @@ async function scoreNode(responses, questionSkillMap, microSkillMap, atlasNode, 
 // FIRESTORE WRITERS
 // ============================================================================
 
-async function updateWeakSpot(userId, nodeId, { nodeScore, newState, capsuleId, severityLevel }) {
+async function updateWeakSpot(userId, nodeId, { nodeScore, newState, capsuleId, severityLevel, nodeName }) {
   const ref = db.collection('user_weak_spots').doc(userId).collection('nodes').doc(nodeId);
-  await ref.set(
-    {
-      node_id: nodeId,
-      current_score: nodeScore,
-      node_state: newState,
-      capsule_id: capsuleId || null,
-      severity_level: severityLevel || null,
-      last_scored_at: admin.firestore.FieldValue.serverTimestamp(),
-    },
-    { merge: true }
-  );
+  const data = {
+    node_id: nodeId,
+    current_score: nodeScore,
+    node_state: newState,
+    capsule_id: capsuleId || null,
+    severity_level: severityLevel || null,
+    last_scored_at: admin.firestore.FieldValue.serverTimestamp(),
+  };
+  if (nodeName) data.node_name = nodeName;
+  await ref.set(data, { merge: true });
 }
 
 async function logWeakSpotEvent(userId, nodeId, eventData) {
@@ -336,6 +335,7 @@ async function detectWeakSpots(userId, sessionId) {
         newState,
         capsuleId: node.capsule_id,
         severityLevel: node.severity_level,
+        nodeName: node.node_name,
       });
 
       // Log the scoring event
@@ -421,6 +421,7 @@ async function evaluateRetrieval(userId, nodeId, responses, atlasNode) {
     newState,
     capsuleId: atlasNode.capsule_id,
     severityLevel: atlasNode.severity_level,
+    nodeName: atlasNode.node_name,
   });
 
   await logWeakSpotEvent(userId, nodeId, {
@@ -489,9 +490,18 @@ async function getUserWeakSpots(userId, { nodeState, limit = 10 } = {}) {
     const latestEvent = eventsSnap.empty ? null : eventsSnap.docs[0].data().event_type;
     const capsuleStatus = deriveCapsuleStatus(latestEvent);
 
+    // If node_name not yet stored (pre-fix documents), look it up from atlas_nodes
+    let nodeName = ws.node_name;
+    if (!nodeName) {
+      try {
+        const atlasDoc = await db.collection('atlas_nodes').doc(ws.node_id).get();
+        if (atlasDoc.exists) nodeName = atlasDoc.data().node_name;
+      } catch (_) { /* non-fatal */ }
+    }
+
     return {
       nodeId: ws.node_id,
-      title: ws.node_name || ws.node_id,
+      nodeTitle: nodeName || ws.node_id,
       currentScore: ws.current_score,
       nodeState: ws.node_state,
       severityLevel: ws.severity_level,
