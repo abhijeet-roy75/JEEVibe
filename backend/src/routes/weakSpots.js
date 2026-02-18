@@ -40,6 +40,25 @@ router.get('/capsules/:capsuleId',
       }
 
       const data = doc.data();
+
+      // Fetch retrieval questions from the pool
+      let retrievalQuestions = [];
+      if (data.pool_id) {
+        const poolDoc = await db.collection('retrieval_pools').doc(data.pool_id).get();
+        if (poolDoc.exists) {
+          const poolData = poolDoc.data();
+          const questionIds = poolData.question_ids || [];
+          if (questionIds.length > 0) {
+            const qDocs = await Promise.all(
+              questionIds.map(qId => db.collection('retrieval_questions').doc(qId).get())
+            );
+            retrievalQuestions = qDocs
+              .filter(d => d.exists)
+              .map(d => ({ questionId: d.id, ...d.data() }));
+          }
+        }
+      }
+
       return res.json({
         success: true,
         data: {
@@ -53,6 +72,7 @@ router.get('/capsules/:capsuleId',
             estimatedReadTime: data.estimated_read_time || 90,
             poolId: data.pool_id,
           },
+          retrievalQuestions,
         },
       });
     } catch (err) {
