@@ -82,8 +82,53 @@
 
 - [ ] Deploy to Render.com
 
-**Status:** ⬜ Not started
+**Status:** ✅ Complete (2026-02-18, commits `4c6ec94`, `af1439b`)
 **Blockers:** None
+
+### Completed
+- [x] Upload content to Firestore from `inputs/cognitive_mastery/data1/`
+  - [x] `atlas_nodes` — 14 nodes (7 electrostatics + 7 units)
+  - [x] `capsules` — 14 capsules
+  - [x] `retrieval_pools` — 14 pools
+  - [x] `retrieval_questions` — 42 questions (21 elec bulk + 7×3 units individual)
+  - [x] `atlas_micro_skills` — 33 skills (17 elec + 16 units)
+  - [x] `atlas_question_skill_map` — 72 elec + 45 units questions mapped
+  - Script: `backend/scripts/cognitive-mastery/upload-cognitive-mastery.js`
+
+- [x] Tag 117 pilot questions with `micro_skill_ids`
+  - Verified all 117 question IDs exist in Firestore (72 electrostatics + 45 units)
+  - Script: `backend/scripts/cognitive-mastery/tag-questions-micro-skills.js`
+  - Result: 117 tagged, 0 not found, 0 skipped
+
+- [x] Build scoring engine: `backend/src/services/weakSpotScoringService.js`
+  - Full 3-component formula with per-node weights
+  - In-memory cache (5-min TTL) for atlas nodes, micro-skills, question-skill maps
+  - `detectWeakSpots(userId, sessionId)` — returns top triggered node or null (non-fatal)
+  - `evaluateRetrieval(userId, nodeId, responses, atlasNode)` — scores 3 retrieval questions
+  - `getUserWeakSpots(userId, options)` — lists weak spots with capsule status derived from event log
+  - `logEngagementEvent(userId, nodeId, eventType, capsuleId)` — validated allowlist write
+
+- [x] Build API endpoints: `backend/src/routes/weakSpots.js`
+  - `GET /api/capsules/:capsuleId`
+  - `POST /api/weak-spots/retrieval`
+  - `GET /api/weak-spots/:userId`
+  - `POST /api/weak-spots/events`
+
+- [x] Hook scoring into chapter practice: `backend/src/routes/chapterPractice.js`
+  - `const weakSpot = await detectWeakSpots(userId, session_id);` called before `res.json()`
+  - `weakSpot: weakSpot || null` included in completion response (additive — existing mobile ignores it)
+
+- [x] Registered `weakSpots.js` route in `backend/src/index.js`
+
+- [x] Unit tests: `backend/tests/unit/services/weakSpotScoringService.test.js`
+  - 18 tests: scoring formula, state transitions, retrieval evaluation, event allowlist
+  - All 567 total backend tests passing
+
+- [x] Firestore composite indexes added and deployed (`backend/firebase/firestore.indexes.json`, commit `af1439b`)
+  - `responses` (COLLECTION): `chapter_key ASC + session_id ASC` — recurrence `!=` query
+  - `weak_spot_events` (COLLECTION): `student_id + atlas_node_id + event_type ASC + created_at DESC` — capsule status lookup
+
+- [x] Deployed to Render.com (push to main)
 
 ---
 
@@ -144,26 +189,30 @@
 
 ---
 
-## Week 4 (Mar 9-15): Analytics + Soft Launch
+## Week 4 (Mar 9-15): Integration Testing + Launch
 
 ### Goals
-- [ ] Add analytics events (5 key events):
-  - `weak_spot_detected` (backend, after scoring)
-  - `capsule_opened` (mobile, on Screen 2 entry)
-  - `capsule_completed` (mobile, on scroll-to-bottom)
-  - `capsule_skipped` (mobile, on "Save for Later")
-  - `retrieval_completed` (backend, with `passed`, `correctCount`, `newState`)
+- [x] Admin dashboard: Cognitive Mastery analytics page (done early — 2026-02-18, commit `cdc880c`)
+  - `GET /api/admin/metrics/cognitive-mastery` endpoint
+  - `getCognitiveMasteryMetrics()` in `adminMetricsService.js`
+  - `admin-dashboard/src/pages/CognitiveMastery.jsx` — summary cards + per-node breakdown table
+  - Live at https://jeevibe-admin.web.app
+
+- [ ] Analytics events instrumented (partially done):
+  - [x] `chapter_scored` — already written by `detectWeakSpots()` to `weak_spot_events`
+  - [x] `retrieval_completed` — already written by `evaluateRetrieval()` to `weak_spot_events`
+  - [ ] `capsule_opened` — mobile sends via `POST /api/weak-spots/events` (Week 2)
+  - [ ] `capsule_completed` — mobile sends via `POST /api/weak-spots/events` (Week 2)
+  - [ ] `capsule_skipped` — mobile sends via `POST /api/weak-spots/events` (Week 2)
 
 - [ ] Fix bugs from Week 3 internal testing
 
-- [ ] Soft launch: enable for 20% of users (via feature flag or remote config)
-
-- [ ] Monitor for 3 days:
+- [ ] Monitor for 3 days post-launch:
   - Detection rate (target: 30-40% of chapter practice sessions)
   - Capsule open rate (target: 60%+)
   - Retrieval pass rate (target: 50-70%)
 
-**Status:** ⬜ Not started
+**Status:** 🟡 In progress (admin analytics done early; monitoring pending Week 3)
 **Blockers:** Week 3 complete
 
 ---
@@ -190,7 +239,7 @@
 3. Daily Quiz integration
 
 ### Phase 3: Scale
-1. Admin dashboard: capsule skip rates, retrieval pass rates per node
+1. ✅ Admin dashboard: capsule skip rates, retrieval pass rates per node (done in Week 1)
 2. Weekly insights email/notification
 3. ML-based detection (replace rules-based)
 
@@ -201,7 +250,7 @@
 | Risk | Impact | Status |
 |------|--------|--------|
 | **Threshold calibration** (full formula max ~1.0, trigger 0.60) | Critical | ✅ Mitigated — using full 3-component formula |
-| **Questions not tagged** (micro_skill_ids missing) | High | 🟡 Run tag-questions-micro-skills.js (Week 1) |
+| **Questions not tagged** (micro_skill_ids missing) | High | ✅ Done — 117 questions tagged (Week 1) |
 | **LaTeX rendering issues** in capsule text | Medium | 🟢 Reuse LatexWidget |
 | **Pass rate too low** (<40%) | Medium | 🟡 Monitor Week 4, adjust pool if needed |
 | **Pass rate too high** (>80%) | Low | 🟡 Monitor Week 4, add harder contrast questions |

@@ -11,6 +11,7 @@ import Content from './pages/Content';
 import Alerts from './pages/Alerts';
 import Teachers from './pages/Teachers';
 import TeacherDetail from './pages/TeacherDetail';
+import CognitiveMastery from './pages/CognitiveMastery';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         <Route path="/alerts" element={<Alerts />} />
         <Route path="/teachers" element={<Teachers />} />
         <Route path="/teachers/:teacherId" element={<TeacherDetail />} />
+        <Route path="/cognitive-mastery" element={<CognitiveMastery />} />
       </Route>
     </Routes>
   );

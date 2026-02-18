@@ -51,6 +51,9 @@ export const api = {
 
   getUserDetails: (userId) => fetchWithAuth(`/api/admin/users/${userId}`),
 
+  // Cognitive Mastery analytics
+  getCognitiveMastery: () => fetchWithAuth('/api/admin/metrics/cognitive-mastery'),
+
   // Alerts
   getAlerts: () => fetchWithAuth('/api/admin/alerts'),
 
