@@ -130,6 +130,13 @@
 
 - [x] Deployed to Render.com (push to main)
 
+- [x] **MVP scoring decision (2026-02-18):** Simplified to `node_score = avg(skill_error_rate)` for launch
+  - Updated all 14 atlas nodes in Firestore: `scoring_weights = { skill_deficit_weight: 1.0, signature: 0, recurrence: 0 }`
+  - Rationale: `distractor_analysis` missing on 52/55 pilot questions → signature score = 0 silently; recurrence irrelevant with <10 beta users
+  - Effect: `trigger if avg_error_rate >= 0.60` across node's micro-skills (intuitive, debuggable)
+  - No code change — scoring engine already reads weights from Firestore; takes effect within 5-min cache TTL
+  - **Phase 2 restoration plan:** Once content team adds DA to ≥50% of questions, restore weights to `{ skill_deficit: 0.60, signature: 0.25, recurrence: 0.15 }` via Firestore update only
+
 ---
 
 ## Week 2 (Feb 24 - Mar 1): Mobile UI
@@ -235,8 +242,14 @@
 
 ### Phase 2: Expand
 1. Add Laws of Motion + more chapters (requires product team content)
-2. Upgrade scoring to include signature distractor detection (0.25 weight)
-3. Daily Quiz integration
+2. **Upgrade scoring: restore signature component (0.25 weight)**
+   - Requires content team to add `distractor_analysis` to pilot chapter questions (currently 3/55 electrostatics have it)
+   - Requires `diagnostic_keyword_hints` added to micro-skills for natural-language keyword matching
+   - Implementation: update `scoring_weights` in Firestore back to `{ skill_deficit: 0.60, signature: 0.25, recurrence: 0.15 }`
+   - No code change needed — scoring engine already reads DA from response docs and keyword_hints from micro-skills
+   - **Trigger**: once content team confirms DA coverage ≥ 50% of questions per chapter
+3. Restore recurrence component (0.15 weight) once users have 3+ sessions history
+4. Daily Quiz integration
 
 ### Phase 3: Scale
 1. ✅ Admin dashboard: capsule skip rates, retrieval pass rates per node (done in Week 1)
@@ -249,7 +262,7 @@
 
 | Risk | Impact | Status |
 |------|--------|--------|
-| **Threshold calibration** (full formula max ~1.0, trigger 0.60) | Critical | ✅ Mitigated — using full 3-component formula |
+| **Threshold calibration** (full formula max ~1.0, trigger 0.60) | Critical | ✅ Mitigated — MVP uses skill_deficit only (weight=1.0), trigger 0.60 means 60%+ error rate |
 | **Questions not tagged** (micro_skill_ids missing) | High | ✅ Done — 117 questions tagged (Week 1) |
 | **LaTeX rendering issues** in capsule text | Medium | 🟢 Reuse LatexWidget |
 | **Pass rate too low** (<40%) | Medium | 🟡 Monitor Week 4, adjust pool if needed |
