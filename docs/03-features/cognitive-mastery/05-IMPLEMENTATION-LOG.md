@@ -175,8 +175,33 @@
 - [ ] Modify `home_screen.dart`
   - Add `ActiveWeakSpotsCard` widget
 
-**Status:** ⬜ Not started
-**Blockers:** Week 1 backend APIs must be deployed
+**Status:** 🟡 In progress (2026-02-18)
+**Blockers:** None — all Week 1 APIs are deployed
+
+### Completed
+
+- [x] `WeakSpotDetected` model added to `chapter_practice_models.dart`
+  - `PracticeSessionSummary.fromJson` now parses `weakSpot` from completion response
+- [x] API methods added to `api_service.dart`
+  - `getCapsule(capsuleId, authToken)` — fetches capsule + retrieval questions
+  - `submitWeakSpotRetrieval(userId, nodeId, responses, authToken)` — submits 3 answers
+  - `getUserWeakSpots(userId, authToken)` — lists all weak spots
+  - `logWeakSpotEvent(userId, nodeId, eventType, capsuleId, authToken)` — fire-and-forget
+- [x] `weak_spot_detected_modal.dart` (Screen 1) — bottom sheet modal shown post-practice
+- [x] `capsule_screen.dart` (Screen 2) — LaTeX capsule viewer with scroll-to-complete tracking
+- [x] `weak_spot_retrieval_screen.dart` (Screen 3) — 3 retrieval questions, reuses QuestionCardWidget
+- [x] `weak_spot_results_screen.dart` (Screen 4) — pass/fail screen with node state label
+- [x] `active_weak_spots_card.dart` (Screen 5) — home screen dashboard widget
+  - Sort: active → severity → score; shows top 3
+  - "View All →" navigates to Screen 6
+- [x] `all_weak_spots_screen.dart` (Screen 6) — all weak spots grouped by state
+  - "Resume" action for active nodes with a capsule
+- [x] `chapter_practice_result_screen.dart` modified
+  - Converted from StatelessWidget to StatefulWidget
+  - Shows `WeakSpotDetectedModal` via `addPostFrameCallback` if `weakSpot != null`
+- [x] `home_screen.dart` modified
+  - Added `ActiveWeakSpotsCard` widget below assessment section
+  - Loads weak spots non-blocking via `_loadWeakSpots()` in `_loadData()`
 
 ---
 

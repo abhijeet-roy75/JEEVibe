@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../models/chapter_practice_models.dart';
 import '../../providers/chapter_practice_provider.dart';
 import '../../services/subscription_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../services/firebase/auth_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
@@ -15,9 +17,10 @@ import '../../widgets/buttons/primary_button.dart';
 import '../../widgets/buttons/secondary_button.dart';
 import '../main_navigation_screen.dart';
 import '../subscription/paywall_screen.dart';
+import '../weak_spot_detected_modal.dart';
 import 'chapter_practice_review_screen.dart';
 
-class ChapterPracticeResultScreen extends StatelessWidget {
+class ChapterPracticeResultScreen extends StatefulWidget {
   final PracticeSessionSummary? summary;
   final List<PracticeQuestionResult>? results;
   final ChapterPracticeSession? session;
@@ -28,6 +31,56 @@ class ChapterPracticeResultScreen extends StatelessWidget {
     this.results,
     this.session,
   });
+
+  @override
+  State<ChapterPracticeResultScreen> createState() =>
+      _ChapterPracticeResultScreenState();
+}
+
+class _ChapterPracticeResultScreenState
+    extends State<ChapterPracticeResultScreen> {
+  bool _isDisposed = false;
+
+  // Delegate getters to widget
+  PracticeSessionSummary? get summary => widget.summary;
+  List<PracticeQuestionResult>? get results => widget.results;
+  ChapterPracticeSession? get session => widget.session;
+
+  @override
+  void initState() {
+    super.initState();
+    // Show weak spot modal after first frame if backend detected one
+    if (widget.summary?.weakSpot != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showWeakSpotModal();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  Future<void> _showWeakSpotModal() async {
+    final weakSpot = widget.summary?.weakSpot;
+    if (weakSpot == null || weakSpot.capsuleId == null) return;
+    if (_isDisposed || !mounted) return;
+
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final token = await authService.getIdToken();
+      if (token == null || _isDisposed || !mounted) return;
+
+      final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (userId.isEmpty || _isDisposed || !mounted) return;
+
+      await showWeakSpotDetectedModal(context, weakSpot, token, userId);
+    } catch (_) {
+      // Non-fatal — don't disrupt results screen
+    }
+  }
 
   // Computed values from either summary or provider results
   int get _totalQuestions =>

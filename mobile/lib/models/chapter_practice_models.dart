@@ -448,6 +448,36 @@ class PracticeAnswerResult {
   }
 }
 
+/// Weak spot data returned in chapter practice completion response
+class WeakSpotDetected {
+  final String nodeId;
+  final String title;
+  final double score;
+  final String nodeState;
+  final String? capsuleId;
+  final String severityLevel;
+
+  WeakSpotDetected({
+    required this.nodeId,
+    required this.title,
+    required this.score,
+    required this.nodeState,
+    this.capsuleId,
+    required this.severityLevel,
+  });
+
+  factory WeakSpotDetected.fromJson(Map<String, dynamic> json) {
+    return WeakSpotDetected(
+      nodeId: json['nodeId']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      score: (json['score'] ?? 0.0).toDouble(),
+      nodeState: json['nodeState']?.toString() ?? 'active',
+      capsuleId: json['capsuleId']?.toString(),
+      severityLevel: json['severityLevel']?.toString() ?? 'medium',
+    );
+  }
+}
+
 /// Session Complete Summary
 class PracticeSessionSummary {
   final String sessionId;
@@ -462,6 +492,7 @@ class PracticeSessionSummary {
   final double thetaMultiplier;
   final double overallTheta;
   final double overallPercentile;
+  final WeakSpotDetected? weakSpot;
 
   PracticeSessionSummary({
     required this.sessionId,
@@ -476,11 +507,17 @@ class PracticeSessionSummary {
     required this.thetaMultiplier,
     required this.overallTheta,
     required this.overallPercentile,
+    this.weakSpot,
   });
 
   factory PracticeSessionSummary.fromJson(Map<String, dynamic> json) {
     final summary = json['summary'] is Map ? json['summary'] as Map<String, dynamic> : <String, dynamic>{};
     final updatedStats = json['updated_stats'] is Map ? json['updated_stats'] as Map<String, dynamic> : <String, dynamic>{};
+
+    WeakSpotDetected? weakSpot;
+    if (json['weakSpot'] is Map) {
+      weakSpot = WeakSpotDetected.fromJson(json['weakSpot'] as Map<String, dynamic>);
+    }
 
     return PracticeSessionSummary(
       sessionId: summary['session_id']?.toString() ?? '',
@@ -495,6 +532,7 @@ class PracticeSessionSummary {
       thetaMultiplier: (summary['theta_multiplier'] ?? 0.5).toDouble(),
       overallTheta: (updatedStats['overall_theta'] ?? 0.0).toDouble(),
       overallPercentile: (updatedStats['overall_percentile'] ?? 50.0).toDouble(),
+      weakSpot: weakSpot,
     );
   }
 }

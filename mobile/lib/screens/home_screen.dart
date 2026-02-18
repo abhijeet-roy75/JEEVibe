@@ -44,6 +44,7 @@ import 'chapter_practice/chapter_practice_loading_screen.dart';
 import 'chapter_list_screen.dart';
 import 'mock_test/mock_test_home_screen.dart';
 import '../providers/mock_test_provider.dart';
+import '../widgets/active_weak_spots_card.dart';
 
 class HomeScreen extends StatefulWidget {
   /// When true, the screen is embedded in bottom navigation
@@ -86,6 +87,12 @@ class _HomeScreenState extends State<HomeScreen>
 
   // Chapter unlock data for JEE countdown timeline
   Map<String, dynamic>? _chapterUnlockData;
+
+  // Cognitive Mastery: active weak spots for dashboard card
+  List<WeakSpotEntry> _weakSpots = [];
+  bool _weakSpotsLoading = false;
+  String? _currentAuthToken;
+  String? _currentUserId;
 
   // Screenshot controller for image sharing
   final _screenshotController = ScreenshotController();
@@ -167,6 +174,32 @@ class _HomeScreenState extends State<HomeScreen>
         }
       } catch (e) {
         debugPrint('Error refreshing chapter unlock data: $e');
+      }
+    }
+  }
+
+  /// Load weak spots for dashboard card (called non-blocking from _loadData)
+  Future<void> _loadWeakSpots(String userId, String token) async {
+    if (_isDisposed || !mounted) return;
+    if (!_isDisposed && mounted) {
+      setState(() => _weakSpotsLoading = true);
+    }
+    try {
+      final apiService = ApiService();
+      final result = await apiService.getUserWeakSpots(userId, token);
+      if (!_isDisposed && mounted) {
+        final raw = result['data']?['weakSpots'] as List<dynamic>? ?? [];
+        setState(() {
+          _weakSpots = raw
+              .map((e) => WeakSpotEntry.fromJson(e as Map<String, dynamic>))
+              .toList();
+          _weakSpotsLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading weak spots: $e');
+      if (!_isDisposed && mounted) {
+        setState(() => _weakSpotsLoading = false);
       }
     }
   }
@@ -332,6 +365,13 @@ class _HomeScreenState extends State<HomeScreen>
           final mockTestProvider = context.read<MockTestProvider>();
           mockTestProvider.loadTemplates();
         }
+
+        // Load weak spots for dashboard card (non-blocking)
+        if (token != null) {
+          _currentAuthToken = token;
+          _currentUserId = user.uid;
+          _loadWeakSpots(user.uid, token);
+        }
       }
 
       if (!_isDisposed && mounted) {
@@ -474,6 +514,14 @@ class _HomeScreenState extends State<HomeScreen>
                       _buildResultsCard(),
                     ] else
                       _buildAssessmentCard(),
+                    const SizedBox(height: 16),
+                    // Active Weak Spots Card (Cognitive Mastery dashboard)
+                    ActiveWeakSpotsCard(
+                      weakSpots: _weakSpots,
+                      isLoading: _weakSpotsLoading,
+                      authToken: _currentAuthToken,
+                      userId: _currentUserId,
+                    ),
                     const SizedBox(height: 16),
                     // Daily Adaptive Quiz Card (Locked until assessment complete)
                     _buildDailyPracticeCard(),

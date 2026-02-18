@@ -2334,5 +2334,145 @@ class ApiService {
       }
     });
   }
+
+  // ─── Cognitive Mastery: Capsules & Weak Spots ──────────────────────────────
+
+  /// Fetch a capsule by ID for display in CapsuleScreen
+  Future<Map<String, dynamic>> getCapsule(
+    String capsuleId,
+    String authToken,
+  ) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final response = await _client.get(
+          Uri.parse('$baseUrl/api/capsules/$capsuleId'),
+          headers: headers,
+        ).timeout(const Duration(seconds: 15));
+
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          }
+          throw Exception(jsonData['error'] ?? 'Failed to load capsule');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to load capsule');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
+
+  /// Submit retrieval answers for a weak spot node
+  Future<Map<String, dynamic>> submitWeakSpotRetrieval({
+    required String userId,
+    required String nodeId,
+    required List<Map<String, dynamic>> responses,
+    required String authToken,
+  }) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final response = await _client.post(
+          Uri.parse('$baseUrl/api/weak-spots/retrieval'),
+          headers: headers,
+          body: json.encode({
+            'userId': userId,
+            'nodeId': nodeId,
+            'responses': responses,
+          }),
+        ).timeout(const Duration(seconds: 20));
+
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          }
+          throw Exception(jsonData['error'] ?? 'Failed to submit retrieval');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to submit retrieval');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
+
+  /// Get all weak spots for a user
+  Future<Map<String, dynamic>> getUserWeakSpots(
+    String userId,
+    String authToken,
+  ) async {
+    return _retryRequest(() async {
+      try {
+        final headers = await getAuthHeaders(authToken);
+        final response = await _client.get(
+          Uri.parse('$baseUrl/api/weak-spots/$userId'),
+          headers: headers,
+        ).timeout(const Duration(seconds: 15));
+
+        if (_checkSessionExpiry(response)) {
+          throw Exception('Session expired. Please sign in again.');
+        }
+
+        if (response.statusCode == 200) {
+          final jsonData = json.decode(response.body);
+          if (jsonData['success'] == true) {
+            return jsonData;
+          }
+          throw Exception(jsonData['error'] ?? 'Failed to load weak spots');
+        } else {
+          final errorData = json.decode(response.body);
+          throw Exception(errorData['error'] ?? 'Failed to load weak spots');
+        }
+      } on SocketException {
+        throw Exception('No internet connection. Please check your network and try again.');
+      } on http.ClientException {
+        throw Exception('Network error. Please try again.');
+      }
+    });
+  }
+
+  /// Log a weak spot engagement event (capsule_opened, capsule_completed, capsule_skipped)
+  Future<void> logWeakSpotEvent({
+    required String userId,
+    required String nodeId,
+    required String eventType,
+    String? capsuleId,
+    required String authToken,
+  }) async {
+    try {
+      final headers = await getAuthHeaders(authToken);
+      await _client.post(
+        Uri.parse('$baseUrl/api/weak-spots/events'),
+        headers: headers,
+        body: json.encode({
+          'userId': userId,
+          'nodeId': nodeId,
+          'eventType': eventType,
+          if (capsuleId != null) 'capsuleId': capsuleId,
+        }),
+      ).timeout(const Duration(seconds: 10));
+      // Fire-and-forget: ignore errors silently
+    } catch (_) {
+      // Non-fatal
+    }
+  }
 }
 

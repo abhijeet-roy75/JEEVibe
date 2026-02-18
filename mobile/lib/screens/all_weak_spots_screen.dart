@@ -1,0 +1,316 @@
+/// All Weak Spots Screen
+/// Shows all weak spots grouped by state.
+/// States: active ("Needs Strengthening"), improving ("Keep Practicing"), stable ("Recently Strengthened")
+/// "Resume Capsule" action available for active nodes with a capsule.
+import 'package:flutter/material.dart';
+import '../widgets/active_weak_spots_card.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
+import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
+import 'capsule_screen.dart';
+
+class AllWeakSpotsScreen extends StatelessWidget {
+  final List<WeakSpotEntry> weakSpots;
+  final String? authToken;
+  final String? userId;
+
+  const AllWeakSpotsScreen({
+    super.key,
+    required this.weakSpots,
+    this.authToken,
+    this.userId,
+  });
+
+  Map<String, List<WeakSpotEntry>> get _grouped {
+    final groups = <String, List<WeakSpotEntry>>{
+      'active': [],
+      'improving': [],
+      'stable': [],
+    };
+    for (final ws in weakSpots) {
+      final state = ws.nodeState;
+      if (groups.containsKey(state)) {
+        groups[state]!.add(ws);
+      } else {
+        groups['active']!.add(ws); // fallback
+      }
+    }
+    // Sort each group by severity then score
+    for (final key in groups.keys) {
+      groups[key]!.sort(WeakSpotEntry.compare);
+    }
+    return groups;
+  }
+
+  String _groupTitle(String state) {
+    switch (state) {
+      case 'improving':
+        return 'KEEP PRACTICING';
+      case 'stable':
+        return 'RECENTLY STRENGTHENED';
+      case 'active':
+      default:
+        return 'NEEDS STRENGTHENING';
+    }
+  }
+
+  Color _groupColor(String state) {
+    switch (state) {
+      case 'improving':
+        return const Color(0xFFF59E0B);
+      case 'stable':
+        return AppColors.successGreen;
+      case 'active':
+      default:
+        return AppColors.errorRed;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final grouped = _grouped;
+    final orderedStates = ['active', 'improving', 'stable'];
+
+    return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(context),
+            Expanded(
+              child: weakSpots.isEmpty
+                  ? _buildEmpty()
+                  : ListView(
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        16,
+                        16,
+                        MediaQuery.of(context).viewPadding.bottom + 24,
+                      ),
+                      children: orderedStates
+                          .where((s) => (grouped[s] ?? []).isNotEmpty)
+                          .expand((state) => [
+                                _buildGroupHeader(state, grouped[state]!.length),
+                                SizedBox(height: PlatformSizing.spacing(8)),
+                                ...grouped[state]!.map((ws) => _buildCard(context, ws, state)),
+                                SizedBox(height: PlatformSizing.spacing(16)),
+                              ])
+                          .toList(),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(8, 8, 20, 8),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  color: AppColors.textDark,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                Text(
+                  'My Weak Spots',
+                  style: AppTextStyles.headerMedium.copyWith(
+                    fontSize: PlatformSizing.fontSize(20),
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmpty() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.psychology_outlined,
+              size: 56,
+              color: AppColors.textLight,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Weak Spots Yet',
+              style: AppTextStyles.headerMedium.copyWith(
+                color: AppColors.textDark,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Complete chapter practice to discover areas that need strengthening.',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textMedium,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroupHeader(String state, int count) {
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 16,
+          decoration: BoxDecoration(
+            color: _groupColor(state),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '${_groupTitle(state)} ($count)',
+          style: AppTextStyles.labelSmall.copyWith(
+            fontSize: PlatformSizing.fontSize(11),
+            fontWeight: FontWeight.bold,
+            color: AppColors.textMedium,
+            letterSpacing: 0.8,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCard(BuildContext context, WeakSpotEntry ws, String state) {
+    final canResume =
+        state == 'active' && ws.capsuleId != null && authToken != null && userId != null;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: PlatformSizing.spacing(8)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
+        border: Border.all(color: AppColors.borderLight),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(PlatformSizing.spacing(14)),
+        child: Row(
+          children: [
+            Container(
+              width: PlatformSizing.spacing(8),
+              height: PlatformSizing.spacing(8),
+              decoration: BoxDecoration(
+                color: _groupColor(state),
+                shape: BoxShape.circle,
+              ),
+            ),
+            SizedBox(width: PlatformSizing.spacing(10)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    ws.nodeTitle,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textDark,
+                      fontSize: PlatformSizing.fontSize(14),
+                    ),
+                  ),
+                  SizedBox(height: PlatformSizing.spacing(2)),
+                  Row(
+                    children: [
+                      Text(
+                        _chapterLabel(ws.chapterKey),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textMedium,
+                          fontSize: PlatformSizing.fontSize(12),
+                        ),
+                      ),
+                      if (ws.severityLevel != 'low') ...[
+                        Text(
+                          ' · ',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textLight,
+                            fontSize: PlatformSizing.fontSize(12),
+                          ),
+                        ),
+                        Text(
+                          _capitalise(ws.severityLevel),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: _groupColor(state),
+                            fontSize: PlatformSizing.fontSize(12),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (canResume)
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => CapsuleScreen(
+                      capsuleId: ws.capsuleId!,
+                      nodeId: ws.nodeId,
+                      nodeTitle: ws.nodeTitle,
+                      authToken: authToken!,
+                      userId: userId!,
+                    ),
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: PlatformSizing.spacing(10),
+                    vertical: PlatformSizing.spacing(6),
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'Resume',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.primaryPurple,
+                    fontSize: PlatformSizing.fontSize(12),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _chapterLabel(String? chapterKey) {
+    if (chapterKey == null) return '';
+    // physics_electrostatics → Electrostatics
+    final parts = chapterKey.split('_');
+    if (parts.length > 1) {
+      return parts.sublist(1).map(_capitalise).join(' ');
+    }
+    return _capitalise(chapterKey);
+  }
+
+  String _capitalise(String s) {
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
+  }
+}
