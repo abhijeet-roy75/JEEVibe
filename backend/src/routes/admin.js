@@ -743,4 +743,44 @@ router.post('/moderation/summary', authenticateAdmin, async (req, res, next) => 
   }
 });
 
+// ============================================================================
+// COGNITIVE MASTERY METRICS
+// ============================================================================
+
+/**
+ * GET /api/admin/metrics/cognitive-mastery
+ *
+ * Delivery, engagement, and retrieval analytics for the Cognitive Mastery feature.
+ * Returns per-node breakdown and 7-day summary.
+ *
+ * Authentication: Admin required
+ */
+router.get('/metrics/cognitive-mastery', authenticateAdmin, async (req, res, next) => {
+  try {
+    const metrics = await withTimeout(
+      adminMetricsService.getCognitiveMasteryMetrics(),
+      ADMIN_METRICS_TIMEOUT,
+      'Cognitive mastery metrics query timed out'
+    );
+
+    logger.info('Admin cognitive mastery metrics retrieved', {
+      requestId: req.id,
+      adminEmail: req.userEmail,
+      totalEvents: metrics.summary.totalEvents,
+    });
+
+    res.json({
+      success: true,
+      data: metrics,
+      requestId: req.id,
+    });
+  } catch (error) {
+    logger.error('Error retrieving cognitive mastery metrics', {
+      requestId: req.id,
+      error: error.message,
+    });
+    next(error);
+  }
+});
+
 module.exports = router;

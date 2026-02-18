@@ -853,11 +853,139 @@ async function getUserDetails(userId) {
   };
 }
 
+/**
+ * Get Cognitive Mastery analytics
+ *
+ * Queries weak_spot_events to compute delivery, engagement, and retrieval metrics
+ * across all atlas nodes.
+ *
+ * @returns {Object} Cognitive mastery metrics
+ */
+async function getCognitiveMasteryMetrics() {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  // Pull all weak_spot_events (append-only log)
+  const eventsSnap = await db.collection('weak_spot_events')
+    .where('created_at', '>=', sevenDaysAgo.toISOString())
+    .get();
+
+  const events = [];
+  eventsSnap.forEach(doc => events.push(doc.data()));
+
+  // Pull atlas_nodes for display names
+  const nodesSnap = await db.collection('atlas_nodes').get();
+  const nodeNames = {};
+  nodesSnap.forEach(doc => {
+    const d = doc.data();
+    nodeNames[doc.id] = d.node_name || doc.id;
+  });
+
+  // Per-node accumulators
+  const nodeStats = {};
+
+  const ensureNode = (nodeId) => {
+    if (!nodeStats[nodeId]) {
+      nodeStats[nodeId] = {
+        nodeId,
+        nodeName: nodeNames[nodeId] || nodeId,
+        triggered: new Set(),     // unique users who got a weak spot detected
+        opened: new Set(),        // unique users who opened capsule
+        completed: new Set(),     // unique users who completed capsule
+        skipped: new Set(),       // unique users who skipped capsule
+        retrievalAttempts: 0,
+        retrievalPassed: 0,
+      };
+    }
+    return nodeStats[nodeId];
+  };
+
+  for (const ev of events) {
+    const nodeId = ev.atlas_node_id;
+    if (!nodeId) continue;
+    const s = ensureNode(nodeId);
+    const uid = ev.student_id;
+
+    switch (ev.event_type) {
+      case 'chapter_scored':
+      case 'state_changed':
+        s.triggered.add(uid);
+        break;
+      case 'capsule_opened':
+        s.triggered.add(uid);
+        s.opened.add(uid);
+        break;
+      case 'capsule_completed':
+        s.triggered.add(uid);
+        s.opened.add(uid);
+        s.completed.add(uid);
+        break;
+      case 'capsule_skipped':
+        s.triggered.add(uid);
+        s.skipped.add(uid);
+        break;
+      case 'retrieval_completed':
+        s.retrievalAttempts++;
+        if (ev.metadata?.passed) s.retrievalPassed++;
+        break;
+      default:
+        break;
+    }
+  }
+
+  // Summarise per node
+  const nodeBreakdown = Object.values(nodeStats).map(s => {
+    const triggered = s.triggered.size;
+    const opened = s.opened.size;
+    const completed = s.completed.size;
+    const skipped = s.skipped.size;
+    return {
+      nodeId: s.nodeId,
+      nodeName: s.nodeName,
+      triggered,
+      opened,
+      completed,
+      skipped,
+      openRate: triggered > 0 ? Math.round((opened / triggered) * 100) : 0,
+      completionRate: opened > 0 ? Math.round((completed / opened) * 100) : 0,
+      retrievalAttempts: s.retrievalAttempts,
+      retrievalPassed: s.retrievalPassed,
+      retrievalPassRate: s.retrievalAttempts > 0
+        ? Math.round((s.retrievalPassed / s.retrievalAttempts) * 100)
+        : 0,
+    };
+  }).sort((a, b) => b.triggered - a.triggered);
+
+  // Global summary
+  const totalEvents = events.length;
+  const allTriggered = new Set(events.filter(e => ['chapter_scored', 'state_changed', 'capsule_opened', 'capsule_completed', 'capsule_skipped'].includes(e.event_type)).map(e => e.student_id)).size;
+  const allOpened = new Set(events.filter(e => ['capsule_opened', 'capsule_completed'].includes(e.event_type)).map(e => e.student_id)).size;
+  const totalRetrievals = nodeBreakdown.reduce((sum, n) => sum + n.retrievalAttempts, 0);
+  const totalPassed = nodeBreakdown.reduce((sum, n) => sum + n.retrievalPassed, 0);
+
+  const mostTriggeredNode = nodeBreakdown[0] || null;
+
+  return {
+    windowDays: 7,
+    summary: {
+      totalEvents,
+      uniqueUsersTriggered: allTriggered,
+      uniqueUsersOpenedCapsule: allOpened,
+      capsuleOpenRate: allTriggered > 0 ? Math.round((allOpened / allTriggered) * 100) : 0,
+      totalRetrievals,
+      retrievalPassRate: totalRetrievals > 0 ? Math.round((totalPassed / totalRetrievals) * 100) : 0,
+      mostTriggeredNode: mostTriggeredNode ? mostTriggeredNode.nodeName : null,
+    },
+    nodeBreakdown,
+    generatedAt: new Date().toISOString(),
+  };
+}
+
 module.exports = {
   getDailyHealth,
   getEngagement,
   getLearning,
   getContent,
   getUsers,
-  getUserDetails
+  getUserDetails,
+  getCognitiveMasteryMetrics,
 };
