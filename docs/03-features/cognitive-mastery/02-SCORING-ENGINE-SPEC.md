@@ -12,7 +12,7 @@ The scoring engine analyzes chapter practice session responses to detect weak sp
 
 | Input | Firestore Location | Fields Used |
 |-------|-------------------|-------------|
-| Session responses | `users/{userId}/chapter_practice_responses` | `student_answer`, `correct_answer`, `is_correct`, `time_taken_seconds`, `question_irt_params`, `distractor_analysis` |
+| Session responses | `chapter_practice_responses/{userId}/responses` | `student_answer`, `correct_answer`, `is_correct`, `time_taken_seconds`, `question_irt_params`, `distractor_analysis` |
 | Micro-skill map | `atlas_micro_skills/{chapterKey}` (uploaded from data1/) | `micro_skill_id`, `diagnostic_focus` |
 | Question→skill map | `atlas_question_skill_map/{chapterKey}` (uploaded from data1/) | `question_id → [micro_skill_ids]` |
 | Atlas nodes | `atlas_nodes/{nodeId}` | `micro_skill_ids`, `scoring_weights`, `trigger_threshold`, `stability_threshold`, `min_signal_count` |
@@ -109,8 +109,11 @@ function calcSignatureScore(responses, questionSkillMap, microSkillMap, nodeSkil
 ```javascript
 async function calcRecurrenceScore(userId, chapterKey, nodeSkillIds, questionSkillMap, currentSessionId, db) {
   // Fetch responses from last 3 sessions for this chapter (excluding current)
+  // NOTE: actual Firestore path is chapter_practice_responses/{userId}/responses/{sessionId}_{questionId}
   const previousResponses = await db
-    .collection(`users/${userId}/chapter_practice_responses`)
+    .collection('chapter_practice_responses')
+    .doc(userId)
+    .collection('responses')
     .where('chapter_key', '==', chapterKey)
     .where('session_id', '!=', currentSessionId)
     .orderBy('answered_at', 'desc')
@@ -331,8 +334,20 @@ async function getCached(key, fetchFn) {
 
 ---
 
+## Data Model Lookup Chain
+
+```
+atlas_node  →  capsule_id  →  capsules/{capsuleId}  →  pool_id  →  retrieval_pools/{poolId}
+```
+
+- `atlas_node` has `capsule_id` but NOT `pool_id`
+- `capsule` document has `pool_id` — this is the authoritative link to retrieval questions
+- `GET /api/capsules/:capsuleId` returns `poolId` in its response, giving mobile everything it needs
+
+---
+
 ## Related Documentation
 
-- [API Reference](01-API-REFERENCE.md) - `/weak-spots/detect` endpoint
+- [API Reference](01-API-REFERENCE.md) - endpoint specs
 - [Testing Strategy](06-TESTING-STRATEGY.md) - Scoring engine test cases
 - [Mobile UI Spec](03-MOBILE-UI-SPEC.md) - How scores surface to students

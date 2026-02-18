@@ -265,6 +265,9 @@ app.use('/api/ai-tutor', aiTutorRouter);
 const chapterPracticeRouter = require('./routes/chapterPractice');
 app.use('/api/chapter-practice', chapterPracticeRouter);
 
+const weakSpotsRouter = require('./routes/weakSpots');
+app.use('/api', weakSpotsRouter);
+
 const shareRouter = require('./routes/share');
 app.use('/api/share', shareRouter);
 

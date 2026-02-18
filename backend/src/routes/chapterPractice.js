@@ -37,6 +37,7 @@ const {
   calculateSubtopicAccuracyUpdate
 } = require('../services/thetaUpdateService');
 const { updateStreak } = require('../services/streakService');
+const { detectWeakSpots } = require('../services/weakSpotScoringService');
 
 // ============================================================================
 // CONSTANTS
@@ -1085,6 +1086,9 @@ router.post('/complete', authenticateUser, validateSessionId, async (req, res, n
       thetaImprovement
     });
 
+    // Run weak spot detection (non-blocking — failure does not affect completion)
+    const weakSpot = await detectWeakSpots(userId, session_id);
+
     res.json({
       success: true,
       message: 'Practice session completed',
@@ -1111,6 +1115,7 @@ router.post('/complete', authenticateUser, validateSessionId, async (req, res, n
         overall_accuracy: updatedChapterPracticeStats.overall_accuracy,
         chapter_stats: updatedChapterPracticeStats.by_chapter[sessionData.chapter_key]
       },
+      weakSpot: weakSpot || null,
       requestId: req.id
     });
 

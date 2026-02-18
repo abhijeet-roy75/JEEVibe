@@ -17,44 +17,38 @@ This document specifies all backend API endpoints for the Cognitive Mastery feat
 
 ### 1. Detect Weak Spots
 
-**POST** `/weak-spots/detect`
+**INTERNAL ONLY — not an HTTP endpoint.**
 
-Analyzes a completed chapter practice session to detect weak spots.
+Detection runs server-side as a direct function call inside the chapter practice `/complete` route. Mobile never calls this directly — it receives the result embedded in the chapter practice completion response.
 
-**Request:**
-```json
-{
-  "userId": "string",
-  "sessionId": "string"
-}
+```javascript
+// Called inside POST /api/chapter-practice/complete
+const weakSpot = await detectWeakSpots(userId, sessionId, db);
+// weakSpot is then included in the completion response
 ```
 
-**Response (Weak Spot Detected):**
+**Chapter Practice Completion Response (extended):**
 ```json
 {
   "success": true,
-  "data": {
-    "detected": true,
-    "weakSpot": {
-      "nodeId": "PHY_ELEC_VEC_001",
-      "title": "Vector Superposition Error",
-      "score": 0.50,
-      "nodeState": "active",
-      "capsuleId": "CAP_PHY_ELEC_VEC_001_V1",
-      "severityLevel": "high"
-    }
+  "summary": { "...existing fields..." },
+  "updated_stats": { "...existing fields..." },
+  "chapter_practice_stats": { "...existing fields..." },
+  "weakSpot": {
+    "nodeId": "PHY_ELEC_VEC_001",
+    "title": "Vector Superposition Error",
+    "score": 0.50,
+    "nodeState": "active",
+    "capsuleId": "CAP_PHY_ELEC_VEC_001_V1",
+    "severityLevel": "high"
   }
 }
 ```
 
-**Response (No Weak Spot):**
+**Response when no weak spot triggered:**
 ```json
 {
-  "success": true,
-  "data": {
-    "detected": false,
-    "weakSpot": null
-  }
+  "weakSpot": null
 }
 ```
 
@@ -173,6 +167,56 @@ Retrieves all weak spots for a user (for dashboard).
 
 ---
 
+### 5. Log Engagement Event
+
+**POST** `/weak-spots/events`
+
+Called by mobile to log user engagement with capsules. This is how `capsule_status` is tracked — the event log is the source of truth, not a mutable field. Backend validates the `eventType` against an allowlist before writing.
+
+**Request:**
+```json
+{
+  "nodeId": "PHY_ELEC_VEC_001",
+  "eventType": "capsule_opened",
+  "capsuleId": "CAP_PHY_ELEC_VEC_001_V1"
+}
+```
+
+**Allowed `eventType` values (mobile-initiated):**
+- `capsule_delivered` — modal shown to user
+- `capsule_opened` — user tapped "Read Capsule"
+- `capsule_saved` — user tapped "Save for Later"
+- `capsule_completed` — user scrolled to bottom of capsule
+- `capsule_skipped` — user tapped "Skip for Now" on capsule screen
+- `retrieval_started` — user tapped "Continue to Validation"
+
+**Note:** State-change events (`chapter_scored`, `retrieval_completed`) are written by backend only — mobile cannot submit these.
+
+**Response:**
+```json
+{
+  "success": true
+}
+```
+
+**How `capsule_status` is derived (for dashboard display):**
+
+The `GET /api/weak-spots/:userId` endpoint reads the latest engagement event per node from `weak_spot_events` and computes `capsuleStatus`:
+
+| Latest engagement event | `capsuleStatus` returned |
+|------------------------|--------------------------|
+| `capsule_delivered` (or none) | `"delivered"` |
+| `capsule_saved` | `"ignored"` |
+| `capsule_opened` | `"opened"` |
+| `capsule_completed` | `"completed"` |
+
+**How "Resume Capsule" works (Q8):**
+- Dashboard stores `capsuleId` in weak spot data (from `atlas_nodes`)
+- Mobile calls `GET /api/capsules/:capsuleId` — same endpoint, no special resume flow
+- Mobile skips Screen 1 (modal) and goes directly to Screen 2 (capsule viewer)
+
+---
+
 ## Authentication
 
 All endpoints require Firebase Auth ID token in header:
@@ -223,8 +267,20 @@ Authorization: Bearer <firebase_id_token>
 
 - All endpoints are built real from day 1 — no stub phase
 - Content for pilot chapters (Electrostatics + Units & Measurements) already loaded into Firestore
-- Feature gated by `cognitive_mastery_enabled` flag in `tier_config/active`
-- Detection is called server-side after chapter practice session completes — mobile does not need to call detect separately; it receives the result in the chapter practice completion response
+- No per-tier gating — feature is available to all tiers (Free, Pro, Ultra). Free tier naturally has fewer sessions due to chapter practice limits (5 questions/chapter, 5 chapters/day), which means fewer capsule triggers organically. Optional kill switch: add `cognitive_mastery_enabled: false` to top-level `tier_config/active` if needed, but not required for launch.
+- Detection runs as an internal function call inside `/api/chapter-practice/complete` — NOT a separate HTTP endpoint
+- Mobile never calls Firestore directly — all writes go through backend API endpoints
+- `capsule_status` is derived from the `weak_spot_events` event log, not stored as a mutable field
+
+### API Summary
+
+| Method | Endpoint | Caller | Purpose |
+|--------|----------|--------|---------|
+| INTERNAL | `detectWeakSpots()` | Backend only | Called inside `/complete`, result embedded in response |
+| GET | `/api/capsules/:capsuleId` | Mobile | Fetch capsule content |
+| POST | `/api/weak-spots/retrieval` | Mobile | Submit retrieval answers |
+| GET | `/api/weak-spots/:userId` | Mobile | List weak spots for dashboard |
+| POST | `/api/weak-spots/events` | Mobile | Log engagement events (capsule opened, skipped, etc.) |
 
 ---
 

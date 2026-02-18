@@ -13,7 +13,7 @@
  *   node scripts/tag-questions-micro-skills.js --dry-run
  */
 
-const { db } = require('../src/config/firebase');
+const { db } = require('../../src/config/firebase');
 
 const args = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');

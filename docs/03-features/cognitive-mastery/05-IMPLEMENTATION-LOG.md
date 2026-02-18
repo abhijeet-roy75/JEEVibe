@@ -20,8 +20,12 @@
   - [ ] `atlas_nodes` collection (14 nodes: 7 electrostatics + 7 units)
   - [ ] `capsules` collection (14 capsules)
   - [ ] `retrieval_pools` collection (14 pools, 3 questions each, pass 2/3)
-  - [ ] `retrieval_questions` collection (3 questions per pool)
-  - [ ] `atlas_micro_skills` + `atlas_question_skill_map` collections
+  - [ ] `retrieval_questions` collection (3 questions per pool = 42 questions total)
+    - Stored separately from main `questions` collection (different ID namespace: `PHY_ELEC_VEC_001_RQ_001`)
+    - Format must match existing question schema for `QuestionCardWidget` to render them
+    - Source files: `RQ_PHY_ELEC_*.json` and `RQ_PHY_UNITS_*.json` in `data1/`
+  - [ ] `atlas_micro_skills/{chapterKey}` collection
+  - [ ] `atlas_question_skill_map/{chapterKey}` collection
   - **Script:** `backend/scripts/cognitive-mastery/upload-cognitive-mastery.js`
     ```bash
     # Dry run first to preview what will be written
@@ -56,20 +60,25 @@
   - `min_signal_count = 2` (need ≥2 questions per node to trigger)
   - Returns top triggered node per session (1 capsule per session max)
 
-- [ ] Build 4 API endpoints: `backend/src/routes/weakSpots.js`
-  - [ ] `POST /api/weak-spots/detect` (internal — called by chapter practice route)
+- [ ] Build API endpoints: `backend/src/routes/weakSpots.js`
   - [ ] `GET /api/capsules/:capsuleId`
   - [ ] `POST /api/weak-spots/retrieval` (3 questions, pass 2/3)
   - [ ] `GET /api/weak-spots/:userId`
+  - [ ] `POST /api/weak-spots/events` (mobile engagement events — allowlisted event types only)
+  - **NOTE**: `/detect` is NOT an HTTP endpoint — it's an internal function call only
 
 - [ ] Hook scoring into chapter practice: `backend/src/routes/chapterPractice.js`
-  - Call `detectWeakSpots()` after session submission
-  - Include `weakSpot` in session completion response (null if none triggered)
+  - Call `detectWeakSpots(userId, sessionId, db)` directly inside `/complete` handler
+  - Include `weakSpot: { nodeId, title, score, nodeState, capsuleId, severityLevel } | null` in completion response
 
 - [ ] Create `weak_spot_events` collection (append-only event log)
   - Write on every node state change
 
-- [ ] Add feature flag: `cognitive_mastery_enabled: false` in `tier_config/active`
+- [x] Feature flag decision: NO per-tier gating. Feature available to all tiers.
+  - Free tier is naturally limited via chapter practice limits (5 Q/chapter, 5 chapters/day)
+  - Analytics → Mastery tab is a separate IRT-based feature (Pro/Ultra only) — unrelated to cognitive mastery UI
+  - Cognitive mastery surfaces on home screen + post-practice modal — both available to all tiers
+  - Optional kill switch only: if needed, add `cognitive_mastery_enabled: true` as top-level boolean in `tier_config/active` — NOT in per-tier limits
 
 - [ ] Deploy to Render.com
 

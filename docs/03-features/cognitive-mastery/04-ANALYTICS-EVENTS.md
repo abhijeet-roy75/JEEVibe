@@ -351,56 +351,71 @@ analytics.track('retrieval_completed', {
 
 ## Analytics Implementation
 
-### Backend Setup
+**No third-party event tracking (Segment, Amplitude, etc.) — all events are written to Firestore.**
 
-**Location:** `/backend/src/services/analytics.js`
+The `weak_spot_events` collection is the single source of truth for both state changes AND engagement. Product metrics are queried directly from this collection.
+
+### Event Storage
+
+All events — whether backend-initiated (state changes) or mobile-initiated (engagement) — are written to `weak_spot_events` as append-only documents.
+
+**Backend state-change events** are written directly in `weakSpotScoringService.js` and the retrieval route.
+
+**Mobile engagement events** are sent via `POST /api/weak-spots/events` — backend validates the `eventType` allowlist and writes to Firestore. Mobile never writes to Firestore directly.
+
+### Unified Event Schema
 
 ```javascript
-const analytics = require('analytics-node');
+// weak_spot_events/{auto-id}
+{
+  student_id: "uid",
+  atlas_node_id: "PHY_ELEC_VEC_001",
+  chapter_key: "physics_electrostatics",      // null for engagement events
+  capsule_id: "CAP_PHY_ELEC_VEC_001_V1",      // null for state-change events
+  session_id: "string",                        // null for engagement events
 
-class AnalyticsService {
-  constructor() {
-    this.client = new analytics(process.env.SEGMENT_WRITE_KEY);
-  }
+  event_type:
+    // State changes (backend writes only)
+    "chapter_scored" | "retrieval_completed" |
+    // Engagement (mobile → POST /api/weak-spots/events → backend writes)
+    "capsule_delivered" | "capsule_opened" | "capsule_saved" |
+    "capsule_completed" | "capsule_skipped" | "retrieval_started",
 
-  track(eventName, properties) {
-    this.client.track({
-      event: eventName,
-      userId: properties.userId,
-      properties: {
-        ...properties,
-        environment: process.env.NODE_ENV,
-        version: process.env.APP_VERSION
-      },
-      timestamp: new Date()
-    });
-  }
+  // State change fields (null for engagement events)
+  previous_state: null | "inactive" | "active" | "improving" | "stable",
+  new_state: null | "active" | "improving" | "stable",
+  previous_score: null | 0.82,
+  new_score: null | 0.49,
+
+  created_at: serverTimestamp()
 }
-
-module.exports = new AnalyticsService();
 ```
 
-### Mobile Setup
+### Deriving `capsule_status` from Event Log
 
-**Location:** `/mobile/lib/services/analytics_service.dart`
+The `GET /api/weak-spots/:userId` endpoint computes `capsuleStatus` per node by reading the latest engagement event:
 
-```dart
-import 'package:segment_analytics/segment_analytics.dart';
+| Latest engagement event | `capsuleStatus` |
+|------------------------|-----------------|
+| none / `capsule_delivered` | `"delivered"` |
+| `capsule_saved` | `"ignored"` |
+| `capsule_opened` | `"opened"` |
+| `capsule_completed` | `"completed"` |
 
-class AnalyticsService {
-  final Segment _segment = Segment();
+### Querying Product Metrics
 
-  void track(String eventName, Map<String, dynamic> properties) {
-    _segment.track(
-      eventName: eventName,
-      properties: {
-        ...properties,
-        'platform': Platform.isIOS ? 'ios' : 'android',
-        'appVersion': packageInfo.version,
-      },
-    );
-  }
-}
+```javascript
+// Capsule delivery rate (backend query)
+const delivered = await db.collection('weak_spot_events')
+  .where('event_type', '==', 'capsule_delivered')
+  .where('created_at', '>=', weekAgo).get();
+
+// Capsule open rate
+const opened = await db.collection('weak_spot_events')
+  .where('event_type', '==', 'capsule_opened')
+  .where('created_at', '>=', weekAgo).get();
+
+// open_rate = opened.size / delivered.size
 ```
 
 ---

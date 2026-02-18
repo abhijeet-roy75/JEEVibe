@@ -23,13 +23,13 @@
 
 const path = require('path');
 const fs = require('fs');
-const { db } = require('../src/config/firebase');
+const { db } = require('../../src/config/firebase');
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 
-const DEFAULT_DATA_DIR = path.join(__dirname, '../../inputs/cognitive_mastery/data1');
+const DEFAULT_DATA_DIR = path.join(__dirname, '../../../inputs/cognitive_mastery/data1');
 const BATCH_SIZE = 500;
 
 const args = process.argv.slice(2);
