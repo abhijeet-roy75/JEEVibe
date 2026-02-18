@@ -90,7 +90,7 @@ const retrievalValidation = [
   body('nodeId').notEmpty().withMessage('nodeId is required'),
   body('responses').isArray({ min: 1 }).withMessage('responses must be a non-empty array'),
   body('responses.*.questionId').notEmpty().withMessage('Each response needs questionId'),
-  body('responses.*.isCorrect').isBoolean().withMessage('Each response needs isCorrect boolean'),
+  body('responses.*.studentAnswer').notEmpty().withMessage('Each response needs studentAnswer'),
 ];
 
 router.post('/weak-spots/retrieval',
@@ -117,7 +117,20 @@ router.post('/weak-spots/retrieval',
       }
       const atlasNode = { atlas_node_id: nodeDoc.id, ...nodeDoc.data() };
 
-      const result = await evaluateRetrieval(userId, nodeId, responses, atlasNode);
+      // Fetch correct answers from Firestore and compute isCorrect server-side
+      const enrichedResponses = await Promise.all(
+        responses.map(async (r) => {
+          const qDoc = await db.collection('retrieval_questions').doc(r.questionId).get();
+          const correctOption = qDoc.exists ? (qDoc.data().correct_option || '') : '';
+          return {
+            questionId: r.questionId,
+            studentAnswer: r.studentAnswer,
+            isCorrect: r.studentAnswer.trim().toUpperCase() === correctOption.trim().toUpperCase(),
+          };
+        })
+      );
+
+      const result = await evaluateRetrieval(userId, nodeId, enrichedResponses, atlasNode);
 
       logger.info(`Retrieval completed: user=${userId} node=${nodeId} passed=${result.passed} score=${result.newScore}`);
 
