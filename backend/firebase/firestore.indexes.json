@@ -411,6 +411,26 @@
         { "fieldPath": "user_id", "order": "ASCENDING" },
         { "fieldPath": "snapshot_date", "order": "ASCENDING" }
       ]
+    },
+    {
+      "comment": "Cognitive Mastery: Recurrence scoring — chapter_key filter + session_id inequality (!=) requires orderBy session_id",
+      "collectionGroup": "responses",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "chapter_key", "order": "ASCENDING" },
+        { "fieldPath": "session_id", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "comment": "Cognitive Mastery: Capsule status lookup — latest engagement event per node for a user",
+      "collectionGroup": "weak_spot_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "student_id", "order": "ASCENDING" },
+        { "fieldPath": "atlas_node_id", "order": "ASCENDING" },
+        { "fieldPath": "event_type", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [
