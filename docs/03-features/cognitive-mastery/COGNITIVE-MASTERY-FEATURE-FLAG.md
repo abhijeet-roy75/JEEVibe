@@ -17,9 +17,11 @@ The Cognitive Mastery feature (Weak Spots detection and remediation) is controll
 ### Backend
 - The `tierConfigService.js` includes the flag in the default config
 - The flag is cached with a 5-minute TTL along with tier configuration
+- **Subscription API** (`GET /api/subscriptions/status`) now includes `feature_flags` in the response
 
 ### Mobile
-- On app startup, the `home_screen.dart` reads the flag from Firestore
+- On app startup, the `home_screen.dart` reads the flag from the **subscription API response**
+- The flag is parsed from `SubscriptionStatus.featureFlags['show_cognitive_mastery']`
 - If `show_cognitive_mastery` is `true`:
   - "Active Weak Spots" card appears on home screen
   - Weak spots API is called to load user's weak spots
