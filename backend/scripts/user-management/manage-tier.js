@@ -47,7 +47,8 @@ function initFirebase() {
     });
   } else {
     // Try to load from local service account file
-    const serviceAccountPath = path.join(__dirname, '..', 'serviceAccountKey.json');
+    // Script is in backend/scripts/user-management/, go up two levels to backend/
+    const serviceAccountPath = path.join(__dirname, '..', '..', 'serviceAccountKey.json');
     try {
       const serviceAccount = require(serviceAccountPath);
       admin.initializeApp({
