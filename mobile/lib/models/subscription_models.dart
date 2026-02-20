@@ -312,6 +312,7 @@ class SubscriptionStatus {
   final TierFeatures features;
   final AllUsage usage;
   final ChapterPracticeWeeklyUsage? chapterPracticeWeekly;
+  final Map<String, dynamic>? featureFlags;
 
   SubscriptionStatus({
     required this.subscription,
@@ -319,6 +320,7 @@ class SubscriptionStatus {
     required this.features,
     required this.usage,
     this.chapterPracticeWeekly,
+    this.featureFlags,
   });
 
   factory SubscriptionStatus.fromJson(Map<String, dynamic> json) {
@@ -330,6 +332,7 @@ class SubscriptionStatus {
       chapterPracticeWeekly: json['chapter_practice_weekly'] != null
           ? ChapterPracticeWeeklyUsage.fromJson(json['chapter_practice_weekly'])
           : null,
+      featureFlags: json['feature_flags'] as Map<String, dynamic>?,
     );
   }
 

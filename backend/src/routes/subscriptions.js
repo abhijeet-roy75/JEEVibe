@@ -83,11 +83,12 @@ router.get('/status', authenticateUser, async (req, res, next) => {
     });
     const userData = userDoc.exists ? userDoc.data() : null;
 
-    // Get subscription status, usage, and weekly chapter practice usage in parallel
-    const [status, usage, chapterPracticeWeekly] = await Promise.all([
+    // Get subscription status, usage, weekly chapter practice usage, and tier config in parallel
+    const [status, usage, chapterPracticeWeekly, tierConfig] = await Promise.all([
       getSubscriptionStatus(userId, tierInfo),
       getAllUsage(userId, tierInfo),
-      getWeeklyUsage(userId)
+      getWeeklyUsage(userId),
+      getTierConfig()
     ]);
 
     logger.info('Subscription status retrieved', {
@@ -143,6 +144,7 @@ router.get('/status', authenticateUser, async (req, res, next) => {
         },
         limits: status.limits,
         features: status.features,
+        feature_flags: tierConfig.feature_flags || {},
         usage: {
           snap_solve: {
             used: usage.snap_solve.used,

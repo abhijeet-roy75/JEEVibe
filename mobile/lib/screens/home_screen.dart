@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:screenshot/screenshot.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -116,7 +115,6 @@ class _HomeScreenState extends State<HomeScreen>
     super.initState();
     _loadData();
     _trackSession();
-    _loadCognitiveMasteryFlag();
 
     // Listen for profile changes to refresh chapter unlock data
     _userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
@@ -178,30 +176,6 @@ class _HomeScreenState extends State<HomeScreen>
       } catch (e) {
         debugPrint('Error refreshing chapter unlock data: $e');
       }
-    }
-  }
-
-  /// Load Cognitive Mastery feature flag from tier_config
-  Future<void> _loadCognitiveMasteryFlag() async {
-    try {
-      final doc = await FirebaseFirestore.instance
-          .collection('tier_config')
-          .doc('active')
-          .get();
-
-      if (doc.exists && !_isDisposed && mounted) {
-        final data = doc.data() as Map<String, dynamic>?;
-        final featureFlags = data?['feature_flags'] as Map<String, dynamic>?;
-        final showFlag = featureFlags?['show_cognitive_mastery'] as bool? ?? false;
-
-        setState(() {
-          _showCognitiveMastery = showFlag;
-        });
-        debugPrint('Cognitive Mastery feature flag: $_showCognitiveMastery');
-      }
-    } catch (e) {
-      debugPrint('Error loading Cognitive Mastery flag: $e');
-      // Default to false on error
     }
   }
 
@@ -310,6 +284,18 @@ class _HomeScreenState extends State<HomeScreen>
             ]);
 
             if (_isDisposed || !mounted) return;
+
+            // Process subscription response (index 4) to extract feature flags
+            final subscriptionResponse = results[4] as SubscriptionStatus?;
+            if (subscriptionResponse != null && subscriptionResponse.featureFlags != null) {
+              final showCognitiveMastery = subscriptionResponse.featureFlags!['show_cognitive_mastery'] as bool? ?? false;
+              if (!_isDisposed && mounted) {
+                setState(() {
+                  _showCognitiveMastery = showCognitiveMastery;
+                });
+                debugPrint('Cognitive Mastery feature flag: $_showCognitiveMastery');
+              }
+            }
 
             // Process assessment results
             final assessmentResult = results[0] as AssessmentResult;
