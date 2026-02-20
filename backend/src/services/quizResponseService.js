@@ -30,10 +30,11 @@ const { validateQuestionId, validateStudentAnswer, validateTimeTaken } = require
 function validateAnswer(questionData, studentAnswer) {
   const questionId = questionData.question_id;
   const questionType = questionData.question_type;
+  const answerType = questionData.answer_type; // Check answer_type field
   const validatedAnswer = validateStudentAnswer(studentAnswer);
-  
+
   let isCorrect = false;
-  
+
   if (questionType === 'mcq_single' || questionType === 'assertion_reason') {
     // MCQ and Assertion-Reason: Exact match with correct_answer
     if (!questionData.correct_answer) {
@@ -49,61 +50,79 @@ function validateAnswer(questionData, studentAnswer) {
     isCorrect = correctAnswers.includes(validatedAnswer.trim().toUpperCase());
 
   } else if (questionType === 'numerical') {
-    // Numerical: Check if within range or exact match
-    const studentAnswerNum = parseFloat(validatedAnswer);
+    // CRITICAL: Check answer_type first - some "numerical" questions expect text answers
+    // Example: "Find the median class" answer is "20-30" (text), not a number
+    if (answerType === 'text') {
+      // Text answer in a numerical question (e.g., class intervals, categories)
+      if (!questionData.correct_answer) {
+        throw new Error(`Question ${questionId} missing correct_answer field`);
+      }
 
-    if (isNaN(studentAnswerNum)) {
-      throw new Error(
-        `Invalid numerical answer: "${validatedAnswer}". ` +
-        `Please enter a single number (e.g., 25), not a range.`
-      );
-    }
-    
-    if (questionData.answer_range) {
-      // Check if within range
-      const { min, max } = questionData.answer_range;
-      
-      if (typeof min !== 'number' || typeof max !== 'number') {
+      // Exact text match (case-insensitive, trimmed)
+      const correctAnswers = [
+        questionData.correct_answer,
+        ...(questionData.alternate_correct_answers || [])
+      ].map(a => String(a).trim().toUpperCase());
+
+      isCorrect = correctAnswers.includes(validatedAnswer.trim().toUpperCase());
+
+    } else {
+      // True numerical answer - parse as number
+      const studentAnswerNum = parseFloat(validatedAnswer);
+
+      if (isNaN(studentAnswerNum)) {
         throw new Error(
-          `Question ${questionId} has invalid answer_range: min=${min}, max=${max}`
+          `Invalid numerical answer: "${validatedAnswer}". ` +
+          `Please enter a single number (e.g., 25).`
         );
       }
-      
-      isCorrect = studentAnswerNum >= min && studentAnswerNum <= max;
-      
-    } else if (questionData.correct_answer_exact) {
-      // Exact match with tolerance
-      const correctAnswer = parseFloat(questionData.correct_answer_exact);
 
-      if (isNaN(correctAnswer)) {
-        // Log the error for admin to fix, but don't block the user
-        logger.error('Question has invalid correct_answer_exact - marking as incorrect', {
-          questionId,
-          correct_answer_exact: questionData.correct_answer_exact,
-          note: 'Admin must fix this question data in Firestore'
-        });
+      if (questionData.answer_range) {
+        // Check if within range
+        const { min, max } = questionData.answer_range;
 
-        // Mark as incorrect and continue (don't throw error that blocks user)
-        isCorrect = false;
+        if (typeof min !== 'number' || typeof max !== 'number') {
+          throw new Error(
+            `Question ${questionId} has invalid answer_range: min=${min}, max=${max}`
+          );
+        }
+
+        isCorrect = studentAnswerNum >= min && studentAnswerNum <= max;
+
+      } else if (questionData.correct_answer_exact) {
+        // Exact match with tolerance
+        const correctAnswer = parseFloat(questionData.correct_answer_exact);
+
+        if (isNaN(correctAnswer)) {
+          // Log the error for admin to fix, but don't block the user
+          logger.error('Question has invalid correct_answer_exact - marking as incorrect', {
+            questionId,
+            correct_answer_exact: questionData.correct_answer_exact,
+            note: 'Admin must fix this question data in Firestore'
+          });
+
+          // Mark as incorrect and continue (don't throw error that blocks user)
+          isCorrect = false;
+        } else {
+          // Tolerance: 0.01 or 1% (whichever is larger)
+          const tolerance = Math.max(0.01, Math.abs(correctAnswer) * 0.01);
+          isCorrect = Math.abs(studentAnswerNum - correctAnswer) <= tolerance;
+        }
+
       } else {
-        // Tolerance: 0.01 or 1% (whichever is larger)
+        // Fallback to correct_answer
+        const correctAnswer = parseFloat(questionData.correct_answer);
+
+        if (isNaN(correctAnswer)) {
+          throw new Error(
+            `Question ${questionId} has invalid correct_answer: ${questionData.correct_answer}`
+          );
+        }
+
         const tolerance = Math.max(0.01, Math.abs(correctAnswer) * 0.01);
         isCorrect = Math.abs(studentAnswerNum - correctAnswer) <= tolerance;
       }
-      
-    } else {
-      // Fallback to correct_answer
-      const correctAnswer = parseFloat(questionData.correct_answer);
-      
-      if (isNaN(correctAnswer)) {
-        throw new Error(
-          `Question ${questionId} has invalid correct_answer: ${questionData.correct_answer}`
-        );
-      }
-      
-      const tolerance = Math.max(0.01, Math.abs(correctAnswer) * 0.01);
-      isCorrect = Math.abs(studentAnswerNum - correctAnswer) <= tolerance;
-    }
+    } // Close the else block for answer_type !== 'text'
     
   } else {
     throw new Error(
