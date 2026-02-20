@@ -58,7 +58,9 @@ const apiLimiter = rateLimit({
       method: req.method,
       key: getUserKey(req),
     });
-    res.status(options.statusCode).send(options.message);
+    // options.message is a function, call it to get the actual message object
+    const message = typeof options.message === 'function' ? options.message(req) : options.message;
+    res.status(options.statusCode).json(message);
   },
 });
 
@@ -90,7 +92,9 @@ const strictLimiter = rateLimit({
       method: req.method,
       key: getUserKey(req),
     });
-    res.status(options.statusCode).send(options.message);
+    // options.message is a function, call it to get the actual message object
+    const message = typeof options.message === 'function' ? options.message(req) : options.message;
+    res.status(options.statusCode).json(message);
   },
 });
 
@@ -123,7 +127,9 @@ const imageProcessingLimiter = rateLimit({
       method: req.method,
       key: getUserKey(req),
     });
-    res.status(options.statusCode).send(options.message);
+    // options.message is a function, call it to get the actual message object
+    const message = typeof options.message === 'function' ? options.message(req) : options.message;
+    res.status(options.statusCode).json(message);
   },
 });
 
@@ -147,7 +153,9 @@ const adminLimiter = rateLimit({
       method: req.method,
       userId: req.userId || 'unknown',
     });
-    res.status(options.statusCode).send(options.message);
+    // options.message is a function, call it to get the actual message object
+    const message = typeof options.message === 'function' ? options.message(req) : options.message;
+    res.status(options.statusCode).json(message);
   },
 });
 
