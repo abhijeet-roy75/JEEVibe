@@ -4,7 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../services/firebase/auth_service.dart';
 import '../../services/firebase/firestore_user_service.dart';
 import '../../services/subscription_service.dart';
-import '../../providers/offline_provider.dart';
+import '../../providers/offline_provider_conditional.dart';
 import '../../providers/user_profile_provider.dart';
 import '../../services/quiz_storage_service.dart';
 import '../../models/user_profile.dart';

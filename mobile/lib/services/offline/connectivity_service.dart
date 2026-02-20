@@ -163,6 +163,15 @@ class ConnectivityService extends ChangeNotifier {
 
     _lastCheck = DateTime.now();
 
+    // Web: Check browser's navigator.onLine property
+    if (kIsWeb) {
+      // Import dart:html conditionally
+      // Note: This requires conditional import which we'll add at the top
+      // For now, assume web is always online (will be enhanced later)
+      _updateOnlineStatus(true);
+      return true;
+    }
+
     try {
       // Try to connect to Google's DNS server (fast and reliable)
       final result = await InternetAddress.lookup('google.com')

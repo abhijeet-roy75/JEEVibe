@@ -10,6 +10,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/priya_avatar.dart';
+import '../widgets/responsive_layout.dart';
 import '../widgets/buttons/gradient_button.dart';
 import '../widgets/buttons/primary_button.dart';
 import '../widgets/buttons/secondary_button.dart';
@@ -385,7 +386,10 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
       return Scaffold(
         backgroundColor: AppColors.backgroundLight,
         body: Center(
-          child: Padding(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: isDesktopViewport(context) ? 480 : double.infinity,
+            ),
             padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -413,28 +417,38 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
       backgroundColor: AppColors.backgroundLight,
       body: Column(
         children: [
-          // Purple gradient header
+          // Purple gradient header - Full width
           _buildHeader(),
-          // Scrollable content
+          // Scrollable content - Constrained on desktop
           Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
-                  // Quiz summary card
-                  _buildQuizSummaryCard(),
-                  const SizedBox(height: 16),
-                  // Performance by topic
-                  _buildPerformanceByTopic(topicPerformance),
-                  const SizedBox(height: 16),
-                  // Priya Ma'am feedback
-                  _buildPriyaMaamFeedback(),
-                  const SizedBox(height: 16),
-                  // Action buttons
-                  _buildActionButtons(),
-                  // Bottom padding to account for Android navigation bar (using viewPadding for system UI)
-                  SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 24),
-                ],
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                ),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 16),
+                        // Quiz summary card
+                        _buildQuizSummaryCard(),
+                        const SizedBox(height: 16),
+                        // Performance by topic
+                        _buildPerformanceByTopic(topicPerformance),
+                        const SizedBox(height: 16),
+                        // Priya Ma'am feedback
+                        _buildPriyaMaamFeedback(),
+                        const SizedBox(height: 16),
+                        // Action buttons
+                        _buildActionButtons(),
+                        // Bottom padding to account for Android navigation bar (using viewPadding for system UI)
+                        SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 24),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -557,7 +571,6 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
 
   Widget _buildQuizSummaryCard() {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
       padding: EdgeInsets.all(PlatformSizing.spacing(20)),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -733,7 +746,6 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
 
   Widget _buildPerformanceByTopic(Map<String, Map<String, dynamic>> topicPerformance) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -839,7 +851,6 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
     final hasAiTutorAccess = subscriptionService.status?.limits.aiTutorEnabled ?? false;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),
       padding: EdgeInsets.all(PlatformSizing.spacing(20)),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -912,9 +923,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
   }
 
   Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
+    return Column(
         children: [
           // Review All Questions button (has filter for mistakes built-in)
           _buildActionButton(
@@ -948,7 +957,6 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
             size: GradientButtonSize.large,
           ),
         ],
-      ),
     );
   }
 

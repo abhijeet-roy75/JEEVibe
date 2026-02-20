@@ -17,7 +17,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_platform_sizing.dart';
 import '../providers/app_state_provider.dart';
-import '../providers/offline_provider.dart';
+import '../providers/offline_provider_conditional.dart';
 import '../widgets/buttons/gradient_button.dart';
 import '../widgets/buttons/icon_button.dart';
 import '../widgets/offline/offline_banner.dart';
@@ -30,6 +30,7 @@ import '../services/subscription_service.dart';
 import '../utils/text_preprocessor.dart';
 import '../widgets/subject_icon_widget.dart';
 import '../widgets/priya_avatar.dart';
+import '../widgets/responsive_layout.dart';
 import 'main_navigation_screen.dart';
 
 class SnapHomeScreen extends StatefulWidget {
@@ -100,18 +101,25 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
           // Main content
           Column(
             children: [
-              // Offline banner at the very top
+              // Offline banner at the very top - Full width
               const OfflineBanner(),
+              // Header - Full width
               _buildHeader(),
+              // Content - Constrained on desktop
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
                     gradient: AppColors.backgroundGradient,
                   ),
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: Column(
-                      children: [
+                  child: Center(
+                    child: Container(
+                      constraints: BoxConstraints(
+                        maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                      ),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          children: [
                         const SizedBox(height: 24),
                         _buildActionButtons(),
                         const SizedBox(height: 24),
@@ -128,7 +136,9 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
                         ),
                         // Add extra padding for Android system navigation bar
                         SizedBox(height: 24 + MediaQuery.of(context).viewPadding.bottom),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),

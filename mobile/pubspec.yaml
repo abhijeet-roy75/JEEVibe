@@ -75,10 +75,14 @@ dependencies:
   device_info_plus: ^10.1.0
 
   # Offline Mode - Database & Caching
+  # Note: Isar doesn't fully support web (large integer literals not supported in JavaScript)
+  # Web builds will disable offline features (database_service.dart returns early on web)
   isar: ^3.1.0+1
-  isar_flutter_libs: ^3.1.0+1
   flutter_cache_manager: ^3.3.1
   cached_network_image: ^3.3.1
+
+  # Error Tracking (for web)
+  sentry_flutter: ^7.0.0
 
   # Connectivity Detection
   connectivity_plus: ^6.0.0

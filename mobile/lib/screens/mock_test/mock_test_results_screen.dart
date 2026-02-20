@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/subject_icon_widget.dart';
 import '../../widgets/buttons/gradient_button.dart';
+import '../../widgets/responsive_layout.dart';
 import '../../models/mock_test_models.dart';
 import '../../services/api_service.dart';
 import '../../services/firebase/auth_service.dart';
@@ -80,15 +81,24 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
       backgroundColor: AppColors.backgroundLight,
       body: Column(
         children: [
+          // Header - Full width
           _buildHeader(),
+          // Content - Constrained on desktop
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                    ? _buildErrorView()
-                    : _result != null
-                        ? _buildResultsView()
-                        : const Center(child: Text('No results')),
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                ),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
+                        ? _buildErrorView()
+                        : _result != null
+                            ? _buildResultsView()
+                            : const Center(child: Text('No results')),
+              ),
+            ),
           ),
         ],
       ),

@@ -88,10 +88,10 @@ class PlatformSizing {
   // =============================================================================
 
   /// Check if we're running on Android
-  static bool get isAndroid => !kIsWeb && Platform.isAndroid;
+  static bool get isAndroid => kIsWeb ? false : Platform.isAndroid;
 
   /// Check if we're running on iOS
-  static bool get isIOS => !kIsWeb && Platform.isIOS;
+  static bool get isIOS => kIsWeb ? false : Platform.isIOS;
 
   // =============================================================================
   // SIZING METHODS

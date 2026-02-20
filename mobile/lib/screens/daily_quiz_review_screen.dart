@@ -11,6 +11,7 @@ import '../theme/app_text_styles.dart';
 import '../widgets/buttons/icon_button.dart';
 import '../widgets/priya_avatar.dart';
 import '../widgets/question_review/question_review_screen.dart';
+import '../widgets/responsive_layout.dart';
 
 class DailyQuizReviewScreen extends StatefulWidget {
   final String quizId;
@@ -178,7 +179,10 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
       return Scaffold(
         backgroundColor: AppColors.backgroundLight,
         body: Center(
-          child: Padding(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: isDesktopViewport(context) ? 480 : double.infinity,
+            ),
             padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -204,30 +208,40 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
       backgroundColor: AppColors.backgroundLight,
       body: Column(
         children: [
-          // Purple header
+          // Purple header - Full width
           _buildHeader(),
-          // Scrollable content
+          // Scrollable content - Constrained on desktop
           Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewPadding.bottom,
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
-                  // Filter buttons (also show counts)
-                  _buildFilterButtons(),
-                  const SizedBox(height: 16),
-                  // Question list
-                  _buildQuestionList(),
-                  const SizedBox(height: 16),
-                  // Priya Ma'am message
-                  _buildPriyaMaamMessage(),
-                  const SizedBox(height: 16),
-                  // Start Reviewing button
-                  _buildStartReviewingButton(),
-                  const SizedBox(height: 32),
-                ],
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                ),
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewPadding.bottom,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 16),
+                        // Filter buttons (also show counts)
+                        _buildFilterButtons(),
+                        const SizedBox(height: 16),
+                        // Question list
+                        _buildQuestionList(),
+                        const SizedBox(height: 16),
+                        // Priya Ma'am message
+                        _buildPriyaMaamMessage(),
+                        const SizedBox(height: 16),
+                        // Start Reviewing button
+                        _buildStartReviewingButton(),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -349,9 +363,7 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
   }
 
   Widget _buildFilterButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -402,7 +414,6 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
             ],
           ),
         ],
-      ),
     );
   }
 
@@ -672,7 +683,6 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.primaryPurple.withValues(alpha: 0.1),
@@ -715,9 +725,7 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
   }
 
   Widget _buildStartReviewingButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
+    return Container(
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
@@ -754,7 +762,6 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
             ),
           ),
         ),
-      ),
     );
   }
 }

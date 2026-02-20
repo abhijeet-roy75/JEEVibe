@@ -19,7 +19,7 @@ import '../widgets/daily_quiz/daily_quiz_card_widget.dart';
 import '../widgets/daily_quiz/subject_progress_widget.dart';
 import '../widgets/offline/offline_banner.dart';
 import '../providers/daily_quiz_provider.dart';
-import '../providers/offline_provider.dart';
+import '../providers/offline_provider_conditional.dart';
 import '../providers/user_profile_provider.dart';
 import '../utils/error_handler.dart';
 import 'daily_quiz_loading_screen.dart';

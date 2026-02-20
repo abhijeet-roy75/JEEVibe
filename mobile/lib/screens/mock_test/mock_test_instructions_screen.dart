@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/priya_avatar.dart';
+import '../../widgets/responsive_layout.dart';
 import '../../models/mock_test_models.dart';
 import '../../providers/mock_test_provider.dart';
 import 'mock_test_screen.dart';
@@ -38,13 +39,20 @@ class _MockTestInstructionsScreenState
         ),
         child: Column(
           children: [
+            // Header - Full width
             _buildHeader(),
+            // Content - Constrained on desktop
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: Center(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                     _buildTestInfoCard(),
                     const SizedBox(height: 20),
                     _buildInstructionsCard(),
@@ -55,10 +63,13 @@ class _MockTestInstructionsScreenState
                     const SizedBox(height: 20),
                     _buildAgreementCheckbox(),
                     const SizedBox(height: 24),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
+            // Start button - Full width
             _buildStartButton(),
           ],
         ),

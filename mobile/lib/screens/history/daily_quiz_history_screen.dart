@@ -10,7 +10,7 @@ import '../../services/subscription_service.dart';
 import '../../models/quiz_history.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../../providers/offline_provider.dart';
+import '../../providers/offline_provider_conditional.dart';
 import '../../widgets/offline/offline_banner.dart';
 import '../../models/subscription_models.dart';
 import '../daily_quiz_review_screen.dart';

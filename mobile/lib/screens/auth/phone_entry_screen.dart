@@ -9,6 +9,7 @@ import '../../theme/app_text_styles.dart';
 import '../../theme/app_platform_sizing.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/buttons/icon_button.dart';
+import '../../widgets/responsive_layout.dart';
 
 class PhoneEntryScreen extends StatefulWidget {
   const PhoneEntryScreen({super.key});
@@ -198,13 +199,21 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = isDesktopViewport(context);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
-      body: Column(
-        children: [
-            // Gradient Header Section - Full Width
+      body: ResponsiveScrollableLayout(
+        maxWidth: 480,
+        useSafeArea: false, // We'll handle SafeArea manually for the header
+        child: Column(
+          children: [
+            // Gradient Header Section - Compact on desktop
             Container(
               width: double.infinity,
+              padding: EdgeInsets.symmetric(
+                vertical: isDesktop ? 24.0 : 32.0, // Less padding on desktop
+              ),
               decoration: const BoxDecoration(
                 gradient: AppColors.ctaGradient,
               ),
@@ -216,7 +225,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: AppSpacing.lg,
-                        vertical: PlatformSizing.spacing(12), // 12→9.6px Android
+                        vertical: PlatformSizing.spacing(8), // Reduced from 12
                       ),
                       child: Row(
                         children: [
@@ -265,11 +274,11 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     ),
                     // Title in header
                     Padding(
-                      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(32)), // 32→25.6px Android
+                      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(isDesktop ? 16 : 24)), // Reduced on desktop
                       child: Text(
                         'Phone Number',
                         style: AppTextStyles.headerLarge.copyWith(
-                          fontSize: PlatformSizing.fontSize(28), // 28→24.64px Android
+                          fontSize: PlatformSizing.fontSize(isDesktop ? 24 : 28), // Smaller on desktop
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -281,12 +290,11 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
               ),
             ),
             // White Content Section
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(AppSpacing.xxl),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+            Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                     Text(
                       'Welcome to JEEVibe! 👋',
                       style: AppTextStyles.headerLarge.copyWith(
@@ -412,12 +420,12 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
 
               // Bottom safe area padding to prevent Android nav bar covering content
               SizedBox(height: MediaQuery.of(context).padding.bottom),
-                    ],
-                  ),
-                ),
+                ],
               ),
+            ),
           ],
         ),
+      ),
     );
   }
 }

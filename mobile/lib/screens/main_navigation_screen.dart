@@ -1,11 +1,15 @@
 /// Main Navigation Screen
 /// Bottom navigation shell containing Home, History, Analytics, and Profile tabs
+/// Desktop: Left sidebar navigation (NavigationRail)
+/// Mobile: Bottom navigation bar
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import '../providers/user_profile_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_platform_sizing.dart';
+import '../widgets/responsive_layout.dart';
 import 'home_screen.dart';
 import 'history/history_screen.dart';
 import 'analytics_screen.dart';
@@ -78,11 +82,97 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = isDesktopViewport(context);
+
+    return Scaffold(
+      body: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
+    );
+  }
+
+  /// Desktop layout with left sidebar navigation
+  Widget _buildDesktopLayout() {
+    return Row(
+      children: [
+        // Left sidebar navigation
+        NavigationRail(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: _onTabSelected,
+          backgroundColor: AppColors.surface,
+          labelType: NavigationRailLabelType.all,
+          leading: Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 24),
+            child: Image.asset(
+              'assets/images/JEEVibeLogo_240.png',
+              width: 48,
+              height: 48,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.ctaGradient,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'JV',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          destinations: [
+            NavigationRailDestination(
+              icon: Icon(Icons.home_outlined, color: _tabColors[0]),
+              selectedIcon: Icon(Icons.home_rounded, color: _tabColors[0]),
+              label: const Text('Home'),
+            ),
+            NavigationRailDestination(
+              icon: Icon(Icons.history_outlined, color: _tabColors[1]),
+              selectedIcon: Icon(Icons.history_rounded, color: _tabColors[1]),
+              label: const Text('History'),
+            ),
+            NavigationRailDestination(
+              icon: Icon(Icons.insights_outlined, color: _tabColors[2]),
+              selectedIcon: Icon(Icons.insights_rounded, color: _tabColors[2]),
+              label: const Text('Analytics'),
+            ),
+            NavigationRailDestination(
+              icon: Icon(Icons.person_outline_rounded, color: _tabColors[3]),
+              selectedIcon: Icon(Icons.person_rounded, color: _tabColors[3]),
+              label: const Text('Profile'),
+            ),
+          ],
+        ),
+        const VerticalDivider(thickness: 1, width: 1),
+        // Main content area - constrained to max width
+        Expanded(
+          child: IndexedStack(
+            index: _currentIndex,
+            children: List.generate(4, (index) {
+              if (_visitedTabs.contains(index)) {
+                return _buildScreen(index);
+              }
+              return const SizedBox.shrink();
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Mobile layout with bottom navigation bar
+  Widget _buildMobileLayout() {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: List.generate(4, (index) {
-          // Only build visited tabs, use placeholder for unvisited
           if (_visitedTabs.contains(index)) {
             return _buildScreen(index);
           }

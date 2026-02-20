@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../services/firebase/auth_service.dart';
 import '../../services/firebase/firestore_user_service.dart';
@@ -15,6 +16,7 @@ import '../../theme/app_platform_sizing.dart';
 import '../../utils/auth_error_helper.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/buttons/icon_button.dart';
+import '../../widgets/responsive_layout.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String verificationId;
@@ -149,8 +151,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
         // Handle Forgot PIN flow
         if (widget.isForgotPinFlow) {
-          // Clear old PIN immediately after successful verification
-          await pinService.clearPin();
+          // Clear old PIN immediately after successful verification (skip on web)
+          if (!kIsWeb) {
+            await pinService.clearPin();
+          }
 
           if (!mounted) return;
 
@@ -159,8 +163,16 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
           if (!mounted) return;
 
-          // Navigate to CreatePinScreen to set new PIN
-          // Target screen is always MainNavigationScreen for existing users
+          // Web: Go directly to home (no PIN needed)
+          if (kIsWeb) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+              (route) => false,
+            );
+            return;
+          }
+
+          // Mobile: Navigate to CreatePinScreen to set new PIN
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => const CreatePinScreen(
@@ -180,15 +192,25 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
           if (!mounted) return;
 
+          // Target screen is always MainNavigationScreen (bottom nav) for existing users
+          final targetScreen = const MainNavigationScreen();
+
+          // Web: Skip PIN entirely, go straight to home
+          if (kIsWeb) {
+            debugPrint('🌐 Web platform detected - skipping PIN, navigating to home...');
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => targetScreen),
+              (route) => false,
+            );
+            return;
+          }
+
+          // Mobile: Check PIN status
           debugPrint('🔐 Checking if PIN exists on device...');
-          // User exists - Check if PIN is set on this device
           final hasPin = await pinService.pinExists();
           debugPrint('🔐 PIN exists: $hasPin');
 
           if (!mounted) return;
-
-          // Target screen is always MainNavigationScreen (bottom nav) for existing users
-          final targetScreen = const MainNavigationScreen();
 
           if (hasPin) {
              debugPrint('➡️ Navigating to PIN verification screen...');
@@ -214,8 +236,22 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             );
           }
         } else {
+          // New User
+          // Web: Skip PIN entirely, go straight to onboarding
+          if (kIsWeb) {
+            debugPrint('🌐 New user on web - skipping PIN, navigating to onboarding...');
+            // Note: CreatePinScreen handles routing to onboarding for new users
+            // But on web, we skip PIN entirely, so we need to import OnboardingStep1Screen
+            // For now, use CreatePinScreen which will detect and route appropriately
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => const CreatePinScreen()),
+              (route) => false,
+            );
+            return;
+          }
+
           debugPrint('➡️ Navigating to create PIN screen (new user)...');
-          // New User - Standard flow: Create PIN -> Profile Setup
+          // Mobile: Standard flow - Create PIN -> Profile Setup
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const CreatePinScreen()),
             (route) => false,
@@ -298,13 +334,21 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = isDesktopViewport(context);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
-      body: Column(
-        children: [
-            // Gradient Header Section - Full Width
+      body: ResponsiveScrollableLayout(
+        maxWidth: 480,
+        useSafeArea: false,
+        child: Column(
+          children: [
+            // Gradient Header Section - Compact on desktop
             Container(
               width: double.infinity,
+              padding: EdgeInsets.symmetric(
+                vertical: isDesktop ? 24.0 : 32.0,
+              ),
               decoration: const BoxDecoration(
                 gradient: AppColors.ctaGradient,
               ),
@@ -316,7 +360,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: AppSpacing.lg,
-                        vertical: PlatformSizing.spacing(12), // 12→9.6px Android
+                        vertical: PlatformSizing.spacing(8),
                       ),
                       child: Row(
                         children: [
@@ -361,11 +405,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     ),
                     // Title in header
                     Padding(
-                      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(32)), // 32→25.6px Android
+                      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(isDesktop ? 16 : 24)),
                       child: Text(
                         'Verification Code',
                         style: AppTextStyles.headerLarge.copyWith(
-                          fontSize: PlatformSizing.fontSize(28), // 28→24.64px Android
+                          fontSize: PlatformSizing.fontSize(isDesktop ? 24 : 28),
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -377,13 +421,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               ),
             ),
             // White Content Section
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(AppSpacing.xxl),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: AppSpacing.md),
+            Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: AppSpacing.md),
               RichText(
                 text: TextSpan(
                   text: 'Please enter the code sent to\n',
@@ -549,12 +592,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
               // Bottom safe area padding to prevent Android nav bar covering content
               SizedBox(height: MediaQuery.of(context).padding.bottom),
-                    ],
-                  ),
-                ),
+                ],
               ),
+            ),
           ],
         ),
+      ),
     );
   }
 }

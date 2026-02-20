@@ -51,11 +51,11 @@ function validateAnswer(questionData, studentAnswer) {
   } else if (questionType === 'numerical') {
     // Numerical: Check if within range or exact match
     const studentAnswerNum = parseFloat(validatedAnswer);
-    
+
     if (isNaN(studentAnswerNum)) {
       throw new Error(
-        `Invalid numerical answer for question ${questionId}: "${validatedAnswer}". ` +
-        `Must be a valid number.`
+        `Invalid numerical answer: "${validatedAnswer}". ` +
+        `Please enter a single number (e.g., 25), not a range.`
       );
     }
     

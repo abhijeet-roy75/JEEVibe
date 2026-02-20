@@ -23,7 +23,7 @@ import '../models/user_profile.dart';
 import '../models/assessment_response.dart';
 import '../models/analytics_data.dart';
 import '../providers/app_state_provider.dart';
-import '../providers/offline_provider.dart';
+import '../providers/offline_provider_conditional.dart';
 import '../providers/user_profile_provider.dart';
 import 'profile/profile_view_screen.dart';
 import 'assessment_instructions_screen.dart';
@@ -45,6 +45,7 @@ import 'chapter_list_screen.dart';
 import 'mock_test/mock_test_home_screen.dart';
 import '../providers/mock_test_provider.dart';
 import '../widgets/active_weak_spots_card.dart';
+import '../widgets/responsive_layout.dart';
 
 class HomeScreen extends StatefulWidget {
   /// When true, the screen is embedded in bottom navigation
@@ -501,64 +502,45 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: null,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.backgroundGradient,
-        ),
-        child: Column(
-          children: [
-            // Offline banner (shows when offline)
-            const OfflineBanner(),
-            // Trial banner (shows when trial is urgent)
-            const TrialBanner(),
-            // Header with logo, title, profile
-            _buildHeader(),
-            // Scrollable content
-            Expanded(
+      body: Column(
+        children: [
+          // Offline banner (shows when offline) - full width
+          const OfflineBanner(),
+          // Trial banner (shows when trial is urgent) - full width
+          const TrialBanner(),
+          // Header with logo, title, profile - full width
+          _buildHeader(),
+          // Scrollable content with responsive layout
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: AppColors.backgroundGradient,
+              ),
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    // Show results if completed, otherwise show assessment card
-                    if (_isAssessmentCompleted && _assessmentData != null) ...[
-                      _buildPriyaMessageCard(),
-                      const SizedBox(height: 16),
-                      _buildResultsCard(),
-                    ] else
-                      _buildAssessmentCard(),
-                    const SizedBox(height: 16),
-                    // Daily Adaptive Quiz Card (Locked until assessment complete)
-                    _buildDailyPracticeCard(),
-                    // Chapter Practice card (always show)
-                    const SizedBox(height: 16),
-                    _buildFocusAreasCard(),
-                    const SizedBox(height: 16),
-                    // Active Weak Spots Card (Cognitive Mastery dashboard) - controlled by feature flag
-                    if (_showCognitiveMastery) ...[
-                      ActiveWeakSpotsCard(
-                        weakSpots: _weakSpots,
-                        isLoading: _weakSpotsLoading,
-                        authToken: _currentAuthToken,
-                        userId: _currentUserId,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    // Mock Test Card
-                    _buildMockTestCard(),
-                    const SizedBox(height: 24),
-                    // Snap & Solve Card
-                    _buildSnapSolveCard(),
-                    const SizedBox(height: 24),
-                    // Journey Card (always visible)
-                    _buildJourneyCard(),
-                    const SizedBox(height: 32),
-                  ],
+                child: Center(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isDesktopViewport(context) ? 24.0 : 0.0,
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isDesktop = constraints.maxWidth > 900;
+
+                        if (isDesktop) {
+                          return _buildDesktopLayout();
+                        } else {
+                          return _buildMobileLayout();
+                        }
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton: FeedbackFAB(
         currentScreen: 'HomeScreen',
@@ -792,6 +774,108 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         );
     }
+  }
+
+  /// Mobile layout - single column with all cards stacked vertically
+  Widget _buildMobileLayout() {
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        // Show results if completed, otherwise show assessment card
+        if (_isAssessmentCompleted && _assessmentData != null) ...[
+          _buildPriyaMessageCard(),
+          const SizedBox(height: 16),
+          _buildResultsCard(),
+        ] else
+          _buildAssessmentCard(),
+        const SizedBox(height: 16),
+        // Daily Adaptive Quiz Card (Locked until assessment complete)
+        _buildDailyPracticeCard(),
+        // Chapter Practice card (always show)
+        const SizedBox(height: 16),
+        _buildFocusAreasCard(),
+        const SizedBox(height: 16),
+        // Active Weak Spots Card (Cognitive Mastery dashboard) - controlled by feature flag
+        if (_showCognitiveMastery) ...[
+          ActiveWeakSpotsCard(
+            weakSpots: _weakSpots,
+            isLoading: _weakSpotsLoading,
+            authToken: _currentAuthToken,
+            userId: _currentUserId,
+          ),
+          const SizedBox(height: 16),
+        ],
+        // Mock Test Card
+        _buildMockTestCard(),
+        const SizedBox(height: 24),
+        // Snap & Solve Card
+        _buildSnapSolveCard(),
+        const SizedBox(height: 24),
+        // Journey Card (always visible)
+        _buildJourneyCard(),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  /// Desktop layout - 2-column grid with cards distributed for visual balance
+  Widget _buildDesktopLayout() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left column
+          Expanded(
+            child: Column(
+              children: [
+                // Show results if completed, otherwise show assessment card
+                if (_isAssessmentCompleted && _assessmentData != null) ...[
+                  _buildPriyaMessageCard(),
+                  const SizedBox(height: 16),
+                  _buildResultsCard(),
+                ] else
+                  _buildAssessmentCard(),
+                const SizedBox(height: 16),
+                // Daily Practice (Quiz) Card
+                _buildDailyPracticeCard(),
+                const SizedBox(height: 16),
+                // Mock Test Card
+                _buildMockTestCard(),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+          const SizedBox(width: 24),
+          // Right column
+          Expanded(
+            child: Column(
+              children: [
+                // Focus Areas (Chapter Practice)
+                _buildFocusAreasCard(),
+                const SizedBox(height: 16),
+                // Active Weak Spots Card (Cognitive Mastery) - controlled by feature flag
+                if (_showCognitiveMastery) ...[
+                  ActiveWeakSpotsCard(
+                    weakSpots: _weakSpots,
+                    isLoading: _weakSpotsLoading,
+                    authToken: _currentAuthToken,
+                    userId: _currentUserId,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                // Snap & Solve Card
+                _buildSnapSolveCard(),
+                const SizedBox(height: 16),
+                // Journey Card
+                _buildJourneyCard(),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildAssessmentCard() {

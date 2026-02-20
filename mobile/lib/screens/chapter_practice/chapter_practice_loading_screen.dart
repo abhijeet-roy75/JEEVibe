@@ -16,6 +16,7 @@ import '../../widgets/quiz_loading_screen.dart';
 import '../../utils/error_handler.dart';
 import '../subscription/paywall_screen.dart';
 import '../daily_quiz_loading_screen.dart';
+import '../../widgets/responsive_layout.dart';
 import 'chapter_practice_question_screen.dart';
 
 class ChapterPracticeLoadingScreen extends StatefulWidget {
@@ -302,11 +303,15 @@ class _ChapterPracticeLoadingScreenState
       return Scaffold(
         backgroundColor: AppColors.backgroundLight,
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+          child: Center(
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: isDesktopViewport(context) ? 480 : double.infinity,
+              ),
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                 // Icon based on error type
                 Container(
                   width: PlatformSizing.spacing(80),
@@ -359,7 +364,8 @@ class _ChapterPracticeLoadingScreenState
                   },
                   icon: Icons.refresh,
                 ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

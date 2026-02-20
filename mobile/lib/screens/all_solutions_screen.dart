@@ -4,9 +4,10 @@ library;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/storage_service.dart';
-import '../services/offline/sync_service.dart';
+import '../services/offline/sync_service_stub.dart'
+    if (dart.library.io) '../services/offline/sync_service.dart';
 import '../models/snap_data_model.dart';
-import '../providers/offline_provider.dart';
+import '../providers/offline_provider_conditional.dart';
 import '../widgets/app_header.dart';
 import '../widgets/offline/offline_banner.dart';
 import '../widgets/offline/cached_image_widget.dart';

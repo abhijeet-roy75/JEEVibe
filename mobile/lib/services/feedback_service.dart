@@ -25,18 +25,23 @@ class FeedbackService {
       final appVersion = '${packageInfo.version} (${packageInfo.buildNumber})';
 
       // Get device info
-      final deviceInfo = DeviceInfoPlugin();
       String deviceModel = 'Unknown';
       String osVersion = 'Unknown';
 
-      if (Platform.isIOS) {
-        final iosInfo = await deviceInfo.iosInfo;
-        deviceModel = iosInfo.model;
-        osVersion = 'iOS ${iosInfo.systemVersion}';
-      } else if (Platform.isAndroid) {
-        final androidInfo = await deviceInfo.androidInfo;
-        deviceModel = androidInfo.model;
-        osVersion = 'Android ${androidInfo.version.release}';
+      if (kIsWeb) {
+        deviceModel = 'Web Browser';
+        osVersion = 'Web';
+      } else {
+        final deviceInfo = DeviceInfoPlugin();
+        if (Platform.isIOS) {
+          final iosInfo = await deviceInfo.iosInfo;
+          deviceModel = iosInfo.model;
+          osVersion = 'iOS ${iosInfo.systemVersion}';
+        } else if (Platform.isAndroid) {
+          final androidInfo = await deviceInfo.androidInfo;
+          deviceModel = androidInfo.model;
+          osVersion = 'Android ${androidInfo.version.release}';
+        }
       }
 
       // Get user profile (if available)

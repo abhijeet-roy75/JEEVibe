@@ -3,6 +3,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_platform_sizing.dart';
 import '../screens/subscription/paywall_screen.dart';
+import 'responsive_layout.dart';
 
 /// Dialog shown when user's trial expires
 /// Shows before/after comparison and special discount offer
@@ -44,12 +45,16 @@ class TrialExpiredDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg), // 16→12.8px Android
       ),
-      child: Container(
-        padding: EdgeInsets.all(AppSpacing.xxl), // 24→19.2px Android
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: isDesktopViewport(context) ? 480 : double.infinity,
+        ),
+        child: Container(
+          padding: EdgeInsets.all(AppSpacing.xxl), // 24→19.2px Android
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               // Icon - CRITICAL sizing for dialog prominence
               Container(
                 width: PlatformSizing.iconSize(64), // 64→56.32px Android
@@ -202,7 +207,8 @@ class TrialExpiredDialog extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

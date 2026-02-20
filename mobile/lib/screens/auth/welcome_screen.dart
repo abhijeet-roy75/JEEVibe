@@ -36,21 +36,28 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
-      body: Column(
-        children: [
-            // Gradient Header Section - Full Width
-            Expanded(
-              flex: 2,
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  gradient: AppColors.ctaGradient,
-                ),
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth > 900;
+
+          return Center(
+            child: Container(
+              constraints: isDesktop ? const BoxConstraints(maxWidth: 480) : null,
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Gradient Header Section - Compact on desktop
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: isDesktop ? 40.0 : 60.0, // Smaller padding on desktop
+                        ),
+                        decoration: const BoxDecoration(
+                          gradient: AppColors.ctaGradient,
+                        ),
+                        child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -118,24 +125,19 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           maxLines: 2,
                           overflow: TextOverflow.visible,
                         ),
-                        SizedBox(height: PlatformSizing.spacing(8)), // Add bottom padding to prevent cutoff
-                      ],
+                          SizedBox(height: PlatformSizing.spacing(8)), // Add bottom padding to prevent cutoff
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ),
-            // White Content Section
-            Expanded(
-              flex: 3,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xxl,
-                  vertical: PlatformSizing.spacing(32), // 32→25.6px Android
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+                    // White Content Section
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xxl,
+                        vertical: PlatformSizing.spacing(32), // 32→25.6px Android
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                     // Abstract Graphic - Wavy line with dots
                     SizedBox(
                       height: PlatformSizing.spacing(120), // 120→96px Android
@@ -251,16 +253,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           color: AppColors.primaryPurple,
                           decoration: TextDecoration.underline,
                         ),
+                        ),
                       ),
-                    ),
-                    // Bottom safe area padding to prevent Android nav bar covering content
-                    SizedBox(height: MediaQuery.of(context).padding.bottom),
-                  ],
+                      // Bottom safe area padding to prevent Android nav bar covering content
+                      SizedBox(height: MediaQuery.of(context).padding.bottom),
+                    ],
+                  ),
+                ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
+          );
+        },
+      ),
     );
   }
 }

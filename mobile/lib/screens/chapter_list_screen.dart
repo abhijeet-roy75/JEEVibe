@@ -11,6 +11,7 @@ import '../theme/app_text_styles.dart';
 import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/subject_icon_widget.dart';
 import '../widgets/app_header.dart';
+import '../widgets/responsive_layout.dart';
 import 'home_screen.dart';
 import 'chapter_practice/chapter_practice_loading_screen.dart';
 import 'unlock_quiz/unlock_quiz_loading_screen.dart';
@@ -206,7 +207,7 @@ class _ChapterListScreenState extends State<ChapterListScreen>
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          // Standard gradient header
+          // Header - Full width
           AppHeader(
             leading: Container(
               decoration: BoxDecoration(
@@ -312,11 +313,20 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                 : null,
             bottomPadding: 16,
           ),
-          // Subject Tabs
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Container(
+          // Content - Constrained on desktop
+          Expanded(
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                ),
+                child: Column(
+                  children: [
+                    // Subject Tabs
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Container(
               decoration: BoxDecoration(
                 color: AppColors.surfaceGrey,
                 borderRadius: BorderRadius.circular(12),
@@ -342,15 +352,20 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                   Tab(text: 'Math'),
                 ],
               ),
-            ),
-          ),
-          // Tab content
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: _subjects.map((subject) {
-                return _buildSubjectChapterList(subject);
-              }).toList(),
+                      ),
+                    ),
+                    // Tab content
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: _subjects.map((subject) {
+                          return _buildSubjectChapterList(subject);
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],

@@ -5,8 +5,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/offline_provider.dart';
-import '../../models/offline/cached_solution.dart';
+import '../../providers/offline_provider_conditional.dart';
+import '../../models/offline/cached_solution_conditional.dart'; // For SyncState enum
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 

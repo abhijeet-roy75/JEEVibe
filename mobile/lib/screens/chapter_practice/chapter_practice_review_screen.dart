@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/buttons/icon_button.dart';
 import '../../widgets/priya_avatar.dart';
+import '../../widgets/responsive_layout.dart';
 import '../../widgets/question_review/question_review_screen.dart';
 import '../../utils/text_preprocessor.dart';
 
@@ -107,16 +108,21 @@ class _ChapterPracticeReviewScreenState
       backgroundColor: AppColors.backgroundLight,
       body: Column(
         children: [
-          // Purple header
+          // Purple header - Full width
           _buildHeader(),
-          // Scrollable content
+          // Scrollable content - Constrained on desktop
           Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewPadding.bottom,
-              ),
-              child: Column(
-                children: [
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                ),
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewPadding.bottom,
+                  ),
+                  child: Column(
+                    children: [
                   const SizedBox(height: 16),
                   // Filter buttons (also show counts)
                   _buildFilterButtons(),
@@ -130,7 +136,9 @@ class _ChapterPracticeReviewScreenState
                   // Start Reviewing button
                   _buildStartReviewingButton(),
                   const SizedBox(height: 32),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

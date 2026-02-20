@@ -71,6 +71,22 @@ class AuthService extends ChangeNotifier {
 
   /// Get or create a persistent device ID
   static Future<String> getDeviceId() async {
+    // Web: Use timestamp-based ID (no native device info)
+    if (kIsWeb) {
+      try {
+        String? deviceId = await _storage.read(key: _deviceIdKey);
+        if (deviceId != null) {
+          return deviceId;
+        }
+
+        final webDeviceId = 'web-${DateTime.now().millisecondsSinceEpoch}';
+        await _storage.write(key: _deviceIdKey, value: webDeviceId);
+        return webDeviceId;
+      } catch (e) {
+        return 'web-${DateTime.now().millisecondsSinceEpoch}';
+      }
+    }
+
     try {
       // Try to read existing device ID
       String? deviceId = await _storage.read(key: _deviceIdKey);
@@ -108,6 +124,11 @@ class AuthService extends ChangeNotifier {
 
   /// Get human-readable device name
   static Future<String> getDeviceName() async {
+    // Web: Return browser info
+    if (kIsWeb) {
+      return 'Web Browser';
+    }
+
     try {
       final deviceInfo = DeviceInfoPlugin();
 

@@ -15,6 +15,7 @@ import '../widgets/daily_quiz/feedback_banner_widget.dart';
 import '../widgets/daily_quiz/detailed_explanation_widget.dart';
 import '../widgets/buttons/icon_button.dart';
 import '../widgets/buttons/primary_button.dart';
+import '../widgets/responsive_layout.dart';
 import '../utils/error_handler.dart';
 import 'daily_quiz_result_screen.dart';
 
@@ -36,6 +37,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
   Timer? _timer;
   bool _quizInitialized = false;
   bool _isCompletingQuiz = false; // Local guard against double-tap
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -86,6 +88,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     // The elapsed time is calculated from DateTime.now().difference(startTime)
     // so it will be correct when user returns, even if time passed in background
     _timer?.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -311,13 +314,25 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
 
   void _handleNextQuestion() {
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
-    
+
     if (provider.isQuizComplete) {
       _completeQuiz();
     } else {
       provider.nextQuestion();
       _startTimer();
       setState(() {});
+
+      // Scroll to top to show the beginning of the next question
+      // Use post-frame callback to ensure scroll happens after build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            0.0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
     }
   }
 
@@ -420,11 +435,15 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
           return Scaffold(
             backgroundColor: AppColors.backgroundLight,
             body: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+              child: Center(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: isDesktopViewport(context) ? 480 : double.infinity,
+                  ),
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
                     Container(
                       width: 80,
                       height: 80,
@@ -473,12 +492,13 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                       ),
                     ),
                   ],
+                  ),
                 ),
               ),
             ),
           );
         }
-        
+
         final question = quiz.questions[currentIndex];
         final questionState = provider.getQuestionState(currentIndex);
         final feedback = questionState?.feedback;
@@ -510,69 +530,77 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
             backgroundColor: AppColors.backgroundLight,
             body: Column(
             children: [
-              // Header
+              // Header - Full width
               _buildHeader(progress, elapsedTime, quiz.totalQuestions, currentIndex + 1, quiz),
-              // Main content
+              // Main content - Constrained on desktop
               Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 16),
-                      // Feedback banner (if answered)
-                      if (feedback != null) ...[
-                        FeedbackBannerWidget(
-                          feedback: feedback,
-                          timeTakenSeconds: elapsedTime,
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      // Question card
-                      QuestionCardWidget(
-                        key: ValueKey('question_${question.questionId}'),
-                        question: question,
-                        selectedAnswer: questionState?.selectedAnswer,
-                        showAnswerOptions: feedback == null,
-                        // FIX: Simplified callback logic - always provide callback when not yet answered
-                        onAnswerSelected: feedback == null ? _handleOptionSelection : null,
-                        onAnswerSubmitted: feedback == null
-                            ? ((question.options != null && question.options!.isNotEmpty && questionState?.selectedAnswer != null)
-                                ? () => _handleAnswerSubmission(questionState!.selectedAnswer!)
-                                : question.isNumerical && questionState?.selectedAnswer != null && questionState!.selectedAnswer!.trim().isNotEmpty
-                                    ? () {
-                                        // For numerical, get the answer from the text field
-                                        // The onAnswerSelected callback will have been called when user types
-                                        _handleAnswerSubmission(questionState!.selectedAnswer!);
-                                      }
-                                    : null)
-                            : null,
-                        elapsedSeconds: elapsedTime,
-                        feedback: feedback,
+                child: Center(
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                    ),
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 16),
+                          // Feedback banner (if answered) - has its own padding
+                          if (feedback != null) ...[
+                            FeedbackBannerWidget(
+                              feedback: feedback,
+                              timeTakenSeconds: elapsedTime,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          // Question card (has its own margin, no padding wrapper needed)
+                          QuestionCardWidget(
+                            key: ValueKey('question_${question.questionId}'),
+                            question: question,
+                            selectedAnswer: questionState?.selectedAnswer,
+                            showAnswerOptions: feedback == null,
+                            // FIX: Simplified callback logic - always provide callback when not yet answered
+                            onAnswerSelected: feedback == null ? _handleOptionSelection : null,
+                            onAnswerSubmitted: feedback == null
+                                ? ((question.options != null && question.options!.isNotEmpty && questionState?.selectedAnswer != null)
+                                    ? () => _handleAnswerSubmission(questionState!.selectedAnswer!)
+                                    : question.isNumerical && questionState?.selectedAnswer != null && questionState!.selectedAnswer!.trim().isNotEmpty
+                                        ? () {
+                                            // For numerical, get the answer from the text field
+                                            // The onAnswerSelected callback will have been called when user types
+                                            _handleAnswerSubmission(questionState!.selectedAnswer!);
+                                          }
+                                        : null)
+                                : null,
+                            elapsedSeconds: elapsedTime,
+                            feedback: feedback,
+                          ),
+                          const SizedBox(height: 16),
+                          // Detailed explanation (if answered) - has its own padding
+                          if (feedback != null) ...[
+                            DetailedExplanationWidget(
+                              feedback: feedback,
+                              isCorrect: feedback.isCorrect,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          // Teacher message
+                          _buildTeacherMessage(feedback),
+                          // Next button (if feedback shown)
+                          if (feedback != null) ...[
+                            const SizedBox(height: 16),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: _buildActionButton(provider),
+                            ),
+                          ],
+                          const SizedBox(height: 16),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      // Detailed explanation (if answered)
-                      if (feedback != null) ...[
-                        DetailedExplanationWidget(
-                          feedback: feedback,
-                          isCorrect: feedback.isCorrect,
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      // Teacher message
-                      _buildTeacherMessage(feedback),
-                      // Next button (if feedback shown)
-                      if (feedback != null) ...[
-                        const SizedBox(height: 16),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: _buildActionButton(provider),
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                    ],
+                    ),
                   ),
                 ),
               ),
-              // Bottom status bar
+              // Bottom status bar - Full width
               _buildBottomStatusBar(quiz, currentIndex),
             ],
           ),
@@ -595,11 +623,15 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+        child: Center(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: isDesktopViewport(context) ? 480 : double.infinity,
+            ),
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
               Container(
                 width: PlatformSizing.spacing(80),
                 height: PlatformSizing.spacing(80),
@@ -668,6 +700,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
                 ),
               ),
             ],
+            ),
           ),
         ),
       ),

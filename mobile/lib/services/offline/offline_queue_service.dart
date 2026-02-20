@@ -7,7 +7,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'database_service.dart';
-import '../../models/offline/cached_solution.dart';
+import '../../models/offline/cached_solution_conditional.dart';
 import '../api_service.dart';
 
 class OfflineQueueService {

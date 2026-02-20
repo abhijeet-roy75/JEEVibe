@@ -4,12 +4,14 @@ import 'package:provider/provider.dart';
 import '../../constants/profile_constants.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
+import '../../theme/app_platform_sizing.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/buttons/icon_button.dart';
 import '../../services/firebase/firestore_user_service.dart';
 import '../../providers/user_profile_provider.dart';
 import '../../models/user_profile.dart';
 import '../welcome_carousel_screen.dart';
+import '../../widgets/responsive_layout.dart';
 
 /// Simplified Onboarding - Screen 2
 ///
@@ -116,20 +118,28 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = isDesktopViewport(context);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
-      body: Column(
-        children: [
-          // Compact Gradient Header Section
-          Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: AppColors.ctaGradient,
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      body: ResponsiveScrollableLayout(
+        maxWidth: 480,
+        useSafeArea: false,
+        child: Column(
+          children: [
+            // Compact Gradient Header Section
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: AppColors.ctaGradient,
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: PlatformSizing.spacing(isDesktop ? 8 : 12),
+                  ),
                 child: Row(
                   children: [
                     // Back button
@@ -183,10 +193,9 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
           ),
 
           // White Content Section - Everything scrollable
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Form(
+          Padding(
+            padding: EdgeInsets.all(AppSpacing.xxl),
+            child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -589,8 +598,8 @@ class _OnboardingStep2ScreenState extends State<OnboardingStep2Screen> {
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
   }

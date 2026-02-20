@@ -13,6 +13,7 @@ import '../../theme/app_platform_sizing.dart';
 import '../../widgets/latex_widget.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/offline/cached_image_widget.dart';
+import '../../widgets/responsive_layout.dart';
 import '../../providers/mock_test_provider.dart';
 import '../../models/mock_test_models.dart';
 import '../../models/assessment_question.dart' show QuestionOption;
@@ -67,19 +68,29 @@ class _MockTestScreenState extends State<MockTestScreen> {
           ),
           child: Column(
             children: [
+              // Header - Full width
               _buildHeader(),
+              // Content - Constrained on desktop
               Expanded(
-                child: Consumer<MockTestProvider>(
-                  builder: (context, provider, _) {
-                    if (provider.activeSession == null) {
-                      return const Center(
-                        child: Text('No active test'),
-                      );
-                    }
-                    return _buildQuestionView(provider);
-                  },
+                child: Center(
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                    ),
+                    child: Consumer<MockTestProvider>(
+                      builder: (context, provider, _) {
+                        if (provider.activeSession == null) {
+                          return const Center(
+                            child: Text('No active test'),
+                          );
+                        }
+                        return _buildQuestionView(provider);
+                      },
+                    ),
+                  ),
                 ),
               ),
+              // Bottom navigation - Full width
               _buildBottomNavigation(),
             ],
           ),

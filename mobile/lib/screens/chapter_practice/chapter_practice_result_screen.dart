@@ -15,6 +15,7 @@ import '../../widgets/priya_avatar.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import '../../widgets/buttons/primary_button.dart';
 import '../../widgets/buttons/secondary_button.dart';
+import '../../widgets/responsive_layout.dart';
 import '../main_navigation_screen.dart';
 import '../subscription/paywall_screen.dart';
 import '../weak_spot_detected_modal.dart';
@@ -189,16 +190,21 @@ class _ChapterPracticeResultScreenState
         backgroundColor: AppColors.backgroundLight,
         body: Column(
           children: [
-            // Header
+            // Header - Full width
             _buildHeader(context),
-            // Scrollable content
+            // Scrollable content - Constrained on desktop
             Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewPadding.bottom + 16,
-                ),
-                child: Column(
-                  children: [
+              child: Center(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                  ),
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewPadding.bottom + 16,
+                    ),
+                    child: Column(
+                      children: [
                     const SizedBox(height: 16),
                     // Summary cards
                     _buildSummaryCards(),
@@ -212,7 +218,9 @@ class _ChapterPracticeResultScreenState
                     // Action buttons
                     _buildActionButtons(context),
                     const SizedBox(height: 16),
-                  ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),

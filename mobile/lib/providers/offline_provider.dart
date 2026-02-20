@@ -7,9 +7,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../services/offline/connectivity_service.dart';
-import '../services/offline/database_service.dart';
-import '../services/offline/offline_queue_service.dart';
-import '../models/offline/cached_solution.dart';
+import '../services/offline/database_service_stub.dart'
+    if (dart.library.io) '../services/offline/database_service.dart';
+import '../services/offline/offline_queue_service_stub.dart'
+    if (dart.library.io) '../services/offline/offline_queue_service.dart';
+import '../models/offline/cached_solution_conditional.dart';
 
 class OfflineProvider extends ChangeNotifier {
   final ConnectivityService _connectivityService;

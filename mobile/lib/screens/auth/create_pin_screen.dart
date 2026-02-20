@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../onboarding/onboarding_step1_screen.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../theme/app_platform_sizing.dart';
 import '../../services/firebase/pin_service.dart';
+import '../../widgets/responsive_layout.dart';
 
 class CreatePinScreen extends StatefulWidget {
   final Widget? targetScreen;
@@ -29,7 +31,17 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-focus and show numeric keypad immediately
+
+    // Web: Skip PIN entirely, navigate directly
+    if (kIsWeb) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _isDisposed) return;
+        _navigateDirectlyWithoutPIN();
+      });
+      return;
+    }
+
+    // Mobile: Auto-focus and show numeric keypad immediately
     // Use multiple delayed attempts to ensure keyboard stays visible
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_isDisposed) {
@@ -42,6 +54,26 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
         });
       }
     });
+  }
+
+  /// Navigate directly without PIN (web only)
+  void _navigateDirectlyWithoutPIN() {
+    if (!mounted || _isDisposed) return;
+
+    debugPrint('🌐 Web: Skipping PIN creation, navigating directly...');
+
+    // Navigate to Target Screen (if provided) or Onboarding
+    if (widget.targetScreen != null) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => widget.targetScreen!),
+        (route) => false,
+      );
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const OnboardingStep1Screen()),
+        (route) => false,
+      );
+    }
   }
   
   void _handlePin(String pin) {
@@ -158,10 +190,15 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = isDesktopViewport(context);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
-      body: Column(
-        children: [
+      body: ResponsiveScrollableLayout(
+        maxWidth: 480,
+        useSafeArea: false,
+        child: Column(
+          children: [
             // Gradient Header Section - Full Width
             Container(
               width: double.infinity,
@@ -176,7 +213,7 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: AppSpacing.lg,
-                        vertical: PlatformSizing.spacing(12), // 12→9.6px Android
+                        vertical: PlatformSizing.spacing(isDesktop ? 8 : 12),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -214,11 +251,11 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                     ),
                     // Title in header
                     Padding(
-                      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(32)), // 32→25.6px Android
+                      padding: EdgeInsets.only(bottom: PlatformSizing.spacing(isDesktop ? 24 : 32)),
                       child: Text(
                         _isConfirming ? 'Confirm your PIN' : 'Create your PIN',
                         style: AppTextStyles.headerLarge.copyWith(
-                          fontSize: PlatformSizing.fontSize(28), // 28→24.64px Android
+                          fontSize: PlatformSizing.fontSize(isDesktop ? 24 : 28),
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -230,9 +267,8 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
               ),
             ),
             // White Content Section
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(AppSpacing.xxl),
+            Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -311,8 +347,8 @@ class _CreatePinScreenState extends State<CreatePinScreen> {
                   ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
     );
   }

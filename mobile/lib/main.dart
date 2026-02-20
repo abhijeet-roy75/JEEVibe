@@ -1,9 +1,11 @@
 import 'dart:ui';
-import 'dart:io' show Platform;
+import 'dart:io' show Platform if (dart.library.html) '';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:provider/provider.dart';
 import 'package:screen_protector/screen_protector.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'providers/daily_quiz_provider.dart';
 import 'providers/ai_tutor_provider.dart';
 import 'providers/chapter_practice_provider.dart';
@@ -21,13 +23,16 @@ import 'services/firebase/auth_service.dart';
 import 'services/firebase/firestore_user_service.dart' show FirestoreUserService, ProfileNotFoundException;
 import 'services/subscription_service.dart';
 import 'services/offline/connectivity_service.dart';
-import 'services/offline/database_service.dart';
+// Conditional import: use stub on web, real implementation on mobile
+import 'services/offline/database_service_stub.dart'
+    if (dart.library.io) 'services/offline/database_service.dart';
 import 'services/offline/image_cache_service.dart';
-import 'services/offline/sync_service.dart';
+import 'services/offline/sync_service_stub.dart'
+    if (dart.library.io) 'services/offline/sync_service.dart';
 import 'services/api_service.dart';
 import 'services/push_notification_service.dart';
 import 'providers/app_state_provider.dart';
-import 'providers/offline_provider.dart';
+import 'providers/offline_provider_conditional.dart';
 import 'providers/user_profile_provider.dart';
 import 'models/user_profile.dart';
 import 'models/subscription_models.dart';
@@ -51,8 +56,14 @@ import 'theme/app_platform_sizing.dart';
 final GlobalKey<NavigatorState> globalNavigatorKey = GlobalKey<NavigatorState>();
 
 /// Initialize screenshot and screen recording prevention
-/// This applies globally to the entire app
+/// This applies globally to the entire app (mobile only)
 Future<void> _initializeScreenProtection() async {
+  // Skip on web - screen protector only works on mobile
+  if (kIsWeb) {
+    debugPrint('Screen protection skipped on web');
+    return;
+  }
+
   try {
     if (Platform.isAndroid) {
       // Android: Uses FLAG_SECURE to prevent screenshots and screen recording
@@ -71,49 +82,87 @@ Future<void> _initializeScreenProtection() async {
 }
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Initialize error tracking
+  if (kIsWeb) {
+    // Web: Use Sentry (Firebase Crashlytics doesn't support web)
+    // IMPORTANT: Must call ensureInitialized INSIDE SentryFlutter.init to avoid zone mismatch
+    await SentryFlutter.init(
+      (options) {
+        options.dsn = 'https://10a69257b5c4a767ba3862cea537e0bf@o4510739543425024.ingest.us.sentry.io/4510919912325120';
+        options.environment = kReleaseMode ? 'production' : 'development';
+        options.tracesSampleRate = 0.2; // 20% of transactions for performance monitoring
+        // Filter out non-critical errors
+        options.beforeSend = (event, {hint}) {
+          final exception = event.throwable?.toString() ?? event.message?.formatted ?? '';
+          // Filter SVG parsing errors
+          if (exception.contains('Invalid SVG data') ||
+              exception.contains('unhandled element <ns0:svg')) {
+            return null; // Drop this event
+          }
+          // Filter phone validation errors
+          if (exception.contains('ErrorType.notANumber') ||
+              exception.contains('not seem to be a phone number')) {
+            return null;
+          }
+          return event;
+        };
+      },
+      appRunner: () => _runApp(),
+    );
+  } else {
+    // Mobile: Use Firebase Crashlytics
+    WidgetsFlutterBinding.ensureInitialized();
+    await _runApp();
+  }
+}
 
+Future<void> _runApp() async {
   // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize Firebase Crashlytics
-  FlutterError.onError = (errorDetails) {
-    // Filter out non-critical SVG parsing errors (handled gracefully by SafeSvgWidget)
-    if (errorDetails.exception.toString().contains('Invalid SVG data') ||
-        errorDetails.exception.toString().contains('unhandled element <ns0:svg')) {
-      debugPrint('SVG parsing error (handled gracefully): ${errorDetails.exception}');
-      return;
-    }
-    // Filter out phone number validation errors (handled by form validation)
-    if (errorDetails.exception.toString().contains('ErrorType.notANumber') ||
-        errorDetails.exception.toString().contains('not seem to be a phone number')) {
-      debugPrint('Phone validation error (handled by form): ${errorDetails.exception}');
-      return;
-    }
-    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-  };
-  // Pass all uncaught asynchronous errors to Crashlytics
-  PlatformDispatcher.instance.onError = (error, stack) {
-    // Filter out non-critical SVG parsing errors
-    if (error.toString().contains('Invalid SVG data') ||
-        error.toString().contains('unhandled element <ns0:svg')) {
-      debugPrint('SVG parsing error (handled gracefully): $error');
+  // Initialize Firebase Crashlytics (mobile only)
+  if (!kIsWeb) {
+    FlutterError.onError = (errorDetails) {
+      // Filter out non-critical SVG parsing errors (handled gracefully by SafeSvgWidget)
+      if (errorDetails.exception.toString().contains('Invalid SVG data') ||
+          errorDetails.exception.toString().contains('unhandled element <ns0:svg')) {
+        debugPrint('SVG parsing error (handled gracefully): ${errorDetails.exception}');
+        return;
+      }
+      // Filter out phone number validation errors (handled by form validation)
+      if (errorDetails.exception.toString().contains('ErrorType.notANumber') ||
+          errorDetails.exception.toString().contains('not seem to be a phone number')) {
+        debugPrint('Phone validation error (handled by form): ${errorDetails.exception}');
+        return;
+      }
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    };
+    // Pass all uncaught asynchronous errors to Crashlytics
+    PlatformDispatcher.instance.onError = (error, stack) {
+      // Filter out non-critical SVG parsing errors
+      if (error.toString().contains('Invalid SVG data') ||
+          error.toString().contains('unhandled element <ns0:svg')) {
+        debugPrint('SVG parsing error (handled gracefully): $error');
+        return true;
+      }
+      // Filter out phone number validation errors
+      if (error.toString().contains('ErrorType.notANumber') ||
+          error.toString().contains('not seem to be a phone number')) {
+        debugPrint('Phone validation error (handled by form): $error');
+        return true;
+      }
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
-    }
-    // Filter out phone number validation errors
-    if (error.toString().contains('ErrorType.notANumber') ||
-        error.toString().contains('not seem to be a phone number')) {
-      debugPrint('Phone validation error (handled by form): $error');
-      return true;
-    }
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
+    };
+  }
 
-  // Register background message handler for push notifications
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  // Register background message handler for push notifications (mobile only)
+  // Web doesn't support background message handlers
+  if (!kIsWeb) {
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  }
 
   // Initialize connectivity service for offline detection
   // Use forceReinit: true to handle hot restart properly
@@ -729,13 +778,16 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
           },
         );
 
-        // Initialize push notifications (non-blocking)
-        PushNotificationService().initialize(
-          authToken,
-          navigatorKey: globalNavigatorKey,
-        ).catchError((e) {
-          print('Error initializing push notifications: $e');
-        });
+        // Initialize push notifications (non-blocking, mobile only)
+        // Web doesn't support Firebase Cloud Messaging the same way
+        if (!kIsWeb) {
+          PushNotificationService().initialize(
+            authToken,
+            navigatorKey: globalNavigatorKey,
+          ).catchError((e) {
+            print('Error initializing push notifications: $e');
+          });
+        }
 
         // Update last active timestamp (non-blocking)
         firestoreService.updateLastActive(user.uid).catchError((e) {
@@ -762,21 +814,27 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
 
     if (!mounted) return;
 
-    final pinService = PinService();
-    final hasPin = await pinService.pinExists();
-
-    if (!mounted) return;
-
     // Determine target screen (MainNavigation with bottom nav is the new home)
     final targetScreen = const MainNavigationScreen();
 
-    // If PIN exists, show PIN verification screen, otherwise go directly to home
-    if (hasPin) {
-      _targetScreen = PinVerificationScreen(
-        targetScreen: targetScreen,
-      );
-    } else {
+    // Web: Skip PIN entirely, go straight to home
+    if (kIsWeb) {
       _targetScreen = targetScreen;
+    } else {
+      // Mobile: Check if PIN exists
+      final pinService = PinService();
+      final hasPin = await pinService.pinExists();
+
+      if (!mounted) return;
+
+      // If PIN exists, show PIN verification screen, otherwise go directly to home
+      if (hasPin) {
+        _targetScreen = PinVerificationScreen(
+          targetScreen: targetScreen,
+        );
+      } else {
+        _targetScreen = targetScreen;
+      }
     }
 
     if (mounted) {

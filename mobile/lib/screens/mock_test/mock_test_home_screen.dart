@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../theme/app_platform_sizing.dart';
 import '../../widgets/buttons/gradient_button.dart';
+import '../../widgets/responsive_layout.dart';
 import '../../providers/mock_test_provider.dart';
 import '../../models/mock_test_models.dart';
 import 'mock_test_screen.dart';
@@ -46,10 +47,25 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
         ),
         child: Column(
           children: [
+            // Header - Full width
             _buildHeader(),
-            _buildUsageCard(),
+            // Content - Constrained on desktop
             Expanded(
-              child: _buildTemplatesList(),
+              child: Center(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                  ),
+                  child: Column(
+                    children: [
+                      _buildUsageCard(),
+                      Expanded(
+                        child: _buildTemplatesList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),

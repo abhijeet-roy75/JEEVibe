@@ -18,8 +18,9 @@ import '../services/localization_service.dart';
 import '../providers/app_state_provider.dart';
 import '../config/content_config.dart';
 import '../utils/text_preprocessor.dart';
-import '../providers/offline_provider.dart';
-import '../services/offline/sync_service.dart';
+import '../providers/offline_provider_conditional.dart';
+import '../services/offline/sync_service_stub.dart'
+    if (dart.library.io) '../services/offline/sync_service.dart';
 import '../models/ai_tutor_models.dart';
 import 'ai_tutor_chat_screen.dart';
 import '../services/subscription_service.dart';

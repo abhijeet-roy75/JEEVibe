@@ -17,6 +17,7 @@ import '../../widgets/daily_quiz/feedback_banner_widget.dart';
 import '../../widgets/daily_quiz/detailed_explanation_widget.dart';
 import '../../widgets/buttons/icon_button.dart';
 import '../../widgets/buttons/primary_button.dart';
+import '../../widgets/responsive_layout.dart';
 import 'chapter_practice_result_screen.dart';
 
 class ChapterPracticeQuestionScreen extends StatefulWidget {
@@ -294,19 +295,27 @@ class _ChapterPracticeQuestionScreenState
         if (provider.session == null || provider.currentQuestion == null) {
           return Scaffold(
             backgroundColor: AppColors.backgroundLight,
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: AppColors.errorRed),
-                  const SizedBox(height: 16),
-                  Text('No session found', style: AppTextStyles.headerMedium),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Go Back'),
+            body: SafeArea(
+              child: Center(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: isDesktopViewport(context) ? 480 : double.infinity,
                   ),
-                ],
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 64, color: AppColors.errorRed),
+                      const SizedBox(height: 16),
+                      Text('No session found', style: AppTextStyles.headerMedium),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Go Back'),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           );
@@ -346,14 +355,19 @@ class _ChapterPracticeQuestionScreenState
             backgroundColor: AppColors.backgroundLight,
             body: Column(
               children: [
-                // Header
+                // Header - Full width
                 _buildHeader(session, currentIndex + 1, totalQuestions,
                     progress, provider.correctCount),
-                // Main content
+                // Main content - Constrained on desktop
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
+                  child: Center(
+                    child: Container(
+                      constraints: BoxConstraints(
+                        maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
                         const SizedBox(height: 16),
                         // Feedback banner (if answered with full result available) - using shared widget
                         if (hasFullFeedback) ...[
@@ -400,11 +414,13 @@ class _ChapterPracticeQuestionScreenState
                           ),
                         ],
                         const SizedBox(height: 16),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-                // Bottom status bar
+                // Bottom status bar - Full width
                 _buildBottomStatusBar(provider),
               ],
             ),

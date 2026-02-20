@@ -7,7 +7,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import '../../models/offline/cached_solution.dart';
+import '../../models/offline/cached_solution_conditional.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
@@ -26,6 +26,9 @@ class DatabaseService {
 
   /// Get the Isar instance
   Isar get isar {
+    if (kIsWeb) {
+      throw UnsupportedError('Offline database not supported on web');
+    }
     if (_isar == null) {
       throw Exception('DatabaseService not initialized. Call initialize() first.');
     }
@@ -47,6 +50,18 @@ class DatabaseService {
     _initCompleter = Completer<void>();
 
     try {
+      if (kIsWeb) {
+        // Web: Disable offline features (Isar doesn't fully support web)
+        // Return early - offline features won't work on web
+        _isInitialized = true;
+        if (kDebugMode) {
+          print('DatabaseService: Skipped initialization on web (offline features disabled)');
+        }
+        _initCompleter?.complete();
+        return;
+      }
+
+      // Mobile: Use native Isar with file system
       final dir = await getApplicationDocumentsDirectory();
 
       _isar = await Isar.open(
@@ -64,7 +79,7 @@ class DatabaseService {
       _isInitialized = true;
 
       if (kDebugMode) {
-        print('DatabaseService: Isar database initialized');
+        print('DatabaseService: Isar database initialized (${kIsWeb ? "IndexedDB" : "native"})');
       }
 
       _initCompleter?.complete();

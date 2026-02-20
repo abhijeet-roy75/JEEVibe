@@ -6,6 +6,7 @@ import '../../theme/app_text_styles.dart';
 import '../../theme/app_platform_sizing.dart';
 import '../../widgets/buttons/gradient_button.dart';
 import 'onboarding_step2_screen.dart';
+import '../../widgets/responsive_layout.dart';
 
 /// Simplified Onboarding - Screen 1
 ///
@@ -77,23 +78,28 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = isDesktopViewport(context);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
-      body: Column(
-        children: [
-          // Compact Gradient Header Section
-          Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: AppColors.ctaGradient,
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: PlatformSizing.spacing(12), // 12→9.6px Android
-                ),
+      body: ResponsiveScrollableLayout(
+        maxWidth: 480,
+        useSafeArea: false,
+        child: Column(
+          children: [
+            // Compact Gradient Header Section
+            Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: AppColors.ctaGradient,
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: PlatformSizing.spacing(isDesktop ? 8 : 12),
+                  ),
                 child: Row(
                   children: [
                     // Wave emoji + Title inline
@@ -141,10 +147,9 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
           ),
 
           // White Content Section - Everything scrollable
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(AppSpacing.xxl),
-              child: Form(
+          Padding(
+            padding: EdgeInsets.all(AppSpacing.xxl),
+            child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -524,8 +529,8 @@ class _OnboardingStep1ScreenState extends State<OnboardingStep1Screen> {
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
   }

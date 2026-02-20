@@ -12,6 +12,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/buttons/icon_button.dart';
 import '../../widgets/priya_avatar.dart';
+import '../../widgets/responsive_layout.dart';
 import '../../widgets/question_review/question_review_screen.dart';
 import '../../widgets/subject_icon_widget.dart';
 
@@ -213,12 +214,16 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
     if (_error != null || _testResult == null) {
       return Scaffold(
         backgroundColor: AppColors.backgroundLight,
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+        body: SafeArea(
+          child: Center(
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: isDesktopViewport(context) ? 480 : double.infinity,
+              ),
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                 Icon(Icons.error_outline, size: 64, color: AppColors.errorRed),
                 const SizedBox(height: 16),
                 Text('Error', style: AppTextStyles.headerMedium),
@@ -229,7 +234,8 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Go Back'),
                 ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -240,14 +246,21 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
       backgroundColor: AppColors.backgroundLight,
       body: Column(
         children: [
+          // Header - Full width
           _buildHeader(),
+          // Content - Constrained on desktop
           Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewPadding.bottom,
-              ),
-              child: Column(
-                children: [
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                ),
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewPadding.bottom,
+                  ),
+                  child: Column(
+                    children: [
                   const SizedBox(height: 16),
                   // Subject filter chips
                   _buildSubjectFilter(),
@@ -264,7 +277,9 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
                   // Start Reviewing button
                   _buildStartReviewingButton(),
                   const SizedBox(height: 32),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

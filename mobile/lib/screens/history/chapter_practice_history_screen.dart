@@ -12,7 +12,7 @@ import '../../models/chapter_practice_models.dart';
 import '../../models/daily_quiz_question.dart' show SolutionStep;
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
-import '../../providers/offline_provider.dart';
+import '../../providers/offline_provider_conditional.dart';
 import '../../widgets/offline/offline_banner.dart';
 import '../../widgets/subject_icon_widget.dart';
 import '../../widgets/subject_filter_bar.dart';
