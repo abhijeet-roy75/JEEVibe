@@ -17,6 +17,9 @@ class QuestionCardWidget extends StatefulWidget {
   final VoidCallback? onAnswerSubmitted;
   final int? elapsedSeconds;
   final AnswerFeedback? feedback;
+  final int? questionNumber; // Override question.position if provided
+  final bool showDifficultyChip;
+  final String submitButtonLabel;
 
   const QuestionCardWidget({
     super.key,
@@ -27,6 +30,9 @@ class QuestionCardWidget extends StatefulWidget {
     this.onAnswerSubmitted,
     this.elapsedSeconds,
     this.feedback,
+    this.questionNumber,
+    this.showDifficultyChip = true,
+    this.submitButtonLabel = 'Submit Answer',
   });
 
   @override
@@ -167,6 +173,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Subject and chapter with time
+          if (question.subject.isNotEmpty || question.chapter.isNotEmpty)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -260,28 +267,29 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                   borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                 ),
                 child: Text(
-                  'Question ${widget.question.position}',
+                  'Question ${widget.questionNumber ?? widget.question.position}',
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.primaryPurple,
                   ),
                 ),
               ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: PlatformSizing.spacing(12),
-                  vertical: PlatformSizing.spacing(4),
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.warningAmber.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
-                ),
-                child: Text(
-                  _getDifficultyLabel(null), // TODO: Add difficulty to model
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.warningAmber,
+              if (widget.showDifficultyChip)
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: PlatformSizing.spacing(12),
+                    vertical: PlatformSizing.spacing(4),
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.warningAmber.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
+                  ),
+                  child: Text(
+                    _getDifficultyLabel(null), // TODO: Add difficulty to model
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.warningAmber,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -339,7 +347,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                     borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                   ),
                 ),
-                child: const Text('Submit Answer'),
+                child: Text(widget.submitButtonLabel),
               ),
             ),
           ],
@@ -374,7 +382,7 @@ class _QuestionCardWidgetState extends State<QuestionCardWidget> {
                         borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                       ),
                     ),
-                    child: const Text('Submit Answer'),
+                    child: Text(widget.submitButtonLabel),
                   ),
                 );
               },

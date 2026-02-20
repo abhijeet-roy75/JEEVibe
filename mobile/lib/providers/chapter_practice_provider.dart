@@ -440,7 +440,7 @@ class ChapterPracticeProvider extends ChangeNotifier {
   /// Safe wrapper for notifyListeners that checks disposal state
   void _notifyListeners() {
     if (!_isDisposed) {
-      _notifyListeners();
+      notifyListeners();
     }
   }
 }

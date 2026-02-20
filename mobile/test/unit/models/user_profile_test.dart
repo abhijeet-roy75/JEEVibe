@@ -12,7 +12,7 @@ void main() {
         firstName: 'Test',
         lastName: 'User',
         email: 'test@example.com',
-        targetYear: '2026',
+        jeeTargetExamDate: '2026-04',
         state: 'Maharashtra',
         targetExam: 'JEE Main + Advanced',
         dreamBranch: 'Computer Science',
@@ -29,7 +29,7 @@ void main() {
       expect(map['firstName'], 'Test');
       expect(map['lastName'], 'User');
       expect(map['email'], 'test@example.com');
-      expect(map['targetYear'], '2026');
+      expect(map['jeeTargetExamDate'], '2026-04');
       expect(map['state'], 'Maharashtra');
       expect(map['targetExam'], 'JEE Main + Advanced');
       expect(map['dreamBranch'], 'Computer Science');
@@ -54,7 +54,7 @@ void main() {
       expect(map['firstName'], isNull);
       expect(map['lastName'], isNull);
       expect(map['email'], isNull);
-      expect(map['targetYear'], isNull);
+      expect(map['jeeTargetExamDate'], isNull);
       expect(map['state'], isNull);
       expect(map['targetExam'], isNull);
       expect(map['dreamBranch'], isNull);
@@ -68,7 +68,7 @@ void main() {
         'firstName': 'Test',
         'lastName': 'User',
         'email': 'test@example.com',
-        'targetYear': '2026',
+        'jeeTargetExamDate': '2026-04',
         'state': 'Maharashtra',
         'targetExam': 'JEE Main + Advanced',
         'dreamBranch': 'Computer Science',
@@ -85,7 +85,7 @@ void main() {
       expect(profile.firstName, 'Test');
       expect(profile.lastName, 'User');
       expect(profile.email, 'test@example.com');
-      expect(profile.targetYear, '2026');
+      expect(profile.jeeTargetExamDate, '2026-04');
       expect(profile.state, 'Maharashtra');
       expect(profile.targetExam, 'JEE Main + Advanced');
       expect(profile.dreamBranch, 'Computer Science');
@@ -107,7 +107,7 @@ void main() {
       expect(profile.firstName, isNull);
       expect(profile.lastName, isNull);
       expect(profile.email, isNull);
-      expect(profile.targetYear, isNull);
+      expect(profile.jeeTargetExamDate, isNull);
       expect(profile.state, isNull);
       expect(profile.targetExam, isNull);
       expect(profile.dreamBranch, isNull);

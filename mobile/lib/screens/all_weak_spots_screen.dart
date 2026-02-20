@@ -1,12 +1,13 @@
 /// All Weak Spots Screen
 /// Shows all weak spots grouped by state.
 /// States: active ("Needs Strengthening"), improving ("Keep Practicing"), stable ("Recently Strengthened")
-/// "Resume Capsule" action available for active nodes with a capsule.
+/// "Learn" action available for active nodes with a capsule.
 import 'package:flutter/material.dart';
 import '../widgets/active_weak_spots_card.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
+import '../widgets/app_header.dart';
 import 'capsule_screen.dart';
 
 class AllWeakSpotsScreen extends StatelessWidget {
@@ -73,11 +74,35 @@ class AllWeakSpotsScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            Expanded(
+      body: Column(
+        children: [
+          AppHeader(
+            showGradient: true,
+            gradient: AppColors.ctaGradient,
+            topPadding: 16,
+            bottomPadding: 20,
+            leading: Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                onPressed: () => Navigator.of(context).pop(),
+                padding: EdgeInsets.all(PlatformSizing.spacing(8)),
+                constraints: const BoxConstraints(),
+              ),
+            ),
+            title: Text(
+              'My Weak Spots',
+              style: AppTextStyles.headerSmall.copyWith(
+                fontSize: PlatformSizing.fontSize(20),
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          Expanded(
               child: weakSpots.isEmpty
                   ? _buildEmpty()
                   : ListView(
@@ -100,39 +125,6 @@ class AllWeakSpotsScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(8, 8, 20, 8),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  color: AppColors.textDark,
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                Text(
-                  'My Weak Spots',
-                  style: AppTextStyles.headerMedium.copyWith(
-                    fontSize: PlatformSizing.fontSize(20),
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-        ],
-      ),
     );
   }
 
@@ -186,7 +178,7 @@ class AllWeakSpotsScreen extends StatelessWidget {
         Text(
           '${_groupTitle(state)} ($count)',
           style: AppTextStyles.labelSmall.copyWith(
-            fontSize: PlatformSizing.fontSize(11),
+            fontSize: PlatformSizing.fontSize(12),
             fontWeight: FontWeight.bold,
             color: AppColors.textMedium,
             letterSpacing: 0.8,
@@ -235,14 +227,15 @@ class AllWeakSpotsScreen extends StatelessWidget {
                   SizedBox(height: PlatformSizing.spacing(2)),
                   Row(
                     children: [
-                      Text(
-                        _chapterLabel(ws.chapterKey),
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textMedium,
-                          fontSize: PlatformSizing.fontSize(12),
+                      if (_chapterLabel(ws.chapterKey).isNotEmpty)
+                        Text(
+                          _chapterLabel(ws.chapterKey),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textMedium,
+                            fontSize: PlatformSizing.fontSize(12),
+                          ),
                         ),
-                      ),
-                      if (ws.severityLevel != 'low') ...[
+                      if (_chapterLabel(ws.chapterKey).isNotEmpty)
                         Text(
                           ' · ',
                           style: AppTextStyles.bodySmall.copyWith(
@@ -250,14 +243,14 @@ class AllWeakSpotsScreen extends StatelessWidget {
                             fontSize: PlatformSizing.fontSize(12),
                           ),
                         ),
-                        Text(
-                          _capitalise(ws.severityLevel),
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: _groupColor(state),
-                            fontSize: PlatformSizing.fontSize(12),
-                          ),
+                      Text(
+                        _severityLabel(ws.severityLevel),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: _severityColor(ws.severityLevel),
+                          fontSize: PlatformSizing.fontSize(12),
+                          fontWeight: FontWeight.w500,
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ],
@@ -277,18 +270,22 @@ class AllWeakSpotsScreen extends StatelessWidget {
                   ),
                 ),
                 style: TextButton.styleFrom(
+                  backgroundColor: AppColors.primaryPurple.withValues(alpha: 0.1),
+                  foregroundColor: AppColors.primaryPurple,
                   padding: EdgeInsets.symmetric(
-                    horizontal: PlatformSizing.spacing(10),
-                    vertical: PlatformSizing.spacing(6),
+                    horizontal: PlatformSizing.spacing(16),
+                    vertical: PlatformSizing.spacing(10),
                   ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(20)),
+                  ),
+                  minimumSize: Size(PlatformSizing.spacing(64), PlatformSizing.spacing(36)),
                 ),
                 child: Text(
-                  'Resume',
+                  'Learn',
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.primaryPurple,
-                    fontSize: PlatformSizing.fontSize(12),
+                    fontSize: PlatformSizing.fontSize(13),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -297,6 +294,30 @@ class AllWeakSpotsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _severityLabel(String severity) {
+    switch (severity) {
+      case 'high':
+        return 'High Severity';
+      case 'medium':
+        return 'Medium Severity';
+      case 'low':
+      default:
+        return 'Low Severity';
+    }
+  }
+
+  Color _severityColor(String severity) {
+    switch (severity) {
+      case 'high':
+        return AppColors.errorRed;
+      case 'medium':
+        return const Color(0xFFF59E0B); // amber/orange
+      case 'low':
+      default:
+        return AppColors.successGreen;
+    }
   }
 
   String _chapterLabel(String? chapterKey) {

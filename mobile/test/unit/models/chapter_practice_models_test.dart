@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jeevibe_mobile/models/chapter_practice_models.dart';
+import 'package:jeevibe_mobile/models/daily_quiz_question.dart';
 
 void main() {
   group('ChapterPracticeSession', () {
@@ -288,7 +289,7 @@ void main() {
         isCorrect: true,
         timeTakenSeconds: 30,
         solutionText: 'Explanation here',
-        solutionSteps: ['Step 1'],
+        solutionSteps: [SolutionStep(stepNumber: 1, description: 'Step 1')],
       );
 
       expect(result.questionId, 'q1');

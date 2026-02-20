@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:screenshot/screenshot.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
@@ -93,6 +94,7 @@ class _HomeScreenState extends State<HomeScreen>
   bool _weakSpotsLoading = false;
   String? _currentAuthToken;
   String? _currentUserId;
+  bool _showCognitiveMastery = false; // Feature flag from tier_config
 
   // Screenshot controller for image sharing
   final _screenshotController = ScreenshotController();
@@ -114,6 +116,7 @@ class _HomeScreenState extends State<HomeScreen>
     super.initState();
     _loadData();
     _trackSession();
+    _loadCognitiveMasteryFlag();
 
     // Listen for profile changes to refresh chapter unlock data
     _userProfileProvider = Provider.of<UserProfileProvider>(context, listen: false);
@@ -175,6 +178,30 @@ class _HomeScreenState extends State<HomeScreen>
       } catch (e) {
         debugPrint('Error refreshing chapter unlock data: $e');
       }
+    }
+  }
+
+  /// Load Cognitive Mastery feature flag from tier_config
+  Future<void> _loadCognitiveMasteryFlag() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('tier_config')
+          .doc('active')
+          .get();
+
+      if (doc.exists && !_isDisposed && mounted) {
+        final data = doc.data() as Map<String, dynamic>?;
+        final featureFlags = data?['feature_flags'] as Map<String, dynamic>?;
+        final showFlag = featureFlags?['show_cognitive_mastery'] as bool? ?? false;
+
+        setState(() {
+          _showCognitiveMastery = showFlag;
+        });
+        debugPrint('Cognitive Mastery feature flag: $_showCognitiveMastery');
+      }
+    } catch (e) {
+      debugPrint('Error loading Cognitive Mastery flag: $e');
+      // Default to false on error
     }
   }
 
@@ -366,8 +393,8 @@ class _HomeScreenState extends State<HomeScreen>
           mockTestProvider.loadTemplates();
         }
 
-        // Load weak spots for dashboard card (non-blocking)
-        if (token != null) {
+        // Load weak spots for dashboard card (non-blocking) - only if feature is enabled
+        if (token != null && _showCognitiveMastery) {
           _currentAuthToken = token;
           _currentUserId = user.uid;
           _loadWeakSpots(user.uid, token);
@@ -515,20 +542,22 @@ class _HomeScreenState extends State<HomeScreen>
                     ] else
                       _buildAssessmentCard(),
                     const SizedBox(height: 16),
-                    // Active Weak Spots Card (Cognitive Mastery dashboard)
-                    ActiveWeakSpotsCard(
-                      weakSpots: _weakSpots,
-                      isLoading: _weakSpotsLoading,
-                      authToken: _currentAuthToken,
-                      userId: _currentUserId,
-                    ),
-                    const SizedBox(height: 16),
                     // Daily Adaptive Quiz Card (Locked until assessment complete)
                     _buildDailyPracticeCard(),
-                    // Focus Areas card (always show)
+                    // Chapter Practice card (always show)
                     const SizedBox(height: 16),
                     _buildFocusAreasCard(),
                     const SizedBox(height: 16),
+                    // Active Weak Spots Card (Cognitive Mastery dashboard) - controlled by feature flag
+                    if (_showCognitiveMastery) ...[
+                      ActiveWeakSpotsCard(
+                        weakSpots: _weakSpots,
+                        isLoading: _weakSpotsLoading,
+                        authToken: _currentAuthToken,
+                        userId: _currentUserId,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     // Mock Test Card
                     _buildMockTestCard(),
                     const SizedBox(height: 24),
@@ -2236,7 +2265,7 @@ class _HomeScreenState extends State<HomeScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Focus Chapters',
+                        'Chapter Practice',
                         style: AppTextStyles.headerSmall.copyWith(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,

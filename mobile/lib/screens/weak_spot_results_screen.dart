@@ -133,8 +133,8 @@ class WeakSpotResultsScreen extends StatelessWidget {
 
                     Text(
                       passed
-                          ? 'Great work on "$nodeTitle"! Keep practicing this chapter to lock in the improvement.'
-                          : '"$nodeTitle" still needs work. Try more chapter practice, then come back to strengthen it.',
+                          ? 'Great work on "$nodeTitle"! It\'s now marked as improving — do more chapter practice to make it fully stable.'
+                          : '"$nodeTitle" still needs work. Review the lesson and try more chapter practice, then come back to strengthen it.',
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.textMedium,
                         height: 1.5,

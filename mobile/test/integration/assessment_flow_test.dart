@@ -1,22 +1,22 @@
 /// Integration tests for assessment flow
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:jeevibe_mobile/screens/assessment_intro_screen.dart';
+import 'package:jeevibe_mobile/screens/assessment_instructions_screen.dart';
 import 'package:jeevibe_mobile/screens/assessment_question_screen.dart';
 import '../helpers/test_helpers.dart';
 
 void main() {
   group('Assessment Flow Integration Tests', () {
     testWidgets('complete assessment flow', (WidgetTester tester) async {
-      // Start with assessment intro screen
+      // Start with assessment instructions screen
       await tester.pumpWidget(
-        createTestApp(const AssessmentIntroScreen()),
+        createTestApp(const AssessmentInstructionsScreen()),
       );
 
       await waitForAsync(tester);
 
-      // Verify intro screen is displayed
-      expect(find.byType(AssessmentIntroScreen), findsOneWidget);
+      // Verify instructions screen is displayed
+      expect(find.byType(AssessmentInstructionsScreen), findsOneWidget);
 
       // Note: Full flow would require:
       // 1. Tap "Start Assessment"

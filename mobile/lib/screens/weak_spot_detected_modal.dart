@@ -138,7 +138,7 @@ class WeakSpotDetectedModal extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Your answers suggest a misconception in this concept. '
+                  'Your answers suggest a weak spot in this concept. '
                   'A 90-second capsule will help you fix it.',
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textMedium,

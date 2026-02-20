@@ -19,6 +19,9 @@ let cacheTimestamp = 0;
 // Default tier configuration (fallback if Firestore is unavailable)
 const DEFAULT_TIER_CONFIG = {
   version: '1.0.0',
+  feature_flags: {
+    show_cognitive_mastery: false,  // Global flag to show/hide Cognitive Mastery features
+  },
   tiers: {
     free: {
       tier_id: 'free',

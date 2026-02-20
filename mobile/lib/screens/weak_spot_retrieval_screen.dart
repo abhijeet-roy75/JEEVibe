@@ -7,8 +7,8 @@ import '../services/api_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
+import '../widgets/app_header.dart';
 import '../widgets/daily_quiz/question_card_widget.dart';
-import '../widgets/buttons/gradient_button.dart';
 import 'weak_spot_results_screen.dart';
 
 class WeakSpotRetrievalScreen extends StatefulWidget {
@@ -157,73 +157,82 @@ class _WeakSpotRetrievalScreenState extends State<WeakSpotRetrievalScreen> {
                 16,
                 16,
                 16,
-                MediaQuery.of(context).viewPadding.bottom + 100,
+                MediaQuery.of(context).viewPadding.bottom + 24,
               ),
               child: QuestionCardWidget(
                 question: _current,
                 selectedAnswer: _selectedAnswer,
                 showAnswerOptions: true,
                 onAnswerSelected: _onAnswerSelected,
-                elapsedSeconds: null, // no timer
+                onAnswerSubmitted: _canSubmit && !_isSubmitting ? _submitAnswer : null,
+                elapsedSeconds: null,
+                questionNumber: _currentIndex + 1,
+                showDifficultyChip: false,
+                submitButtonLabel: _isSubmitting
+                    ? 'Submitting...'
+                    : _isLastQuestion
+                        ? 'Submit'
+                        : 'Next Question',
               ),
             ),
           ),
-          _buildBottomBar(),
         ],
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Container(
-      color: Colors.white,
-      child: SafeArea(
-        bottom: false,
+    return AppHeader(
+      showGradient: true,
+      gradient: AppColors.ctaGradient,
+      topPadding: 16,
+      bottomPadding: 0,
+      leading: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
+        ),
+        child: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+          padding: EdgeInsets.all(PlatformSizing.spacing(8)),
+          constraints: const BoxConstraints(),
+        ),
+      ),
+      title: Text(
+        'Validation (${_currentIndex + 1}/$_totalQuestions)',
+        style: AppTextStyles.headerSmall.copyWith(
+          fontSize: PlatformSizing.fontSize(18),
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+      subtitle: Padding(
+        padding: EdgeInsets.fromLTRB(
+          PlatformSizing.spacing(16), 0,
+          PlatformSizing.spacing(16), PlatformSizing.spacing(12),
+        ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(8, 8, 20, 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    color: AppColors.textDark,
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Validation (${_currentIndex + 1}/$_totalQuestions)',
-                          style: AppTextStyles.headerMedium.copyWith(
-                            fontSize: PlatformSizing.fontSize(18),
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                        Text(
-                          widget.nodeTitle,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textMedium,
-                            fontSize: PlatformSizing.fontSize(12),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+            Text(
+              widget.nodeTitle,
+              style: AppTextStyles.bodyWhite.copyWith(
+                color: Colors.white.withValues(alpha: 0.85),
+                fontSize: PlatformSizing.fontSize(13),
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
             ),
-            // Progress bar
-            LinearProgressIndicator(
-              value: (_currentIndex + 1) / _totalQuestions,
-              backgroundColor: AppColors.borderLight,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryPurple),
-              minHeight: 3,
+            SizedBox(height: PlatformSizing.spacing(10)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: (_currentIndex + 1) / _totalQuestions,
+                backgroundColor: Colors.white.withValues(alpha: 0.3),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                minHeight: 4,
+              ),
             ),
           ],
         ),
@@ -231,27 +240,4 @@ class _WeakSpotRetrievalScreenState extends State<WeakSpotRetrievalScreen> {
     );
   }
 
-  Widget _buildBottomBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: AppColors.borderLight)),
-      ),
-      padding: EdgeInsets.fromLTRB(
-        16,
-        12,
-        16,
-        MediaQuery.of(context).viewPadding.bottom + 12,
-      ),
-      child: GradientButton(
-        text: _isSubmitting
-            ? 'Submitting...'
-            : _isLastQuestion
-                ? 'Submit'
-                : 'Next Question',
-        onPressed: _canSubmit && !_isSubmitting ? _submitAnswer : null,
-        size: GradientButtonSize.large,
-      ),
-    );
-  }
 }

@@ -325,7 +325,7 @@ class SectionCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: AppTextStyles.headingSmall,  // Platform-adaptive font size
+              style: AppTextStyles.headerSmall,
             ),
             if (trailing != null) trailing!,
           ],

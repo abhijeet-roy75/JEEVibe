@@ -75,9 +75,10 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       final apiService = ApiService();
       final result = await apiService.getCapsule(widget.capsuleId, widget.authToken);
       if (!_isDisposed && mounted) {
+        final data = result['data'] as Map<String, dynamic>? ?? {};
         setState(() {
-          _capsule = result['capsule'] as Map<String, dynamic>?;
-          _retrievalQuestions = result['retrievalQuestions'] as List<dynamic>? ?? [];
+          _capsule = data['capsule'] as Map<String, dynamic>?;
+          _retrievalQuestions = data['retrievalQuestions'] as List<dynamic>? ?? [];
           _isLoading = false;
         });
       }
@@ -157,44 +158,56 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(8, 8, 20, 16),
+          padding: EdgeInsets.fromLTRB(
+            PlatformSizing.spacing(20),
+            PlatformSizing.spacing(16),
+            PlatformSizing.spacing(20),
+            PlatformSizing.spacing(20),
+          ),
           child: Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Fix This Weak Spot',
-                      style: AppTextStyles.headerWhite.copyWith(
-                        fontSize: PlatformSizing.fontSize(18),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.timer_outlined,
-                          color: Colors.white.withValues(alpha: 0.8),
-                          size: PlatformSizing.iconSize(14),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '90s read',
-                          style: AppTextStyles.bodyWhite.copyWith(
-                            fontSize: PlatformSizing.fontSize(12),
-                            color: Colors.white.withValues(alpha: 0.8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                 ),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                  onPressed: () => Navigator.of(context).pop(),
+                  padding: EdgeInsets.all(PlatformSizing.spacing(8)),
+                  constraints: const BoxConstraints(),
+                ),
+              ),
+              SizedBox(width: PlatformSizing.spacing(16)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Fix This Weak Spot',
+                    style: AppTextStyles.headerWhite.copyWith(
+                      fontSize: PlatformSizing.fontSize(18),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.timer_outlined,
+                        color: Colors.white.withValues(alpha: 0.8),
+                        size: PlatformSizing.iconSize(14),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '90s read',
+                        style: AppTextStyles.bodyWhite.copyWith(
+                          fontSize: PlatformSizing.fontSize(12),
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),

@@ -532,21 +532,36 @@ class _ChapterPracticeResultScreenState
             )),
             const SizedBox(height: 16),
             // Upgrade button
-            PrimaryButton(
-              text: 'Upgrade to Pro',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const PaywallScreen(
-                      featureName: 'Chapter Practice',
-                      limitReachedMessage: 'You\'ve completed 5 questions. Upgrade for 15 questions per chapter!',
-                    ),
-                  ),
-                );
-              },
-              backgroundColor: Colors.white,
+            SizedBox(
+              width: double.infinity,
               height: PlatformSizing.buttonHeight(48),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PaywallScreen(
+                        featureName: 'Chapter Practice',
+                        limitReachedMessage: 'You\'ve completed 5 questions. Upgrade for 15 questions per chapter!',
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.primaryPurple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
+                  ),
+                ),
+                child: const Text(
+                  'Upgrade to Pro',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
           ],
         ),

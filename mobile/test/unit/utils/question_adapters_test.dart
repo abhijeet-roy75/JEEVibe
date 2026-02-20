@@ -153,7 +153,10 @@ void main() {
         correctAnswer: 'A',
         correctAnswerText: 'Speed with direction',
         solutionText: 'Velocity is speed with direction.',
-        solutionSteps: ['Step 1: Understand speed', 'Step 2: Add direction'],
+        solutionSteps: [
+          SolutionStep(stepNumber: 1, description: 'Step 1: Understand speed'),
+          SolutionStep(stepNumber: 2, description: 'Step 2: Add direction'),
+        ],
         thetaDelta: 0.15,
         thetaMultiplier: 0.5,
       );
@@ -319,7 +322,7 @@ void main() {
         studentAnswer: 'A',
         correctAnswer: 'A',
         solutionText: 'Solution',
-        solutionSteps: ['Step 1'],
+        solutionSteps: [SolutionStep(stepNumber: 1, description: 'Step 1')],
         thetaDelta: 0.1,
         thetaMultiplier: 0.5,
       );

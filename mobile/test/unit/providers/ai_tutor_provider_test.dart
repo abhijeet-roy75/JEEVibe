@@ -18,7 +18,11 @@ void main() {
   });
 
   tearDown(() {
-    provider.dispose();
+    try {
+      provider.dispose();
+    } catch (_) {
+      // Ignore if already disposed (dispose-group tests call dispose manually)
+    }
   });
 
   group('AiTutorProvider - Initial State', () {
