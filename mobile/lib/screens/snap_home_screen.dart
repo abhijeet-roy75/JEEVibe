@@ -1,7 +1,7 @@
 /// Snap Home Screen - Snap & Solve feature (matches design: Snap and Solve.PNG)
 /// Camera capture and gallery picker for question submission
 import 'dart:io';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -644,62 +644,65 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
       builder: (context, appState, offlineProvider, child) {
         final isOffline = offlineProvider.isOffline;
         final canSnap = appState.canTakeSnap && !isOffline;
+        final isCameraAvailable = !kIsWeb; // Camera not available on web
 
         return Padding(
           padding: AppSpacing.screenPadding,
           child: Row(
             children: [
-              // Capture Button
-              Expanded(
-                child: Container(
-                  height: PlatformSizing.buttonHeight(48), // Platform-adaptive: 48px iOS / ~42px Android
-                  decoration: BoxDecoration(
-                    gradient: canSnap ? AppColors.ctaGradient : null,
-                    color: canSnap ? null : AppColors.borderGray,
-                    borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                    boxShadow: canSnap ? AppShadows.buttonShadow : [],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: _isProcessing ? null : (canSnap ? _capturePhoto : null),
+              // Capture Button - Disabled on web
+              if (isCameraAvailable)
+                Expanded(
+                  child: Container(
+                    height: PlatformSizing.buttonHeight(48), // Platform-adaptive: 48px iOS / ~42px Android
+                    decoration: BoxDecoration(
+                      gradient: canSnap ? AppColors.ctaGradient : null,
+                      color: canSnap ? null : AppColors.borderGray,
                       borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                      child: Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (_isProcessing)
-                              const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
+                      boxShadow: canSnap ? AppShadows.buttonShadow : [],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _isProcessing ? null : (canSnap ? _capturePhoto : null),
+                        borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_isProcessing)
+                                const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              else
+                                Icon(
+                                  isOffline
+                                      ? Icons.cloud_off
+                                      : (canSnap ? Icons.camera_alt : Icons.lock),
+                                  color: canSnap ? Colors.white : AppColors.textGray,
+                                  size: 20,
                                 ),
-                              )
-                            else
-                              Icon(
-                                isOffline
-                                    ? Icons.cloud_off
-                                    : (canSnap ? Icons.camera_alt : Icons.lock),
-                                color: canSnap ? Colors.white : AppColors.textGray,
-                                size: 20,
+                              const SizedBox(width: 8),
+                              Text(
+                                'Capture',
+                                style: AppTextStyles.labelMedium.copyWith(
+                                  color: canSnap ? Colors.white : AppColors.textGray,
+                                  fontSize: 15,
+                                ),
                               ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Capture',
-                              style: AppTextStyles.labelMedium.copyWith(
-                                color: canSnap ? Colors.white : AppColors.textGray,
-                                fontSize: 15,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
+              if (isCameraAvailable) const SizedBox(width: 12),
               const SizedBox(width: 12),
               // Gallery Button
               Expanded(
