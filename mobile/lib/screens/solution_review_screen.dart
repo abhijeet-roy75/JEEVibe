@@ -25,6 +25,7 @@ import '../services/share_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../widgets/shareable_solution_card.dart';
 import 'package:provider/provider.dart';
+import '../widgets/responsive_layout.dart';
 
 class SolutionReviewScreen extends StatefulWidget {
   final List<RecentSolution> allSolutions;
@@ -125,32 +126,41 @@ class _SolutionReviewScreenState extends State<SolutionReviewScreen> {
         child: Column(
           children: [
             const OfflineBanner(),
+            // Header - Full width
             _buildHeader(context),
+            // Main content - Constrained on desktop
             Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.space24,
-                  AppSpacing.space24,
-                  AppSpacing.space24,
-                  AppSpacing.space24 + MediaQuery.of(context).viewPadding.bottom,
-                ),
-                child: Column(
-                  children: [
-                    SizedBox(height: AppSpacing.space24),
-                    _buildQuestionCard(solution),
-                    SizedBox(height: AppSpacing.space32),
-                    _buildSolutionSteps(solution, context),
-                    SizedBox(height: AppSpacing.space24),
-                    _buildFinalAnswer(solution),
-                    SizedBox(height: AppSpacing.space24),
-                    _buildPriyaTip(solution),
-                    // Only show "Back to Snap and Solve" when NOT coming from history tab
-                    if (!widget.isFromHistoryTab) ...[
-                      SizedBox(height: AppSpacing.space24),
-                      _buildNavigationButtons(),
-                    ],
-                    SizedBox(height: AppSpacing.space32),
-                  ],
+              child: Center(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                  ),
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.space24,
+                      AppSpacing.space24,
+                      AppSpacing.space24,
+                      AppSpacing.space24 + MediaQuery.of(context).viewPadding.bottom,
+                    ),
+                    child: Column(
+                      children: [
+                        SizedBox(height: AppSpacing.space24),
+                        _buildQuestionCard(solution),
+                        SizedBox(height: AppSpacing.space32),
+                        _buildSolutionSteps(solution, context),
+                        SizedBox(height: AppSpacing.space24),
+                        _buildFinalAnswer(solution),
+                        SizedBox(height: AppSpacing.space24),
+                        _buildPriyaTip(solution),
+                        // Only show "Back to Snap and Solve" when NOT coming from history tab
+                        if (!widget.isFromHistoryTab) ...[
+                          SizedBox(height: AppSpacing.space24),
+                          _buildNavigationButtons(),
+                        ],
+                        SizedBox(height: AppSpacing.space32),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),

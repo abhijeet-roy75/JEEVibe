@@ -27,6 +27,7 @@ import '../services/subscription_service.dart';
 import '../services/share_service.dart';
 import '../services/firebase/auth_service.dart';
 import '../widgets/shareable_solution_card.dart';
+import '../widgets/responsive_layout.dart';
 
 class SolutionScreen extends StatefulWidget {
   final Future<Solution> solutionFuture;
@@ -305,32 +306,42 @@ class _SolutionScreenState extends State<SolutionScreen> {
       ),
         child: Column(
           children: [
+            // Header - Full width
             _buildHeader(solution),
+            // Main content - Constrained on desktop
             Expanded(
-              child: SingleChildScrollView(
-                padding: AppSpacing.screenPadding,
-                child: Column(
-                  children: [
-                    SizedBox(height: AppSpacing.space24),
-                    _buildQuestionCard(solution),
-                    SizedBox(height: AppSpacing.space32),
-                    _buildSolutionSteps(solution),
-                    SizedBox(height: AppSpacing.space24),
-                    _buildFinalAnswer(solution),
-                    SizedBox(height: AppSpacing.space24),
-                    _buildPriyaTip(solution),
-                    SizedBox(height: AppSpacing.space32),
-                    // Practice section for Pro/Ultra users only
-                    if (SubscriptionService().isPro || SubscriptionService().isUltra) ...[
-                      _buildPracticeSection(solution),
-                      SizedBox(height: AppSpacing.space32),
-                    ],
-                    _buildActionButtons(solution),
-                    SizedBox(height: AppSpacing.space32),
-                  ],
+              child: Center(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                  ),
+                  child: SingleChildScrollView(
+                    padding: AppSpacing.screenPadding,
+                    child: Column(
+                      children: [
+                        SizedBox(height: AppSpacing.space24),
+                        _buildQuestionCard(solution),
+                        SizedBox(height: AppSpacing.space32),
+                        _buildSolutionSteps(solution),
+                        SizedBox(height: AppSpacing.space24),
+                        _buildFinalAnswer(solution),
+                        SizedBox(height: AppSpacing.space24),
+                        _buildPriyaTip(solution),
+                        SizedBox(height: AppSpacing.space32),
+                        // Practice section for Pro/Ultra users only
+                        if (SubscriptionService().isPro || SubscriptionService().isUltra) ...[
+                          _buildPracticeSection(solution),
+                          SizedBox(height: AppSpacing.space32),
+                        ],
+                        _buildActionButtons(solution),
+                        SizedBox(height: AppSpacing.space32),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
+            // Bottom banner - Full width
             _buildBottomBanner(),
           ],
         ),

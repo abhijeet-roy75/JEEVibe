@@ -20,6 +20,7 @@ import '../widgets/subject_filter_bar.dart';
 import '../widgets/latex_widget.dart';
 import '../utils/text_preprocessor.dart';
 import 'snap_home_screen.dart';
+import '../widgets/responsive_layout.dart';
 
 class AllSolutionsScreen extends StatefulWidget {
   final bool isInHistoryTab;
@@ -224,18 +225,28 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
       child: Column(
         children: [
           if (!widget.isInHistoryTab) const OfflineBanner(),
+          // Header - Full width
           if (!widget.isInHistoryTab) _buildHeader(),
-          // Filter bar outside of scrollable content to avoid gesture conflicts
+          // Metrics section - Full width
           if (!_isLoading && _allSolutions.isNotEmpty) _buildMetricsSection(),
+          // Main content - Constrained on desktop
           Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primaryPurple),
-                  )
-                : _filteredSolutions.isEmpty
-                    ? _buildEmptyState()
-                    : _buildSolutionsList(),
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                ),
+                child: _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(color: AppColors.primaryPurple),
+                      )
+                    : _filteredSolutions.isEmpty
+                        ? _buildEmptyState()
+                        : _buildSolutionsList(),
+              ),
+            ),
           ),
+          // Footer - Full width
           if (!_isLoading) _buildFooter(),
         ],
       ),
