@@ -13,6 +13,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../theme/app_platform_sizing.dart';
 import '../../widgets/app_header.dart';
+import '../../widgets/responsive_layout.dart';
 import '../auth/welcome_screen.dart';
 import '../subscription/paywall_screen.dart';
 import 'profile_edit_screen.dart';
@@ -274,37 +275,13 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       showGradient: true,
       gradient: AppColors.ctaGradient,
       leading: widget.isInBottomNav
-          ? Container(
-              width: PlatformSizing.spacing(40),
-              height: PlatformSizing.spacing(40),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(25),
-                    blurRadius: PlatformSizing.spacing(8),
-                    offset: Offset(PlatformSizing.spacing(0), PlatformSizing.spacing(2)),
-                  ),
-                ],
-              ),
-              child: ClipOval(
-                child: Padding(
-                  padding: EdgeInsets.all(PlatformSizing.spacing(6)),
-                  child: Image.asset(
-                    'assets/images/JEEVibeLogo.png',
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(
-                        Icons.person,
-                        color: AppColors.primary,
-                        size: PlatformSizing.iconSize(22),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            )
+          ? (isDesktopViewport(context)
+              ? null // Hide on desktop/web - logo is in sidebar
+              : Icon(
+                  Icons.person_outline,
+                  color: Colors.white,
+                  size: PlatformSizing.iconSize(28),
+                ))
           : Container(
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.2),

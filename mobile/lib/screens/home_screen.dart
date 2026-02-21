@@ -552,33 +552,15 @@ class _HomeScreenState extends State<HomeScreen>
     return AppHeader(
       showGradient: true,
       gradient: AppColors.ctaGradient,
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+      // Hide logo on web (desktop) - logo already in sidebar
+      // On mobile, show simple home icon since there's no sidebar
+      leading: isDesktopViewport(context)
+          ? null // Hide on desktop/web - logo is in sidebar
+          : const Icon(
+              Icons.home_outlined,
+              color: Colors.white,
+              size: 28,
             ),
-          ],
-        ),
-        child: ClipOval(
-          child: Padding(
-            padding: const EdgeInsets.all(6),
-            child: Image.asset(
-              'assets/images/JEEVibeLogo.png',
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) {
-                return const SizedBox.shrink();
-              },
-            ),
-          ),
-        ),
-      ),
       title: Text(
         'Hi ${_getUserName()}! 👋',
         style: AppTextStyles.headerWhite.copyWith(
