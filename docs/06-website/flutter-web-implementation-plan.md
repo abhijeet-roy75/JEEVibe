@@ -548,6 +548,7 @@ class PWAInstallPrompt extends StatelessWidget {
 | **Biometric Auth** | ❌ Disabled | No web equivalent for TouchID/FaceID | Session-based auth only |
 | **Screen Protection** | ❌ Not Possible | Browsers cannot prevent screenshots | Accept screenshots on web |
 | **Push Notifications** | ⏸️ Deferred | Requires service worker setup | Not implemented yet |
+| **Share Button (Analytics)** | ❌ Hidden on Web | Native platform sharing API not available | Button hidden on web platform |
 
 ### Implementation Details
 
@@ -594,7 +595,35 @@ if (kIsWeb) {
 
 ---
 
-#### 3. Responsive Design Status (2026-02-21) ✅
+#### 3. Share Button (Analytics Screen) (2026-02-21) ✅
+**File**: `mobile/lib/screens/analytics_screen.dart`
+
+**Web Behavior**:
+```dart
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+// In AppHeader trailing:
+trailing: kIsWeb
+    ? null  // Hide Share button on web
+    : GestureDetector(
+        onTap: _onSharePressed,
+        child: ShareButton(...),
+      ),
+```
+
+**Why Hidden on Web**:
+- Native platform sharing API (`Share.share()` from `share_plus` package) not available on web
+- Web browsers have different sharing mechanisms (Web Share API)
+- Would require separate implementation for web using `html.Navigator.share()`
+- Not critical for MVP - users can screenshot analytics instead
+
+**User Impact**: Share button simply not shown on web. No error, no broken functionality.
+
+**Future Consideration**: Implement Web Share API if users request sharing on desktop.
+
+---
+
+#### 4. Responsive Design Status (2026-02-21) ✅
 
 **Implemented Screens** (COMPLETE):
 - ✅ Daily Quiz (all 5 screens responsive)
@@ -620,13 +649,22 @@ if (kIsWeb) {
   - solution_screen.dart (solution display) ✅
   - solution_review_screen.dart (solution review) ✅
   - all_solutions_screen.dart (solution history) ✅
-- ✅ History (4 screens, all responsive)
+- ✅ History (5 screens, all responsive including footer buttons)
   - history_screen.dart (tab container - no changes needed)
-  - daily_quiz_history_screen.dart ✅
-  - chapter_practice_history_screen.dart ✅
-  - mock_test_history_screen.dart ✅
+  - daily_quiz_history_screen.dart ✅ (list + footer button)
+  - chapter_practice_history_screen.dart ✅ (list + footer button)
+  - mock_test_history_screen.dart ✅ (list + "Coming Soon" button - feature disabled)
+  - all_solutions_screen.dart ✅ (Snap & Solve history + footer button)
 - ✅ Question Review (shared widget, responsive)
   - widgets/question_review/question_review_screen.dart ✅
+- ✅ Analytics (2 tab widgets, responsive with constrained tab bar)
+  - analytics_screen.dart (header logo hidden on web, tab bar constrained to 900px, Share button hidden on web) ✅
+  - widgets/analytics/overview_tab.dart ✅
+  - widgets/analytics/mastery_tab.dart ✅
+- ✅ Profile (main screen, responsive)
+  - profile_view_screen.dart (header logo hidden on web) ✅
+- ✅ AI Tutor (Priya Ma'am chat, responsive)
+  - ai_tutor_chat_screen.dart (messages, input bar, quick actions all constrained) ✅
 
 **Pattern Used**:
 ```dart

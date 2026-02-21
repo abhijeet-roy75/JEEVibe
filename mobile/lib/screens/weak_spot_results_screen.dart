@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/buttons/gradient_button.dart';
+import '../widgets/responsive_layout.dart';
 import 'main_navigation_screen.dart';
 
 /// Maps backend node state to user-facing label.
@@ -52,11 +53,16 @@ class WeakSpotResultsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(24, 0, 24, bottomPadding + 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+        child: Center(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+            ),
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(24, 0, 24, bottomPadding + 24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
               // Icon
               Container(
                 width: PlatformSizing.spacing(88),
@@ -154,6 +160,8 @@ class WeakSpotResultsScreen extends StatelessWidget {
                 size: GradientButtonSize.large,
               ),
             ],
+              ),
+            ),
           ),
         ),
       ),

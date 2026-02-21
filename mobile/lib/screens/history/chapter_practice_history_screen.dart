@@ -362,10 +362,15 @@ class _ChapterPracticeHistoryScreenState
           ),
         ],
       ),
-      child: Container(
-        width: double.infinity,
-        height: 48,
-        decoration: BoxDecoration(
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+          ),
+          child: Container(
+            width: double.infinity,
+            height: 48,
+            decoration: BoxDecoration(
           gradient: hasChapterPractice ? AppColors.ctaGradient : null,
           color: hasChapterPractice ? null : Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -421,6 +426,8 @@ class _ChapterPracticeHistoryScreenState
                 ),
               ],
             ),
+          ),
+        ),
           ),
         ),
       ),

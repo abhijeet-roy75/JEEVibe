@@ -162,10 +162,15 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
           ),
         ],
       ),
-      child: Container(
-        width: double.infinity,
-        height: PlatformSizing.buttonHeight(48),
-        decoration: BoxDecoration(
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+          ),
+          child: Container(
+            width: double.infinity,
+            height: PlatformSizing.buttonHeight(48),
+            decoration: BoxDecoration(
           gradient: AppColors.ctaGradient,
           borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
           boxShadow: AppShadows.buttonShadow,
@@ -208,6 +213,8 @@ class _AllSolutionsScreenState extends State<AllSolutionsScreen> {
                 ),
               ],
             ),
+          ),
+        ),
           ),
         ),
       ),

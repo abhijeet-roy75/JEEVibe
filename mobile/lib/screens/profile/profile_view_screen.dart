@@ -478,9 +478,14 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                       AppSpacing.xxl,
                       AppSpacing.xxl + MediaQuery.of(context).viewPadding.bottom,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                    child: Center(
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                         // Enhanced Avatar and Name Card
                         Container(
                           width: double.infinity,
@@ -664,7 +669,9 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                             ),
                           ),
                         SizedBox(height: AppSpacing.lg),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),

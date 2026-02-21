@@ -233,10 +233,15 @@ class _DailyQuizHistoryScreenState extends State<DailyQuizHistoryScreen> {
           ),
         ],
       ),
-      child: Container(
-        width: double.infinity,
-        height: 48,
-        decoration: BoxDecoration(
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+          ),
+          child: Container(
+            width: double.infinity,
+            height: 48,
+            decoration: BoxDecoration(
           gradient: isLimitReached ? null : AppColors.ctaGradient,
           color: isLimitReached ? Colors.white : null,
           borderRadius: BorderRadius.circular(12),
@@ -290,6 +295,8 @@ class _DailyQuizHistoryScreenState extends State<DailyQuizHistoryScreen> {
                 ),
               ],
             ),
+          ),
+        ),
           ),
         ),
       ),

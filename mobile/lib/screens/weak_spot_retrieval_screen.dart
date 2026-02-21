@@ -9,6 +9,7 @@ import '../theme/app_text_styles.dart';
 import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/app_header.dart';
 import '../widgets/daily_quiz/question_card_widget.dart';
+import '../widgets/responsive_layout.dart';
 import 'weak_spot_results_screen.dart';
 
 class WeakSpotRetrievalScreen extends StatefulWidget {
@@ -159,7 +160,12 @@ class _WeakSpotRetrievalScreenState extends State<WeakSpotRetrievalScreen> {
                 16,
                 MediaQuery.of(context).viewPadding.bottom + 24,
               ),
-              child: QuestionCardWidget(
+              child: Center(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                  ),
+                  child: QuestionCardWidget(
                 question: _current,
                 selectedAnswer: _selectedAnswer,
                 showAnswerOptions: true,
@@ -173,6 +179,8 @@ class _WeakSpotRetrievalScreenState extends State<WeakSpotRetrievalScreen> {
                     : _isLastQuestion
                         ? 'Submit'
                         : 'Next Question',
+              ),
+                ),
               ),
             ),
           ),

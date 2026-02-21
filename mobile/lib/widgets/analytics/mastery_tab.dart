@@ -11,6 +11,7 @@ import '../../services/analytics_service.dart';
 import '../../services/subscription_service.dart';
 import '../../services/share_service.dart';
 import '../../widgets/buttons/gradient_button.dart';
+import '../../widgets/responsive_layout.dart';
 import '../../screens/ai_tutor_chat_screen.dart';
 import '../priya_avatar.dart';
 import '../shareable_subject_mastery_card.dart';
@@ -195,8 +196,13 @@ class MasteryTabState extends State<MasteryTab> {
         // Scrollable content
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+            child: Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Content based on loading state
@@ -219,7 +225,9 @@ class MasteryTabState extends State<MasteryTab> {
                 ],
                 // Bottom padding to account for Android navigation bar
                 SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 24),
-              ],
+                ],
+              ),
+              ),
             ),
           ),
         ),

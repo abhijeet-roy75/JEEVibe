@@ -1,5 +1,6 @@
 /// Analytics Screen
 /// Main screen for student analytics with Overview and Mastery tabs
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/firebase/auth_service.dart';
@@ -232,55 +233,58 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           textAlign: TextAlign.center,
         ),
       ),
-      trailing: _isLoading
-          ? Container(
-              width: PlatformSizing.spacing(60),
-              height: PlatformSizing.spacing(24),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
-              ),
-            )
-          : GestureDetector(
-              key: _shareButtonKey,
-              onTap: _isSharing ? null : _onSharePressed,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(10), vertical: PlatformSizing.spacing(4)),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_isSharing)
-                      SizedBox(
-                        width: PlatformSizing.spacing(14),
-                        height: PlatformSizing.spacing(14),
-                        child: const CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    else
-                      Icon(
-                        Icons.share_outlined,
-                        color: Colors.white,
-                        size: PlatformSizing.iconSize(14),
-                      ),
-                    SizedBox(width: PlatformSizing.spacing(4)),
-                    Text(
-                      'Share',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: PlatformSizing.fontSize(12),  // 12px iOS, 10.56px Android (was 11)
-                      ),
+      // Hide Share button on web - native sharing is not supported
+      trailing: kIsWeb
+          ? null
+          : (_isLoading
+              ? Container(
+                  width: PlatformSizing.spacing(60),
+                  height: PlatformSizing.spacing(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
+                  ),
+                )
+              : GestureDetector(
+                  key: _shareButtonKey,
+                  onTap: _isSharing ? null : _onSharePressed,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(10), vertical: PlatformSizing.spacing(4)),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                     ),
-                  ],
-                ),
-              ),
-            ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_isSharing)
+                          SizedBox(
+                            width: PlatformSizing.spacing(14),
+                            height: PlatformSizing.spacing(14),
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        else
+                          Icon(
+                            Icons.share_outlined,
+                            color: Colors.white,
+                            size: PlatformSizing.iconSize(14),
+                          ),
+                        SizedBox(width: PlatformSizing.spacing(4)),
+                        Text(
+                          'Share',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: PlatformSizing.fontSize(12),  // 12px iOS, 10.56px Android (was 11)
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )),
     );
   }
 
@@ -288,35 +292,42 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     return Container(
       color: Colors.white,
       padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16), vertical: PlatformSizing.spacing(12)),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surfaceGrey,
-          borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
-        ),
-        child: TabBar(
-          controller: _tabController,
-          indicator: BoxDecoration(
-            gradient: AppColors.ctaGradient, // Pink-purple gradient per design
-            borderRadius: BorderRadius.circular(PlatformSizing.radius(10)),
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
           ),
-          indicatorSize: TabBarIndicatorSize.tab,
-          dividerColor: Colors.transparent,
-          labelColor: Colors.white,
-          unselectedLabelColor: AppColors.textTertiary, // Light gray per design
-          labelStyle: AppTextStyles.labelMedium.copyWith(
-            fontWeight: FontWeight.w600,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surfaceGrey,
+              borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                gradient: AppColors.ctaGradient, // Pink-purple gradient per design
+                borderRadius: BorderRadius.circular(PlatformSizing.radius(10)),
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              dividerColor: Colors.transparent,
+              labelColor: Colors.white,
+              unselectedLabelColor: AppColors.textTertiary, // Light gray per design
+              labelStyle: AppTextStyles.labelMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: AppTextStyles.labelMedium,
+              padding: EdgeInsets.all(PlatformSizing.spacing(4)),
+              // Reduce tab height on Android for more compact appearance
+              labelPadding: EdgeInsets.symmetric(
+                horizontal: PlatformSizing.spacing(12),  // 12px iOS, 9.6px Android
+                vertical: PlatformSizing.spacing(2),     // 2px iOS, 1.6px Android (minimal vertical padding)
+              ),
+              tabs: const [
+                Tab(text: 'Overview'),
+                Tab(text: 'Mastery'),
+              ],
+            ),
           ),
-          unselectedLabelStyle: AppTextStyles.labelMedium,
-          padding: EdgeInsets.all(PlatformSizing.spacing(4)),
-          // Reduce tab height on Android for more compact appearance
-          labelPadding: EdgeInsets.symmetric(
-            horizontal: PlatformSizing.spacing(12),  // 12px iOS, 9.6px Android
-            vertical: PlatformSizing.spacing(2),     // 2px iOS, 1.6px Android (minimal vertical padding)
-          ),
-          tabs: const [
-            Tab(text: 'Overview'),
-            Tab(text: 'Mastery'),
-          ],
         ),
       ),
     );

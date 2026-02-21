@@ -8,7 +8,9 @@ Comprehensive test suite for JEEVibe mobile app that runs before deployments.
 test/
 ├── unit/              # Unit tests for services, models, utilities
 ├── widget/            # Widget tests for UI components
+├── widgets/           # Shared widget tests (responsive layout, etc.)
 ├── integration/       # Integration tests for user flows
+├── web/               # Web-specific platform tests
 ├── fixtures/          # Test data and fixtures
 ├── mocks/             # Mock implementations
 └── helpers/           # Test utilities and helpers
@@ -31,6 +33,9 @@ flutter test test/widget/
 
 # Integration tests only
 flutter test test/integration/
+
+# Web-specific tests only
+flutter test test/web/ test/widgets/responsive_layout_test.dart
 ```
 
 ### Run Before Deployment
@@ -69,6 +74,19 @@ genhtml coverage/lcov.info -o coverage/html
 - Snap & Solve flow
 - Profile management
 - Error handling
+
+### 4. Web-Specific Tests (New - 2026-02-21)
+- Responsive layout behavior (900px breakpoint)
+- Platform detection (`kIsWeb` flag)
+- Conditional rendering (web vs mobile UI)
+- Feature availability (camera, share, offline mode)
+- Viewport detection helper functions
+
+**Files:**
+- `test/web/platform_specific_behavior_test.dart` (10 tests)
+- `test/widgets/responsive_layout_test.dart` (10 tests)
+
+**Total Web Coverage:** 20 automated tests
 
 ## Pre-Deployment Checklist
 

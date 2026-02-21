@@ -131,6 +131,10 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
+  web:
+    generate: true
+    image_path: "assets/images/JEEVibeLogo.png"
+    background_color: "#FFFFFF"
   image_path: "assets/images/JEEVibeLogo.png"
   min_sdk_android: 21
   adaptive_icon_background: "#FFFFFF"

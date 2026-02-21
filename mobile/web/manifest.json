@@ -1,11 +1,11 @@
 {
-    "name": "jeevibe_mobile",
-    "short_name": "jeevibe_mobile",
+    "name": "JEEVibe - AI-Powered JEE Preparation",
+    "short_name": "JEEVibe",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#8B5CF6",
+    "description": "AI-powered adaptive learning platform for JEE Main & Advanced preparation with daily quizzes, chapter practice, and instant doubt solving.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

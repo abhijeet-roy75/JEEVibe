@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/app_header.dart';
+import '../widgets/responsive_layout.dart';
 import 'capsule_screen.dart';
 
 class AllWeakSpotsScreen extends StatelessWidget {
@@ -105,9 +106,14 @@ class AllWeakSpotsScreen extends StatelessWidget {
           Expanded(
               child: weakSpots.isEmpty
                   ? _buildEmpty()
-                  : ListView(
-                      padding: EdgeInsets.fromLTRB(
-                        16,
+                  : Center(
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                        ),
+                        child: ListView(
+                            padding: EdgeInsets.fromLTRB(
+                              16,
                         16,
                         16,
                         MediaQuery.of(context).viewPadding.bottom + 24,
@@ -122,9 +128,11 @@ class AllWeakSpotsScreen extends StatelessWidget {
                               ])
                           .toList(),
                     ),
-            ),
-          ],
-        ),
+                  ),
+                ),
+          ),
+        ],
+      ),
     );
   }
 

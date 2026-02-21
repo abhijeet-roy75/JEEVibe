@@ -143,38 +143,45 @@ class _MockTestHistoryScreenState extends State<MockTestHistoryScreen> {
           ),
         ],
       ),
-      child: Container(
-        width: double.infinity,
-        height: 48,
-        decoration: BoxDecoration(
-          gradient: AppColors.ctaGradient,
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+          ),
+          child: Container(
+            width: double.infinity,
+            height: 48,
+            decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: AppShadows.buttonShadow,
+          border: Border.all(color: AppColors.primary.withAlpha(100), width: 1.5),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: _navigateToMockTestHome,
+            onTap: null, // Disabled - feature coming soon
             borderRadius: BorderRadius.circular(12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.assignment,
-                  color: Colors.white,
+                Icon(
+                  Icons.lock_outline,
+                  color: AppColors.textTertiary,
                   size: 20,
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Start Simulation',
+                  'Coming Soon',
                   style: AppTextStyles.labelMedium.copyWith(
-                    color: Colors.white,
+                    color: AppColors.textTertiary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
+          ),
+        ),
           ),
         ),
       ),

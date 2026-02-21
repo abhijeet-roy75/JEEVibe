@@ -14,6 +14,7 @@ import '../widgets/ai_tutor/context_marker_widget.dart';
 import '../widgets/ai_tutor/chat_input_bar.dart';
 import '../widgets/ai_tutor/quick_actions_row.dart';
 import '../widgets/ai_tutor/typing_indicator.dart';
+import '../widgets/responsive_layout.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_platform_sizing.dart';
 
@@ -252,14 +253,28 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
                         child: _buildMessageList(provider),
                       ),
                       if (provider.quickActions.isNotEmpty)
-                        QuickActionsRow(
-                          actions: provider.quickActions,
-                          onActionTap: _handleQuickAction,
-                          isLoading: provider.isSendingMessage || provider.isInjectingContext,
+                        Center(
+                          child: Container(
+                            constraints: BoxConstraints(
+                              maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                            ),
+                            child: QuickActionsRow(
+                              actions: provider.quickActions,
+                              onActionTap: _handleQuickAction,
+                              isLoading: provider.isSendingMessage || provider.isInjectingContext,
+                            ),
+                          ),
                         ),
-                      ChatInputBar(
-                        onSend: _handleSendMessage,
-                        isLoading: provider.isSendingMessage || provider.isInjectingContext,
+                      Center(
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+                          ),
+                          child: ChatInputBar(
+                            onSend: _handleSendMessage,
+                            isLoading: provider.isSendingMessage || provider.isInjectingContext,
+                          ),
+                        ),
                       ),
                     ],
                   );
@@ -561,11 +576,16 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
       return _buildEmptyState();
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
-      itemCount: messages.length + (provider.isSendingMessage ? 1 : 0),
-      itemBuilder: (context, index) {
+    return Center(
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+        ),
+        child: ListView.builder(
+          controller: _scrollController,
+          padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
+          itemCount: messages.length + (provider.isSendingMessage ? 1 : 0),
+          itemBuilder: (context, index) {
         // Show typing indicator at the end while sending
         if (index == messages.length && provider.isSendingMessage) {
           return const TypingIndicator();
@@ -591,6 +611,8 @@ class _AiTutorChatScreenState extends State<AiTutorChatScreen> {
           showAvatar: showAvatar,
         );
       },
+        ),
+      ),
     );
   }
 

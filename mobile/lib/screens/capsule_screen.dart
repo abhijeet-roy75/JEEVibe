@@ -10,6 +10,7 @@ import '../theme/app_text_styles.dart';
 import 'package:jeevibe_mobile/theme/app_platform_sizing.dart';
 import '../widgets/latex_widget.dart';
 import '../widgets/buttons/gradient_button.dart';
+import '../widgets/responsive_layout.dart';
 import 'weak_spot_retrieval_screen.dart';
 
 class CapsuleScreen extends StatefulWidget {
@@ -268,7 +269,12 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
         16,
         MediaQuery.of(context).viewPadding.bottom + 24,
       ),
-      child: Column(
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+          ),
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Node title chip
@@ -338,6 +344,8 @@ class _CapsuleScreenState extends State<CapsuleScreen> {
             ),
           ),
         ],
+          ),
+        ),
       ),
     );
   }
