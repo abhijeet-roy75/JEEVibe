@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../theme/app_platform_sizing.dart';
 import '../../widgets/app_header.dart';
+import '../../widgets/responsive_layout.dart';
 import '../all_solutions_screen.dart';
 import '../subscription/paywall_screen.dart';
 import '../../models/subscription_models.dart';
@@ -112,37 +113,15 @@ class _HistoryScreenState extends State<HistoryScreen>
         return AppHeader(
           showGradient: true,
           gradient: AppColors.ctaGradient,
-          leading: Container(
-            width: PlatformSizing.spacing(40),
-            height: PlatformSizing.spacing(40),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(25),
-                  blurRadius: PlatformSizing.spacing(8),
-                  offset: Offset(PlatformSizing.spacing(0), PlatformSizing.spacing(2)),
+          // Hide logo on web (desktop) - logo already in sidebar
+          // On mobile, show simple history icon since there's no sidebar
+          leading: isDesktopViewport(context)
+              ? null // Hide on desktop/web - logo is in sidebar
+              : Icon(
+                  Icons.history,
+                  color: Colors.white,
+                  size: PlatformSizing.iconSize(28),
                 ),
-              ],
-            ),
-            child: ClipOval(
-              child: Padding(
-                padding: EdgeInsets.all(PlatformSizing.spacing(6)),
-                child: Image.asset(
-                  'assets/images/JEEVibeLogo.png',
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.history,
-                      color: AppColors.primary,
-                      size: PlatformSizing.iconSize(22),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
           title: Text(
             'Hi $userName! 👋',
             style: AppTextStyles.headerWhite.copyWith(
