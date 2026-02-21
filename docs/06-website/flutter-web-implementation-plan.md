@@ -535,11 +535,101 @@ class PWAInstallPrompt extends StatelessWidget {
 
 ---
 
+## Web Platform Limitations (IMPLEMENTED) 🚨
+
+### Features NOT Available on Web
+
+**Updated**: 2026-02-21 (based on actual implementation)
+
+| Feature | Status | Reason | Web Alternative |
+|---------|--------|--------|-----------------|
+| **Snap & Solve** | ❌ Disabled | Camera/file system APIs incompatible | Shows "Mobile App Required" message |
+| **Offline Mode** | ❌ Disabled | IndexedDB implementation incomplete | Online-only for now |
+| **Biometric Auth** | ❌ Disabled | No web equivalent for TouchID/FaceID | Session-based auth only |
+| **Screen Protection** | ❌ Not Possible | Browsers cannot prevent screenshots | Accept screenshots on web |
+| **Push Notifications** | ⏸️ Deferred | Requires service worker setup | Not implemented yet |
+
+### Implementation Details
+
+#### 1. Snap & Solve (2026-02-21) ✅
+**File**: `mobile/lib/screens/snap_home_screen.dart`
+
+**Web Behavior**:
+```dart
+if (kIsWeb) {
+  return Container(
+    child: Row(
+      children: [
+        Icon(Icons.phone_android),
+        Text('Mobile App Required'),
+        Text('Snap & Solve requires camera access...'),
+      ],
+    ),
+  );
+}
+```
+
+**User Message**: "Snap & Solve requires camera access. Please download the JEEVibe mobile app to use this feature."
+
+**Why Not Implemented**:
+- `image_picker` on web requires `WebUiSettings` configuration
+- `File(image.path)` doesn't work on web (blob URLs)
+- Would need `XFile.readAsBytes()` + web-compatible image processing
+- `image_cropper` package not compatible with web
+- File upload would work but poor UX compared to mobile camera
+
+**Future Consideration**: If web users request it, implement file upload-only version (no live camera).
+
+---
+
+#### 2. Offline Mode (Not Yet Implemented)
+**Status**: Mobile code exists but not web-compatible
+
+**Why Not Working**:
+- Isar database needs web-specific initialization
+- Image caching strategy needs browser storage limits
+- Service worker for offline content not configured
+
+**Future Plan**: Implement in Phase 2 with reduced cache (100 solutions vs 200 mobile).
+
+---
+
+#### 3. Responsive Design Status (2026-02-21) ✅
+
+**Implemented Screens**:
+- ✅ Daily Quiz (all screens responsive)
+- ✅ Chapter Practice (all screens responsive)
+- ✅ Mock Tests (all screens responsive)
+- ✅ Snap & Solve (shows mobile-only message)
+- ✅ Solution Review (all screens responsive)
+- ✅ History (all screens responsive)
+
+**Pattern Used**:
+```dart
+Container(
+  constraints: BoxConstraints(
+    maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+  ),
+  child: content,
+)
+```
+
+**Helper Function**:
+```dart
+bool isDesktopViewport(BuildContext context) {
+  return MediaQuery.of(context).size.width > 900;
+}
+```
+
+---
+
 ## Decisions Made (2026-02-20) ✅
 
-1. **Snap & Solve Strategy**: ✅ **File upload only** (9 weeks timeline)
-   - Simple, fast to implement, works everywhere
-   - Defer webcam capture to post-launch if users request
+1. **Snap & Solve Strategy**: ✅ **Mobile-only** (updated 2026-02-21)
+   - ~~File upload only~~ (original plan)
+   - **New decision**: Show "Mobile App Required" message on web
+   - Simpler UX than half-working file upload
+   - Defer web support until user demand is clear
 
 2. **Desktop App Priority**: ✅ **Web focus first, desktop apps deferred**
    - Skip Phase 3 (desktop apps) for now
@@ -548,6 +638,7 @@ class PWAInstallPrompt extends StatelessWidget {
 3. **Offline Mode**: ✅ **Reduced cache (100 solutions vs 200)**
    - Sufficient for web usage patterns
    - Reduces browser storage pressure
+   - **Not yet implemented on web**
 
 4. **Desktop App Prompt**: ✅ **Skip for MVP**
    - Focus on web-only experience
@@ -555,7 +646,7 @@ class PWAInstallPrompt extends StatelessWidget {
 
 **Revised Timeline**: **11 weeks** (down from 16 weeks)
 - Phase 1: Web MVP without camera (8 weeks)
-- Phase 2: File upload for Snap & Solve (3 weeks)
+- ~~Phase 2: File upload for Snap & Solve (3 weeks)~~ **SKIPPED** (mobile-only instead)
 - **No Phase 3 or 4** (desktop apps deferred)
 
 ---
