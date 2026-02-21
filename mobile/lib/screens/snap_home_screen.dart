@@ -703,7 +703,6 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
                   ),
                 ),
               if (isCameraAvailable) const SizedBox(width: 12),
-              const SizedBox(width: 12),
               // Gallery Button
               Expanded(
                 child: Container(
