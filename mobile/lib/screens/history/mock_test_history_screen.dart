@@ -10,6 +10,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../providers/offline_provider_conditional.dart';
 import '../../widgets/offline/offline_banner.dart';
+import '../../widgets/responsive_layout.dart';
 import '../mock_test/mock_test_home_screen.dart';
 import '../mock_test/mock_test_results_screen.dart';
 
@@ -196,13 +197,20 @@ class _MockTestHistoryScreenState extends State<MockTestHistoryScreen> {
     return RefreshIndicator(
       onRefresh: isOffline ? () async {} : _onRefresh,
       color: AppColors.primary,
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(16),
-        itemCount: _tests.length,
-        itemBuilder: (context, index) {
-          return _buildTestCard(_tests[index], index);
-        },
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+          ),
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(16),
+            itemCount: _tests.length,
+            itemBuilder: (context, index) {
+              return _buildTestCard(_tests[index], index);
+            },
+          ),
+        ),
       ),
     );
   }

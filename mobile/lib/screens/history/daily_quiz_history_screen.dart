@@ -17,6 +17,7 @@ import '../daily_quiz_review_screen.dart';
 import '../daily_quiz_loading_screen.dart';
 import '../subscription/paywall_screen.dart';
 import '../main_navigation_screen.dart';
+import '../../widgets/responsive_layout.dart';
 
 class DailyQuizHistoryScreen extends StatefulWidget {
   const DailyQuizHistoryScreen({super.key});
@@ -311,23 +312,30 @@ class _DailyQuizHistoryScreenState extends State<DailyQuizHistoryScreen> {
     return RefreshIndicator(
       onRefresh: isOffline ? () async {} : _onRefresh,
       color: AppColors.primary,
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(16),
-        itemCount: _quizzes.length + (_hasMore ? 1 : 0) + (_showUpgradeBanner ? 1 : 0),
-        itemBuilder: (context, index) {
-          // Show loading indicator at bottom
-          if (index == _quizzes.length && _hasMore) {
-            return _buildLoadingMoreIndicator();
-          }
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+          ),
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(16),
+            itemCount: _quizzes.length + (_hasMore ? 1 : 0) + (_showUpgradeBanner ? 1 : 0),
+            itemBuilder: (context, index) {
+              // Show loading indicator at bottom
+              if (index == _quizzes.length && _hasMore) {
+                return _buildLoadingMoreIndicator();
+              }
 
-          // Show upgrade banner if applicable
-          if (index == _quizzes.length + (_hasMore ? 1 : 0) && _showUpgradeBanner) {
-            return _buildUpgradeBanner();
-          }
+              // Show upgrade banner if applicable
+              if (index == _quizzes.length + (_hasMore ? 1 : 0) && _showUpgradeBanner) {
+                return _buildUpgradeBanner();
+              }
 
-          return _buildQuizCard(_quizzes[index], index);
-        },
+              return _buildQuizCard(_quizzes[index], index);
+            },
+          ),
+        ),
       ),
     );
   }

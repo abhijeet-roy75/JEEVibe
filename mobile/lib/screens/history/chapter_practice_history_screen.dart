@@ -19,6 +19,7 @@ import '../../widgets/subject_filter_bar.dart';
 import '../chapter_practice/chapter_practice_review_screen.dart';
 import '../chapter_list_screen.dart';
 import '../subscription/paywall_screen.dart';
+import '../../widgets/responsive_layout.dart';
 
 class ChapterPracticeHistoryScreen extends StatefulWidget {
   const ChapterPracticeHistoryScreen({super.key});
@@ -449,24 +450,31 @@ class _ChapterPracticeHistoryScreenState
     return RefreshIndicator(
       onRefresh: isOffline ? () async {} : _onRefresh,
       color: AppColors.primary,
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.all(16),
-        itemCount: _filteredSessions.length + (_hasMore ? 1 : 0) + (_showUpgradeBanner ? 1 : 0),
-        itemBuilder: (context, index) {
-          // Show loading indicator at bottom
-          if (index == _filteredSessions.length && _hasMore) {
-            return _buildLoadingMoreIndicator();
-          }
+      child: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
+          ),
+          child: ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.all(16),
+            itemCount: _filteredSessions.length + (_hasMore ? 1 : 0) + (_showUpgradeBanner ? 1 : 0),
+            itemBuilder: (context, index) {
+              // Show loading indicator at bottom
+              if (index == _filteredSessions.length && _hasMore) {
+                return _buildLoadingMoreIndicator();
+              }
 
-          // Show upgrade banner at bottom if applicable
-          if (index == _filteredSessions.length + (_hasMore ? 1 : 0) &&
-              _showUpgradeBanner) {
-            return _buildUpgradeBanner();
-          }
+              // Show upgrade banner at bottom if applicable
+              if (index == _filteredSessions.length + (_hasMore ? 1 : 0) &&
+                  _showUpgradeBanner) {
+                return _buildUpgradeBanner();
+              }
 
-          return _buildSessionCard(_filteredSessions[index]);
-        },
+              return _buildSessionCard(_filteredSessions[index]);
+            },
+          ),
+        ),
       ),
     );
   }
