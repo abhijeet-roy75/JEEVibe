@@ -643,66 +643,114 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
     return Consumer2<AppStateProvider, OfflineProvider>(
       builder: (context, appState, offlineProvider, child) {
         final isOffline = offlineProvider.isOffline;
-        final canSnap = appState.canTakeSnap && !isOffline;
+        final canSnap = appState.canTakeSnap && !isOffline && !kIsWeb; // Snap disabled on web
         final isCameraAvailable = !kIsWeb; // Camera not available on web
+
+        // On web, show a message that this feature is mobile-only
+        if (kIsWeb) {
+          return Padding(
+            padding: AppSpacing.screenPadding,
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.primaryPurple.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                border: Border.all(
+                  color: AppColors.primaryPurple.withValues(alpha: 0.3),
+                  width: 2,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.phone_android,
+                    color: AppColors.primaryPurple,
+                    size: 32,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Mobile App Required',
+                          style: AppTextStyles.labelLarge.copyWith(
+                            color: AppColors.primaryPurple,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Snap & Solve requires camera access. Please download the JEEVibe mobile app to use this feature.',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
 
         return Padding(
           padding: AppSpacing.screenPadding,
           child: Row(
             children: [
-              // Capture Button - Disabled on web
-              if (isCameraAvailable)
-                Expanded(
-                  child: Container(
-                    height: PlatformSizing.buttonHeight(48), // Platform-adaptive: 48px iOS / ~42px Android
-                    decoration: BoxDecoration(
-                      gradient: canSnap ? AppColors.ctaGradient : null,
-                      color: canSnap ? null : AppColors.borderGray,
+              // Capture Button
+              Expanded(
+                child: Container(
+                  height: PlatformSizing.buttonHeight(48), // Platform-adaptive: 48px iOS / ~42px Android
+                  decoration: BoxDecoration(
+                    gradient: canSnap ? AppColors.ctaGradient : null,
+                    color: canSnap ? null : AppColors.borderGray,
+                    borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
+                    boxShadow: canSnap ? AppShadows.buttonShadow : [],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: _isProcessing ? null : (canSnap ? _capturePhoto : null),
                       borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                      boxShadow: canSnap ? AppShadows.buttonShadow : [],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _isProcessing ? null : (canSnap ? _capturePhoto : null),
-                        borderRadius: BorderRadius.circular(AppRadius.radiusMedium),
-                        child: Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (_isProcessing)
-                                const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              else
-                                Icon(
-                                  isOffline
-                                      ? Icons.cloud_off
-                                      : (canSnap ? Icons.camera_alt : Icons.lock),
-                                  color: canSnap ? Colors.white : AppColors.textGray,
-                                  size: 20,
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (_isProcessing)
+                              const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
                                 ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Capture',
-                                style: AppTextStyles.labelMedium.copyWith(
-                                  color: canSnap ? Colors.white : AppColors.textGray,
-                                  fontSize: 15,
-                                ),
+                              )
+                            else
+                              Icon(
+                                isOffline
+                                    ? Icons.cloud_off
+                                    : (canSnap ? Icons.camera_alt : Icons.lock),
+                                color: canSnap ? Colors.white : AppColors.textGray,
+                                size: 20,
                               ),
-                            ],
-                          ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Capture',
+                              style: AppTextStyles.labelMedium.copyWith(
+                                color: canSnap ? Colors.white : AppColors.textGray,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
                 ),
-              if (isCameraAvailable) const SizedBox(width: 12),
+              ),
+              const SizedBox(width: 12),
               // Gallery Button
               Expanded(
                 child: Container(
