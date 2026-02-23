@@ -48,12 +48,11 @@ router.get('/dashboard', authenticateUser, async (req, res, next) => {
   try {
     const userId = req.userId;
 
-    // Fetch all data in parallel for maximum performance
-    const [userDoc, subscriptionStatus, overview, weeklyActivity] = await Promise.all([
+    // Fetch user data, subscription, and overview in parallel
+    const [userDoc, subscriptionStatus, overview] = await Promise.all([
       retryFirestoreOperation(() => db.collection('users').doc(userId).get()),
       getSubscriptionStatus(userId),
-      analyticsService.getAnalyticsOverview(userId),
-      analyticsService.getWeeklyActivity(userId)
+      analyticsService.getAnalyticsOverview(userId)
     ]);
 
     const userData = userDoc.exists ? userDoc.data() : {};
@@ -73,6 +72,35 @@ router.get('/dashboard', authenticateUser, async (req, res, next) => {
       profileCompleted: userData.profile_completed ?? userData.profileCompleted ?? false,
       createdAt: userData.created_at?.toDate?.()?.toISOString() || userData.createdAt || null,
       lastActive: userData.last_active?.toDate?.()?.toISOString() || userData.lastActive || null
+    };
+
+    // Build weekly activity (inline from /weekly-activity route)
+    const trends = await progressService.getAccuracyTrends(userId, 7);
+    const dataByDate = {};
+    trends.forEach(day => {
+      dataByDate[day.date] = day;
+    });
+
+    const currentWeek = getCurrentWeekIST();
+    const weekData = currentWeek.map(day => {
+      const existing = dataByDate[day.date];
+      return {
+        date: day.date,
+        dayName: day.dayName,
+        isToday: day.isToday,
+        isFuture: day.isFuture,
+        quizzes: existing?.quizzes || 0,
+        questions: existing?.questions || 0,
+        correct: existing?.correct || 0,
+        accuracy: existing?.accuracy || 0
+      };
+    });
+
+    const pastAndTodayData = weekData.filter(d => !d.isFuture);
+    const weeklyActivity = {
+      week: weekData,
+      total_questions: pastAndTodayData.reduce((sum, d) => sum + d.questions, 0),
+      total_quizzes: pastAndTodayData.reduce((sum, d) => sum + d.quizzes, 0)
     };
 
     // Return all data in single response
