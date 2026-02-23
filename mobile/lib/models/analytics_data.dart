@@ -627,12 +627,17 @@ class AnalyticsDashboard {
     final profileData = json['profile'] is Map<String, dynamic>
         ? json['profile'] as Map<String, dynamic>
         : <String, dynamic>{};
-    
+
     // Convert ISO date strings to Timestamp for UserProfile
     final profileWithTimestamps = <String, dynamic>{};
     profileData.forEach((key, value) {
-      if ((key == 'createdAt' || key == 'lastActive' || key == 'dateOfBirth') && value != null) {
-        profileWithTimestamps[key] = Timestamp.fromDate(DateTime.parse(value));
+      if ((key == 'createdAt' || key == 'lastActive' || key == 'dateOfBirth') && value != null && value is String && value.isNotEmpty) {
+        try {
+          profileWithTimestamps[key] = Timestamp.fromDate(DateTime.parse(value));
+        } catch (e) {
+          // If date parsing fails, keep the original value (or set to null)
+          profileWithTimestamps[key] = null;
+        }
       } else {
         profileWithTimestamps[key] = value;
       }
