@@ -85,35 +85,23 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
       _authToken = token;
 
-      // Load user profile for name
-      final firestoreService = Provider.of<FirestoreUserService>(context, listen: false);
-      final user = authService.currentUser;
-      if (user != null) {
-        final profile = await firestoreService.getUserProfile(user.uid);
-        if (mounted) {
-          _userProfile = profile;
-          // Sync profile to centralized provider so other screens get the update
-          if (profile != null) {
-            context.read<UserProfileProvider>().updateProfile(profile);
-          }
-        }
-      }
-
-      // Load subscription status to determine analytics access level
-      await _subscriptionService.fetchStatus(token);
-      final analyticsAccess = _subscriptionService.status?.features.analyticsAccess ?? 'basic';
-      _hasFullAnalytics = analyticsAccess == 'full';
-
-      // Fetch overview and weekly activity in parallel
-      final results = await Future.wait([
-        AnalyticsService.getOverview(authToken: token),
-        AnalyticsService.getWeeklyActivity(authToken: token),
-      ]);
+      // NEW: Use batched dashboard endpoint (reduces 4 API calls to 1)
+      final dashboard = await AnalyticsService.getDashboard(authToken: token);
 
       if (mounted) {
+        // Update user profile
+        _userProfile = dashboard.profile;
+        // Sync profile to centralized provider so other screens get the update
+        context.read<UserProfileProvider>().updateProfile(dashboard.profile);
+
+        // Update subscription service status (for other screens)
+        _subscriptionService.updateStatus(dashboard.subscription);
+        final analyticsAccess = dashboard.subscription.features.analyticsAccess;
+        _hasFullAnalytics = analyticsAccess == 'full';
+
         setState(() {
-          _overview = results[0] as AnalyticsOverview;
-          _weeklyActivity = results[1] as WeeklyActivity;
+          _overview = dashboard.overview;
+          _weeklyActivity = dashboard.weeklyActivity;
           _isLoading = false;
         });
       }

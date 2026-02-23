@@ -4,10 +4,53 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/analytics_data.dart';
+import '../models/user_profile.dart';
+import '../models/subscription_status.dart';
 
 class AnalyticsService {
   static const String baseUrl = 'https://jeevibe-thzi.onrender.com';
   static const Duration timeout = Duration(seconds: 30);
+
+  /// Get analytics dashboard (BATCHED - replaces 4 separate API calls)
+  ///
+  /// Returns all data needed for analytics screen in a single call:
+  /// - User profile
+  /// - Subscription status
+  /// - Analytics overview
+  /// - Weekly activity
+  ///
+  /// This reduces API calls from 4 to 1, improving performance and reducing rate limiting issues.
+  static Future<AnalyticsDashboard> getDashboard({
+    required String authToken,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/analytics/dashboard'),
+        headers: {
+          'Authorization': 'Bearer $authToken',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(timeout);
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        if (json['success'] == true && json['data'] != null) {
+          return AnalyticsDashboard.fromJson(json['data']);
+        }
+        throw Exception(json['error'] ?? 'Failed to load analytics dashboard');
+      } else if (response.statusCode == 401) {
+        throw Exception('Authentication required');
+      } else if (response.statusCode == 429) {
+        throw Exception('Too many requests. Please try again later.');
+      } else {
+        final errorBody = jsonDecode(response.body);
+        throw Exception(errorBody['error'] ?? 'Failed to load dashboard (${response.statusCode})');
+      }
+    } catch (e) {
+      debugPrint('Error fetching analytics dashboard: $e');
+      rethrow;
+    }
+  }
 
   /// Get analytics overview
   static Future<AnalyticsOverview> getOverview({

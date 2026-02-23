@@ -43,6 +43,16 @@ class SubscriptionService extends ChangeNotifier {
     return DateTime.now().difference(_lastFetchTime!) < _cacheDuration;
   }
 
+  /// Update subscription status from external source (e.g., batched API response)
+  /// This allows other services to update the cached status without making a separate API call
+  void updateStatus(SubscriptionStatus status) {
+    _cachedStatus = status;
+    _lastFetchTime = DateTime.now();
+    _errorMessage = null;
+    notifyListeners();
+    debugPrint('SubscriptionService: Status updated from external source - tier=${status.subscription.tier}');
+  }
+
   /// Fetch subscription status from API
   Future<SubscriptionStatus?> fetchStatus(String authToken,
       {bool forceRefresh = false}) async {

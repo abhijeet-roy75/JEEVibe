@@ -1,7 +1,10 @@
 /// Analytics Data Models
 /// Models for analytics API responses
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_colors.dart';
+import 'user_profile.dart';
+import 'subscription_status.dart';
 
 /// Mastery status enum
 enum MasteryStatus {
@@ -600,6 +603,46 @@ class AccuracyTimeline {
       days: json['days'] ?? 30,
       dataPoints: json['data_points'] ?? 0,
       timeline: timeline,
+    );
+  }
+}
+
+/// Batched Analytics Dashboard Response
+/// Combines all data needed for analytics screen in one API call
+class AnalyticsDashboard {
+  final UserProfile profile;
+  final SubscriptionStatus subscription;
+  final AnalyticsOverview overview;
+  final WeeklyActivity weeklyActivity;
+
+  AnalyticsDashboard({
+    required this.profile,
+    required this.subscription,
+    required this.overview,
+    required this.weeklyActivity,
+  });
+
+  factory AnalyticsDashboard.fromJson(Map<String, dynamic> json) {
+    // Convert profile data (handle both Map and nested structure)
+    final profileData = json['profile'] is Map<String, dynamic>
+        ? json['profile'] as Map<String, dynamic>
+        : <String, dynamic>{};
+    
+    // Convert ISO date strings to Timestamp for UserProfile
+    final profileWithTimestamps = <String, dynamic>{};
+    profileData.forEach((key, value) {
+      if ((key == 'createdAt' || key == 'lastActive' || key == 'dateOfBirth') && value != null) {
+        profileWithTimestamps[key] = Timestamp.fromDate(DateTime.parse(value));
+      } else {
+        profileWithTimestamps[key] = value;
+      }
+    });
+
+    return AnalyticsDashboard(
+      profile: UserProfile.fromMap(profileWithTimestamps, profileData['uid'] ?? ''),
+      subscription: SubscriptionStatus.fromJson(json['subscription'] ?? {}),
+      overview: AnalyticsOverview.fromJson(json['overview'] ?? {}),
+      weeklyActivity: WeeklyActivity.fromJson(json['weeklyActivity'] ?? {}),
     );
   }
 }
