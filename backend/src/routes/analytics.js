@@ -49,11 +49,11 @@ router.get('/dashboard', authenticateUser, async (req, res, next) => {
     const userId = req.userId;
 
     // Fetch all data in parallel for maximum performance
-    const [userDoc, subscriptionStatus, analyticsAccess, tierInfo] = await Promise.all([
+    const [userDoc, subscriptionStatus, overview, weeklyActivity] = await Promise.all([
       retryFirestoreOperation(() => db.collection('users').doc(userId).get()),
       getSubscriptionStatus(userId),
-      getAnalyticsAccess(userId),
-      getEffectiveTier(userId)
+      analyticsService.getAnalyticsOverview(userId),
+      analyticsService.getWeeklyActivity(userId)
     ]);
 
     const userData = userDoc.exists ? userDoc.data() : {};
@@ -74,12 +74,6 @@ router.get('/dashboard', authenticateUser, async (req, res, next) => {
       createdAt: userData.created_at?.toDate?.()?.toISOString() || userData.createdAt || null,
       lastActive: userData.last_active?.toDate?.()?.toISOString() || userData.lastActive || null
     };
-
-    // Get analytics overview (reuse existing service method)
-    const overview = await analyticsService.getAnalyticsOverview(userId, analyticsAccess, tierInfo);
-
-    // Get weekly activity (reuse existing service method)
-    const weeklyActivity = await analyticsService.getWeeklyActivity(userId);
 
     // Return all data in single response
     res.json({
