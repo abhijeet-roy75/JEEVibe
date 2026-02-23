@@ -92,7 +92,7 @@ void main() async {
         options.environment = kReleaseMode ? 'production' : 'development';
         options.tracesSampleRate = 0.2; // 20% of transactions for performance monitoring
         // Filter out non-critical errors
-        options.beforeSend = (event, {hint}) {
+        options.beforeSend = (event, hint) {
           final exception = event.throwable?.toString() ?? event.message?.formatted ?? '';
           // Filter SVG parsing errors
           if (exception.contains('Invalid SVG data') ||

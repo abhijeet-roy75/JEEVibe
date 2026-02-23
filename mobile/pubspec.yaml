@@ -82,7 +82,7 @@ dependencies:
   cached_network_image: ^3.3.1
 
   # Error Tracking (for web)
-  sentry_flutter: ^7.0.0
+  sentry_flutter: ^8.0.0
 
   # Connectivity Detection
   connectivity_plus: ^6.0.0
