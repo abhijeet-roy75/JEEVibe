@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../../constants/profile_constants.dart';
@@ -278,6 +279,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideScreen = screenWidth > 900;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
       body: Column(
@@ -290,39 +294,46 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             ),
             child: SafeArea(
               bottom: false,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16.0), vertical: PlatformSizing.spacing(12.0)),
-                child: Row(
-                  children: [
-                    // Back button
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
-                      ),
-                      child: AppIconButton.back(
-                        onPressed: () => Navigator.of(context).pop(),
-                        color: Colors.white,
-                        size: AppIconButtonSize.small,
-                      ),
-                    ),
-                    SizedBox(width: PlatformSizing.spacing(12)),
-                    const Text(
-                      '✏️',
-                      style: TextStyle(fontSize: 24),
-                    ),
-                    SizedBox(width: PlatformSizing.spacing(8)),
-                    Expanded(
-                      child: Text(
-                        "Edit Profile",
-                        style: AppTextStyles.headerLarge.copyWith(
-                          fontSize: PlatformSizing.fontSize(20),
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: isWideScreen ? 900 : double.infinity,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16.0), vertical: PlatformSizing.spacing(12.0)),
+                    child: Row(
+                      children: [
+                        // Back button
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
+                          ),
+                          child: AppIconButton.back(
+                            onPressed: () => Navigator.of(context).pop(),
+                            color: Colors.white,
+                            size: AppIconButtonSize.small,
+                          ),
                         ),
-                      ),
+                        SizedBox(width: PlatformSizing.spacing(12)),
+                        const Text(
+                          '✏️',
+                          style: TextStyle(fontSize: 24),
+                        ),
+                        SizedBox(width: PlatformSizing.spacing(8)),
+                        Expanded(
+                          child: Text(
+                            "Edit Profile",
+                            style: AppTextStyles.headerLarge.copyWith(
+                              fontSize: PlatformSizing.fontSize(20),
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -330,13 +341,19 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
           // Form Content
           Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(PlatformSizing.spacing(24.0)),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+            child: Center(
+              child: SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: isWideScreen ? 900 : double.infinity,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(PlatformSizing.spacing(24.0)),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                     // Basic Information Section
                     _buildSectionHeader('Basic Information'),
 
@@ -598,9 +615,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
                     SizedBox(height: PlatformSizing.spacing(24)),
 
-                    // Bottom safe area padding to prevent Android nav bar covering Cancel button
-                    SizedBox(height: MediaQuery.of(context).padding.bottom),
-                  ],
+                          // Bottom safe area padding to prevent Android nav bar covering Cancel button
+                          SizedBox(height: MediaQuery.of(context).padding.bottom),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
