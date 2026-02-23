@@ -78,6 +78,22 @@ class ApiService {
     return false;
   }
 
+  /// Extract error message from API response
+  /// Handles both string errors and object errors with message field
+  static String _extractErrorMessage(dynamic errorData, String defaultMessage) {
+    if (errorData == null) return defaultMessage;
+
+    if (errorData is String) {
+      return errorData;
+    } else if (errorData is Map) {
+      final message = errorData['message'];
+      if (message is String) return message;
+      return errorData.toString();
+    }
+
+    return defaultMessage;
+  }
+
   /// Get authentication headers including session token
   static Future<Map<String, String>> getAuthHeaders(String authToken) async {
     final sessionToken = await AuthService.getSessionToken();
@@ -503,12 +519,12 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to complete snap practice';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to complete snap practice');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -847,15 +863,13 @@ class ApiService {
           if (jsonData['success'] == true && jsonData['quiz'] != null) {
             return DailyQuiz.fromJson(jsonData['quiz'] as Map<String, dynamic>);
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
           try {
             final errorData = json.decode(response.body);
-            final errorMsg = errorData['error']?['message'] ?? 
-                           errorData['error'] ?? 
-                           'Failed to generate quiz';
+            final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to generate quiz');
             final requestId = errorData['requestId'];
             print('API Error: $errorMsg (Status: ${response.statusCode}, Request ID: $requestId)');
             throw Exception('$errorMsg${requestId != null ? ' (Request ID: $requestId)' : ''}');
@@ -898,7 +912,7 @@ class ApiService {
 
         if (response.statusCode != 200) {
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to start quiz';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to start quiz');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -947,12 +961,12 @@ class ApiService {
             feedbackData['student_answer'] = studentAnswer;
             return AnswerFeedback.fromJson(feedbackData);
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to submit answer';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to submit answer');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -992,12 +1006,12 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to complete quiz';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to complete quiz');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1034,12 +1048,12 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get quiz result';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to get quiz result');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1075,7 +1089,7 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData['summary'] as Map<String, dynamic>;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
@@ -1085,7 +1099,7 @@ class ApiService {
             throw Exception('Server temporarily unavailable (${response.statusCode}). Please try again.');
           }
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get summary';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to get summary');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1123,7 +1137,7 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData['progress'] as Map<String, dynamic>;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
@@ -1133,7 +1147,7 @@ class ApiService {
             throw Exception('Server temporarily unavailable (${response.statusCode}). Please try again.');
           }
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get progress';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to get progress');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1172,7 +1186,7 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData['data'] as Map<String, dynamic>;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
@@ -1182,7 +1196,7 @@ class ApiService {
             throw Exception('Server temporarily unavailable (${response.statusCode}). Please try again.');
           }
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get unlocked chapters';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to get unlocked chapters');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1238,9 +1252,7 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData as Map<String, dynamic>;
           } else {
-            final errorMsg = jsonData['error']?['message'] ??
-                jsonData['error'] ??
-                'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
@@ -1250,9 +1262,7 @@ class ApiService {
                 'Server temporarily unavailable (${response.statusCode}). Please try again.');
           }
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ??
-              errorData['error'] ??
-              'Failed to get quiz history';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to get quiz history');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1293,12 +1303,12 @@ class ApiService {
           if (jsonData['success'] == true) {
             return;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Failed to submit feedback';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Failed to submit feedback');
             throw Exception(errorMsg);
           }
         } else {
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to submit feedback';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to submit feedback');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1346,12 +1356,12 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to generate practice';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to generate practice');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1397,12 +1407,12 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to submit answer';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to submit answer');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1442,12 +1452,12 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to complete practice';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to complete practice');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1484,12 +1494,12 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get session';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to get session');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1531,12 +1541,12 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get active session';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to get active session');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1578,12 +1588,12 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData;
           } else {
-            final errorMsg = jsonData['error']?['message'] ?? jsonData['error'] ?? 'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ?? errorData['error'] ?? 'Failed to get practice stats';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to get practice stats');
           throw Exception(errorMsg);
         }
       } on SocketException {
@@ -1642,9 +1652,7 @@ class ApiService {
           if (jsonData['success'] == true) {
             return jsonData as Map<String, dynamic>;
           } else {
-            final errorMsg = jsonData['error']?['message'] ??
-                jsonData['error'] ??
-                'Invalid response format';
+            final errorMsg = _extractErrorMessage(jsonData['error'], 'Invalid response format');
             throw Exception(errorMsg);
           }
         } else {
@@ -1654,9 +1662,7 @@ class ApiService {
                 'Server temporarily unavailable (${response.statusCode}). Please try again.');
           }
           final errorData = json.decode(response.body);
-          final errorMsg = errorData['error']?['message'] ??
-              errorData['error'] ??
-              'Failed to get practice history';
+          final errorMsg = _extractErrorMessage(errorData['error'], 'Failed to get practice history');
           throw Exception(errorMsg);
         }
       } on SocketException {

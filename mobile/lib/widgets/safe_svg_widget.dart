@@ -49,6 +49,10 @@ class SafeSvgWidget extends StatelessWidget {
       },
       allowDrawingOutsideViewBox: true,
       excludeFromSemantics: true,
+      // Explicitly hide any title/desc elements that might be in the SVG
+      theme: const SvgTheme(
+        currentColor: Colors.transparent, // Don't affect colors
+      ),
     );
   }
 }

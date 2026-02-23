@@ -169,7 +169,17 @@ class FirestoreUserService {
         throw const ProfileNotFoundException();
       } else {
         final errorData = json.decode(response.body);
-        throw Exception(errorData['error'] ?? 'Failed to fetch user profile');
+        // Handle error field that can be either a string or an object with message
+        final error = errorData['error'];
+        String errorMsg;
+        if (error is Map) {
+          errorMsg = error['message'] ?? error.toString();
+        } else if (error is String) {
+          errorMsg = error;
+        } else {
+          errorMsg = 'Failed to fetch user profile';
+        }
+        throw Exception(errorMsg);
       }
     } on ProfileNotFoundException {
       // Rethrow ProfileNotFoundException so it can be caught separately
