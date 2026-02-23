@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_colors.dart';
 import 'user_profile.dart';
-import 'subscription_status.dart';
+import 'subscription_models.dart';
 
 /// Mastery status enum
 enum MasteryStatus {

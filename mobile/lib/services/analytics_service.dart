@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/analytics_data.dart';
 import '../models/user_profile.dart';
-import '../models/subscription_status.dart';
+import '../models/subscription_models.dart';
 
 class AnalyticsService {
   static const String baseUrl = 'https://jeevibe-thzi.onrender.com';
