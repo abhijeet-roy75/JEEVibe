@@ -22,8 +22,84 @@ const analyticsService = require('../services/analyticsService');
 const thetaSnapshotService = require('../services/thetaSnapshotService');
 const progressService = require('../services/progressService');
 const { getAnalyticsAccess } = require('../middleware/featureGate');
-const { getEffectiveTier } = require('../services/subscriptionService');
+const { getEffectiveTier, getSubscriptionStatus } = require('../services/subscriptionService');
 const { getCurrentWeekIST } = require('../utils/dateUtils');
+const { retryFirestoreOperation } = require('../utils/firestoreRetry');
+
+// ============================================================================
+// BATCHED ANALYTICS DASHBOARD (NEW - Reduces 4 API calls to 1)
+// ============================================================================
+
+/**
+ * GET /api/analytics/dashboard
+ *
+ * Batched endpoint that returns all data needed for analytics dashboard.
+ * Replaces 4 separate API calls with 1 call:
+ * - User profile
+ * - Subscription status
+ * - Analytics overview
+ * - Weekly activity
+ *
+ * This reduces rate limiting issues and improves performance.
+ *
+ * Authentication: Required
+ */
+router.get('/dashboard', authenticateUser, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+
+    // Fetch all data in parallel for maximum performance
+    const [userDoc, subscriptionStatus, analyticsAccess, tierInfo] = await Promise.all([
+      retryFirestoreOperation(() => db.collection('users').doc(userId).get()),
+      getSubscriptionStatus(userId),
+      getAnalyticsAccess(userId),
+      getEffectiveTier(userId)
+    ]);
+
+    const userData = userDoc.exists ? userDoc.data() : {};
+
+    // Build user profile response (matching /api/users/profile format)
+    const profile = {
+      uid: userId,
+      phoneNumber: userData.phone_number || userData.phoneNumber || null,
+      firstName: userData.first_name || userData.firstName || null,
+      lastName: userData.last_name || userData.lastName || null,
+      email: userData.email || null,
+      dateOfBirth: userData.date_of_birth?.toDate?.()?.toISOString() || userData.dateOfBirth || null,
+      targetExam: userData.target_exam || userData.targetExam || null,
+      targetYear: userData.target_year || userData.targetYear || null,
+      coachingName: userData.coaching_name || userData.coachingName || null,
+      isEnrolledInCoaching: userData.is_enrolled_in_coaching ?? userData.isEnrolledInCoaching ?? false,
+      profileCompleted: userData.profile_completed ?? userData.profileCompleted ?? false,
+      createdAt: userData.created_at?.toDate?.()?.toISOString() || userData.createdAt || null,
+      lastActive: userData.last_active?.toDate?.()?.toISOString() || userData.lastActive || null
+    };
+
+    // Get analytics overview (reuse existing service method)
+    const overview = await analyticsService.getAnalyticsOverview(userId, analyticsAccess, tierInfo);
+
+    // Get weekly activity (reuse existing service method)
+    const weeklyActivity = await analyticsService.getWeeklyActivity(userId);
+
+    // Return all data in single response
+    res.json({
+      success: true,
+      data: {
+        profile,
+        subscription: subscriptionStatus,
+        overview,
+        weeklyActivity
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching analytics dashboard', {
+      userId: req.userId,
+      error: error.message,
+      stack: error.stack
+    });
+    next(error);
+  }
+});
 
 // ============================================================================
 // ANALYTICS OVERVIEW

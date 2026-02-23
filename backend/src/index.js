@@ -248,7 +248,8 @@ const dailyQuizRouter = require('./routes/dailyQuiz');
 app.use('/api/daily-quiz', dailyQuizRouter);
 
 const analyticsRouter = require('./routes/analytics');
-app.use('/api/analytics', analyticsRouter);
+const { analyticsLimiter } = require('./middleware/rateLimiter');
+app.use('/api/analytics', analyticsLimiter, analyticsRouter);
 
 const snapHistoryRouter = require('./routes/snapHistory');
 app.use('/api', snapHistoryRouter);

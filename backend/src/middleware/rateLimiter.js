@@ -159,10 +159,50 @@ const adminLimiter = rateLimit({
   },
 });
 
+// Analytics rate limiter - higher limits for real-time analytics updates
+// Users need to see updated analytics immediately after completing quizzes/practice
+const analyticsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  keyGenerator: getUserKey,
+  max: (req) => {
+    // Authenticated users: Higher limit (200 requests per 15 min)
+    // This allows for ~50 page loads before hitting limit (4 calls per load reduced to 1 with batching)
+    if (req.userId) {
+      return 200;
+    }
+    // Anonymous/unauthenticated: Lower limit
+    return 40;
+  },
+  message: (req) => ({
+    success: false,
+    error: req.userId
+      ? 'Too many analytics requests. Please try again in a moment.'
+      : 'Too many requests from this IP, please try again later.',
+    requestId: req.id || 'unknown',
+  }),
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: false,
+  skipFailedRequests: false,
+  handler: (req, res, next, options) => {
+    logger.warn('Analytics rate limit exceeded', {
+      requestId: req.id || 'unknown',
+      userId: req.userId || null,
+      ip: req.ip,
+      path: req.path,
+      method: req.method,
+      key: getUserKey(req),
+    });
+    const message = typeof options.message === 'function' ? options.message(req) : options.message;
+    res.status(options.statusCode).json(message);
+  },
+});
+
 module.exports = {
   apiLimiter,
   strictLimiter,
   imageProcessingLimiter,
   adminLimiter,
+  analyticsLimiter,
 };
 
