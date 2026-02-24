@@ -78,7 +78,8 @@ dependencies:
   # Note: Isar doesn't fully support web (large integer literals not supported in JavaScript)
   # Web builds will disable offline features (database_service.dart returns early on web)
   isar: ^3.1.0+1
-  isar_flutter_libs: ^3.1.0+1  # Required for Android/iOS native libraries
+  # isar_flutter_libs: ^3.1.0+1  # DISABLED: Has compatibility issues with Android SDK 36 (lStar attribute error)
+  # Offline mode will be unavailable until this is resolved - app will gracefully degrade
   flutter_cache_manager: ^3.3.1
   cached_network_image: ^3.3.1
 

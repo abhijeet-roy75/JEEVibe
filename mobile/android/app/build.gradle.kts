@@ -20,7 +20,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.jeevibe.jeevibe_mobile"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36  // Required by Flutter plugins (camera, image_picker, etc.)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

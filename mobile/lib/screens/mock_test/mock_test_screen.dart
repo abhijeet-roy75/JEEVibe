@@ -1001,7 +1001,7 @@ class _QuestionPaletteSheet extends StatelessWidget {
         SizedBox(width: PlatformSizing.spacing(4)),
         Text(
           label,
-          style: TextStyle(fontSize: 12)  // 12px iOS, 10.56px Android (was 11),
+          style: TextStyle(fontSize: 12),  // 12px iOS, 10.56px Android (was 11)
         ),
       ],
     );
