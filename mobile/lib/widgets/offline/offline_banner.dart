@@ -70,7 +70,7 @@ class OfflineBanner extends StatelessWidget {
                       '${offlineProvider.pendingActionsCount} pending',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: Colors.white,
-                        fontSize: 11,
+                        fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                       ),
                     ),
                   ),
@@ -114,7 +114,7 @@ class OfflineIndicator extends StatelessWidget {
                 'Offline',
                 style: AppTextStyles.bodySmall.copyWith(
                   color: Colors.white,
-                  fontSize: 11,
+                  fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                   fontWeight: FontWeight.w600,
                 ),
               ),

@@ -181,7 +181,7 @@ class ShareableSolutionCard extends StatelessWidget {
                 '${steps.length} steps total',
                 style: AppTextStyles.bodySmall.copyWith(
                   color: AppColors.textLight,
-                  fontSize: 11,
+                  fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                 ),
               ),
             ],
@@ -212,7 +212,7 @@ class ShareableSolutionCard extends StatelessWidget {
                       '$stepNum',
                       style: const TextStyle(
                         color: AppColors.primaryPurple,
-                        fontSize: 11,
+                        fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -240,7 +240,7 @@ class ShareableSolutionCard extends StatelessWidget {
             child: Text(
               '... and ${steps.length - 3} more steps',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                 color: AppColors.textLight,
                 fontStyle: FontStyle.italic,
               ),

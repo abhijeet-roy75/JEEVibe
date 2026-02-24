@@ -684,7 +684,7 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
                         chapter,
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.textLight,
-                          fontSize: 11,
+                          fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -708,7 +708,7 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
                             _formatTime(timeTaken),
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.textLight,
-                              fontSize: 11,
+                              fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -718,7 +718,7 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
                             'Unattempted',
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.textLight,
-                              fontSize: 11,
+                              fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                             ),
                           )
                         else if (!isCorrect)
@@ -726,7 +726,7 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
                             'Your: ${userAnswer.toUpperCase()}',
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.errorRed,
-                              fontSize: 11,
+                              fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                             ),
                           ),
                         if (!isUnattempted) ...[
@@ -735,7 +735,7 @@ class _MockTestReviewScreenState extends State<MockTestReviewScreen> {
                             'Ans: ${correctAnswer.toUpperCase()}',
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.successGreen,
-                              fontSize: 11,
+                              fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                               fontWeight: FontWeight.w600,
                             ),
                           ),

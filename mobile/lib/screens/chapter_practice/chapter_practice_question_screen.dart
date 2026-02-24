@@ -502,7 +502,7 @@ class _ChapterPracticeQuestionScreenState
                           'Practice',
                           style: AppTextStyles.labelSmall.copyWith(
                             color: Colors.white,
-                            fontSize: 11,
+                            fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                           ),
                         ),
                       ],

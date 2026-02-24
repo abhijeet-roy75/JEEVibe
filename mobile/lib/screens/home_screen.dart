@@ -987,7 +987,7 @@ class _HomeScreenState extends State<HomeScreen>
         text,
         style: AppTextStyles.bodySmall.copyWith(
           color: AppColors.textMedium,
-          fontSize: 11,
+          fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
         ),
         textAlign: TextAlign.center,
         maxLines: 1,
@@ -1927,7 +1927,7 @@ class _HomeScreenState extends State<HomeScreen>
                   style: AppTextStyles.labelSmall.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 11,
+                    fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                   ),
                 ),
               ),
@@ -2328,7 +2328,7 @@ class _HomeScreenState extends State<HomeScreen>
                           '5 chapters/day • 5 questions/chapter',
                           style: AppTextStyles.caption.copyWith(
                             color: AppColors.textTertiary,
-                            fontSize: 11,
+                            fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                           ),
                         ),
                     ],

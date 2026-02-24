@@ -546,7 +546,7 @@ class OverviewTabState extends State<OverviewTab> {
                   style: AppTextStyles.caption.copyWith(
                     color: accuracyColor,
                     fontWeight: FontWeight.w600,
-                    fontSize: 11,
+                    fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                   ),
                 ),
               ),

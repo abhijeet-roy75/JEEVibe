@@ -352,7 +352,7 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: AppTextStyles.bodyWhite.copyWith(fontSize: 11),
+            style: AppTextStyles.bodyWhite.copyWith(fontSize: 12)  // 12px iOS, 10.56px Android (was 11),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,

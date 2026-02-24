@@ -144,7 +144,7 @@ class AccuracyChart extends StatelessWidget {
                     AppTextStyles.caption.copyWith(
                       color: lineColor,
                       fontWeight: FontWeight.bold,
-                      fontSize: 11,
+                      fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                     ),
                   );
                 }).toList();

@@ -319,7 +319,7 @@ class ShareableSubjectMasteryCard extends StatelessWidget {
           child: Text(
             label,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
               fontWeight: FontWeight.w500,
               color: AppColors.textMedium,
             ),
@@ -348,7 +348,7 @@ class ShareableSubjectMasteryCard extends StatelessWidget {
           child: Text(
             '$count',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
               fontWeight: FontWeight.w600,
               color: color,
             ),
@@ -406,7 +406,7 @@ class ShareableSubjectMasteryCard extends StatelessWidget {
           child: Text(
             chapter.chapterName,
             style: const TextStyle(
-              fontSize: 11,
+              fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
               color: AppColors.textMedium,
             ),
             maxLines: 1,
@@ -416,7 +416,7 @@ class ShareableSubjectMasteryCard extends StatelessWidget {
         Text(
           '${chapter.accuracy.round()}%',
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
             fontWeight: FontWeight.w600,
             color: color,
           ),

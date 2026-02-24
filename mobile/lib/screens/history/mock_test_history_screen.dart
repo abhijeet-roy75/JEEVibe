@@ -470,7 +470,7 @@ class _MockTestHistoryScreenState extends State<MockTestHistoryScreen> {
       child: Text(
         '$label: $subjectScore/$maxMarks',
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
           fontWeight: FontWeight.w600,
           color: textColor,
         ),

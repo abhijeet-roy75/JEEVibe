@@ -107,7 +107,7 @@ class WeeklyActivityChart extends StatelessWidget {
                       style: AppTextStyles.caption.copyWith(
                         color: labelColor,
                         fontWeight: labelWeight,
-                        fontSize: 11,
+                        fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
                       ),
                     ),
                   );

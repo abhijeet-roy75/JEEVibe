@@ -394,7 +394,7 @@ class _ChapterPracticeResultScreenState
             label,
             style: AppTextStyles.bodySmall.copyWith(
               color: AppColors.textMedium,
-              fontSize: 11,
+              fontSize: 12,  // 12px iOS, 10.56px Android (was 11)
             ),
           ),
         ],
