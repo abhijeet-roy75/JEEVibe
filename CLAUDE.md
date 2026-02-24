@@ -312,6 +312,58 @@ promo_codes/                      - Promotional codes
 3. Check tier permissions if feature-gated
 4. Update mobile API service
 
+## Offline Mode (Isar Database)
+
+**Current Status:** Temporarily disabled due to Android SDK 36 compatibility
+
+The app uses Isar (embedded NoSQL database) for offline caching of:
+- Questions with LaTeX/solutions
+- Practice session history
+- Quiz states
+- ~1000-5000 records typically
+
+### Why Isar?
+- **Performance:** 3-5x faster than sqflite for complex queries
+- **Type-safe:** No SQL strings, compile-time safety
+- **Web support:** Full IndexedDB support (unlike sqflite)
+- **Auto-migrations:** Schema changes handled automatically
+- **Developer experience:** Clean API, no boilerplate
+
+### Current Issue (Feb 2026)
+`isar_flutter_libs 3.1.0+1` is incompatible with Android SDK 36:
+- Error: `android:attr/lStar not found`
+- Root cause: Material Components API 31+ attribute in old library build
+- Impact: Offline mode disabled, app gracefully degrades to online-only
+- Timeline: Waiting for Isar team to release SDK 36-compatible build
+
+### Monitoring for Updates
+
+**Automated Check:**
+```bash
+node backend/scripts/check-isar-update.js
+```
+Checks pub.dev API for new versions and provides update instructions.
+
+**Manual Monitoring:**
+1. Watch GitHub releases: https://github.com/isar/isar/releases
+2. Check pub.dev: https://pub.dev/packages/isar_flutter_libs/versions
+3. Look for "Android SDK 36" or "compileSdk 36" in changelogs
+
+**When Update Available:**
+1. Update `mobile/pubspec.yaml`: `isar_flutter_libs: ^3.x.x`
+2. Uncomment the dependency (currently disabled with comment)
+3. Test build: `cd mobile && flutter clean && flutter pub get && flutter build apk`
+4. If successful, update CLAUDE.md to mark as resolved
+
+### Alternative Solutions (if needed urgently)
+- **sqflite:** Mature SQLite wrapper, no web support, requires SQL
+- **Drift:** Type-safe SQL, great web support, more complex setup
+- **Hive:** Key-value store, simpler but less powerful for queries
+
+**Decision:** Stick with Isar, wait for update (2-4 weeks estimated)
+
+---
+
 ## Do NOT
 
 - Commit `.env` files or credentials
