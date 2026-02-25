@@ -419,6 +419,78 @@ app.use((req, res) => {
 });
 
 // ========================================
+// ENVIRONMENT VALIDATION
+// ========================================
+
+/**
+ * Validates required environment variables before server startup
+ * Exits with error code 1 if any required variables are missing
+ */
+function validateEnvironment() {
+  // Required variables for all environments
+  const REQUIRED_ALL = [
+    'FIREBASE_PROJECT_ID',
+    'FIREBASE_PRIVATE_KEY',
+    'FIREBASE_CLIENT_EMAIL',
+    'NODE_ENV'
+  ];
+
+  // Additional required variables for production
+  const REQUIRED_PRODUCTION = [
+    'ALLOWED_ORIGINS',
+    'OPENAI_API_KEY',
+    'RAZORPAY_KEY_ID',
+    'RAZORPAY_KEY_SECRET'
+  ];
+
+  // Additional required variables for development (minimal set)
+  const REQUIRED_DEVELOPMENT = [
+    'OPENAI_API_KEY'
+  ];
+
+  // Determine which variables to check based on environment
+  const isProduction = process.env.NODE_ENV === 'production';
+  const requiredVars = [
+    ...REQUIRED_ALL,
+    ...(isProduction ? REQUIRED_PRODUCTION : REQUIRED_DEVELOPMENT)
+  ];
+
+  // Check for missing variables
+  const missingVars = requiredVars.filter(varName => !process.env[varName]);
+
+  if (missingVars.length > 0) {
+    console.error('');
+    console.error('❌ FATAL ERROR: Missing required environment variables');
+    console.error('');
+    console.error('Missing variables:', missingVars.join(', '));
+    console.error('');
+    console.error('Server cannot start without these variables.');
+    console.error('Please check your .env file or environment configuration.');
+    console.error('');
+    console.error('Required for all environments:');
+    REQUIRED_ALL.forEach(v => console.error(`  - ${v}`));
+    console.error('');
+    if (isProduction) {
+      console.error('Additional required for production:');
+      REQUIRED_PRODUCTION.forEach(v => console.error(`  - ${v}`));
+    } else {
+      console.error('Additional required for development:');
+      REQUIRED_DEVELOPMENT.forEach(v => console.error(`  - ${v}`));
+    }
+    console.error('');
+    process.exit(1);
+  }
+
+  // Log successful validation
+  console.log('✅ Environment variables validated successfully');
+  console.log(`   Environment: ${process.env.NODE_ENV}`);
+  console.log(`   Variables checked: ${requiredVars.length}`);
+}
+
+// Validate environment BEFORE starting server
+validateEnvironment();
+
+// ========================================
 // START SERVER
 // ========================================
 
@@ -428,16 +500,6 @@ const server = app.listen(PORT, () => {
     environment: process.env.NODE_ENV || 'development',
     nodeVersion: process.version,
   });
-
-  // Check for required environment variables
-  const requiredEnvVars = ['OPENAI_API_KEY', 'FIREBASE_PROJECT_ID'];
-  const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-
-  if (missingVars.length > 0) {
-    logger.warn('⚠️  Missing required environment variables', {
-      missing: missingVars,
-    });
-  }
 
   if (process.env.NODE_ENV === 'production') {
     logger.info('✅ Production mode - Security features enabled');
