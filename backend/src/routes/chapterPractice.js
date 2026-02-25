@@ -1001,34 +1001,71 @@ router.post('/complete', authenticateUser, validateSessionMiddleware, validateSe
       { correctCount, totalAnswered, totalTime, thetaImprovement }
     );
 
-    // Update session as completed
+    // ========================================================================
+    // ATOMIC TRANSACTION: Update session and user theta together
+    // This prevents race conditions when multiple sessions complete concurrently
+    // ========================================================================
     await retryFirestoreOperation(async () => {
-      return await sessionRef.update({
-        status: 'completed',
-        completed_at: admin.firestore.FieldValue.serverTimestamp(),
-        final_accuracy: accuracy,
-        final_correct_count: correctCount,
-        final_total_answered: totalAnswered,
-        total_time_seconds: totalTime,
-        theta_improvement: thetaImprovement
-      });
-    });
+      return await db.runTransaction(async (transaction) => {
+        // Re-read user document in transaction to get latest theta values
+        const userDocInTxn = await transaction.get(userRef);
 
-    // Update user with subject/overall theta, subtopic accuracy, and chapter practice stats
-    await retryFirestoreOperation(async () => {
-      return await userRef.update({
-        theta_by_subject: subjectAndOverallUpdate.theta_by_subject,
-        subject_accuracy: subjectAndOverallUpdate.subject_accuracy,
-        overall_theta: subjectAndOverallUpdate.overall_theta,
-        overall_percentile: subjectAndOverallUpdate.overall_percentile,
-        subtopic_accuracy: updatedSubtopicAccuracy,
-        chapter_practice_stats: updatedChapterPracticeStats,
-        total_questions_solved: admin.firestore.FieldValue.increment(totalAnswered),
-        total_time_spent_minutes: admin.firestore.FieldValue.increment(Math.round(totalTime / 60)),
-        // Cumulative stats - consistent with daily quiz and initial assessment
-        'cumulative_stats.total_questions_correct': admin.firestore.FieldValue.increment(correctCount),
-        'cumulative_stats.total_questions_attempted': admin.firestore.FieldValue.increment(totalAnswered),
-        'cumulative_stats.last_updated': admin.firestore.FieldValue.serverTimestamp()
+        if (!userDocInTxn.exists) {
+          throw new ApiError(404, `User ${userId} not found`, 'USER_NOT_FOUND');
+        }
+
+        const latestUserData = userDocInTxn.data();
+        const latestThetaByChapter = latestUserData.theta_by_chapter || {};
+
+        // Recalculate subject/overall theta with latest chapter data
+        // (in case another session updated theta between our read and this transaction)
+        const latestSubjectAndOverallUpdate = calculateSubjectAndOverallThetaUpdate(latestThetaByChapter);
+
+        // Get latest subtopic accuracy
+        const latestSubtopicAccuracy = latestUserData.subtopic_accuracy || {};
+        const finalSubtopicAccuracy = calculateSubtopicAccuracyUpdate(latestSubtopicAccuracy, responses);
+
+        // Aggregate chapter practice stats with latest data
+        const latestStats = latestUserData.chapter_practice_stats || null;
+        const finalChapterPracticeStats = aggregateChapterPracticeStats(
+          latestStats,
+          sessionData,
+          { correctCount, totalAnswered, totalTime, thetaImprovement }
+        );
+
+        // Update session as completed (atomic with user update)
+        transaction.update(sessionRef, {
+          status: 'completed',
+          completed_at: admin.firestore.FieldValue.serverTimestamp(),
+          final_accuracy: accuracy,
+          final_correct_count: correctCount,
+          final_total_answered: totalAnswered,
+          total_time_seconds: totalTime,
+          theta_improvement: thetaImprovement
+        });
+
+        // Update user with subject/overall theta, subtopic accuracy, and chapter practice stats
+        transaction.update(userRef, {
+          theta_by_subject: latestSubjectAndOverallUpdate.theta_by_subject,
+          subject_accuracy: latestSubjectAndOverallUpdate.subject_accuracy,
+          overall_theta: latestSubjectAndOverallUpdate.overall_theta,
+          overall_percentile: latestSubjectAndOverallUpdate.overall_percentile,
+          subtopic_accuracy: finalSubtopicAccuracy,
+          chapter_practice_stats: finalChapterPracticeStats,
+          total_questions_solved: admin.firestore.FieldValue.increment(totalAnswered),
+          total_time_spent_minutes: admin.firestore.FieldValue.increment(Math.round(totalTime / 60)),
+          // Cumulative stats - consistent with daily quiz and initial assessment
+          'cumulative_stats.total_questions_correct': admin.firestore.FieldValue.increment(correctCount),
+          'cumulative_stats.total_questions_attempted': admin.firestore.FieldValue.increment(totalAnswered),
+          'cumulative_stats.last_updated': admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        logger.info('Chapter practice completed with atomic theta updates', {
+          userId,
+          sessionId: session_id,
+          chapterKey: sessionData.chapter_key,
+          overall_theta: latestSubjectAndOverallUpdate.overall_theta
+        });
       });
     });
 
