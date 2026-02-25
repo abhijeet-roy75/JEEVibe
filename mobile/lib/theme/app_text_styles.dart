@@ -14,7 +14,7 @@ class AppTextStyles {
   // ===========================================================================
 
   /// Get Inter font with fallback to system fonts
-  /// This prevents blank text if GoogleFonts CDN fails or is slow
+  /// GoogleFonts automatically provides fallback to system fonts if CDN fails
   static TextStyle _inter({
     required double fontSize,
     required FontWeight fontWeight,
@@ -28,13 +28,6 @@ class AppTextStyles {
       color: color,
       height: height,
       letterSpacing: letterSpacing,
-      fontFallback: const [
-        'SF Pro Text',      // iOS system font
-        'Roboto',           // Android system font
-        'Helvetica Neue',   // macOS/iOS fallback
-        'Arial',            // Universal fallback
-        'sans-serif',       // Generic fallback
-      ],
     );
   }
 
@@ -98,6 +91,7 @@ class AppTextStyles {
         fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
+        height: 1.4,
       );
 
   // ===========================================================================

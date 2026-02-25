@@ -19,12 +19,12 @@ void main() {
       expect(service.isInitialized, isFalse);
     });
 
-    test('should throw when accessing isar before initialization', () {
+    test('should throw UnsupportedError when accessing isar before initialization', () {
       final service = DatabaseService();
 
       expect(
         () => service.isar,
-        throwsA(isA<Exception>()),
+        throwsA(isA<UnsupportedError>()),
       );
     });
 

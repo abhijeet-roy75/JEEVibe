@@ -1,7 +1,7 @@
 /// Snap Home Screen - Snap & Solve feature (matches design: Snap and Solve.PNG)
 /// Camera capture and gallery picker for question submission
 import 'dart:io';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform, kIsWeb;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform, kIsWeb, kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';

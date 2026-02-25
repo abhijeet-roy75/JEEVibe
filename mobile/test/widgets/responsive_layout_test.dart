@@ -4,7 +4,7 @@ import 'package:jeevibe_mobile/widgets/responsive_layout.dart';
 
 void main() {
   group('ResponsiveLayout Widget Tests', () {
-    testWidgets('constrains content to default 480px on desktop viewport (>900px width)',
+    testWidgets('constrains content to default 480px on desktop viewport (>1200px width)',
         (WidgetTester tester) async {
       // Set desktop viewport size (1200px width)
       tester.view.physicalSize = const Size(1200, 800);
@@ -43,7 +43,7 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
     });
 
-    testWidgets('does NOT constrain content on mobile viewport (<900px width)',
+    testWidgets('does NOT constrain content on mobile viewport (<1200px width)',
         (WidgetTester tester) async {
       // Set mobile viewport size (375px width)
       tester.view.physicalSize = const Size(375, 667);
@@ -176,10 +176,10 @@ void main() {
   });
 
   group('isDesktopViewport Helper Function Tests', () {
-    testWidgets('returns true for viewport width > 900px',
+    testWidgets('returns true for viewport width > 1200px',
         (WidgetTester tester) async {
-      // Set desktop viewport
-      tester.view.physicalSize = const Size(1200, 800);
+      // Set desktop viewport (must be > 1200, not >= 1200)
+      tester.view.physicalSize = const Size(1400, 800);
       tester.view.devicePixelRatio = 1.0;
 
       bool? isDesktop;
@@ -201,7 +201,7 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
     });
 
-    testWidgets('returns false for viewport width <= 900px',
+    testWidgets('returns false for viewport width <= 1200px',
         (WidgetTester tester) async {
       // Set mobile viewport
       tester.view.physicalSize = const Size(375, 667);
@@ -226,10 +226,10 @@ void main() {
       addTearDown(() => tester.view.resetPhysicalSize());
     });
 
-    testWidgets('returns false for exactly 900px width',
+    testWidgets('returns false for exactly 1200px width',
         (WidgetTester tester) async {
-      // Set viewport to exactly 900px
-      tester.view.physicalSize = const Size(900, 800);
+      // Set viewport to exactly 1200px
+      tester.view.physicalSize = const Size(1200, 800);
       tester.view.devicePixelRatio = 1.0;
 
       bool? isDesktop;
@@ -245,15 +245,15 @@ void main() {
         ),
       );
 
-      expect(isDesktop, isFalse); // > 900, not >= 900
+      expect(isDesktop, isFalse); // > 1200, not >= 1200
 
       // Reset to default size
       addTearDown(() => tester.view.resetPhysicalSize());
     });
 
-    testWidgets('returns true for 901px width', (WidgetTester tester) async {
-      // Set viewport to 901px (just above threshold)
-      tester.view.physicalSize = const Size(901, 800);
+    testWidgets('returns true for 1201px width', (WidgetTester tester) async {
+      // Set viewport to 1201px (just above threshold)
+      tester.view.physicalSize = const Size(1201, 800);
       tester.view.devicePixelRatio = 1.0;
 
       bool? isDesktop;
