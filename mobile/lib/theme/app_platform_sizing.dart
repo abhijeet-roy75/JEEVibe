@@ -1,12 +1,12 @@
 /// Platform-Adaptive Sizing Utility
 ///
 /// Provides platform-specific sizing adjustments to optimize UI for both iOS and Android.
-/// Android gets 10-15% smaller sizing to feel more native and less "chunky".
+/// Android gets 12-20% smaller sizing to feel more native and less "chunky".
 ///
 /// Usage:
 /// ```dart
-/// fontSize: PlatformSizing.fontSize(16),  // 16px on iOS, 14.4px on Android
-/// padding: EdgeInsets.all(PlatformSizing.spacing(20)),  // 20px on iOS, 17px on Android
+/// fontSize: PlatformSizing.fontSize(16),  // 16px on iOS, 14.08px on Android
+/// padding: EdgeInsets.all(PlatformSizing.spacing(20)),  // 20px on iOS, 16px on Android
 /// ```
 ///
 /// Features:
@@ -15,10 +15,11 @@
 /// - Simple API with clear method names
 ///
 /// Scale Factors:
-/// - Font: 0.9 (10% smaller on Android)
-/// - Spacing: 0.85 (15% tighter on Android)
-/// - Icon: 0.9 (10% smaller on Android)
-/// - Radius: 0.85 (15% sharper on Android)
+/// - Font: 0.88 (12% smaller on Android)
+/// - Spacing: 0.80 (20% tighter on Android)
+/// - Icon: 0.88 (12% smaller on Android)
+/// - Radius: 0.80 (20% sharper on Android)
+/// - Button Height: 0.88 (12% smaller on Android, consistent with fonts/icons)
 
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -100,11 +101,11 @@ class PlatformSizing {
   /// Apply platform-adaptive scaling to font sizes
   ///
   /// iOS: Returns original size unchanged
-  /// Android: Returns size * 0.9 (10% smaller)
+  /// Android: Returns size * 0.88 (12% smaller)
   ///
   /// Example:
   /// ```dart
-  /// fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.4px Android
+  /// fontSize: PlatformSizing.fontSize(16),  // 16px iOS, 14.08px Android
   /// ```
   static double fontSize(double iosSize) {
     // Validation in debug mode
@@ -131,11 +132,11 @@ class PlatformSizing {
   /// Apply platform-adaptive scaling to spacing/padding values
   ///
   /// iOS: Returns original spacing unchanged
-  /// Android: Returns spacing * 0.85 (15% tighter)
+  /// Android: Returns spacing * 0.80 (20% tighter)
   ///
   /// Example:
   /// ```dart
-  /// padding: EdgeInsets.all(PlatformSizing.spacing(20)),  // 20px iOS, 17px Android
+  /// padding: EdgeInsets.all(PlatformSizing.spacing(20)),  // 20px iOS, 16px Android
   /// ```
   static double spacing(double iosSpacing) {
     // Validation in debug mode
@@ -160,11 +161,11 @@ class PlatformSizing {
   /// Apply platform-adaptive scaling to icon sizes
   ///
   /// iOS: Returns original size unchanged
-  /// Android: Returns size * 0.9 (10% smaller)
+  /// Android: Returns size * 0.88 (12% smaller)
   ///
   /// Example:
   /// ```dart
-  /// Icon(Icons.home, size: PlatformSizing.iconSize(24)),  // 24px iOS, 21.6px Android
+  /// Icon(Icons.home, size: PlatformSizing.iconSize(24)),  // 24px iOS, 21.12px Android
   /// ```
   static double iconSize(double iosSize) {
     // Validation in debug mode
@@ -191,11 +192,11 @@ class PlatformSizing {
   /// Apply platform-adaptive scaling to border radius
   ///
   /// iOS: Returns original radius unchanged
-  /// Android: Returns radius * 0.85 (15% sharper)
+  /// Android: Returns radius * 0.80 (20% sharper)
   ///
   /// Example:
   /// ```dart
-  /// borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),  // 12px iOS, 10.2px Android
+  /// borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),  // 12px iOS, 9.6px Android
   /// ```
   static double radius(double iosRadius) {
     // Validation in debug mode
@@ -215,17 +216,17 @@ class PlatformSizing {
 
   /// Apply platform-adaptive button heights
   ///
-  /// Uses specific Material Design button heights on Android:
-  /// - 36-40px → 36px (small)
-  /// - 41-48px → 44px (medium)
-  /// - 49-56px → 48px (large)
-  /// - 57+px → 52px (extra large)
+  /// Applies consistent 0.88 scale factor on Android (12% smaller):
+  /// - Small (36px iOS) → 31.68px Android
+  /// - Medium (44px iOS) → 38.72px Android
+  /// - Large (48px iOS) → 42.24px Android
+  /// - XL (56px iOS) → 49.28px Android
   ///
   /// iOS: Returns original height unchanged
   ///
   /// Example:
   /// ```dart
-  /// height: PlatformSizing.buttonHeight(56),  // 56px iOS, 48px Android
+  /// height: PlatformSizing.buttonHeight(56),  // 56px iOS, 49.28px Android
   /// ```
   static double buttonHeight(double iosHeight) {
     // Validation in debug mode
@@ -237,16 +238,16 @@ class PlatformSizing {
     // If feature disabled, return original height
     if (!_enableAdaptiveSizing) return iosHeight;
 
-    // iOS always uses original height
-    if (!isAndroid) return iosHeight;
+    // Apply consistent 0.88 scaling on Android (same as fonts and icons)
+    final result = isAndroid ? iosHeight * _fontScale : iosHeight;
 
-    // Android: Map to Material Design button heights
-    if (iosHeight <= 40) return 36;   // Small buttons
-    if (iosHeight <= 48) return 44;   // Medium buttons (Material 3 standard)
-    if (iosHeight <= 56) return 48;   // Large buttons
-    return 52;                        // Extra large buttons
+    // Validation: Button should be at least 32px for touch targets
+    assert(
+      result >= 32.0,
+      'Button height too small: ${result.toStringAsFixed(2)}px (from ${iosHeight}px). Minimum is 32px for accessibility.',
+    );
 
-    // Note: Ensures 44dp minimum touch target (accessibility requirement)
+    return result;
   }
 
   // =============================================================================
