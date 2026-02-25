@@ -120,6 +120,11 @@ class ResponsiveScrollableLayout extends StatelessWidget {
 }
 
 /// Utility to check if current viewport is desktop
+///
+/// Breakpoint set at 1200px to avoid tablet layout issues.
+/// - Mobile: < 600px (phones)
+/// - Tablet: 600px - 1200px (tablets in portrait/landscape)
+/// - Desktop: > 1200px (laptops, desktops, large monitors)
 bool isDesktopViewport(BuildContext context) {
-  return MediaQuery.of(context).size.width > 900;
+  return MediaQuery.of(context).size.width > 1200;
 }

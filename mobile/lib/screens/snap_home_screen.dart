@@ -94,7 +94,9 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print('HomeScreen: build() called');
+    if (kDebugMode) {
+      debugPrint('HomeScreen: build() called');
+    }
     return Scaffold(
       body: Stack(
         children: [
@@ -134,8 +136,8 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: _buildQuickTips(),
                         ),
-                        // Add extra padding for Android system navigation bar
-                        SizedBox(height: 24 + MediaQuery.of(context).viewPadding.bottom),
+                        // Bottom padding - Scaffold handles safe area automatically
+                        const SizedBox(height: 24),
                           ],
                         ),
                       ),

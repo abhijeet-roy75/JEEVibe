@@ -280,7 +280,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isWideScreen = screenWidth > 900;
+    final isWideScreen = screenWidth > 1200;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,

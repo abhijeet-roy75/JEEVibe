@@ -95,19 +95,25 @@ class AuthService extends ChangeNotifier {
       }
 
       // Generate new device ID based on device info
-      final deviceInfo = DeviceInfoPlugin();
       String newDeviceId;
 
-      if (Platform.isIOS) {
-        final iosInfo = await deviceInfo.iosInfo;
-        // Use identifierForVendor which persists across app reinstalls (until device reset)
-        newDeviceId = iosInfo.identifierForVendor ?? 'ios_${DateTime.now().millisecondsSinceEpoch}';
-      } else if (Platform.isAndroid) {
-        final androidInfo = await deviceInfo.androidInfo;
-        // Use androidId which persists across app reinstalls
-        newDeviceId = androidInfo.id;
+      // Web: Use timestamp-based ID
+      if (kIsWeb) {
+        newDeviceId = 'web_${DateTime.now().millisecondsSinceEpoch}';
       } else {
-        newDeviceId = 'unknown_${DateTime.now().millisecondsSinceEpoch}';
+        final deviceInfo = DeviceInfoPlugin();
+
+        if (Platform.isIOS) {
+          final iosInfo = await deviceInfo.iosInfo;
+          // Use identifierForVendor which persists across app reinstalls (until device reset)
+          newDeviceId = iosInfo.identifierForVendor ?? 'ios_${DateTime.now().millisecondsSinceEpoch}';
+        } else if (Platform.isAndroid) {
+          final androidInfo = await deviceInfo.androidInfo;
+          // Use androidId which persists across app reinstalls
+          newDeviceId = androidInfo.id;
+        } else {
+          newDeviceId = 'unknown_${DateTime.now().millisecondsSinceEpoch}';
+        }
       }
 
       // Store for future use

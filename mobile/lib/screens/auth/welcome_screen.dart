@@ -38,7 +38,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       backgroundColor: AppColors.backgroundWhite,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth > 900;
+          final isDesktop = constraints.maxWidth > 1200;
 
           return Center(
             child: Container(
