@@ -30,7 +30,7 @@ class DatabaseService {
       throw UnsupportedError('Offline database not supported on web');
     }
     if (_isar == null) {
-      throw Exception('DatabaseService not initialized. Call initialize() first.');
+      throw UnsupportedError('Offline mode unavailable (isar_flutter_libs not compatible with Android SDK 36). App is running in online-only mode.');
     }
     return _isar!;
   }
@@ -84,6 +84,20 @@ class DatabaseService {
 
       _initCompleter?.complete();
     } catch (e) {
+      // OFFLINE MODE DISABLED: isar_flutter_libs compatibility issue with Android SDK 36
+      // Gracefully degrade - mark as initialized but with null _isar
+      // This allows app to continue without offline features
+      if (e.toString().contains('libisar.so') || e.toString().contains('IsarCore library')) {
+        _isInitialized = true; // Mark as initialized to prevent retry loops
+        if (kDebugMode) {
+          print('DatabaseService: Offline mode unavailable (isar_flutter_libs not compatible with Android SDK 36)');
+          print('DatabaseService: App will run in online-only mode');
+        }
+        _initCompleter?.complete();
+        return;
+      }
+
+      // Other errors should still fail
       _initCompleter?.completeError(e);
       rethrow;
     } finally {
