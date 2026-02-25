@@ -406,6 +406,15 @@ app.use(errorHandler);
 
 // 404 handler (must be after all routes)
 app.use((req, res) => {
+  // Check if response already sent (prevent double response)
+  if (res.headersSent) {
+    logger.warn('404 handler called but response already sent', {
+      requestId: req.id,
+      path: req.path
+    });
+    return;
+  }
+
   logger.warn('404 - Route not found', {
     requestId: req.id,
     method: req.method,

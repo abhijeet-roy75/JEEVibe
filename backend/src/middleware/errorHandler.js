@@ -43,9 +43,22 @@ class ApiError extends Error {
  * Must be last middleware in the chain
  */
 function errorHandler(err, req, res, next) {
+  // CRITICAL: Check if response already sent
+  // If headers are already sent, we can't send another response
+  // This prevents "Cannot set headers after they are sent" errors
+  if (res.headersSent) {
+    logger.warn('Error handler called but response already sent', {
+      requestId: req.id || 'unknown',
+      path: req.path || 'unknown',
+      error: err.message
+    });
+    // Pass to default Express error handler
+    return next(err);
+  }
+
   // Ensure requestId exists (might not if error occurs before requestId middleware)
   const requestId = req.id || 'unknown';
-  
+
   // Log error with context - use console.error for Render.com visibility
   const errorInfo = {
     requestId,
@@ -61,10 +74,10 @@ function errorHandler(err, req, res, next) {
       name: err.name,
     },
   };
-  
+
   // Log to winston
   logger.error('Request error', errorInfo);
-  
+
   // Also log to console for Render.com (winston console transport might not capture all errors)
   console.error('ERROR:', JSON.stringify(errorInfo, null, 2));
 
