@@ -1119,7 +1119,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.borderGray,
                 foregroundColor: AppColors.textDark,
-                padding: EdgeInsets.symmetric(vertical: PlatformSizing.buttonHeight(16)),
+                padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                 ),
@@ -1141,7 +1141,7 @@ class _QuestionReviewScreenState extends State<QuestionReviewScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryPurple,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: PlatformSizing.buttonHeight(16)),
+                padding: EdgeInsets.symmetric(vertical: PlatformSizing.spacing(16)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(PlatformSizing.radius(12)),
                 ),
