@@ -14,6 +14,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../config/firebase');
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
 const { body, param, query, validationResult } = require('express-validator');

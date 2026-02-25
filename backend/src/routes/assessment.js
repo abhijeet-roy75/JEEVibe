@@ -15,6 +15,7 @@ const { getRandomizedAssessmentQuestions } = require('../services/stratifiedRand
 const { processInitialAssessment, validateAssessmentResponses } = require('../services/assessmentService');
 const { formatChapterKey } = require('../services/thetaCalculationService');
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const { validateQuestionId, validateStudentAnswer, validateTimeTaken } = require('../utils/validation');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
@@ -42,7 +43,7 @@ const resultsLimiter = rateLimit({
  * 
  * Authentication: Required (Bearer token in Authorization header)
  */
-router.get('/questions', authenticateUser, async (req, res, next) => {
+router.get('/questions', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     // Use authenticated userId from middleware
     const userId = req.userId;
@@ -109,7 +110,7 @@ router.get('/questions', authenticateUser, async (req, res, next) => {
  * 
  * Note: userId is extracted from authentication token, not from body
  */
-router.post('/submit', authenticateUser, async (req, res) => {
+router.post('/submit', authenticateUser, validateSessionMiddleware, async (req, res) => {
   // Declare responses outside try block to avoid ReferenceError in catch
   let responses;
   try {
@@ -355,7 +356,7 @@ router.post('/submit', authenticateUser, async (req, res) => {
  * User can only access their own results
  * Rate Limited: 30 requests per minute per user
  */
-router.get('/results/:userId', resultsLimiter, authenticateUser, async (req, res) => {
+router.get('/results/:userId', resultsLimiter, authenticateUser, validateSessionMiddleware, async (req, res) => {
   try {
     const { userId: paramUserId } = req.params;
     const authenticatedUserId = req.userId;

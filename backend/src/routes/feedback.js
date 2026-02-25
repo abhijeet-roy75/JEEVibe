@@ -10,6 +10,7 @@ const { body, validationResult } = require('express-validator');
 const router = express.Router();
 const { db, admin } = require('../config/firebase');
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
 const { sendFeedbackEmail } = require('../services/emailService');
@@ -158,7 +159,7 @@ router.post(
  *
  * Authentication: Required
  */
-router.get('/', authenticateUser, async (req, res, next) => {
+router.get('/', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const { limit = 50, status, rating } = req.query;
     const limitNum = Math.min(parseInt(limit) || 50, 200);

@@ -13,6 +13,7 @@ const express = require('express');
 const router = express.Router();
 const { db, admin } = require('../config/firebase');
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
@@ -131,7 +132,7 @@ const validateSessionId = [
  *
  * Authentication: Required
  */
-router.post('/generate', authenticateUser, validateGenerate, async (req, res, next) => {
+router.post('/generate', authenticateUser, validateSessionMiddleware, validateGenerate, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { chapter_key, question_count } = req.body;
@@ -373,7 +374,7 @@ router.post('/generate', authenticateUser, validateGenerate, async (req, res, ne
  *
  * Authentication: Required
  */
-router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req, res, next) => {
+router.post('/submit-answer', authenticateUser, validateSessionMiddleware, validateSubmitAnswer, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { session_id, question_id, student_answer, time_taken_seconds = 0 } = req.body;
@@ -857,7 +858,7 @@ function aggregateChapterPracticeStats(existingStats, sessionData, sessionResult
  *
  * Authentication: Required
  */
-router.post('/complete', authenticateUser, validateSessionId, async (req, res, next) => {
+router.post('/complete', authenticateUser, validateSessionMiddleware, validateSessionId, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { session_id } = req.body;
@@ -1135,7 +1136,7 @@ router.post('/complete', authenticateUser, validateSessionId, async (req, res, n
  *
  * Authentication: Required
  */
-router.get('/session/:sessionId', authenticateUser, async (req, res, next) => {
+router.get('/session/:sessionId', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { sessionId } = req.params;
@@ -1175,7 +1176,7 @@ router.get('/session/:sessionId', authenticateUser, async (req, res, next) => {
  *
  * Authentication: Required
  */
-router.get('/active', authenticateUser, async (req, res, next) => {
+router.get('/active', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { chapter_key } = req.query;
@@ -1217,7 +1218,7 @@ router.get('/active', authenticateUser, async (req, res, next) => {
  *
  * Authentication: Required
  */
-router.get('/stats', authenticateUser, async (req, res, next) => {
+router.get('/stats', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { chapter_key } = req.query;
@@ -1320,7 +1321,7 @@ function formatTime(seconds) {
  *
  * Authentication: Required
  */
-router.get('/history', authenticateUser, async (req, res, next) => {
+router.get('/history', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const limit = Math.min(parseInt(req.query.limit) || 20, 50);

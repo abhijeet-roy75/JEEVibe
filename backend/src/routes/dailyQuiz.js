@@ -13,6 +13,7 @@ const express = require('express');
 const router = express.Router();
 const { db, admin } = require('../config/firebase');
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
@@ -101,7 +102,7 @@ const validateSubmitAnswer = [
  * 
  * Authentication: Required
  */
-router.get('/generate', authenticateUser, async (req, res, next) => {
+router.get('/generate', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
 
@@ -398,7 +399,7 @@ router.get('/generate', authenticateUser, async (req, res, next) => {
  * Body: { quiz_id: string }
  * Authentication: Required
  */
-router.post('/start', authenticateUser, validateQuizId, async (req, res, next) => {
+router.post('/start', authenticateUser, validateSessionMiddleware, validateQuizId, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { quiz_id } = req.body;
@@ -463,7 +464,7 @@ router.post('/start', authenticateUser, validateQuizId, async (req, res, next) =
  * }
  * Authentication: Required
  */
-router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req, res, next) => {
+router.post('/submit-answer', authenticateUser, validateSessionMiddleware, validateSubmitAnswer, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { quiz_id, question_id, student_answer, time_taken_seconds } = req.body;
@@ -497,7 +498,7 @@ router.post('/submit-answer', authenticateUser, validateSubmitAnswer, async (req
  * Body: { quiz_id: string }
  * Authentication: Required
  */
-router.post('/complete', authenticateUser, validateQuizId, async (req, res, next) => {
+router.post('/complete', authenticateUser, validateSessionMiddleware, validateQuizId, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { quiz_id } = req.body;
@@ -988,7 +989,7 @@ router.post('/complete', authenticateUser, validateQuizId, async (req, res, next
  * Get active quiz for user (if any)
  * Authentication: Required
  */
-router.get('/active', authenticateUser, async (req, res, next) => {
+router.get('/active', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
 
@@ -1067,7 +1068,7 @@ router.get('/active', authenticateUser, async (req, res, next) => {
  * 
  * Authentication: Required
  */
-router.get('/progress', authenticateUser, async (req, res, next) => {
+router.get('/progress', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
 
@@ -1118,7 +1119,7 @@ router.get('/progress', authenticateUser, async (req, res, next) => {
  * 
  * Authentication: Required
  */
-router.get('/stats', authenticateUser, async (req, res, next) => {
+router.get('/stats', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const days = parseInt(req.query.days) || 30;
@@ -1172,7 +1173,7 @@ router.get('/stats', authenticateUser, async (req, res, next) => {
  * 
  * Authentication: Required
  */
-router.get('/history', authenticateUser, async (req, res, next) => {
+router.get('/history', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const limit = Math.min(parseInt(req.query.limit) || 20, 50);
@@ -1301,7 +1302,7 @@ router.get('/history', authenticateUser, async (req, res, next) => {
  * 
  * Authentication: Required
  */
-router.get('/result/:quiz_id', authenticateUser, async (req, res, next) => {
+router.get('/result/:quiz_id', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { quiz_id } = req.params;
@@ -1465,7 +1466,7 @@ router.get('/result/:quiz_id', authenticateUser, async (req, res, next) => {
  * 
  * Authentication: Required
  */
-router.get('/question/:question_id', authenticateUser, async (req, res, next) => {
+router.get('/question/:question_id', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     // Validate question_id parameter
     function validateQuestionId(questionId) {
@@ -1554,7 +1555,7 @@ router.get('/question/:question_id', authenticateUser, async (req, res, next) =>
  * 
  * Authentication: Required
  */
-router.get('/summary', authenticateUser, async (req, res, next) => {
+router.get('/summary', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const today = new Date();
@@ -1688,7 +1689,7 @@ router.get('/summary', authenticateUser, async (req, res, next) => {
  * 
  * Authentication: Required
  */
-router.get('/chapter-progress/:chapter_key', authenticateUser, async (req, res, next) => {
+router.get('/chapter-progress/:chapter_key', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
 
@@ -1814,7 +1815,7 @@ router.get('/chapter-progress/:chapter_key', authenticateUser, async (req, res, 
  *
  * Authentication: Required
  */
-router.get('/theta-history', authenticateUser, async (req, res, next) => {
+router.get('/theta-history', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const limit = Math.min(parseInt(req.query.limit) || 30, 100);
@@ -1870,7 +1871,7 @@ router.get('/theta-history', authenticateUser, async (req, res, next) => {
  *
  * Authentication: Required
  */
-router.get('/theta-progression', authenticateUser, async (req, res, next) => {
+router.get('/theta-progression', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const type = req.query.type || 'overall';
@@ -1925,7 +1926,7 @@ router.get('/theta-progression', authenticateUser, async (req, res, next) => {
  *
  * Authentication: Required
  */
-router.get('/theta-snapshot/:quiz_id', authenticateUser, async (req, res, next) => {
+router.get('/theta-snapshot/:quiz_id', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { quiz_id } = req.params;

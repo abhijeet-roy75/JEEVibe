@@ -15,6 +15,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const logger = require('../utils/logger');
 const { db } = require('../config/firebase');
 
@@ -44,7 +45,7 @@ const { retryFirestoreOperation } = require('../utils/firestoreRetry');
  *
  * Authentication: Required
  */
-router.get('/dashboard', authenticateUser, async (req, res, next) => {
+router.get('/dashboard', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
 
@@ -135,7 +136,7 @@ router.get('/dashboard', authenticateUser, async (req, res, next) => {
  *
  * Authentication: Required
  */
-router.get('/overview', authenticateUser, async (req, res, next) => {
+router.get('/overview', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
 
@@ -272,7 +273,7 @@ router.get('/overview', authenticateUser, async (req, res, next) => {
  *
  * @param {string} subject - physics, chemistry, or maths
  */
-router.get('/mastery/:subject', authenticateUser, async (req, res, next) => {
+router.get('/mastery/:subject', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { subject } = req.params;
@@ -320,7 +321,7 @@ router.get('/mastery/:subject', authenticateUser, async (req, res, next) => {
  *
  * @param {string} subject - physics, chemistry, or maths/mathematics
  */
-router.get('/chapters-by-subject/:subject', authenticateUser, async (req, res, next) => {
+router.get('/chapters-by-subject/:subject', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { subject } = req.params;
@@ -371,7 +372,7 @@ router.get('/chapters-by-subject/:subject', authenticateUser, async (req, res, n
  * - chapter (optional): chapter_key - filter to specific chapter
  * - limit (optional): number of data points (default: 30, max: 100)
  */
-router.get('/mastery-timeline', authenticateUser, async (req, res, next) => {
+router.get('/mastery-timeline', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { subject, chapter, limit: limitStr } = req.query;
@@ -461,7 +462,7 @@ router.get('/mastery-timeline', authenticateUser, async (req, res, next) => {
  * - subject (required): physics, chemistry, maths - filter to specific subject
  * - days (optional): number of days to look back (default: 30, max: 90)
  */
-router.get('/accuracy-timeline', authenticateUser, async (req, res, next) => {
+router.get('/accuracy-timeline', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { subject, days: daysStr } = req.query;
@@ -531,7 +532,7 @@ router.get('/accuracy-timeline', authenticateUser, async (req, res, next) => {
  * Query params:
  * - sort (optional): 'percentile' (default), 'alphabetical', 'status'
  */
-router.get('/all-chapters', authenticateUser, async (req, res, next) => {
+router.get('/all-chapters', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const { sort = 'percentile' } = req.query;
@@ -627,7 +628,7 @@ router.get('/all-chapters', authenticateUser, async (req, res, next) => {
  *
  * Authentication: Required
  */
-router.get('/weekly-activity', authenticateUser, async (req, res, next) => {
+router.get('/weekly-activity', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
 

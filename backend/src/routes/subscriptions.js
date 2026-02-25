@@ -12,6 +12,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const { adminLimiter } = require('../middleware/rateLimiter');
 const logger = require('../utils/logger');
 const { db, admin } = require('../config/firebase');
@@ -68,7 +69,7 @@ async function isAdmin(userId) {
  *
  * Authentication: Required
  */
-router.get('/status', authenticateUser, async (req, res, next) => {
+router.get('/status', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
 
@@ -246,7 +247,7 @@ router.get('/plans', async (req, res, next) => {
  *
  * Authentication: Required
  */
-router.get('/usage', authenticateUser, async (req, res, next) => {
+router.get('/usage', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     const usage = await getAllUsage(userId);
@@ -282,7 +283,7 @@ router.get('/usage', authenticateUser, async (req, res, next) => {
  *   reason: string
  * }
  */
-router.post('/admin/grant-override', adminLimiter, authenticateUser, async (req, res, next) => {
+router.post('/admin/grant-override', adminLimiter, authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const adminUserId = req.userId;
     const { user_id, type, tier_id, duration_days, reason } = req.body;
@@ -378,7 +379,7 @@ router.post('/admin/grant-override', adminLimiter, authenticateUser, async (req,
  *
  * Body: { user_id: string }
  */
-router.post('/admin/revoke-override', adminLimiter, authenticateUser, async (req, res, next) => {
+router.post('/admin/revoke-override', adminLimiter, authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const adminUserId = req.userId;
     const { user_id } = req.body;

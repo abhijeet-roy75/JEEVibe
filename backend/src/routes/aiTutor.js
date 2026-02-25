@@ -6,6 +6,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const { requireFeature, checkUsageLimit } = require('../middleware/featureGate');
 const { ApiError } = require('../middleware/errorHandler');
 const logger = require('../utils/logger');

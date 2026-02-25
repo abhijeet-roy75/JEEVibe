@@ -14,6 +14,7 @@ const aiService = AI_PROVIDER === 'claude'
 const { solveQuestionFromImage, generateFollowUpQuestions, generateSingleFollowUpQuestion } = aiService;
 console.log(`[Snap & Solve] Using AI provider: ${AI_PROVIDER}`);
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
 const { storage, db, admin } = require('../config/firebase');
@@ -139,7 +140,7 @@ const upload = multer({
  * 
  * Authentication: Required (Bearer token in Authorization header)
  */
-router.post('/solve', authenticateUser, upload.single('image'), async (req, res, next) => {
+router.post('/solve', authenticateUser, validateSessionMiddleware, upload.single('image'), async (req, res, next) => {
   try {
     const userId = req.userId;
 
@@ -320,6 +321,7 @@ router.post('/solve', authenticateUser, upload.single('image'), async (req, res,
  */
 router.post('/generate-practice-questions',
   authenticateUser,
+  validateSessionMiddleware,
   [
     body('recognizedQuestion').notEmpty().withMessage('recognizedQuestion is required'),
     body('solution').notEmpty().withMessage('solution is required'),
@@ -381,6 +383,7 @@ router.post('/generate-practice-questions',
  */
 router.post('/generate-single-question',
   authenticateUser,
+  validateSessionMiddleware,
   [
     body('recognizedQuestion').notEmpty().withMessage('recognizedQuestion is required'),
     body('solution').notEmpty().withMessage('solution is required'),
@@ -554,6 +557,7 @@ function transformDatabaseQuestionToFollowUp(dbQuestion) {
  */
 router.post('/snap-practice/questions',
   authenticateUser,
+  validateSessionMiddleware,
   [
     body('subject').isIn(VALID_SUBJECTS).withMessage(`subject must be one of: ${VALID_SUBJECTS.join(', ')}`),
     body('topic').notEmpty().withMessage('topic is required'),
@@ -835,6 +839,7 @@ router.post('/snap-practice/questions',
  */
 router.post('/snap-practice/complete',
   authenticateUser,
+  validateSessionMiddleware,
   [
     body('subject').isIn(VALID_SUBJECTS).withMessage('Invalid subject'),
     body('topic').notEmpty().withMessage('Topic is required'),

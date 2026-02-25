@@ -14,6 +14,7 @@ const { body, validationResult } = require('express-validator');
 const router = express.Router();
 const { db, admin } = require('../config/firebase');
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
 const { ApiError } = require('../middleware/errorHandler');
@@ -99,8 +100,9 @@ router.get('/profile', authenticateUser, async (req, res, next) => {
  * 
  * Body: User profile object (all fields optional except uid which comes from token)
  */
-router.post('/profile', 
+router.post('/profile',
   authenticateUser,
+  validateSessionMiddleware,
   [
     body('firstName').optional().isLength({ max: 100 }).trim().escape(),
     body('lastName').optional().isLength({ max: 100 }).trim().escape(),
@@ -285,7 +287,7 @@ router.post('/profile',
  * 
  * Authentication: Required (Bearer token in Authorization header)
  */
-router.get('/profile/exists', authenticateUser, async (req, res, next) => {
+router.get('/profile/exists', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
 
@@ -315,7 +317,7 @@ router.get('/profile/exists', authenticateUser, async (req, res, next) => {
  * 
  * Authentication: Required (Bearer token in Authorization header)
  */
-router.patch('/profile/last-active', authenticateUser, async (req, res, next) => {
+router.patch('/profile/last-active', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
 
@@ -407,7 +409,7 @@ router.post('/fcm-token', authenticateUser, async (req, res, next) => {
  *
  * Authentication: Required (Bearer token in Authorization header)
  */
-router.patch('/profile/complete', authenticateUser, async (req, res, next) => {
+router.patch('/profile/complete', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
   try {
     const userId = req.userId;
     

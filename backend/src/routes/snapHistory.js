@@ -4,6 +4,7 @@
 
 const express = require('express');
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const { getDailyUsage, getSnapHistory } = require('../services/snapHistoryService');
 const { getEffectiveTier } = require('../services/subscriptionService');
 const { getTierLimits } = require('../services/tierConfigService');
@@ -15,7 +16,7 @@ const router = express.Router();
  * GET /api/snap-limit
  * Returns user's daily snap usage and limit
  */
-router.get('/snap-limit', authenticateUser, async (req, res, next) => {
+router.get('/snap-limit', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
     try {
         const userId = req.userId;
         const usage = await getDailyUsage(userId);
@@ -35,7 +36,7 @@ router.get('/snap-limit', authenticateUser, async (req, res, next) => {
  * Returns user's snap history with pagination
  * History is limited based on tier: Free=7 days, Pro=30 days, Ultra=unlimited
  */
-router.get('/snap-history', authenticateUser, async (req, res, next) => {
+router.get('/snap-history', authenticateUser, validateSessionMiddleware, async (req, res, next) => {
     try {
         const userId = req.userId;
         const limit = parseInt(req.query.limit) || 20;

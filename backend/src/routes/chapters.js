@@ -8,6 +8,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const { getUnlockedChapters, isChapterUnlocked, getFullChapterOrder, TOTAL_TIMELINE_MONTHS } = require('../services/chapterUnlockService');
 const logger = require('../utils/logger');
 
@@ -15,7 +16,7 @@ const logger = require('../utils/logger');
  * GET /api/chapters/unlocked
  * Get all unlocked chapters for the authenticated user
  */
-router.get('/unlocked', authenticateUser, async (req, res) => {
+router.get('/unlocked', authenticateUser, validateSessionMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
     const result = await getUnlockedChapters(userId);
@@ -46,7 +47,7 @@ router.get('/unlocked', authenticateUser, async (req, res) => {
  * GET /api/chapters/:chapterKey/unlock-status
  * Check if a specific chapter is unlocked
  */
-router.get('/:chapterKey/unlock-status', authenticateUser, async (req, res) => {
+router.get('/:chapterKey/unlock-status', authenticateUser, validateSessionMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
     const { chapterKey } = req.params;

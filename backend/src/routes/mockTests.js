@@ -19,6 +19,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateUser } = require('../middleware/auth');
+const { validateSessionMiddleware } = require('../middleware/sessionValidator');
 const { body, param, validationResult } = require('express-validator');
 const logger = require('../utils/logger');
 
@@ -90,7 +91,7 @@ const validateSaveAnswer = [
 // List available mock test templates
 // ============================================================================
 
-router.get('/available', authenticateUser, async (req, res) => {
+router.get('/available', authenticateUser, validateSessionMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
 
@@ -155,7 +156,7 @@ router.get('/available', authenticateUser, async (req, res) => {
 // Get active (in-progress) mock test with questions for resuming
 // ============================================================================
 
-router.get('/active', authenticateUser, async (req, res) => {
+router.get('/active', authenticateUser, validateSessionMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
 
@@ -199,7 +200,7 @@ router.get('/active', authenticateUser, async (req, res) => {
 // Start a new mock test
 // ============================================================================
 
-router.post('/start', authenticateUser, async (req, res) => {
+router.post('/start', authenticateUser, validateSessionMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
     const { template_id } = req.body;
@@ -277,7 +278,7 @@ router.post('/start', authenticateUser, async (req, res) => {
 // Save answer for a question (real-time sync)
 // ============================================================================
 
-router.post('/save-answer', authenticateUser, validateSaveAnswer, async (req, res) => {
+router.post('/save-answer', authenticateUser, validateSessionMiddleware, validateSaveAnswer, async (req, res) => {
   try {
     const userId = req.userId;
     const {
@@ -322,7 +323,7 @@ router.post('/save-answer', authenticateUser, validateSaveAnswer, async (req, re
 // Clear answer for a question
 // ============================================================================
 
-router.post('/clear-answer', authenticateUser, async (req, res) => {
+router.post('/clear-answer', authenticateUser, validateSessionMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
     const { test_id, question_number } = req.body;
@@ -359,7 +360,7 @@ router.post('/clear-answer', authenticateUser, async (req, res) => {
 // Submit mock test and calculate results
 // ============================================================================
 
-router.post('/submit', authenticateUser, validateTestId, async (req, res) => {
+router.post('/submit', authenticateUser, validateSessionMiddleware, validateTestId, async (req, res) => {
   try {
     const userId = req.userId;
     const { test_id, final_responses = {} } = req.body;
@@ -407,7 +408,7 @@ router.post('/submit', authenticateUser, validateTestId, async (req, res) => {
 // Abandon an in-progress test
 // ============================================================================
 
-router.post('/abandon', authenticateUser, validateTestId, async (req, res) => {
+router.post('/abandon', authenticateUser, validateSessionMiddleware, validateTestId, async (req, res) => {
   try {
     const userId = req.userId;
     const { test_id } = req.body;
@@ -442,7 +443,7 @@ router.post('/abandon', authenticateUser, validateTestId, async (req, res) => {
 // Get user's mock test history
 // ============================================================================
 
-router.get('/history', authenticateUser, async (req, res) => {
+router.get('/history', authenticateUser, validateSessionMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
 
@@ -493,7 +494,7 @@ router.get('/history', authenticateUser, async (req, res) => {
 // Get detailed results for a completed test (for review)
 // ============================================================================
 
-router.get('/:testId/results', authenticateUser, async (req, res) => {
+router.get('/:testId/results', authenticateUser, validateSessionMiddleware, async (req, res) => {
   try {
     const userId = req.userId;
     const { testId } = req.params;

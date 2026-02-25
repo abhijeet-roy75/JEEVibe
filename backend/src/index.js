@@ -243,7 +243,7 @@ app.use('/api/assessment/submit', strictLimiter);
 // - /api/cron/* (scheduled tasks)
 // - /api/share/* (public routes)
 
-logger.warn('⚠️  Session validation DISABLED temporarily - breaks login flow');
+logger.info('✅ Session validation ENABLED - single-device enforcement active');
 
 // API Routes
 app.use('/api', solveRouter);
