@@ -307,6 +307,23 @@ router.get('/generate', authenticateUser, validateSessionMiddleware, async (req,
       if (existingQuizDoc.exists) {
         savedQuizData = existingQuizDoc.data();
       } else {
+        // ROLLBACK: Transaction failed and quiz not created, restore usage slot
+        logger.error('Quiz save transaction failed, rolling back usage reservation', {
+          userId,
+          error: error.message,
+          requestId: req.id
+        });
+
+        if (!usageReservation.is_unlimited) {
+          await decrementUsage(userId, 'daily_quiz').catch(rollbackError => {
+            logger.error('Usage rollback failed after transaction error', {
+              userId,
+              error: rollbackError.message,
+              requestId: req.id
+            });
+          });
+        }
+
         // Re-throw if it's not a transaction conflict
         throw error;
       }
