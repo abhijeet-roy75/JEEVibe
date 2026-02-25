@@ -170,8 +170,12 @@ const analyticsLimiter = rateLimit({
     if (req.userId) {
       return 200;
     }
-    // Anonymous/unauthenticated: Lower limit
-    return 40;
+    // Anonymous/unauthenticated: Increased limit (100 requests per 15 min)
+    // Higher than general API limiter to account for:
+    // - Render.com internal health checks
+    // - Session expiration with frontend still polling
+    // - These requests will fail at authenticateUser middleware anyway (safe)
+    return 100;
   },
   message: (req) => ({
     success: false,
@@ -185,6 +189,7 @@ const analyticsLimiter = rateLimit({
   skipSuccessfulRequests: false,
   skipFailedRequests: false,
   handler: (req, res, next, options) => {
+    // Enhanced logging to identify source of rate limit hits
     logger.warn('Analytics rate limit exceeded', {
       requestId: req.id || 'unknown',
       userId: req.userId || null,
@@ -192,6 +197,14 @@ const analyticsLimiter = rateLimit({
       path: req.path,
       method: req.method,
       key: getUserKey(req),
+      // Additional diagnostic info
+      userAgent: req.get('user-agent') || 'unknown',
+      referer: req.get('referer') || 'none',
+      origin: req.get('origin') || 'none',
+      forwardedFor: req.get('x-forwarded-for') || 'none',
+      // Help identify if it's a health check or bot
+      isLikelyHealthCheck: !req.get('user-agent') || req.get('user-agent').includes('health'),
+      isLikelyBot: req.get('user-agent') ? req.get('user-agent').toLowerCase().includes('bot') : false,
     });
     const message = typeof options.message === 'function' ? options.message(req) : options.message;
     res.status(options.statusCode).json(message);
