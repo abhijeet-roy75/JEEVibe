@@ -14,15 +14,54 @@ const rateLimit = require('express-rate-limit');
 const logger = require('../utils/logger');
 
 /**
+ * Exempt routes from userId validation warnings
+ * These routes are public or don't require authentication
+ */
+const VALIDATION_EXEMPT_ROUTES = [
+  '/api/health',
+  '/api/cron/',
+  '/api/share/',
+  '/api/auth/session',
+];
+
+/**
+ * Check if a route should be validated for userId
+ */
+function shouldValidateUserId(path) {
+  return !VALIDATION_EXEMPT_ROUTES.some(exemptPath => {
+    if (exemptPath.endsWith('/')) {
+      return path.startsWith(exemptPath);
+    }
+    return path === exemptPath;
+  });
+}
+
+/**
  * Get rate limit key: userId if authenticated, else IP address
  * This prevents:
  * 1. Single user abusing API from multiple devices/IPs
  * 2. Legitimate users in same network (NAT) from being grouped together
+ *
+ * VALIDATION: Logs warning if authenticated route lacks userId (indicates
+ * middleware order issue or conditionalAuth failure)
  */
 const getUserKey = (req) => {
   if (req.userId) {
     return `user:${req.userId}`;
   }
+
+  // Validation: Warn if this looks like an authenticated route without userId
+  if (shouldValidateUserId(req.path) && req.headers.authorization) {
+    logger.warn('⚠️  VALIDATION: Authenticated request missing userId in rate limiter', {
+      requestId: req.id || 'unknown',
+      path: req.path,
+      method: req.method,
+      ip: req.ip,
+      hasAuthHeader: true,
+      authHeaderPrefix: req.headers.authorization?.substring(0, 20) + '...',
+    });
+  }
+
   return `ip:${req.ip}`;
 };
 

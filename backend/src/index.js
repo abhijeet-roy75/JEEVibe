@@ -199,12 +199,25 @@ app.use((req, res, next) => {
 app.get('/api/health', require('./routes/health'));
 
 // ========================================
-// RATE LIMITING
+// CONDITIONAL AUTHENTICATION (Before Rate Limiting)
+// ========================================
+
+// CRITICAL: This must run BEFORE rate limiting so req.userId is available
+// for user-based rate limit keys. It attempts authentication but doesn't block
+// unauthenticated requests (protected routes will block them later via authenticateUser).
+const { conditionalAuth } = require('./middleware/conditionalAuth');
+app.use('/api', conditionalAuth);
+
+logger.info('✅ Conditional auth middleware enabled - user-based rate limiting active');
+
+// ========================================
+// RATE LIMITING (After Conditional Auth)
 // ========================================
 
 const { apiLimiter, strictLimiter, imageProcessingLimiter } = require('./middleware/rateLimiter');
 
-// Apply general rate limiting to all API routes (after health check)
+// Apply general rate limiting to all API routes
+// Now req.userId is set (if authenticated), so rate limiter can use user-based keys
 app.use('/api', apiLimiter);
 
 // Apply strict rate limiting to expensive operations
