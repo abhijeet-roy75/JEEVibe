@@ -646,19 +646,31 @@ class _DailyQuizReviewScreenState extends State<DailyQuizReviewScreen> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      if (!isCorrect) ...[
-                        Text(
-                          'Your answer: ${studentAnswer.toUpperCase()}',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.errorRed,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      Text(
-                        'Correct: ${correctAnswer.toUpperCase()}',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.successGreen,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            if (!isCorrect) ...[
+                              Flexible(
+                                child: Text(
+                                  'Your answer: ${studentAnswer.toUpperCase()}',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: AppColors.errorRed,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Flexible(
+                              child: Text(
+                                'Correct: ${correctAnswer.toUpperCase()}',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.successGreen,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
