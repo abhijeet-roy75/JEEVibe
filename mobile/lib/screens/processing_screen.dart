@@ -77,25 +77,32 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
 
   Widget _buildHeader() {
     return AppHeader(
-      centerContent: Container(
-        width: 40, // Further reduced to match other screens
-        height: 40,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.auto_awesome,
-          color: AppColors.primaryPurple,
-          size: 20, // Further reduced
-        ),
-      ),
-      title: Text(
-        'Hold Tight!',
-        style: AppTextStyles.headerWhite.copyWith(fontSize: 18), // Reduced from 20
-        textAlign: TextAlign.center,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.auto_awesome,
+              color: AppColors.primaryPurple,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Hold Tight!',
+            style: AppTextStyles.headerWhite.copyWith(fontSize: 18),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
       subtitle: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -104,7 +111,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
           Flexible(
             child: Text(
               'Priya Ma\'am is working on it',
-              style: AppTextStyles.subtitleWhite.copyWith(fontSize: 13), // Reduced from 15
+              style: AppTextStyles.subtitleWhite.copyWith(fontSize: 13),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -114,8 +121,8 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
           _buildAnimatedDots(),
         ],
       ),
-      topPadding: 20, // Reduced from default 24 to match photo review screen
-      bottomPadding: 12, // Reduced from default 16 to match photo review screen
+      topPadding: 20,
+      bottomPadding: 12,
     );
   }
 

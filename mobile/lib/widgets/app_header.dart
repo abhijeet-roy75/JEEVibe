@@ -122,6 +122,21 @@ class AppHeaderWithIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Build icon widget
+    final iconWidget = Container(
+      width: iconSize,
+      height: iconSize,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        icon,
+        color: iconColor,
+        size: iconSize * 0.5, // Icon is 50% of container
+      ),
+    );
+
     return AppHeader(
       leading: onClose != null
           ? IconButton(
@@ -129,29 +144,25 @@ class AppHeaderWithIcon extends StatelessWidget {
               onPressed: onClose,
             )
           : null,
-      centerContent: customCenterContent ??
-          Container(
-            width: iconSize,
-            height: iconSize,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: iconSize * 0.5, // Icon is 50% of container
-            ),
-          ),
       title: title.isNotEmpty
-          ? Text(
-              title,
-              style: AppTextStyles.headerWhite.copyWith(fontSize: PlatformSizing.fontSize(20)),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                customCenterContent ?? iconWidget,
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Text(
+                    title,
+                    style: AppTextStyles.headerWhite.copyWith(fontSize: PlatformSizing.fontSize(20)),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             )
-          : null,
+          : (customCenterContent ?? iconWidget),
       subtitle: subtitle != null
           ? Padding(
               padding: EdgeInsets.symmetric(horizontal: PlatformSizing.spacing(16)),

@@ -110,10 +110,9 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
               // Content - Constrained on desktop
               Expanded(
                 child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: AppColors.backgroundGradient,
-                  ),
-                  child: Center(
+                  color: AppColors.backgroundWhite,
+                  child: Align(
+                    alignment: Alignment.topCenter,
                     child: Container(
                       constraints: BoxConstraints(
                         maxWidth: isDesktopViewport(context) ? 900 : double.infinity,
@@ -122,7 +121,7 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
                         physics: const AlwaysScrollableScrollPhysics(),
                         child: Column(
                           children: [
-                        const SizedBox(height: 24),
+                        SizedBox(height: PlatformSizing.spacing(16)), // 16px iOS, 12.8px Android
                         _buildActionButtons(),
                         const SizedBox(height: 24),
                         Padding(
@@ -137,7 +136,7 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
                           child: _buildQuickTips(),
                         ),
                         // Bottom padding - Scaffold handles safe area automatically
-                        const SizedBox(height: 24),
+                        SizedBox(height: PlatformSizing.spacing(16)), // 16px iOS, 12.8px Android (was 24px)
                           ],
                         ),
                       ),
@@ -195,7 +194,7 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
                   child: Column(
                     children: [
                       // Top row: Back button | Title with icon | Remaining counter
@@ -276,7 +275,7 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                       // Subtitle
                       Text(
                         'Point your camera at any JEE question',

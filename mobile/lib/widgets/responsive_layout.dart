@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 /// Responsive layout wrapper for web/desktop
 ///
 /// Provides consistent responsive behavior across all screens:
-/// - Constrains content width on desktop (>900px)
+/// - Constrains content width on desktop (>1200px)
 /// - Centers content horizontally
-/// - Maintains full width on mobile
+/// - Maintains full width on mobile/tablet
 /// - Handles safe area
 ///
 /// Usage:
@@ -33,7 +33,7 @@ class ResponsiveLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth > 900;
+        final isDesktop = constraints.maxWidth > 1200;
 
         Widget content = Center(
           child: Container(
@@ -93,7 +93,7 @@ class ResponsiveScrollableLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth > 900;
+        final isDesktop = constraints.maxWidth > 1200;
 
         Widget content = Center(
           child: Container(

@@ -312,9 +312,11 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
               Form(
                 key: _formKey,
                 child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                    vertical: PlatformSizing.spacing(4), // 4→4px Android (min)
+                  padding: EdgeInsets.only(
+                    left: AppSpacing.lg,
+                    right: AppSpacing.lg,
+                    top: PlatformSizing.spacing(12), // 12→9.6px Android
+                    bottom: PlatformSizing.spacing(12), // 12→9.6px Android
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -336,7 +338,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     selectorConfig: const SelectorConfig(
                       selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
                       setSelectorButtonAsPrefixIcon: true,
-                      leadingPadding: 12,
+                      leadingPadding: 0, // Remove extra leading padding to fix alignment
                       showFlags: true,
                       useEmoji: false,
                     ),
@@ -345,14 +347,23 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     autoValidateMode: AutovalidateMode.onUserInteraction,
                     selectorTextStyle: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textDark, // Normal color for selectable country
+                      color: AppColors.textDark,
                     ),
-                    textStyle: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                    textStyle: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                     initialValue: _number,
                     textFieldController: _controller,
                     formatInput: true,
                     keyboardType: TextInputType.phone,
                     inputBorder: InputBorder.none,
+                    inputDecoration: InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: PlatformSizing.spacing(4), // Minimal vertical padding
+                      ),
+                      isDense: true, // Compact the field
+                    ),
                     validator: _validatePhoneNumber,
                     onSaved: (PhoneNumber number) {
                       _phoneNumber = number.phoneNumber;
