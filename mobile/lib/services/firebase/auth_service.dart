@@ -308,13 +308,31 @@ class AuthService extends ChangeNotifier {
     if (user == null) return null;
 
     try {
-      // On web, always force refresh to work around token staleness issues
-      // Web Firebase Auth has known issues with cached tokens becoming invalid
-      final shouldForceRefresh = kIsWeb || forceRefresh;
-      return await user.getIdToken(shouldForceRefresh);
+      // On web, Firebase Auth has token staleness issues immediately after sign-in
+      // We need to reload the user to sync the auth state before fetching token
+      if (kIsWeb) {
+        try {
+          // Reload user to ensure auth state is synced with Firebase servers
+          await user.reload();
+          // Get the refreshed current user (in case the reload changed state)
+          final refreshedUser = _auth.currentUser;
+          if (refreshedUser == null) return null;
+
+          // Always force refresh on web to get a fresh token
+          return await refreshedUser.getIdToken(true);
+        } catch (e) {
+          debugPrint('Error reloading user on web: $e');
+          // Fallback: try getting token without reload
+          return await user.getIdToken(true);
+        }
+      }
+
+      // On mobile platforms, use standard token fetch with optional force refresh
+      return await user.getIdToken(forceRefresh);
     } catch (e) {
-      // If token fetch fails, try force refresh once
-      if (!forceRefresh) {
+      debugPrint('Error getting ID token: $e');
+      // If token fetch fails and we haven't tried force refresh yet, try once more
+      if (!forceRefresh && !kIsWeb) {
         try {
           return await user.getIdToken(true);
         } catch (_) {
