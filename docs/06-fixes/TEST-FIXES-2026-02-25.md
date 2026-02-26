@@ -195,3 +195,53 @@ For Firebase integration:
 - Monitor test execution time (currently ~4s, acceptable)
 - Consider adding integration test for rate limiter edge cases
 - Document Firebase test cleanup requirements for new tests
+
+---
+
+## Update: GitHub Actions CI Fix (Feb 26, 2026)
+
+### Issue
+After fixing local tests, GitHub Actions still failed with:
+```
+Firebase configuration not found. Set FIREBASE_SERVICE_ACCOUNT_PATH or provide 
+FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, and FIREBASE_CLIENT_EMAIL in .env
+```
+
+**Root Cause**: `aiTutor.test.js` didn't mock Firebase, so it tried to initialize real Firebase on CI (where there's no `.env` file with credentials).
+
+### Solution
+Added Firebase mock to `aiTutor.test.js`:
+```javascript
+// Mock Firebase (required for sessionValidator → authService → firebase.js)
+jest.mock('../../../src/config/firebase', () => ({
+  admin: {},
+  db: {},
+  storage: {},
+  app: {},
+  FieldValue: {}
+}));
+```
+
+Also added `debug` to logger mock (used by conditionalAuth).
+
+### Result
+✅ **All tests passing on GitHub Actions CI**
+- Node 18.x: ✓ 456 tests passed
+- Node 20.x: ✓ 456 tests passed
+- Both jobs completed in ~25-26 seconds
+- Test runs: https://github.com/abhijeet-roy75/JEEVibe/actions/runs/22424044195
+
+### Final Status
+- **Local**: 603 passing, 11 skipped (100% pass rate)
+- **CI**: 456 passing (unit tests only on CI)
+- **Coverage warnings**: Minor (Codecov upload issues, not test failures)
+
+**Backend is fully production-ready with passing tests locally and on CI!** 🎉
+
+---
+
+## Commits
+1. `c8bfe44` - Allow tests to use real Firebase credentials from .env
+2. `215b58d` - Fix all 13 failing auth and rate limiter tests
+3. `402ede1` - Add comprehensive test fixes documentation
+4. `4b3b8ea` - Add Firebase mock to aiTutor test for CI compatibility
