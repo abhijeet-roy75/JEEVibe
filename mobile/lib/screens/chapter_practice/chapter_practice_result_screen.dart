@@ -144,28 +144,39 @@ class _ChapterPracticeResultScreenState
   }
 
   void _goHome(BuildContext context) {
+    if (_isDisposed) return;
+
     // Reset provider state
     final provider =
         Provider.of<ChapterPracticeProvider>(context, listen: false);
     provider.reset();
 
-    // Navigate to main home screen with bottom navigation
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-      (route) => false,
-    );
+    if (!_isDisposed && mounted) {
+      // Navigate to main home screen with bottom navigation
+      // Return true to indicate practice was completed
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+        (route) => false,
+      );
+    }
   }
 
   void _practiceAgain(BuildContext context) {
+    if (_isDisposed) return;
+
     // Reset provider and go back to home to restart practice
     final provider =
         Provider.of<ChapterPracticeProvider>(context, listen: false);
     provider.reset();
 
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    if (!_isDisposed && mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    }
   }
 
   void _reviewQuestions(BuildContext context) {
+    if (_isDisposed || !mounted) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(

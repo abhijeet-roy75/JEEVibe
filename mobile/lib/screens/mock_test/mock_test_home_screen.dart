@@ -21,13 +21,24 @@ class MockTestHomeScreen extends StatefulWidget {
 }
 
 class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
+  // Flag to track if widget is disposed
+  bool _isDisposed = false;
+
   @override
   void initState() {
     super.initState();
     // Defer loading to after the first frame to avoid calling notifyListeners during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadData();
+      if (!_isDisposed && mounted) {
+        _loadData();
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
   }
 
   Future<void> _loadData() async {
@@ -353,27 +364,29 @@ class _MockTestHomeScreenState extends State<MockTestHomeScreen> {
   }
 
   Future<void> _abandonTest(MockTestSession session) async {
+    if (_isDisposed) return;
+
     try {
       final provider = context.read<MockTestProvider>();
       await provider.abandonTest();
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Test abandoned'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
+      if (_isDisposed || !mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Test abandoned'),
+          backgroundColor: AppColors.success,
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceFirst('Exception: ', '')),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      if (_isDisposed || !mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 

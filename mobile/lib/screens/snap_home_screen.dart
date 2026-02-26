@@ -456,6 +456,33 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
   Future<void> _capturePhoto() async {
     if (_isProcessing) return;
 
+    // Web platform guard - camera not supported
+    if (kIsWeb) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.white, size: 20),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Camera capture is not available on web. Please use the gallery option or access from mobile app.',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.infoBlue,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
     // Check offline status first
     final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);
     if (offlineProvider.isOffline) {
@@ -534,6 +561,33 @@ class _SnapHomeScreenState extends State<SnapHomeScreen> {
 
   Future<void> _pickFromGallery() async {
     if (_isProcessing) return;
+
+    // Web platform - gallery picker supported but with limitations
+    if (kIsWeb) {
+      if (mounted) {
+        // Show info message about web limitations
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.white, size: 20),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Image cropping may have limited functionality on web. For best experience, use the mobile app.',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.infoBlue,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
 
     // Check offline status first
     final offlineProvider = Provider.of<OfflineProvider>(context, listen: false);

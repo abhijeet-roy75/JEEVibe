@@ -11,6 +11,7 @@ import '../../widgets/responsive_layout.dart';
 import '../../models/mock_test_models.dart';
 import '../../services/api_service.dart';
 import '../../services/firebase/auth_service.dart';
+import '../../providers/mock_test_provider.dart';
 import 'mock_test_review_screen.dart';
 import '../main_navigation_screen.dart';
 
@@ -33,6 +34,9 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
   bool _isLoading = false;
   String? _error;
 
+  // Flag to track if widget is disposed
+  bool _isDisposed = false;
+
   @override
   void initState() {
     super.initState();
@@ -43,11 +47,21 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
   Future<void> _loadResults() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+    if (_isDisposed) return;
+
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
 
     try {
       final authService = context.read<AuthService>();
@@ -59,19 +73,19 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
         testId: widget.testId,
       );
 
-      if (mounted) {
-        setState(() {
-          _result = MockTestResult.fromJson(data);
-          _isLoading = false;
-        });
-      }
+      if (_isDisposed || !mounted) return;
+
+      setState(() {
+        _result = MockTestResult.fromJson(data);
+        _isLoading = false;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString().replaceFirst('Exception: ', '');
-          _isLoading = false;
-        });
-      }
+      if (_isDisposed || !mounted) return;
+
+      setState(() {
+        _error = e.toString().replaceFirst('Exception: ', '');
+        _isLoading = false;
+      });
     }
   }
 
@@ -118,9 +132,15 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
             children: [
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: () => Navigator.of(context).popUntil(
-                  (route) => route.isFirst || route.settings.name == '/mock-tests',
-                ),
+                onPressed: () {
+                  // Reset provider before navigating away
+                  final mockTestProvider = context.read<MockTestProvider>();
+                  mockTestProvider.reset();
+
+                  Navigator.of(context).popUntil(
+                    (route) => route.isFirst || route.settings.name == '/mock-tests',
+                  );
+                },
               ),
               const Expanded(
                 child: Text(
@@ -609,6 +629,10 @@ class _MockTestResultsScreenState extends State<MockTestResultsScreen> {
           leadingIcon: Icons.home,
           size: GradientButtonSize.large,
           onPressed: () {
+            // Reset provider before navigating away
+            final mockTestProvider = context.read<MockTestProvider>();
+            mockTestProvider.reset();
+
             Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
               (route) => false,

@@ -39,6 +39,9 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
   bool _isCompletingQuiz = false; // Local guard against double-tap
   final ScrollController _scrollController = ScrollController();
 
+  // Flag to track if widget is disposed
+  bool _isDisposed = false;
+
   @override
   void initState() {
     super.initState();
@@ -66,7 +69,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     if (provider.currentQuiz != null && provider.currentQuiz!.quizId == widget.quiz.quizId) {
       // State was restored, check if quiz was already started
       final questionState = provider.getQuestionState(provider.currentQuestionIndex);
-      if (questionState != null && mounted) {
+      if (questionState != null && !_isDisposed && mounted) {
         // Quiz was in progress, resume
         setState(() {
           _quizInitialized = true;
@@ -75,15 +78,16 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         return;
       }
     }
-    
+
     // No saved state or quiz not started, initialize normally
-    if (mounted) {
+    if (!_isDisposed && mounted) {
       _initializeQuiz();
     }
   }
 
   @override
   void dispose() {
+    _isDisposed = true;
     // Cancel the local UI timer when screen is disposed
     // The elapsed time is calculated from DateTime.now().difference(startTime)
     // so it will be correct when user returns, even if time passed in background
@@ -93,6 +97,8 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
   }
 
   Future<void> _initializeQuiz() async {
+    if (_isDisposed) return;
+
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
 
     // Set quiz in provider if not already set
@@ -107,12 +113,12 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         showDialog: false,
       );
 
-      if (mounted) {
-        setState(() {
-          _quizInitialized = true;
-        });
-        _startTimer();
-      }
+      if (_isDisposed || !mounted) return;
+
+      setState(() {
+        _quizInitialized = true;
+      });
+      _startTimer();
     } catch (e) {
       final errorMessage = e.toString().toLowerCase();
 
@@ -125,27 +131,27 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         await storageService.clearQuizState();
         provider.reset();
 
-        if (mounted) {
-          // Show user-friendly message and go back to regenerate
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Quiz expired. Generating a new one...'),
-              backgroundColor: AppColors.primaryPurple,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-          Navigator.of(context).pop(); // Go back to loading screen which will generate new quiz
-        }
+        if (_isDisposed || !mounted) return;
+
+        // Show user-friendly message and go back to regenerate
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Quiz expired. Generating a new one...'),
+            backgroundColor: AppColors.primaryPurple,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.of(context).pop(); // Go back to loading screen which will generate new quiz
         return;
       }
 
-      if (mounted) {
-        ErrorHandler.showErrorSnackBar(
-          context,
-          message: ErrorHandler.getErrorMessage(e),
-          onRetry: _initializeQuiz,
-        );
-      }
+      if (_isDisposed || !mounted) return;
+
+      ErrorHandler.showErrorSnackBar(
+        context,
+        message: ErrorHandler.getErrorMessage(e),
+        onRetry: _initializeQuiz,
+      );
     }
   }
 
@@ -155,7 +161,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
 
     // Use current index from provider inside timer to avoid stale closure
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
+      if (_isDisposed || !mounted) {
         timer.cancel();
         return;
       }
@@ -246,16 +252,18 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     // For MCQ questions, just select the answer (don't submit yet)
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
     provider.selectAnswer(answer);
-    if (mounted) {
+    if (!_isDisposed && mounted) {
       setState(() {});
     }
   }
 
   Future<void> _handleAnswerSubmission(String answer) async {
+    if (_isDisposed) return;
+
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
     final currentIndex = provider.currentQuestionIndex;
     final questionState = provider.getQuestionState(currentIndex);
-    
+
     if (questionState?.isAnswered == true) return;
 
     // C3: Stop timer immediately when answer is submitted
@@ -269,7 +277,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
       if (question.isNumerical) {
         // Check if answer is empty
         if (answer.trim().isEmpty) {
-          if (mounted) {
+          if (!_isDisposed && mounted) {
             ErrorHandler.showErrorSnackBar(
               context,
               message: 'Please enter an answer',
@@ -280,7 +288,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         // Validate numerical input
         final numValue = double.tryParse(answer);
         if (numValue == null) {
-          if (mounted) {
+          if (!_isDisposed && mounted) {
             ErrorHandler.showErrorSnackBar(
               context,
               message: 'Please enter a valid number',
@@ -298,21 +306,23 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         showDialog: false,
       );
 
-      if (mounted) {
-        setState(() {});
-      }
+      if (_isDisposed || !mounted) return;
+
+      setState(() {});
     } catch (e) {
-      if (mounted) {
-        ErrorHandler.showErrorSnackBar(
-          context,
-          message: ErrorHandler.getErrorMessage(e),
-          onRetry: () => _handleAnswerSubmission(answer),
-        );
-      }
+      if (_isDisposed || !mounted) return;
+
+      ErrorHandler.showErrorSnackBar(
+        context,
+        message: ErrorHandler.getErrorMessage(e),
+        onRetry: () => _handleAnswerSubmission(answer),
+      );
     }
   }
 
   void _handleNextQuestion() {
+    if (_isDisposed) return;
+
     final provider = Provider.of<DailyQuizProvider>(context, listen: false);
 
     if (provider.isQuizComplete) {
@@ -320,12 +330,14 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
     } else {
       provider.nextQuestion();
       _startTimer();
-      setState(() {});
+      if (!_isDisposed && mounted) {
+        setState(() {});
+      }
 
       // Scroll to top to show the beginning of the next question
       // Use post-frame callback to ensure scroll happens after build
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
+        if (!_isDisposed && _scrollController.hasClients) {
           _scrollController.animateTo(
             0.0,
             duration: const Duration(milliseconds: 300),
@@ -338,7 +350,7 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
 
   Future<void> _completeQuiz() async {
     // Guard against multiple simultaneous calls (local state)
-    if (_isCompletingQuiz) {
+    if (_isCompletingQuiz || _isDisposed) {
       return;
     }
 
@@ -349,9 +361,11 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
       return;
     }
 
-    setState(() {
-      _isCompletingQuiz = true;
-    });
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _isCompletingQuiz = true;
+      });
+    }
 
     try {
       final result = await ErrorHandler.handleApiError(
@@ -360,50 +374,50 @@ class _DailyQuizQuestionScreenState extends State<DailyQuizQuestionScreen> {
         showDialog: false,
       );
 
-      if (mounted) {
+      if (_isDisposed || !mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => DailyQuizResultScreen(
+            quizId: widget.quiz.quizId,
+            resultData: result,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (_isDisposed || !mounted) return;
+
+      setState(() {
+        _isCompletingQuiz = false;
+      });
+
+      final errorMessage = e.toString().toLowerCase();
+
+      // If quiz is already completed, navigate to results instead of showing retry
+      if (errorMessage.contains('already completed')) {
+        // Quiz was completed (maybe by another request), just navigate to results
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Quiz already completed. Loading results...'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        // Navigate to result screen - the result screen will fetch results
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => DailyQuizResultScreen(
               quizId: widget.quiz.quizId,
-              resultData: result,
+              resultData: null, // Will fetch from API
             ),
           ),
         );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isCompletingQuiz = false;
-        });
-
-        final errorMessage = e.toString().toLowerCase();
-
-        // If quiz is already completed, navigate to results instead of showing retry
-        if (errorMessage.contains('already completed')) {
-          // Quiz was completed (maybe by another request), just navigate to results
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Quiz already completed. Loading results...'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-          // Navigate to result screen - the result screen will fetch results
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => DailyQuizResultScreen(
-                quizId: widget.quiz.quizId,
-                resultData: null, // Will fetch from API
-              ),
-            ),
-          );
-        } else {
-          // Show error with retry for other errors
-          ErrorHandler.showErrorSnackBar(
-            context,
-            message: ErrorHandler.getErrorMessage(e),
-            onRetry: _completeQuiz,
-          );
-        }
+      } else {
+        // Show error with retry for other errors
+        ErrorHandler.showErrorSnackBar(
+          context,
+          message: ErrorHandler.getErrorMessage(e),
+          onRetry: _completeQuiz,
+        );
       }
     }
   }

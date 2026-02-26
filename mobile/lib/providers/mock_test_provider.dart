@@ -611,4 +611,20 @@ class MockTestProvider extends ChangeNotifier {
     _error = null;
     _safeNotifyListeners();
   }
+
+  /// Reset provider state (called after navigating away from mock test)
+  /// This ensures clean state for next test session
+  void reset() {
+    if (_disposed) return;
+
+    _stopTimer();
+    _activeSession = null;
+    _currentQuestionIndex = 0;
+    _error = null;
+
+    if (LoggingConfig.verboseProviderLogs) {
+      debugPrint('[MockTestProvider] State reset');
+    }
+    _safeNotifyListeners();
+  }
 }

@@ -30,6 +30,9 @@ class _MockTestScreenState extends State<MockTestScreen> {
   String? _selectedAnswer;
   final TextEditingController _numericalController = TextEditingController();
 
+  // Flag to track if widget is disposed
+  bool _isDisposed = false;
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +41,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
   @override
   void dispose() {
+    _isDisposed = true;
     _numericalController.dispose();
     super.dispose();
   }
@@ -656,9 +660,11 @@ class _MockTestScreenState extends State<MockTestScreen> {
   }
 
   void _selectOption(String optionId, MockTestProvider provider) {
-    setState(() {
-      _selectedAnswer = optionId;
-    });
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _selectedAnswer = optionId;
+      });
+    }
     provider.saveAnswer(optionId);
   }
 
@@ -681,10 +687,12 @@ class _MockTestScreenState extends State<MockTestScreen> {
   }
 
   void _clearAnswer(MockTestProvider provider) {
-    setState(() {
-      _selectedAnswer = null;
-      _numericalController.clear();
-    });
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _selectedAnswer = null;
+        _numericalController.clear();
+      });
+    }
     provider.clearAnswer();
   }
 
@@ -820,48 +828,52 @@ class _MockTestScreenState extends State<MockTestScreen> {
   }
 
   Future<void> _submitTest() async {
+    if (_isDisposed) return;
+
     final provider = context.read<MockTestProvider>();
 
     // Show loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        content: Row(
-          children: [
-            const CircularProgressIndicator(),
-            SizedBox(width: PlatformSizing.spacing(16)),
-            const Text('Submitting...'),
-          ],
+    if (!_isDisposed && mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              SizedBox(width: PlatformSizing.spacing(16)),
+              const Text('Submitting...'),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    }
 
     try {
       final result = await provider.submitTest();
 
-      if (mounted) {
-        Navigator.pop(context); // Close loading
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MockTestResultsScreen(
-              testId: result.testId,
-              result: result,
-            ),
+      if (_isDisposed || !mounted) return;
+
+      Navigator.pop(context); // Close loading
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MockTestResultsScreen(
+            testId: result.testId,
+            result: result,
           ),
-        );
-      }
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Close loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to submit: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      if (_isDisposed || !mounted) return;
+
+      Navigator.pop(context); // Close loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit: ${e.toString()}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 }
@@ -1058,7 +1070,9 @@ class _NetworkSvgImageState extends State<_NetworkSvgImage> {
     try {
       final response = await http.get(Uri.parse(widget.url));
       if (response.statusCode != 200) {
-        if (mounted) setState(() { _hasError = true; _isLoading = false; });
+        if (mounted) {
+          setState(() { _hasError = true; _isLoading = false; });
+        }
         return;
       }
 
@@ -1073,7 +1087,9 @@ class _NetworkSvgImageState extends State<_NetworkSvgImage> {
       }
     } catch (e) {
       debugPrint('[MockTest] SVG fetch error: $e');
-      if (mounted) setState(() { _hasError = true; _isLoading = false; });
+      if (mounted) {
+        setState(() { _hasError = true; _isLoading = false; });
+      }
     }
   }
 

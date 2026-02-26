@@ -1,7 +1,7 @@
 /// Camera Screen - Snap Your Question
 /// Matches design: 4 Camera Interface Screen Redesigned.png
 import 'dart:io';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -174,12 +174,59 @@ class _CameraScreenState extends State<CameraScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Web platform guard - camera not supported on web
+    if (kIsWeb) {
+      return Scaffold(
+        backgroundColor: AppColors.backgroundLight,
+        appBar: AppBar(
+          backgroundColor: AppColors.primaryPurple,
+          title: const Text('Camera Not Available'),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.camera_alt_outlined,
+                  size: 64,
+                  color: AppColors.textMedium,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Camera Not Available on Web',
+                  style: AppTextStyles.headerMedium.copyWith(
+                    color: AppColors.textDark,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'The camera feature is only available on mobile devices. Please use the JEEVibe mobile app to capture questions.',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textMedium,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Go Back'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: Column(
         children: [
           // Top section: Purple gradient header
           _buildHeader(),
-          
+
           // Bottom section: White background with content
           Expanded(
             child: Container(

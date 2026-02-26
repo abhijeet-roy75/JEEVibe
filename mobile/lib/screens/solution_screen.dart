@@ -48,6 +48,15 @@ class _SolutionScreenState extends State<SolutionScreen> {
   bool _isShareInProgress = false;
   final _screenshotController = ScreenshotController();
 
+  // Flag to track if widget is disposed
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Solution>(
@@ -134,7 +143,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
 
     if (isOCRError) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
+        if (!_isDisposed && mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => OCRFailedScreen(errorMessage: error),
@@ -391,16 +400,18 @@ class _SolutionScreenState extends State<SolutionScreen> {
   }
 
   Future<void> _handleShare(Solution solution) async {
-    if (_isShareInProgress) return;
+    if (_isShareInProgress || _isDisposed) return;
 
-    setState(() => _isShareInProgress = true);
+    if (!_isDisposed && mounted) {
+      setState(() => _isShareInProgress = true);
+    }
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final token = await authService.getIdToken();
 
       if (token == null) {
-        if (mounted) {
+        if (!_isDisposed && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Please sign in to share')),
           );
@@ -428,7 +439,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
       );
 
       if (imageBytes == null) {
-        if (mounted) {
+        if (!_isDisposed && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Could not capture solution image')),
           );
@@ -454,7 +465,7 @@ class _SolutionScreenState extends State<SolutionScreen> {
         sharePositionOrigin: shareButtonRect,
       );
 
-      if (!success && mounted) {
+      if (!success && !_isDisposed && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not open share dialog')),
         );
@@ -462,7 +473,9 @@ class _SolutionScreenState extends State<SolutionScreen> {
     } finally {
       // Re-enable after 2 seconds to prevent rapid taps
       await Future.delayed(const Duration(seconds: 2));
-      if (mounted) setState(() => _isShareInProgress = false);
+      if (!_isDisposed && mounted) {
+        setState(() => _isShareInProgress = false);
+      }
     }
   }
 

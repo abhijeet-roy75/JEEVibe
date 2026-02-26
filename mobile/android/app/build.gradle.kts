@@ -81,3 +81,10 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // Force newer version of play-services-auth to fix SignInHubActivity crash
+    // Issue: NullPointerException in SignInHubActivity.onCreate() in version 20.7.0
+    // Solution: Use version 21.0.0+ which has the fix
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+}

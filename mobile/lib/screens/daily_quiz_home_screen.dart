@@ -50,6 +50,9 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
   int _quizzesRemaining = 1; // Default for free tier
   bool _isQuizUnlimited = false;
 
+  // Flag to track if widget is disposed
+  bool _isDisposed = false;
+
   @override
   void initState() {
     super.initState();
@@ -60,6 +63,7 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
 
   @override
   void dispose() {
+    _isDisposed = true;
     _subscriptionService.removeListener(_onSubscriptionChanged);
     super.dispose();
   }
@@ -67,18 +71,27 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
   /// Called when subscription cache is invalidated
   /// Refreshes usage data to show updated remaining count
   void _onSubscriptionChanged() {
+    if (_isDisposed) return;
     _refreshUsageData();
   }
 
   /// Refresh only usage data (lightweight, no full reload)
   Future<void> _refreshUsageData() async {
+    if (_isDisposed) return;
+
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final token = await authService.getIdToken();
+
+      if (_isDisposed || !mounted) return;
+
       if (token != null) {
         await _subscriptionService.fetchStatus(token, forceRefresh: true);
+
+        if (_isDisposed || !mounted) return;
+
         final quizUsage = _subscriptionService.getUsageInfo(UsageType.dailyQuiz);
-        if (mounted && quizUsage != null) {
+        if (!_isDisposed && mounted && quizUsage != null) {
           setState(() {
             _isQuizUnlimited = quizUsage.isUnlimited;
             _quizzesRemaining = quizUsage.isUnlimited ? 999 : quizUsage.remaining;
@@ -91,16 +104,27 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
   }
 
   Future<void> _loadData() async {
+    if (_isDisposed) return;
+
     try {
       // Load subscription status for quiz gating (force refresh to get latest usage)
       final authService = Provider.of<AuthService>(context, listen: false);
       final user = authService.currentUser;
+
+      if (_isDisposed || !mounted) return;
+
       if (user != null) {
         final token = await authService.getIdToken();
+
+        if (_isDisposed || !mounted) return;
+
         if (token != null) {
           await _subscriptionService.fetchStatus(token, forceRefresh: true);
+
+          if (_isDisposed || !mounted) return;
+
           final quizUsage = _subscriptionService.getUsageInfo(UsageType.dailyQuiz);
-          if (mounted && quizUsage != null) {
+          if (!_isDisposed && mounted && quizUsage != null) {
             setState(() {
               _isQuizUnlimited = quizUsage.isUnlimited;
               _quizzesRemaining = quizUsage.isUnlimited ? 999 : quizUsage.remaining;
@@ -109,6 +133,8 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
         }
       }
 
+      if (_isDisposed || !mounted) return;
+
       // Load summary and progress using provider
       final provider = Provider.of<DailyQuizProvider>(context, listen: false);
       await Future.wait([
@@ -116,26 +142,29 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
         ErrorHandler.withRetry(operation: () => provider.loadProgress()),
       ]);
 
+      if (_isDisposed || !mounted) return;
+
       // Check if user has completed assessment but no daily quizzes
       final progress = provider.progress;
       final completedQuizCount = progress?['cumulative']?['total_quizzes'] ?? 0;
-      
+
       // Check assessment status from local storage
       final storageService = StorageService();
       final assessmentStatus = await storageService.getAssessmentStatus();
-      
+
       if (completedQuizCount == 0 && assessmentStatus == 'completed') {
+        if (_isDisposed || !mounted) return;
         // Load assessment results
         await _loadAssessmentResults(user!.uid);
       }
 
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         setState(() {
           _userState = _determineUserState(provider.summary, provider.progress);
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         ErrorHandler.showErrorSnackBar(
           context,
           message: ErrorHandler.getErrorMessage(e),

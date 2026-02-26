@@ -41,20 +41,31 @@ class _ChapterPracticeLoadingScreenState
   String? _error;
   bool _isOffline = false;
 
+  // Flag to track if widget is disposed
+  bool _isDisposed = false;
+
   @override
   void initState() {
     super.initState();
     _startPractice();
   }
 
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
   Future<void> _startPractice() async {
+    if (_isDisposed) return;
+
     try {
       // Get auth token first (needed for both resume check and new session)
       final authService = Provider.of<AuthService>(context, listen: false);
       final token = await authService.getIdToken();
 
       if (token == null) {
-        if (mounted) {
+        if (!_isDisposed && mounted) {
           setState(() {
             _error = 'Authentication required';
           });
@@ -72,7 +83,7 @@ class _ChapterPracticeLoadingScreenState
         // Check if the active session is for the same chapter
         if (provider.session!.chapterKey == widget.chapterKey) {
           // Resume existing session - critical for ensuring completion
-          if (mounted) {
+          if (!_isDisposed && mounted) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (context) => const ChapterPracticeQuestionScreen(),
@@ -89,7 +100,7 @@ class _ChapterPracticeLoadingScreenState
       final isOnline = await connectivityService.checkRealConnectivity();
 
       if (!isOnline) {
-        if (mounted) {
+        if (!_isDisposed && mounted) {
           setState(() {
             _isOffline = true;
             _error = 'No internet connection';
@@ -109,7 +120,7 @@ class _ChapterPracticeLoadingScreenState
 
       if (!canProceed) {
         // Paywall was shown, go back
-        if (mounted) {
+        if (!_isDisposed && mounted) {
           Navigator.of(context).pop();
         }
         return;
@@ -122,7 +133,7 @@ class _ChapterPracticeLoadingScreenState
       );
 
       if (success && provider.session != null) {
-        if (mounted) {
+        if (!_isDisposed && mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => const ChapterPracticeQuestionScreen(),
@@ -130,41 +141,41 @@ class _ChapterPracticeLoadingScreenState
           );
         }
       } else {
-        if (mounted) {
-          final errorMessage =
-              (provider.errorMessage ?? '').toLowerCase();
+        if (_isDisposed || !mounted) return;
 
-          // Check if daily quiz is required first
-          if (_isDailyQuizRequired(errorMessage)) {
-            _showDailyQuizRequiredDialog();
-            return;
-          }
+        final errorMessage =
+            (provider.errorMessage ?? '').toLowerCase();
 
-          // Check if error is quota-related
-          if (_isQuotaError(errorMessage)) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => const PaywallScreen(
-                  limitReachedMessage:
-                      'Chapter Practice is a Pro/Ultra feature. Upgrade to access!',
-                  featureName: 'Chapter Practice',
-                ),
-              ),
-            );
-            return;
-          }
-
-          setState(() {
-            _error = provider.errorMessage ?? 'Failed to start practice';
-          });
+        // Check if daily quiz is required first
+        if (_isDailyQuizRequired(errorMessage)) {
+          _showDailyQuizRequiredDialog();
+          return;
         }
+
+        // Check if error is quota-related
+        if (_isQuotaError(errorMessage)) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const PaywallScreen(
+                limitReachedMessage:
+                    'Chapter Practice is a Pro/Ultra feature. Upgrade to access!',
+                featureName: 'Chapter Practice',
+              ),
+            ),
+          );
+          return;
+        }
+
+        setState(() {
+          _error = provider.errorMessage ?? 'Failed to start practice';
+        });
       }
     } catch (e) {
       final errorMessage = e.toString().toLowerCase();
 
       // Check if daily quiz is required first
       if (_isDailyQuizRequired(errorMessage)) {
-        if (mounted) {
+        if (!_isDisposed && mounted) {
           _showDailyQuizRequiredDialog();
         }
         return;
@@ -172,7 +183,7 @@ class _ChapterPracticeLoadingScreenState
 
       // Check if error is quota-related
       if (_isQuotaError(errorMessage)) {
-        if (mounted) {
+        if (!_isDisposed && mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => const PaywallScreen(
@@ -186,18 +197,18 @@ class _ChapterPracticeLoadingScreenState
         return;
       }
 
-      if (mounted) {
-        final isNetworkError = errorMessage.contains('socketexception') ||
-            errorMessage.contains('connection') ||
-            errorMessage.contains('network') ||
-            errorMessage.contains('timeout') ||
-            errorMessage.contains('host');
+      if (_isDisposed || !mounted) return;
 
-        setState(() {
-          _isOffline = isNetworkError;
-          _error = ErrorHandler.getErrorMessage(e);
-        });
-      }
+      final isNetworkError = errorMessage.contains('socketexception') ||
+          errorMessage.contains('connection') ||
+          errorMessage.contains('network') ||
+          errorMessage.contains('timeout') ||
+          errorMessage.contains('host');
+
+      setState(() {
+        _isOffline = isNetworkError;
+        _error = ErrorHandler.getErrorMessage(e);
+      });
     }
   }
 
@@ -356,10 +367,12 @@ class _ChapterPracticeLoadingScreenState
                 SecondaryButton(
                   text: 'Try Again',
                   onPressed: () {
-                    setState(() {
-                      _error = null;
-                      _isOffline = false;
-                    });
+                    if (!_isDisposed && mounted) {
+                      setState(() {
+                        _error = null;
+                        _isOffline = false;
+                      });
+                    }
                     _startPractice();
                   },
                   icon: Icons.refresh,
