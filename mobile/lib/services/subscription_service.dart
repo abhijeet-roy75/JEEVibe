@@ -73,12 +73,10 @@ class SubscriptionService extends ChangeNotifier {
 
     try {
       debugPrint('SubscriptionService: Fetching from API...');
+      final headers = await ApiService.getAuthHeaders(authToken);
       final response = await http.get(
         Uri.parse('${ApiService.baseUrl}/api/subscriptions/status'),
-        headers: {
-          'Authorization': 'Bearer $authToken',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       ).timeout(const Duration(seconds: 10));
 
       debugPrint('SubscriptionService: Response status = ${response.statusCode}');

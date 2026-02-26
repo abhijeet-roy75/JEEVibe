@@ -40,9 +40,11 @@ class AuthService extends ChangeNotifier {
   /// Get stored session token
   static Future<String?> getSessionToken() async {
     try {
-      return await _storage.read(key: _sessionTokenKey);
+      final token = await _storage.read(key: _sessionTokenKey);
+      print('[AuthService] getSessionToken: ${token != null ? "FOUND (${token.substring(0, 20)}...)" : "NOT FOUND"}');
+      return token;
     } catch (e) {
-      debugPrint('Error reading session token: $e');
+      print('[AuthService] Error reading session token: $e');
       return null;
     }
   }
@@ -51,8 +53,9 @@ class AuthService extends ChangeNotifier {
   static Future<void> setSessionToken(String token) async {
     try {
       await _storage.write(key: _sessionTokenKey, value: token);
+      print('[AuthService] setSessionToken: SUCCESS (${token.substring(0, 20)}...)');
     } catch (e) {
-      debugPrint('Error storing session token: $e');
+      print('[AuthService] Error storing session token: $e');
     }
   }
 

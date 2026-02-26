@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import '../models/analytics_data.dart';
 import '../models/user_profile.dart';
 import '../models/subscription_models.dart';
+import 'api_service.dart';
 
 class AnalyticsService {
   static const String baseUrl = 'https://jeevibe-thzi.onrender.com';
@@ -24,12 +25,10 @@ class AnalyticsService {
     required String authToken,
   }) async {
     try {
+      final headers = await ApiService.getAuthHeaders(authToken);
       final response = await http.get(
         Uri.parse('$baseUrl/api/analytics/dashboard'),
-        headers: {
-          'Authorization': 'Bearer $authToken',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       ).timeout(timeout);
 
       if (response.statusCode == 200) {
@@ -57,12 +56,10 @@ class AnalyticsService {
     required String authToken,
   }) async {
     try {
+      final headers = await ApiService.getAuthHeaders(authToken);
       final response = await http.get(
         Uri.parse('$baseUrl/api/analytics/overview'),
-        headers: {
-          'Authorization': 'Bearer $authToken',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       ).timeout(timeout);
 
       if (response.statusCode == 200) {
@@ -91,12 +88,10 @@ class AnalyticsService {
     required String subject,
   }) async {
     try {
+      final headers = await ApiService.getAuthHeaders(authToken);
       final response = await http.get(
         Uri.parse('$baseUrl/api/analytics/mastery/$subject'),
-        headers: {
-          'Authorization': 'Bearer $authToken',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       ).timeout(timeout);
 
       if (response.statusCode == 200) {
@@ -136,12 +131,10 @@ class AnalyticsService {
       final uri = Uri.parse('$baseUrl/api/analytics/mastery-timeline')
           .replace(queryParameters: queryParams);
 
+      final headers = await ApiService.getAuthHeaders(authToken);
       final response = await http.get(
         uri,
-        headers: {
-          'Authorization': 'Bearer $authToken',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       ).timeout(timeout);
 
       if (response.statusCode == 200) {
@@ -177,12 +170,10 @@ class AnalyticsService {
       final uri = Uri.parse('$baseUrl/api/analytics/accuracy-timeline')
           .replace(queryParameters: queryParams);
 
+      final headers = await ApiService.getAuthHeaders(authToken);
       final response = await http.get(
         uri,
-        headers: {
-          'Authorization': 'Bearer $authToken',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       ).timeout(timeout);
 
       if (response.statusCode == 200) {
@@ -210,12 +201,10 @@ class AnalyticsService {
     required String authToken,
   }) async {
     try {
+      final headers = await ApiService.getAuthHeaders(authToken);
       final response = await http.get(
         Uri.parse('$baseUrl/api/analytics/weekly-activity'),
-        headers: {
-          'Authorization': 'Bearer $authToken',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       ).timeout(timeout);
 
       if (response.statusCode == 200) {
@@ -243,12 +232,10 @@ class AnalyticsService {
     required String subject,
   }) async {
     try {
+      final headers = await ApiService.getAuthHeaders(authToken);
       final response = await http.get(
         Uri.parse('$baseUrl/api/analytics/chapters-by-subject/$subject'),
-        headers: {
-          'Authorization': 'Bearer $authToken',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
       ).timeout(timeout);
 
       if (response.statusCode == 200) {

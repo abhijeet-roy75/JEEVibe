@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:async';
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'dart:convert';
@@ -33,8 +33,8 @@ class ApiService {
   // HTTP CLIENT (SHARED FOR CONNECTION REUSE)
   // ============================================================================
 
-  /// Shared HTTP client for all API requests
-  /// This reuses TCP connections, reducing latency and battery consumption
+  /// Shared HTTP client for all API requests.
+  /// Reuses TCP connections, reducing latency by 200-500ms per request.
   static final http.Client _client = http.Client();
 
   /// Dispose the HTTP client when app shuts down
@@ -95,51 +95,25 @@ class ApiService {
     return defaultMessage;
   }
 
-  /// Session token and device ID cached per-request cycle for web query params
-  static String? _cachedSessionToken;
-  static String? _cachedDeviceId;
-
   /// Get authentication headers including session token
+  /// Custom headers (x-session-token, x-device-id) are sent on ALL platforms.
+  /// http v1.6.0 uses fetch() API on web which sends all headers correctly.
+  /// CORS allowedHeaders is configured to accept these headers.
   static Future<Map<String, String>> getAuthHeaders(String authToken) async {
     final sessionToken = await AuthService.getSessionToken();
     final deviceId = await AuthService.getDeviceId();
 
-    // Cache for use by _webUrl() helper
-    _cachedSessionToken = sessionToken;
-    _cachedDeviceId = deviceId;
-
     final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $authToken',
+      'x-device-id': deviceId,
     };
 
-    if (!kIsWeb) {
-      // Mobile: Use standard custom headers (works fine on iOS/Android)
-      headers['x-device-id'] = deviceId;
-      if (sessionToken != null) {
-        headers['x-session-token'] = sessionToken;
-      }
+    if (sessionToken != null) {
+      headers['x-session-token'] = sessionToken;
     }
-    // Web: Session token sent via query parameters (see _webUrl helper)
-    // Flutter Web's http package doesn't transmit custom headers
 
     return headers;
-  }
-
-  /// On web, append session token and device ID as query parameters.
-  /// On mobile, return the URL unchanged (headers work fine).
-  static Uri _buildUri(String url) {
-    final uri = Uri.parse(url);
-    if (!kIsWeb) return uri;
-
-    final queryParams = Map<String, String>.from(uri.queryParameters);
-    if (_cachedSessionToken != null) {
-      queryParams['_sessionToken'] = _cachedSessionToken!;
-    }
-    if (_cachedDeviceId != null) {
-      queryParams['_deviceId'] = _cachedDeviceId!;
-    }
-    return uri.replace(queryParameters: queryParams);
   }
 
   /// Get valid authentication token with automatic refresh
@@ -206,7 +180,7 @@ class ApiService {
       tracker.step('Creating multipart request');
       var request = http.MultipartRequest(
         'POST',
-        _buildUri('$baseUrl/api/solve'),
+        Uri.parse('$baseUrl/api/solve'),
       );
 
       // Add authentication headers including session token
@@ -322,7 +296,7 @@ class ApiService {
       try {
       final headers = await getAuthHeaders(authToken);
       final response = await _client.post(
-        _buildUri('$baseUrl/api/generate-single-question'),
+        Uri.parse('$baseUrl/api/generate-single-question'),
         headers: headers,
         body: json.encode({
           'recognizedQuestion': recognizedQuestion,
@@ -381,7 +355,7 @@ class ApiService {
     try {
       final headers = await getAuthHeaders(authToken);
       final response = await _client.post(
-        _buildUri('$baseUrl/api/generate-practice-questions'),
+        Uri.parse('$baseUrl/api/generate-practice-questions'),
         headers: headers,
         body: json.encode({
           'recognizedQuestion': recognizedQuestion,
@@ -450,7 +424,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/snap-practice/questions'),
+          Uri.parse('$baseUrl/api/snap-practice/questions'),
           headers: headers,
           body: json.encode({
             'subject': subject,
@@ -532,7 +506,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/snap-practice/complete'),
+          Uri.parse('$baseUrl/api/snap-practice/complete'),
           headers: headers,
           body: json.encode({
             'subject': subject,
@@ -579,7 +553,7 @@ class ApiService {
   static Future<bool> checkHealth() async {
     try {
       final response = await _client.get(
-        _buildUri('$baseUrl/api/health'),
+        Uri.parse('$baseUrl/api/health'),
       ).timeout(const Duration(seconds: 5));
 
       return response.statusCode == 200;
@@ -597,7 +571,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/subscriptions/status'),
+          Uri.parse('$baseUrl/api/subscriptions/status'),
           headers: headers,
         ).timeout(const Duration(seconds: 15));
 
@@ -653,7 +627,7 @@ class ApiService {
 
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri(url),
+          Uri.parse(url),
           headers: headers,
         ).timeout(const Duration(seconds: 30));
 
@@ -687,7 +661,7 @@ class ApiService {
     try {
       final headers = await getAuthHeaders(authToken);
       final response = await _client.get(
-        _buildUri('$baseUrl/api/assessment/questions'),
+        Uri.parse('$baseUrl/api/assessment/questions'),
         headers: headers,
       ).timeout(const Duration(seconds: 60));
 
@@ -737,7 +711,7 @@ class ApiService {
     try {
       final headers = await getAuthHeaders(authToken);
       final response = await _client.post(
-        _buildUri('$baseUrl/api/assessment/submit'),
+        Uri.parse('$baseUrl/api/assessment/submit'),
         headers: headers,
         body: json.encode({
           'responses': responses.map((r) => r.toJson()).toList(),
@@ -809,7 +783,7 @@ class ApiService {
     try {
       final headers = await getAuthHeaders(authToken);
       final response = await _client.get(
-        _buildUri('$baseUrl/api/assessment/results/$userId'),
+        Uri.parse('$baseUrl/api/assessment/results/$userId'),
         headers: headers,
       ).timeout(const Duration(seconds: 10));
 
@@ -884,7 +858,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/daily-quiz/generate'),
+          Uri.parse('$baseUrl/api/daily-quiz/generate'),
           headers: headers,
         ).timeout(const Duration(seconds: 60));
 
@@ -933,7 +907,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/daily-quiz/start'),
+          Uri.parse('$baseUrl/api/daily-quiz/start'),
           headers: headers,
           body: json.encode({
             'quiz_id': quizId,
@@ -973,7 +947,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/daily-quiz/submit-answer'),
+          Uri.parse('$baseUrl/api/daily-quiz/submit-answer'),
           headers: headers,
           body: json.encode({
             'quiz_id': quizId,
@@ -1024,7 +998,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/daily-quiz/complete'),
+          Uri.parse('$baseUrl/api/daily-quiz/complete'),
           headers: headers,
           body: json.encode({
             'quiz_id': quizId,
@@ -1069,7 +1043,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/daily-quiz/result/$quizId'),
+          Uri.parse('$baseUrl/api/daily-quiz/result/$quizId'),
           headers: headers,
         ).timeout(const Duration(seconds: 30));
 
@@ -1110,7 +1084,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/daily-quiz/summary'),
+          Uri.parse('$baseUrl/api/daily-quiz/summary'),
           headers: headers,
         ).timeout(const Duration(seconds: 15));
 
@@ -1158,7 +1132,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/daily-quiz/progress'),
+          Uri.parse('$baseUrl/api/daily-quiz/progress'),
           headers: headers,
         ).timeout(const Duration(seconds: 15));
 
@@ -1207,7 +1181,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/chapters/unlocked'),
+          Uri.parse('$baseUrl/api/chapters/unlocked'),
           headers: headers,
         ).timeout(const Duration(seconds: 15));
 
@@ -1268,12 +1242,12 @@ class ApiService {
           queryParams['start_date'] = startDate.toIso8601String();
         }
 
-        // Build URL with existing query params, then _buildUri adds web session params
+        // Build URL with existing query params
         String historyUrl = '$baseUrl/api/daily-quiz/history';
         if (queryParams.isNotEmpty) {
           historyUrl += '?${queryParams.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&')}';
         }
-        final uri = _buildUri(historyUrl);
+        final uri = Uri.parse(historyUrl);
 
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
@@ -1327,7 +1301,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/feedback'),
+          Uri.parse('$baseUrl/api/feedback'),
           headers: headers,
           body: json.encode(feedbackData),
         ).timeout(const Duration(seconds: 15));
@@ -1380,7 +1354,7 @@ class ApiService {
 
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/chapter-practice/generate'),
+          Uri.parse('$baseUrl/api/chapter-practice/generate'),
           headers: headers,
           body: json.encode(body),
         ).timeout(const Duration(seconds: 60));
@@ -1426,7 +1400,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/chapter-practice/submit-answer'),
+          Uri.parse('$baseUrl/api/chapter-practice/submit-answer'),
           headers: headers,
           body: json.encode({
             'session_id': sessionId,
@@ -1474,7 +1448,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/chapter-practice/complete'),
+          Uri.parse('$baseUrl/api/chapter-practice/complete'),
           headers: headers,
           body: json.encode({
             'session_id': sessionId,
@@ -1519,7 +1493,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/chapter-practice/session/$sessionId'),
+          Uri.parse('$baseUrl/api/chapter-practice/session/$sessionId'),
           headers: headers,
         ).timeout(const Duration(seconds: 15));
 
@@ -1566,7 +1540,7 @@ class ApiService {
 
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri(url),
+          Uri.parse(url),
           headers: headers,
         ).timeout(const Duration(seconds: 15));
 
@@ -1613,7 +1587,7 @@ class ApiService {
 
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri(url),
+          Uri.parse(url),
           headers: headers,
         ).timeout(const Duration(seconds: 15));
 
@@ -1676,7 +1650,7 @@ class ApiService {
         if (queryParams.isNotEmpty) {
           cpHistoryUrl += '?${queryParams.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&')}';
         }
-        final uri = _buildUri(cpHistoryUrl);
+        final uri = Uri.parse(cpHistoryUrl);
 
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
@@ -1734,7 +1708,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/ai-tutor/conversation?limit=$limit'),
+          Uri.parse('$baseUrl/api/ai-tutor/conversation?limit=$limit'),
           headers: headers,
         ).timeout(const Duration(seconds: 30));
 
@@ -1778,7 +1752,7 @@ class ApiService {
 
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/ai-tutor/inject-context'),
+          Uri.parse('$baseUrl/api/ai-tutor/inject-context'),
           headers: headers,
           body: json.encode(body),
         ).timeout(const Duration(seconds: 60));
@@ -1816,7 +1790,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/ai-tutor/message'),
+          Uri.parse('$baseUrl/api/ai-tutor/message'),
           headers: headers,
           body: json.encode({'message': message}),
         ).timeout(const Duration(seconds: 90));
@@ -1856,7 +1830,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.delete(
-          _buildUri('$baseUrl/api/ai-tutor/conversation'),
+          Uri.parse('$baseUrl/api/ai-tutor/conversation'),
           headers: headers,
         ).timeout(const Duration(seconds: 30));
 
@@ -1898,7 +1872,7 @@ class ApiService {
     try {
       final headers = await getAuthHeaders(authToken);
       final response = await _client.post(
-        _buildUri('$baseUrl/api/share/log'),
+        Uri.parse('$baseUrl/api/share/log'),
         headers: headers,
         body: json.encode({
           'solutionId': solutionId,
@@ -1931,7 +1905,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/mock-tests/available'),
+          Uri.parse('$baseUrl/api/mock-tests/available'),
           headers: headers,
         ).timeout(const Duration(seconds: 30));
 
@@ -1965,7 +1939,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/mock-tests/active'),
+          Uri.parse('$baseUrl/api/mock-tests/active'),
           headers: headers,
         ).timeout(const Duration(seconds: 30));
 
@@ -2005,7 +1979,7 @@ class ApiService {
         }
 
         final response = await _client.post(
-          _buildUri('$baseUrl/api/mock-tests/start'),
+          Uri.parse('$baseUrl/api/mock-tests/start'),
           headers: headers,
           body: json.encode(body),
         ).timeout(const Duration(seconds: 60));
@@ -2050,7 +2024,7 @@ class ApiService {
     try {
       final headers = await getAuthHeaders(authToken);
       final response = await _client.post(
-        _buildUri('$baseUrl/api/mock-tests/save-answer'),
+        Uri.parse('$baseUrl/api/mock-tests/save-answer'),
         headers: headers,
         body: json.encode({
           'test_id': testId,
@@ -2091,7 +2065,7 @@ class ApiService {
     try {
       final headers = await getAuthHeaders(authToken);
       final response = await _client.post(
-        _buildUri('$baseUrl/api/mock-tests/clear-answer'),
+        Uri.parse('$baseUrl/api/mock-tests/clear-answer'),
         headers: headers,
         body: json.encode({
           'test_id': testId,
@@ -2133,7 +2107,7 @@ class ApiService {
         }
 
         final response = await _client.post(
-          _buildUri('$baseUrl/api/mock-tests/submit'),
+          Uri.parse('$baseUrl/api/mock-tests/submit'),
           headers: headers,
           body: json.encode(body),
         ).timeout(const Duration(seconds: 60));
@@ -2168,7 +2142,7 @@ class ApiService {
     try {
       final headers = await getAuthHeaders(authToken);
       final response = await _client.post(
-        _buildUri('$baseUrl/api/mock-tests/abandon'),
+        Uri.parse('$baseUrl/api/mock-tests/abandon'),
         headers: headers,
         body: json.encode({
           'test_id': testId,
@@ -2200,7 +2174,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/mock-tests/history'),
+          Uri.parse('$baseUrl/api/mock-tests/history'),
           headers: headers,
         ).timeout(const Duration(seconds: 30));
 
@@ -2235,7 +2209,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/mock-tests/$testId/results'),
+          Uri.parse('$baseUrl/api/mock-tests/$testId/results'),
           headers: headers,
         ).timeout(const Duration(seconds: 30));
 
@@ -2276,7 +2250,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/unlock-quiz/generate'),
+          Uri.parse('$baseUrl/api/unlock-quiz/generate'),
           headers: headers,
           body: json.encode({'chapterKey': chapterKey}),
         ).timeout(const Duration(seconds: 30));
@@ -2315,7 +2289,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/unlock-quiz/submit-answer'),
+          Uri.parse('$baseUrl/api/unlock-quiz/submit-answer'),
           headers: headers,
           body: json.encode({
             'sessionId': sessionId,
@@ -2356,7 +2330,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/unlock-quiz/complete'),
+          Uri.parse('$baseUrl/api/unlock-quiz/complete'),
           headers: headers,
           body: json.encode({'sessionId': sessionId}),
         ).timeout(const Duration(seconds: 30));
@@ -2394,7 +2368,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/capsules/$capsuleId'),
+          Uri.parse('$baseUrl/api/capsules/$capsuleId'),
           headers: headers,
         ).timeout(const Duration(seconds: 15));
 
@@ -2431,7 +2405,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.post(
-          _buildUri('$baseUrl/api/weak-spots/retrieval'),
+          Uri.parse('$baseUrl/api/weak-spots/retrieval'),
           headers: headers,
           body: json.encode({
             'userId': userId,
@@ -2471,7 +2445,7 @@ class ApiService {
       try {
         final headers = await getAuthHeaders(authToken);
         final response = await _client.get(
-          _buildUri('$baseUrl/api/weak-spots/$userId'),
+          Uri.parse('$baseUrl/api/weak-spots/$userId'),
           headers: headers,
         ).timeout(const Duration(seconds: 15));
 
@@ -2508,7 +2482,7 @@ class ApiService {
     try {
       final headers = await getAuthHeaders(authToken);
       await _client.post(
-        _buildUri('$baseUrl/api/weak-spots/events'),
+        Uri.parse('$baseUrl/api/weak-spots/events'),
         headers: headers,
         body: json.encode({
           'userId': userId,

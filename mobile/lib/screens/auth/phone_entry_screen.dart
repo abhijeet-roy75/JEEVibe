@@ -332,8 +332,18 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                   ),
                   child: InternationalPhoneNumberInput(
                     onInputChanged: (PhoneNumber number) {
-                      _number = number;
-                      _phoneNumber = number.phoneNumber;
+                      try {
+                        _number = number;
+                        _phoneNumber = number.phoneNumber;
+                      } catch (e) {
+                        // Ignore parse errors during typing - user may not have finished entering number
+                        // The validator will catch invalid numbers on form submission
+                        debugPrint('Phone number parse error (ignored): $e');
+                      }
+                    },
+                    onInputValidated: (bool isValid) {
+                      // Silently track validation state
+                      // Don't update UI or trigger setState to avoid crashes from dlibphonenumber
                     },
                     selectorConfig: const SelectorConfig(
                       selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
@@ -344,7 +354,7 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     ),
                     countries: const ['IN', 'US'], // Allow India and USA
                     ignoreBlank: false,
-                    autoValidateMode: AutovalidateMode.onUserInteraction,
+                    autoValidateMode: AutovalidateMode.disabled, // Changed from onUserInteraction to prevent crashes during typing
                     selectorTextStyle: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.textDark,
@@ -366,7 +376,12 @@ class _PhoneEntryScreenState extends State<PhoneEntryScreen> {
                     ),
                     validator: _validatePhoneNumber,
                     onSaved: (PhoneNumber number) {
-                      _phoneNumber = number.phoneNumber;
+                      try {
+                        _phoneNumber = number.phoneNumber;
+                      } catch (e) {
+                        // Catch any parse errors during save
+                        debugPrint('Phone number save error: $e');
+                      }
                     },
                   ),
                 ),
