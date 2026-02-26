@@ -308,7 +308,10 @@ class AuthService extends ChangeNotifier {
     if (user == null) return null;
 
     try {
-      return await user.getIdToken(forceRefresh);
+      // On web, always force refresh to work around token staleness issues
+      // Web Firebase Auth has known issues with cached tokens becoming invalid
+      final shouldForceRefresh = kIsWeb || forceRefresh;
+      return await user.getIdToken(shouldForceRefresh);
     } catch (e) {
       // If token fetch fails, try force refresh once
       if (!forceRefresh) {
