@@ -36,7 +36,17 @@ jest.mock('../../../src/middleware/featureGate', () => ({
 jest.mock('../../../src/utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
+  debug: jest.fn()
+}));
+
+// Mock Firebase (required for sessionValidator → authService → firebase.js)
+jest.mock('../../../src/config/firebase', () => ({
+  admin: {},
+  db: {},
+  storage: {},
+  app: {},
+  FieldValue: {}
 }));
 
 // Mock ApiError to work like a real error class with status
