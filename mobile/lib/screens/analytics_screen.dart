@@ -35,7 +35,7 @@ class AnalyticsScreen extends StatefulWidget {
 }
 
 class _AnalyticsScreenState extends State<AnalyticsScreen>
-    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   AnalyticsOverview? _overview;
   WeeklyActivity? _weeklyActivity;
@@ -56,9 +56,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   bool _isDisposed = false;
 
   @override
-  bool get wantKeepAlive => true; // Keep state alive in bottom nav
-
-  @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
@@ -70,14 +67,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     _isDisposed = true;
     _tabController.dispose();
     super.dispose();
-  }
-
-  /// Public method to refresh data when tab becomes visible
-  /// Called by main_navigation_screen.dart when analytics tab is selected
-  void refreshData() {
-    if (!_isDisposed && mounted) {
-      _loadData();
-    }
   }
 
   Future<void> _loadData() async {
@@ -93,9 +82,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
 
-      // IMPORTANT: Force token refresh on web to prevent stale token issues
-      // Web platform has issues with token expiry when screen state is kept alive
-      final token = await authService.getIdToken(forceRefresh: kIsWeb);
+      // Get authentication token (same as other screens)
+      final token = await authService.getIdToken();
 
       if (_isDisposed || !mounted) return;
 
@@ -173,8 +161,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
-
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: Column(

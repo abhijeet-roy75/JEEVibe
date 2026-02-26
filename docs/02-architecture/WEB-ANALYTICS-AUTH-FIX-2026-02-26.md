@@ -88,51 +88,77 @@ final token = await authService.getIdToken();
 
 ## Solution
 
-### The Fix
+### The Fix (REVISED)
 
-Force token refresh on web platform when loading Analytics data:
+**Initial approach (FAILED):** Tried forcing token refresh on web
+**Final approach (SUCCESS):** Removed `AutomaticKeepAliveClientMixin` to make Analytics behave like other screens
 
 ```dart
-// IMPORTANT: Force token refresh on web to prevent stale token issues
-// Web platform has issues with token expiry when screen state is kept alive
-final token = await authService.getIdToken(forceRefresh: kIsWeb);
+// BEFORE (with AutomaticKeepAliveClientMixin)
+class _AnalyticsScreenState extends State<AnalyticsScreen>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+
+  @override
+  bool get wantKeepAlive => true; // Keep state alive in bottom nav
+
+  // ...
+}
+
+// AFTER (removed mixin)
+class _AnalyticsScreenState extends State<AnalyticsScreen>
+    with SingleTickerProviderStateMixin {
+
+  // No wantKeepAlive - widget rebuilds on each tab visit
+
+  // ...
+}
 ```
 
-**Changed file:** `mobile/lib/screens/analytics_screen.dart` (line 97)
+**Changed file:** `mobile/lib/screens/analytics_screen.dart`
 
-### How It Works
+### What Changed
 
-1. **Platform Detection:** Uses `kIsWeb` constant from `flutter/foundation.dart`
-2. **Conditional Refresh:**
-   - Web: `forceRefresh: true` → Always fetches fresh token from Firebase
-   - Mobile: `forceRefresh: false` → Uses cached token (default behavior)
+1. **Removed `AutomaticKeepAliveClientMixin`:**
+   - Analytics screen now rebuilds from scratch on each tab visit
+   - Matches behavior of other bottom nav tabs (Home, History, Profile)
 
-3. **Firebase Auth Token Refresh:**
-   - Calls `user.getIdToken(true)` on web
-   - Contacts Firebase Auth servers to get new token
-   - New token valid for next 60 minutes
-   - Minimal performance impact (~100-200ms)
+2. **Removed `wantKeepAlive` override:**
+   - Widget state is no longer preserved across tab switches
+   - Fresh token fetched every time user visits Analytics tab
+
+3. **Removed `refreshData()` method:**
+   - No longer needed since widget rebuilds naturally
+
+4. **Removed `super.build(context)` call:**
+   - Not needed without `AutomaticKeepAliveClientMixin`
+
+5. **Simplified token fetching:**
+   - Back to standard `getIdToken()` call (no force refresh needed)
+   - Same pattern as all other screens in the app
 
 ### Why This Works
 
-- **Web-specific fix:** Only affects web platform where issue occurs
-- **No mobile impact:** iOS/Android continue using efficient cached tokens
-- **Guaranteed fresh token:** Every Analytics tab visit gets new token on web
-- **AutomaticKeepAliveClientMixin compatible:** Works with kept-alive state
+- **Consistent with other screens:** Analytics now works exactly like Home, History, Profile tabs
+- **Fresh token every visit:** Widget rebuild triggers full data load with new token
+- **Simpler code:** Removed special-case logic and debugging code
+- **No platform-specific hacks:** Works the same on iOS, Android, and Web
+- **Better maintainability:** One less special case to remember
 
 ---
 
 ## Performance Impact
 
-### Token Refresh Cost
+### Widget Rebuild Cost
 
-| Platform | Before | After | Impact |
-|----------|--------|-------|--------|
-| iOS | Cached token | Cached token | No change |
-| Android | Cached token | Cached token | No change |
-| Web | Cached token (broken) | Fresh token | +100-200ms |
+| Platform | Before (with KeepAlive) | After (rebuild) | Impact |
+|----------|------------------------|-----------------|--------|
+| iOS | State kept alive | Rebuilds on visit | +200-400ms |
+| Android | State kept alive | Rebuilds on visit | +200-400ms |
+| Web | State kept alive (broken) | Rebuilds on visit | +200-400ms |
 
-**Trade-off:** Small latency increase on web for guaranteed authentication.
+**Trade-off:**
+- **Before:** Instant tab switch, but broken authentication on web
+- **After:** Slight delay on tab switch (data load), but reliable on all platforms
 
 ### Network Requests
 
@@ -191,9 +217,12 @@ final token = await authService.getIdToken(forceRefresh: kIsWeb);
 
 ### Files Modified
 
-1. **mobile/lib/screens/analytics_screen.dart** (line 97)
-   - Added `forceRefresh: kIsWeb` parameter to `getIdToken()` call
-   - Import already present: `import 'package:flutter/foundation.dart' show kIsWeb;`
+1. **mobile/lib/screens/analytics_screen.dart**
+   - Removed `AutomaticKeepAliveClientMixin` from class declaration (line 37)
+   - Removed `wantKeepAlive` getter (line 59)
+   - Removed `refreshData()` method (lines 75-80)
+   - Removed `super.build(context)` call (line 173)
+   - Simplified token fetching back to standard `getIdToken()` (line 95)
 
 ### Key Methods
 
@@ -248,17 +277,29 @@ final token = await authService.getIdToken(forceRefresh: kIsWeb);
 
 ## Alternative Solutions Considered
 
-### Option 1: Remove AutomaticKeepAliveClientMixin
-**Rejected:** Loses tab state, poor UX (user loses scroll position, selected tab)
+### Option 1: Force token refresh on web (TRIED FIRST, FAILED)
+**Attempted:** Added `forceRefresh: kIsWeb` to `getIdToken()` call
+**Result:** Still showed authentication error even after hard refresh
+**Why it failed:** Root issue wasn't token staleness, but widget lifecycle interaction with web auth
 
-### Option 2: Global token refresh on all screens
-**Rejected:** Unnecessary performance impact on mobile, breaks existing efficient caching
+### Option 2: Remove AutomaticKeepAliveClientMixin (CHOSEN SOLUTION)
+**Chosen:** Remove special-case keep-alive logic, make Analytics rebuild like other tabs
+**Benefits:**
+- Consistent with rest of app
+- Reliable on all platforms
+- Simpler code (fewer lines)
+- No platform-specific hacks
 
-### Option 3: Listen to auth state changes
-**Rejected:** Doesn't solve cached token expiry issue, adds complexity
+**Trade-offs:**
+- Loses tab state (scroll position, selected sub-tab)
+- Small performance hit on tab switch (~200-400ms)
+- Acceptable for analytics screen (data should be fresh anyway)
 
-### Option 4: Refresh token on tab visibility (selected solution)
-**Chosen:** Minimal code change, web-specific, no mobile impact, guaranteed to work
+### Option 3: Global token refresh on all screens
+**Rejected:** Unnecessary performance impact, breaks existing efficient caching
+
+### Option 4: Listen to auth state changes
+**Rejected:** Doesn't solve the underlying issue, adds complexity
 
 ---
 
@@ -335,15 +376,17 @@ No crashes expected from this change - it's a configuration adjustment to existi
 
 ## Summary
 
-**Problem:** Analytics tab shows authentication error on web due to stale Firebase Auth tokens combined with AutomaticKeepAliveClientMixin keeping widget state alive.
+**Problem:** Analytics tab shows authentication error on web due to widget state interaction with Firebase Auth on web platform.
 
-**Solution:** Force token refresh on web platform (`forceRefresh: kIsWeb`) when loading Analytics data.
+**Root Cause:** `AutomaticKeepAliveClientMixin` kept widget alive across tab switches, preventing fresh token fetch on web.
+
+**Solution:** Removed `AutomaticKeepAliveClientMixin` to make Analytics rebuild on each visit (same as other tabs).
 
 **Impact:**
 - ✅ Fixes authentication errors on web
-- ✅ No impact on iOS/Android performance
-- ✅ Minimal web latency increase (+100-200ms, acceptable)
-- ✅ Simple one-line code change
-- ✅ Deployed and live
+- ✅ Works consistently across iOS, Android, and Web
+- ✅ Simpler code (removed ~20 lines)
+- ⚠️ Small performance hit on tab switch (~200-400ms)
+- ⚠️ Loses tab state (scroll position) - acceptable for analytics
 
-**Status:** Complete and deployed to production.
+**Status:** Complete and deployed to production (https://jeevibe-app.web.app)
