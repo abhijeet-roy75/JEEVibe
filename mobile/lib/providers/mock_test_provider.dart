@@ -14,6 +14,7 @@ class MockTestProvider extends ChangeNotifier {
   // Templates & Usage
   List<MockTestTemplate> _templates = [];
   MockTestUsage? _usage;
+  DateTime? _templatesLastLoaded; // Track when templates were last loaded
 
   // Active Test State
   MockTestSession? _activeSession;
@@ -37,6 +38,9 @@ class MockTestProvider extends ChangeNotifier {
 
   // Disposal State
   bool _disposed = false;
+
+  // Cache duration for templates (5 minutes)
+  static const Duration _templateCacheDuration = Duration(minutes: 5);
 
   MockTestProvider(this._authService);
 
@@ -89,8 +93,28 @@ class MockTestProvider extends ChangeNotifier {
   // =========================================================================
 
   /// Load available templates and usage info
-  Future<void> loadTemplates() async {
+  /// Uses 5-minute cache to prevent excessive API calls (prevents rate limiting on web)
+  Future<void> loadTemplates({bool forceRefresh = false}) async {
     if (_disposed) return;
+
+    // Prevent duplicate simultaneous requests
+    if (_isLoadingTemplates) {
+      if (LoggingConfig.verboseProviderLogs) {
+        debugPrint('[MockTest] Skipping loadTemplates - already loading');
+      }
+      return;
+    }
+
+    // Check if we have cached data and it's still fresh
+    if (!forceRefresh && _templatesLastLoaded != null) {
+      final timeSinceLoad = DateTime.now().difference(_templatesLastLoaded!);
+      if (timeSinceLoad < _templateCacheDuration) {
+        if (LoggingConfig.verboseProviderLogs) {
+          debugPrint('[MockTest] Using cached templates (loaded ${timeSinceLoad.inSeconds}s ago)');
+        }
+        return; // Use cached data
+      }
+    }
 
     _isLoadingTemplates = true;
     _error = null;
@@ -118,6 +142,7 @@ class MockTestProvider extends ChangeNotifier {
         }
       }
 
+      _templatesLastLoaded = DateTime.now(); // Mark cache timestamp
       _isLoadingTemplates = false;
       _safeNotifyListeners();
     } catch (e) {
