@@ -11,6 +11,21 @@ function initializeFirebase() {
       return admin.app();
     }
 
+    // TEST ENVIRONMENT: Use test project (no real Firebase connection)
+    if (process.env.NODE_ENV === 'test') {
+      console.log('🧪 Test environment detected - using mock Firebase configuration');
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: 'test-project',
+          privateKey: '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC\n-----END PRIVATE KEY-----\n',
+          clientEmail: 'test@test-project.iam.gserviceaccount.com',
+        }),
+        storageBucket: 'test-project.firebasestorage.app'
+      });
+      console.log('✅ Firebase Admin initialized in TEST mode');
+      return admin.app();
+    }
+
     // Option 1: Use service account file (development/local only)
     // Skip file check on Vercel/Render/serverless (no file system access)
     const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
