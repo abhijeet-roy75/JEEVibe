@@ -47,21 +47,13 @@ async function validateSessionMiddleware(req, res, next) {
     });
   }
 
-  // Extract session token: header (mobile) or query param (web)
-  // Flutter Web's http package doesn't transmit custom headers,
-  // so web clients send session token as query parameter instead
-  const sessionToken = req.headers['x-session-token'] || req.query._sessionToken;
+  const sessionToken = req.headers['x-session-token'];
 
   if (!sessionToken) {
-    // Collect all header names for debugging (TEMPORARY - remove after fixing web 401)
-    const headerNames = Object.keys(req.headers);
     logger.warn('Session validation failed: no token', {
       requestId,
       userId,
       path: req.path,
-      hasHeader: !!req.headers['x-session-token'],
-      hasQuery: !!req.query._sessionToken,
-      allHeaders: headerNames
     });
     return res.status(401).json({
       success: false,
@@ -69,14 +61,6 @@ async function validateSessionMiddleware(req, res, next) {
       code: 'SESSION_TOKEN_MISSING',
       action: 'FORCE_LOGOUT',
       requestId,
-      // TEMPORARY debug info - remove after fixing web 401 issue
-      _debug: {
-        receivedHeaders: headerNames,
-        hasSessionHeader: !!req.headers['x-session-token'],
-        hasSessionQuery: !!req.query._sessionToken,
-        hasAuthorization: !!req.headers['authorization'],
-        hasDeviceId: !!req.headers['x-device-id']
-      }
     });
   }
 
