@@ -89,8 +89,9 @@ jest.mock('../../../src/middleware/auth', () => ({
   },
 }));
 
-// Mock logger
+// Mock logger (must include debug for conditionalAuth middleware)
 jest.mock('../../../src/utils/logger', () => ({
+  debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),

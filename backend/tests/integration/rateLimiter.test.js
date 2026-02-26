@@ -12,8 +12,8 @@
 
 const request = require('supertest');
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const { conditionalAuth } = require('../../src/middleware/conditionalAuth');
-const { apiLimiter } = require('../../src/middleware/rateLimiter');
 
 // Mock Firebase Admin
 const mockVerifyIdToken = jest.fn();
@@ -42,6 +42,36 @@ jest.mock('@sentry/node', () => ({
 
 const { admin } = require('../../src/config/firebase');
 
+// Helper to create a fresh rate limiter for each test (prevents test pollution)
+const createTestRateLimiter = () => {
+  const getUserKey = (req) => {
+    if (req.userId) {
+      return `user:${req.userId}`;
+    }
+    return `ip:${req.ip}`;
+  };
+
+  return rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    keyGenerator: getUserKey,
+    max: (req) => {
+      if (req.userId) {
+        return 100;
+      }
+      return 20;
+    },
+    message: (req) => ({
+      success: false,
+      error: req.userId
+        ? 'Too many requests from your account, please try again later.'
+        : 'Too many requests from this IP, please try again later.',
+      requestId: req.id || 'unknown',
+    }),
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+};
+
 describe('Rate Limiting Integration Tests', () => {
   let app;
 
@@ -57,11 +87,17 @@ describe('Rate Limiting Integration Tests', () => {
       next();
     });
 
+    // Health check BEFORE rate limiting (matches production - src/index.js:199)
+    app.get('/api/health', (req, res) => {
+      res.json({ success: true, status: 'healthy' });
+    });
+
     // Apply conditional auth BEFORE rate limiting
     app.use(conditionalAuth);
 
     // Apply rate limiting AFTER conditional auth
-    app.use(apiLimiter);
+    // Use fresh rate limiter instance per test to prevent test pollution
+    app.use('/api', createTestRateLimiter());
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -70,11 +106,6 @@ describe('Rate Limiting Integration Tests', () => {
         userId: req.userId || null,
         message: 'Test endpoint',
       });
-    });
-
-    // Health check (exempt from rate limiting)
-    app.get('/api/health', (req, res) => {
-      res.json({ success: true, status: 'healthy' });
     });
   });
 
