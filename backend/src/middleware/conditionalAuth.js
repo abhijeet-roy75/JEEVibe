@@ -110,14 +110,17 @@ async function conditionalAuth(req, res, next) {
       return next();
     }
   } catch (error) {
-    // Unexpected error in conditional auth - log and continue
+    // CRITICAL: Unexpected error in conditional auth (e.g., Firebase down)
+    // This is NOT an invalid token - it's a system error that should be propagated
     logger.error('Conditional auth unexpected error', {
       requestId: req.id,
       path: req.path,
       error: error.message,
+      stack: error.stack
     });
 
-    return next();
+    // Propagate error to error handler (don't swallow it)
+    return next(error);
   }
 }
 
