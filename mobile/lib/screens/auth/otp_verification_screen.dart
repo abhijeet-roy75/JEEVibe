@@ -149,6 +149,15 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
         if (!mounted || _isDisposed) return;
 
+        // On web, add extra delay to allow Firebase auth state to fully sync
+        // Web Firebase Auth completes sign-in quickly but tokens may not be valid yet
+        // This ensures the auth state has propagated through Firebase infrastructure
+        if (kIsWeb) {
+          debugPrint('🌐 Web: Waiting for Firebase auth state to sync...');
+          await Future.delayed(const Duration(milliseconds: 1500));
+          if (!mounted || _isDisposed) return;
+        }
+
         // Handle Forgot PIN flow
         if (widget.isForgotPinFlow) {
           // Clear old PIN immediately after successful verification (skip on web)
