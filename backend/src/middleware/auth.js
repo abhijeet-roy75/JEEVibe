@@ -38,6 +38,7 @@ async function authenticateUser(req, res, next) {
         success: false,
         error: 'No authentication token provided. Include "Authorization: Bearer <token>" header.',
         requestId,
+        _debug: { source: 'auth_middleware_no_token', headers: Object.keys(req.headers) }
       });
     }
     
@@ -86,21 +87,24 @@ async function authenticateUser(req, res, next) {
         success: false,
         error: 'Token has expired. Please sign in again.',
         requestId,
+        _debug: { source: 'auth_middleware_token_expired' }
       });
     }
-    
+
     if (error.code === 'auth/id-token-revoked' || error.code === 'auth/argument-error') {
       return res.status(401).json({
         success: false,
         error: 'Invalid or revoked token. Please sign in again.',
         requestId,
+        _debug: { source: 'auth_middleware_token_revoked' }
       });
     }
-    
+
     return res.status(401).json({
       success: false,
       error: 'Authentication failed: ' + error.message,
       requestId,
+      _debug: { source: 'auth_middleware_error', errorCode: error.code }
     });
   }
 }

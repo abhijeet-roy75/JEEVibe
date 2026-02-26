@@ -53,19 +53,30 @@ async function validateSessionMiddleware(req, res, next) {
   const sessionToken = req.headers['x-session-token'] || req.query._sessionToken;
 
   if (!sessionToken) {
+    // Collect all header names for debugging (TEMPORARY - remove after fixing web 401)
+    const headerNames = Object.keys(req.headers);
     logger.warn('Session validation failed: no token', {
       requestId,
       userId,
       path: req.path,
       hasHeader: !!req.headers['x-session-token'],
-      hasQuery: !!req.query._sessionToken
+      hasQuery: !!req.query._sessionToken,
+      allHeaders: headerNames
     });
     return res.status(401).json({
       success: false,
       error: 'Session token required',
       code: 'SESSION_TOKEN_MISSING',
       action: 'FORCE_LOGOUT',
-      requestId
+      requestId,
+      // TEMPORARY debug info - remove after fixing web 401 issue
+      _debug: {
+        receivedHeaders: headerNames,
+        hasSessionHeader: !!req.headers['x-session-token'],
+        hasSessionQuery: !!req.query._sessionToken,
+        hasAuthorization: !!req.headers['authorization'],
+        hasDeviceId: !!req.headers['x-device-id']
+      }
     });
   }
 
