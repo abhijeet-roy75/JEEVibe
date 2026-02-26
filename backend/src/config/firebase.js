@@ -11,19 +11,12 @@ function initializeFirebase() {
       return admin.app();
     }
 
-    // TEST ENVIRONMENT: Use test project (no real Firebase connection)
+    // TEST ENVIRONMENT: Use real Firebase credentials from .env
+    // Tests that don't need real Firebase should mock the firebase.js module
     if (process.env.NODE_ENV === 'test') {
-      console.log('🧪 Test environment detected - using mock Firebase configuration');
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: 'test-project',
-          privateKey: '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC\n-----END PRIVATE KEY-----\n',
-          clientEmail: 'test@test-project.iam.gserviceaccount.com',
-        }),
-        storageBucket: 'test-project.firebasestorage.app'
-      });
-      console.log('✅ Firebase Admin initialized in TEST mode');
-      return admin.app();
+      console.log('🧪 Test environment detected - will use Firebase credentials from .env');
+      // Fall through to normal initialization logic below
+      // Most unit tests mock firebase.js, but some integration tests need real Firebase
     }
 
     // Option 1: Use service account file (development/local only)
