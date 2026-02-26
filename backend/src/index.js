@@ -149,6 +149,7 @@ const corsOptions = {
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'x-session-token', 'x-device-id'],
+  exposedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'x-session-token', 'x-device-id'],
 };
 
 app.use(cors(corsOptions));
