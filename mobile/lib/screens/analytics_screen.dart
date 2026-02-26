@@ -92,7 +92,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      final token = await authService.getIdToken();
+
+      // IMPORTANT: Force token refresh on web to prevent stale token issues
+      // Web platform has issues with token expiry when screen state is kept alive
+      final token = await authService.getIdToken(forceRefresh: kIsWeb);
 
       if (_isDisposed || !mounted) return;
 
