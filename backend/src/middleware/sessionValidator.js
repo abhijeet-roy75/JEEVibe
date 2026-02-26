@@ -47,34 +47,18 @@ async function validateSessionMiddleware(req, res, next) {
     });
   }
 
-  // Extract session token from header
-  // WORKAROUND FOR FLUTTER WEB: Check both x-session-token header (mobile)
-  // and User-Agent header (web sends "JEEVibe/1.0 DeviceId/xxx SessionToken/yyy")
-  let sessionToken = req.headers['x-session-token'];
-
-  // If not in custom header, check if it's embedded in User-Agent (Flutter Web workaround)
-  if (!sessionToken) {
-    const userAgent = req.headers['user-agent'];
-    if (userAgent) {
-      // Check for format: "JEEVibe/1.0 DeviceId/xxx SessionToken/yyy"
-      const sessionMatch = userAgent.match(/SessionToken\/(\S+)/);
-      if (sessionMatch && sessionMatch[1]) {
-        sessionToken = sessionMatch[1];
-        logger.debug('Extracted session token from User-Agent header (Flutter Web)', {
-          requestId,
-          userId
-        });
-      }
-    }
-  }
+  // Extract session token: header (mobile) or query param (web)
+  // Flutter Web's http package doesn't transmit custom headers,
+  // so web clients send session token as query parameter instead
+  const sessionToken = req.headers['x-session-token'] || req.query._sessionToken;
 
   if (!sessionToken) {
     logger.warn('Session validation failed: no token', {
       requestId,
       userId,
       path: req.path,
-      hasUserAgent: !!req.headers['user-agent'],
-      hasXSessionToken: !!req.headers['x-session-token']
+      hasHeader: !!req.headers['x-session-token'],
+      hasQuery: !!req.query._sessionToken
     });
     return res.status(401).json({
       success: false,
