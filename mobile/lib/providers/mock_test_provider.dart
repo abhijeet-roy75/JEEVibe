@@ -99,9 +99,7 @@ class MockTestProvider extends ChangeNotifier {
 
     // Prevent duplicate simultaneous requests
     if (_isLoadingTemplates) {
-      if (LoggingConfig.verboseProviderLogs) {
-        debugPrint('[MockTest] Skipping loadTemplates - already loading');
-      }
+      debugPrint('[MockTest] ⚠️  BLOCKED: Skipping loadTemplates - already loading');
       return;
     }
 
@@ -109,13 +107,12 @@ class MockTestProvider extends ChangeNotifier {
     if (!forceRefresh && _templatesLastLoaded != null) {
       final timeSinceLoad = DateTime.now().difference(_templatesLastLoaded!);
       if (timeSinceLoad < _templateCacheDuration) {
-        if (LoggingConfig.verboseProviderLogs) {
-          debugPrint('[MockTest] Using cached templates (loaded ${timeSinceLoad.inSeconds}s ago)');
-        }
+        debugPrint('[MockTest] ✓ CACHED: Using templates (loaded ${timeSinceLoad.inSeconds}s ago)');
         return; // Use cached data
       }
     }
 
+    debugPrint('[MockTest] → API CALL: Fetching templates from /api/mock-tests/available');
     _isLoadingTemplates = true;
     _error = null;
     _safeNotifyListeners();
