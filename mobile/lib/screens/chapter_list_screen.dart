@@ -505,10 +505,10 @@ class _ChapterListScreenState extends State<ChapterListScreen>
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () {
+          onTap: () async {
             if (isUnlocked) {
               // Navigate to chapter practice (existing flow)
-              Navigator.of(context).push(
+              final result = await Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) => ChapterPracticeLoadingScreen(
                     chapterKey: chapter.chapterKey,
@@ -517,6 +517,10 @@ class _ChapterListScreenState extends State<ChapterListScreen>
                   ),
                 ),
               );
+              // Refresh unlock data if practice was completed
+              if (result == true && !_isDisposed && mounted) {
+                await _loadUnlockData();
+              }
             } else {
               // Show unlock quiz dialog for locked chapters
               _showUnlockQuizDialog(context, chapter, subject);

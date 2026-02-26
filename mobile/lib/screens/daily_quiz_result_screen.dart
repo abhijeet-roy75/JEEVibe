@@ -41,22 +41,35 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
   String? _error;
   Map<String, dynamic>? _streak;
 
+  // Flag to track if widget is disposed
+  bool _isDisposed = false;
+
   @override
   void initState() {
     super.initState();
     _loadData();
   }
 
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
+    if (_isDisposed) return;
+
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final token = await authService.getIdToken();
-      
+
       if (token == null) {
-        setState(() {
-          _error = 'Authentication required';
-          _isLoading = false;
-        });
+        if (!_isDisposed && mounted) {
+          setState(() {
+            _error = 'Authentication required';
+            _isLoading = false;
+          });
+        }
         return;
       }
 
@@ -65,11 +78,11 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
       final user = authService.currentUser;
       if (user != null) {
         final profile = await firestoreService.getUserProfile(user.uid);
-        if (mounted) {
-          setState(() {
-            _userProfile = profile;
-          });
-        }
+        if (_isDisposed || !mounted) return;
+
+        setState(() {
+          _userProfile = profile;
+        });
       }
 
       // Load quiz result
@@ -78,20 +91,20 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
         quizId: widget.quizId,
       );
 
-      if (mounted) {
-        setState(() {
-          _quizResult = result;
-          _streak = result['streak'] as Map<String, dynamic>?;
-          _isLoading = false;
-        });
-      }
+      if (_isDisposed || !mounted) return;
+
+      setState(() {
+        _quizResult = result;
+        _streak = result['streak'] as Map<String, dynamic>?;
+        _isLoading = false;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString().replaceFirst('Exception: ', '');
-          _isLoading = false;
-        });
-      }
+      if (_isDisposed || !mounted) return;
+
+      setState(() {
+        _error = e.toString().replaceFirst('Exception: ', '');
+        _isLoading = false;
+      });
     }
   }
 
@@ -931,8 +944,8 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
             iconColor: Colors.white,
             label: 'Review Questions ($_total)',
             backgroundColor: AppColors.primaryPurple,
-            onTap: () {
-              Navigator.push(
+            onTap: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => DailyQuizReviewScreen(
@@ -941,6 +954,7 @@ class _DailyQuizResultScreenState extends State<DailyQuizResultScreen> {
                   ),
                 ),
               );
+              // Review screen closed - no refresh needed as data hasn't changed
             },
           ),
           const SizedBox(height: 12),

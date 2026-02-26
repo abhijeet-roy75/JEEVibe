@@ -35,7 +35,7 @@ class AnalyticsScreen extends StatefulWidget {
 }
 
 class _AnalyticsScreenState extends State<AnalyticsScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
   AnalyticsOverview? _overview;
   WeeklyActivity? _weeklyActivity;
@@ -52,6 +52,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
   final GlobalKey _shareButtonKey = GlobalKey();
   bool _isSharing = false;
 
+  // Flag to track if widget is disposed
+  bool _isDisposed = false;
+
+  @override
+  bool get wantKeepAlive => true; // Keep state alive in bottom nav
+
   @override
   void initState() {
     super.initState();
@@ -61,25 +67,42 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
   @override
   void dispose() {
+    _isDisposed = true;
     _tabController.dispose();
     super.dispose();
   }
 
+  /// Public method to refresh data when tab becomes visible
+  /// Called by main_navigation_screen.dart when analytics tab is selected
+  void refreshData() {
+    if (!_isDisposed && mounted) {
+      _loadData();
+    }
+  }
+
   Future<void> _loadData() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+    if (_isDisposed) return;
+
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       final token = await authService.getIdToken();
 
+      if (_isDisposed || !mounted) return;
+
       if (token == null) {
-        setState(() {
-          _error = 'Authentication required';
-          _isLoading = false;
-        });
+        if (!_isDisposed && mounted) {
+          setState(() {
+            _error = 'Authentication required';
+            _isLoading = false;
+          });
+        }
         return;
       }
 
@@ -88,7 +111,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
       // NEW: Use batched dashboard endpoint (reduces 4 API calls to 1)
       final dashboard = await AnalyticsService.getDashboard(authToken: token);
 
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         // Update user profile
         _userProfile = dashboard.profile;
         // Sync profile to centralized provider so other screens get the update
@@ -106,7 +129,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         setState(() {
           _error = e.toString().replaceFirst('Exception: ', '');
           _isLoading = false;
@@ -147,6 +170,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: Column(

@@ -70,6 +70,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       });
     }
 
+    // Refresh Analytics tab when selected (even if already on it)
+    if (index == 2) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          final state = context.findAncestorStateOfType<_AnalyticsScreenState>();
+          state?.refreshData();
+        }
+      });
+    }
+
     // Only change tabs if switching to a different one
     if (_currentIndex != index) {
       setState(() {
