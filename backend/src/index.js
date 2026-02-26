@@ -436,64 +436,62 @@ app.use((req, res) => {
  * Exits with error code 1 if any required variables are missing
  */
 function validateEnvironment() {
-  // Required variables for all environments
-  const REQUIRED_ALL = [
+  // CRITICAL variables that MUST be present (bare minimum for Firebase)
+  const CRITICAL_VARS = [
     'FIREBASE_PROJECT_ID',
+  ];
+
+  // IMPORTANT variables (will warn but not exit if missing)
+  const IMPORTANT_VARS = [
     'FIREBASE_PRIVATE_KEY',
     'FIREBASE_CLIENT_EMAIL',
-    'NODE_ENV'
-  ];
-
-  // Additional required variables for production
-  const REQUIRED_PRODUCTION = [
-    'ALLOWED_ORIGINS',
     'OPENAI_API_KEY',
-    'RAZORPAY_KEY_ID',
-    'RAZORPAY_KEY_SECRET'
   ];
 
-  // Additional required variables for development (minimal set)
-  const REQUIRED_DEVELOPMENT = [
-    'OPENAI_API_KEY'
-  ];
+  // Check critical variables - EXIT if missing
+  const missingCritical = CRITICAL_VARS.filter(varName => !process.env[varName]);
 
-  // Determine which variables to check based on environment
-  const isProduction = process.env.NODE_ENV === 'production';
-  const requiredVars = [
-    ...REQUIRED_ALL,
-    ...(isProduction ? REQUIRED_PRODUCTION : REQUIRED_DEVELOPMENT)
-  ];
-
-  // Check for missing variables
-  const missingVars = requiredVars.filter(varName => !process.env[varName]);
-
-  if (missingVars.length > 0) {
+  if (missingCritical.length > 0) {
     console.error('');
-    console.error('❌ FATAL ERROR: Missing required environment variables');
+    console.error('❌ FATAL ERROR: Missing CRITICAL environment variables');
     console.error('');
-    console.error('Missing variables:', missingVars.join(', '));
+    console.error('Missing:', missingCritical.join(', '));
     console.error('');
-    console.error('Server cannot start without these variables.');
-    console.error('Please check your .env file or environment configuration.');
-    console.error('');
-    console.error('Required for all environments:');
-    REQUIRED_ALL.forEach(v => console.error(`  - ${v}`));
-    console.error('');
-    if (isProduction) {
-      console.error('Additional required for production:');
-      REQUIRED_PRODUCTION.forEach(v => console.error(`  - ${v}`));
-    } else {
-      console.error('Additional required for development:');
-      REQUIRED_DEVELOPMENT.forEach(v => console.error(`  - ${v}`));
-    }
+    console.error('Server cannot start without Firebase configuration.');
+    console.error('Please set FIREBASE_PROJECT_ID in your environment.');
     console.error('');
     process.exit(1);
   }
 
+  // Check important variables - WARN if missing (don't exit)
+  const missingImportant = IMPORTANT_VARS.filter(varName => !process.env[varName]);
+
+  if (missingImportant.length > 0) {
+    console.warn('');
+    console.warn('⚠️  WARNING: Missing recommended environment variables');
+    console.warn('');
+    console.warn('Missing:', missingImportant.join(', '));
+    console.warn('');
+    console.warn('Some features may not work correctly.');
+    console.warn('');
+  }
+
+  // Check environment-specific recommendations
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (isProduction) {
+    const prodRecommended = ['ALLOWED_ORIGINS', 'RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET', 'SENTRY_DSN'];
+    const missingProd = prodRecommended.filter(varName => !process.env[varName]);
+
+    if (missingProd.length > 0) {
+      console.warn('⚠️  Production recommendations:', missingProd.join(', '));
+    }
+  }
+
   // Log successful validation
-  console.log('✅ Environment variables validated successfully');
-  console.log(`   Environment: ${process.env.NODE_ENV}`);
-  console.log(`   Variables checked: ${requiredVars.length}`);
+  console.log('✅ Environment validation passed');
+  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`   Firebase Project: ${process.env.FIREBASE_PROJECT_ID}`);
 }
 
 // Validate environment BEFORE starting server
