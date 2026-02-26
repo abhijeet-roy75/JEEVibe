@@ -48,13 +48,33 @@ async function validateSessionMiddleware(req, res, next) {
   }
 
   // Extract session token from header
-  const sessionToken = req.headers['x-session-token'];
+  // WORKAROUND FOR FLUTTER WEB: Check both x-session-token header (mobile)
+  // and Authorization header (web sends "Bearer <token> Session <session-token>")
+  let sessionToken = req.headers['x-session-token'];
+
+  // If not in custom header, check if it's embedded in Authorization header (Flutter Web workaround)
+  if (!sessionToken) {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      // Check for format: "Bearer <firebase-token> Session <session-token>"
+      const sessionMatch = authHeader.match(/Session\s+(\S+)/);
+      if (sessionMatch && sessionMatch[1]) {
+        sessionToken = sessionMatch[1];
+        logger.debug('Extracted session token from Authorization header (Flutter Web)', {
+          requestId,
+          userId
+        });
+      }
+    }
+  }
 
   if (!sessionToken) {
     logger.warn('Session validation failed: no token', {
       requestId,
       userId,
-      path: req.path
+      path: req.path,
+      hasAuthHeader: !!req.headers.authorization,
+      hasXSessionToken: !!req.headers['x-session-token']
     });
     return res.status(401).json({
       success: false,

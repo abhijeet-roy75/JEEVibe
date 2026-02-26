@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'dart:convert';
@@ -99,12 +100,38 @@ class ApiService {
     final sessionToken = await AuthService.getSessionToken();
     final deviceId = await AuthService.getDeviceId();
 
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $authToken',
-      if (sessionToken != null) 'x-session-token': sessionToken,
-      'x-device-id': deviceId,
-    };
+    // DEBUG: Log session token status (using print() for web compatibility)
+    print('[API] Session token status: ${sessionToken != null ? "PRESENT (${sessionToken.substring(0, 20)}...)" : "MISSING"}');
+
+    // WORKAROUND FOR FLUTTER WEB:
+    // Flutter Web's http package doesn't transmit custom headers (x-session-token) properly
+    // even when they're in the headers map. This is a known limitation.
+    // Solution: Encode session token in Authorization header for web using custom scheme
+    final Map<String, String> headers;
+
+    if (kIsWeb && sessionToken != null) {
+      // Web: Use custom "Bearer+Session" format: "Bearer <firebase-token> Session <session-token>"
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken Session $sessionToken',
+        'x-device-id': deviceId,
+      };
+      print('[API] WEB: Session token encoded in Authorization header');
+    } else {
+      // Mobile: Use standard x-session-token header (works fine on iOS/Android)
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+        'x-device-id': deviceId,
+      };
+      if (sessionToken != null) {
+        headers['x-session-token'] = sessionToken;
+        print('[API] MOBILE: Session token added to x-session-token header');
+      }
+    }
+
+    print('[API] Final headers: ${headers.keys.toList()}');
+    return headers;
   }
 
   /// Get valid authentication token with automatic refresh
