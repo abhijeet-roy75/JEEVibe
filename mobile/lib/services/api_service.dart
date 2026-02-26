@@ -102,15 +102,24 @@ class ApiService {
 
     print('[API] Session token status: ${sessionToken != null ? "PRESENT (${sessionToken.substring(0, 20)}...)" : "MISSING"}');
 
+    // WORKAROUND: Flutter Web's http package doesn't transmit custom headers
+    // So we encode session token in User-Agent header which browsers DO send
     final headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $authToken',
-      'X-Device-Id': deviceId,
     };
 
-    if (sessionToken != null) {
-      headers['X-Session-Token'] = sessionToken;
-      print('[API] ✓ Session token added to X-Session-Token header');
+    if (sessionToken != null && kIsWeb) {
+      // Web: Encode both device ID and session token in User-Agent
+      headers['User-Agent'] = 'JEEVibe/1.0 DeviceId/$deviceId SessionToken/$sessionToken';
+      print('[API] WEB: Session encoded in User-Agent header');
+    } else {
+      // Mobile: Use standard headers (works fine)
+      headers['x-device-id'] = deviceId;
+      if (sessionToken != null) {
+        headers['x-session-token'] = sessionToken;
+        print('[API] MOBILE: Using standard headers');
+      }
     }
 
     print('[API] Final headers: ${headers.keys.toList()}');

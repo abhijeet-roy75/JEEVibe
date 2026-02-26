@@ -47,17 +47,34 @@ async function validateSessionMiddleware(req, res, next) {
     });
   }
 
-  // Extract session token from header (Express lowercases all header names)
-  const sessionToken = req.headers['x-session-token'];
+  // Extract session token from header
+  // WORKAROUND FOR FLUTTER WEB: Check both x-session-token header (mobile)
+  // and User-Agent header (web sends "JEEVibe/1.0 DeviceId/xxx SessionToken/yyy")
+  let sessionToken = req.headers['x-session-token'];
+
+  // If not in custom header, check if it's embedded in User-Agent (Flutter Web workaround)
+  if (!sessionToken) {
+    const userAgent = req.headers['user-agent'];
+    if (userAgent) {
+      // Check for format: "JEEVibe/1.0 DeviceId/xxx SessionToken/yyy"
+      const sessionMatch = userAgent.match(/SessionToken\/(\S+)/);
+      if (sessionMatch && sessionMatch[1]) {
+        sessionToken = sessionMatch[1];
+        logger.debug('Extracted session token from User-Agent header (Flutter Web)', {
+          requestId,
+          userId
+        });
+      }
+    }
+  }
 
   if (!sessionToken) {
-    // Debug: Log all headers to understand what's being received
     logger.warn('Session validation failed: no token', {
       requestId,
       userId,
       path: req.path,
-      allHeaderKeys: Object.keys(req.headers),
-      hasAuthHeader: !!req.headers.authorization
+      hasUserAgent: !!req.headers['user-agent'],
+      hasXSessionToken: !!req.headers['x-session-token']
     });
     return res.status(401).json({
       success: false,
