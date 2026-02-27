@@ -618,6 +618,22 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       print('Validating cached user exists on server...');
       await user.getIdToken(true); // Force refresh validates user exists on Firebase
       print('User validation successful');
+
+      // Ensure session token exists before making any API calls
+      // This prevents 401 errors on web when session token is missing
+      try {
+        final sessionToken = await AuthService.getSessionToken();
+        if (sessionToken == null) {
+          print('No session token found - creating new session...');
+          await authService.createSession();
+          print('Session created successfully');
+        } else {
+          print('Session token already exists');
+        }
+      } catch (sessionError) {
+        print('Error ensuring session token: $sessionError');
+        // Continue anyway - session will be created on first API call that needs it
+      }
     } catch (e) {
       print('User validation failed - user may have been deleted from server: $e');
 
