@@ -111,8 +111,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
         // Sync profile to centralized provider so other screens get the update
         context.read<UserProfileProvider>().updateProfile(dashboard.profile);
 
-        // Use subscription data locally - DON'T update global SubscriptionService
-        // to avoid triggering tier badge rebuilds on other screens (Home, etc.)
+        // Update subscription cache SILENTLY (no notifyListeners, prevents flickering)
+        // This keeps cache fresh so other screens get updated tier without API call
+        _subscriptionService.updateStatusSilent(dashboard.subscription);
         final analyticsAccess = dashboard.subscription.features.analyticsAccess;
         _hasFullAnalytics = analyticsAccess == 'full';
 

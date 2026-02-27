@@ -59,6 +59,17 @@ class SubscriptionService extends ChangeNotifier {
     debugPrint('SubscriptionService: Status updated from external source - tier=${status.subscription.tier}');
   }
 
+  /// Update subscription status silently (without triggering rebuilds)
+  /// Used by Analytics screen to keep cache fresh without causing tier badge to flicker
+  void updateStatusSilent(SubscriptionStatus status) {
+    _cachedStatus = status;
+    _lastKnownTier = status.subscription.tier;
+    _lastFetchTime = DateTime.now();
+    _errorMessage = null;
+    // DON'T call notifyListeners() - prevents unnecessary rebuilds of other screens
+    debugPrint('SubscriptionService: Status updated silently - tier=${status.subscription.tier}');
+  }
+
   /// Fetch subscription status from API
   Future<SubscriptionStatus?> fetchStatus(String authToken,
       {bool forceRefresh = false}) async {
