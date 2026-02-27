@@ -17,6 +17,7 @@ class SubscriptionService extends ChangeNotifier {
 
   // Cache
   SubscriptionStatus? _cachedStatus;
+  SubscriptionTier? _lastKnownTier; // Store last known tier to prevent flickering
   DateTime? _lastFetchTime;
   static const Duration _cacheDuration = Duration(minutes: 5);
 
@@ -32,10 +33,10 @@ class SubscriptionService extends ChangeNotifier {
   SubscriptionStatus? get status => _cachedStatus;
 
   /// Get current tier
-  /// Returns the cached tier even during refresh to prevent flickering
+  /// Returns the last known tier during refresh to prevent flickering
   /// Only falls back to 'free' if we've never fetched status before
   SubscriptionTier get currentTier =>
-      _cachedStatus?.subscription.tier ?? SubscriptionTier.free;
+      _cachedStatus?.subscription.tier ?? _lastKnownTier ?? SubscriptionTier.free;
   bool get isFree => currentTier == SubscriptionTier.free;
   bool get isPro => currentTier == SubscriptionTier.pro;
   bool get isUltra => currentTier == SubscriptionTier.ultra;
@@ -51,6 +52,7 @@ class SubscriptionService extends ChangeNotifier {
   /// This allows other services to update the cached status without making a separate API call
   void updateStatus(SubscriptionStatus status) {
     _cachedStatus = status;
+    _lastKnownTier = status.subscription.tier; // Save for flickering prevention
     _lastFetchTime = DateTime.now();
     _errorMessage = null;
     notifyListeners();
@@ -91,6 +93,7 @@ class SubscriptionService extends ChangeNotifier {
 
         if (data['success'] == true) {
           _cachedStatus = SubscriptionStatus.fromJson(data['data']);
+          _lastKnownTier = _cachedStatus?.subscription.tier; // Save for flickering prevention
           _lastFetchTime = DateTime.now();
           _errorMessage = null;
 
@@ -219,6 +222,7 @@ class SubscriptionService extends ChangeNotifier {
   /// Clear cached status (on logout)
   void clearCache() {
     _cachedStatus = null;
+    _lastKnownTier = null; // Clear last known tier on logout
     _lastFetchTime = null;
     _errorMessage = null;
     notifyListeners();

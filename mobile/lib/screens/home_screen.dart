@@ -651,6 +651,7 @@ class _HomeScreenState extends State<HomeScreen>
           );
         }
 
+        // currentTier now uses _lastKnownTier fallback to prevent flickering
         final tier = subscriptionService.currentTier;
         final tierInfo = _getTierBadgeInfo(tier);
 
