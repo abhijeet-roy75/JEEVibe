@@ -71,8 +71,10 @@ const apiLimiter = rateLimit({
   keyGenerator: getUserKey,
   max: (req) => {
     // Authenticated users: Higher limit (per user, not per IP)
+    // Increased from 100 to 300 to accommodate navigation-heavy testing
+    // and multiple API calls per screen load (10-20 calls per navigation)
     if (req.userId) {
-      return 100;
+      return 300;
     }
     // Anonymous/unauthenticated: Lower limit (per IP)
     return 20;
@@ -204,10 +206,11 @@ const analyticsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   keyGenerator: getUserKey,
   max: (req) => {
-    // Authenticated users: Higher limit (200 requests per 15 min)
-    // This allows for ~50 page loads before hitting limit (4 calls per load reduced to 1 with batching)
+    // Authenticated users: Higher limit (500 requests per 15 min)
+    // Increased from 200 to accommodate navigation testing and screen refreshes
+    // This allows for ~50-100 page loads before hitting limit
     if (req.userId) {
-      return 200;
+      return 500;
     }
     // Anonymous/unauthenticated: Increased limit (100 requests per 15 min)
     // Higher than general API limiter to account for:
