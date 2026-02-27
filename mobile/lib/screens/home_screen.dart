@@ -612,6 +612,45 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildTierBadge() {
     return Consumer<SubscriptionService>(
       builder: (context, subscriptionService, child) {
+        // Don't show tier badge while loading to prevent Free/Pro flickering
+        // This happens on web when navigating between screens triggers a refresh
+        if (subscriptionService.isLoading && subscriptionService.status == null) {
+          // First-time load - show placeholder or loading state
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.grey.shade400,
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.grey.shade600),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Loading...',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
         final tier = subscriptionService.currentTier;
         final tierInfo = _getTierBadgeInfo(tier);
 

@@ -30,6 +30,10 @@ class SubscriptionService extends ChangeNotifier {
 
   // Current status
   SubscriptionStatus? get status => _cachedStatus;
+
+  /// Get current tier
+  /// Returns the cached tier even during refresh to prevent flickering
+  /// Only falls back to 'free' if we've never fetched status before
   SubscriptionTier get currentTier =>
       _cachedStatus?.subscription.tier ?? SubscriptionTier.free;
   bool get isFree => currentTier == SubscriptionTier.free;
