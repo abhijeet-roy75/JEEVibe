@@ -10,7 +10,7 @@
  *   node scripts/diagnose-collections.js [--collection=name]
  */
 
-const { db, admin } = require('../src/config/firebase');
+const { db, admin } = require('../../src/config/firebase');
 
 const COLLECTIONS_TO_CHECK = [
     'assessment_responses',

@@ -4,7 +4,7 @@
  * Usage: node scripts/check-trial-status.js <phoneNumber>
  */
 
-const { db } = require('../src/config/firebase');
+const { db } = require('../../src/config/firebase');
 
 async function checkTrialStatus(phoneNumber) {
   try {

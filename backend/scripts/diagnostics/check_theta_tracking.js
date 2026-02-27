@@ -1,4 +1,4 @@
-const { db } = require("../src/config/firebase");
+const { db } = require("../../src/config/firebase");
 const admin = require("firebase-admin");
 
 async function checkThetaTracking(phoneNumber) {

@@ -38,7 +38,7 @@
  *   --force    : Skips the interactive confirmation prompt.
  */
 
-const { db, admin, storage } = require('../src/config/firebase');
+const { db, admin, storage } = require('../../src/config/firebase');
 const readline = require('readline');
 
 async function deleteCollection(collectionRef, isPreview = false, batchSize = 100) {
