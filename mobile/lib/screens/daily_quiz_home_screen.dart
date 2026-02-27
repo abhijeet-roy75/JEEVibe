@@ -86,7 +86,8 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
       if (_isDisposed || !mounted) return;
 
       if (token != null) {
-        await _subscriptionService.fetchStatus(token, forceRefresh: true);
+        // Respect 5-minute cache - only force refresh after quiz completion, not on screen load
+        await _subscriptionService.fetchStatus(token);
 
         if (_isDisposed || !mounted) return;
 
@@ -119,7 +120,8 @@ class _DailyQuizHomeScreenState extends State<DailyQuizHomeScreen> {
         if (_isDisposed || !mounted) return;
 
         if (token != null) {
-          await _subscriptionService.fetchStatus(token, forceRefresh: true);
+          // Respect 5-minute cache - only force refresh after quiz completion
+          await _subscriptionService.fetchStatus(token);
 
           if (_isDisposed || !mounted) return;
 

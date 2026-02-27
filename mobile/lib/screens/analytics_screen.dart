@@ -35,7 +35,7 @@ class AnalyticsScreen extends StatefulWidget {
 }
 
 class _AnalyticsScreenState extends State<AnalyticsScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late TabController _tabController;
   AnalyticsOverview? _overview;
   WeeklyActivity? _weeklyActivity;
@@ -54,6 +54,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
   // Flag to track if widget is disposed
   bool _isDisposed = false;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -161,6 +164,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: Column(

@@ -148,8 +148,9 @@ class _HomeScreenState extends State<HomeScreen>
   /// Called when profile changes (e.g., JEE target date updated)
   void _onProfileChanged() {
     if (_isDisposed) return;
-    debugPrint('🔄 Profile changed detected, refreshing chapter unlock data...');
-    _refreshChapterUnlockData();
+    debugPrint('🔄 Profile changed detected, refreshing all data...');
+    // Use _loadData() instead of separate API call - eliminates duplicate getUnlockedChapters() call
+    _loadData();
   }
 
   /// Refresh data when tab becomes visible
@@ -157,27 +158,6 @@ class _HomeScreenState extends State<HomeScreen>
     if (_isDisposed) return;
     debugPrint('🔄 Refreshing home screen data...');
     await _loadData();
-  }
-
-  /// Refresh chapter unlock data (called when returning from profile edit)
-  Future<void> _refreshChapterUnlockData() async {
-    if (_isDisposed || _authService == null) return;
-
-    final token = await _authService!.getIdToken();
-
-    if (token != null && !_isDisposed) {
-      try {
-        final unlockData = await ApiService.getUnlockedChapters(authToken: token);
-        if (!_isDisposed && mounted && unlockData.isNotEmpty) {
-          setState(() {
-            _chapterUnlockData = unlockData;
-          });
-          debugPrint('Chapter unlock data refreshed: month=${unlockData['currentMonth']}, unlocked=${(unlockData['unlockedChapters'] as List?)?.length ?? 0}');
-        }
-      } catch (e) {
-        debugPrint('Error refreshing chapter unlock data: $e');
-      }
-    }
   }
 
   /// Load weak spots for dashboard card (called non-blocking from _loadData)
