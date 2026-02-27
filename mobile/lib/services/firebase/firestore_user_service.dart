@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/user_profile.dart';
 import '../firebase/auth_service.dart';
+import '../api_service.dart';
 
 /// Exception for when server returns HTML instead of JSON (server waking up/unavailable)
 class ServerUnavailableException implements Exception {
@@ -73,10 +74,7 @@ class FirestoreUserService {
 
       final response = await http.post(
         Uri.parse('$baseUrl/api/users/profile'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: await ApiService.getAuthHeaders(token),
         body: json.encode(jsonData),
       ).timeout(const Duration(seconds: 30));
 
@@ -133,10 +131,7 @@ class FirestoreUserService {
 
       final response = await http.get(
         Uri.parse('$baseUrl/api/users/profile'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: await ApiService.getAuthHeaders(token),
       ).timeout(const Duration(seconds: 30));
 
       // Check if response is HTML instead of JSON (server unavailable/waking up)
@@ -207,10 +202,7 @@ class FirestoreUserService {
 
       final response = await http.get(
         Uri.parse('$baseUrl/api/users/profile/exists'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: await ApiService.getAuthHeaders(token),
       ).timeout(const Duration(seconds: 30));
 
       // Check if response is HTML instead of JSON (server unavailable/waking up)
@@ -249,10 +241,7 @@ class FirestoreUserService {
 
       final response = await http.patch(
         Uri.parse('$baseUrl/api/users/profile/last-active'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: await ApiService.getAuthHeaders(token),
       ).timeout(const Duration(seconds: 30));
 
       // Check if response is HTML instead of JSON (server unavailable/waking up)
@@ -285,10 +274,7 @@ class FirestoreUserService {
 
       final response = await http.patch(
         Uri.parse('$baseUrl/api/users/profile/complete'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
+        headers: await ApiService.getAuthHeaders(token),
       ).timeout(const Duration(seconds: 30));
 
       // Check if response is HTML instead of JSON (server unavailable/waking up)
