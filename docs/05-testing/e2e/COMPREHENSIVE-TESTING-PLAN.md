@@ -305,26 +305,51 @@ JEEVibe is in pre-launch stabilization phase following web platform introduction
   - Atlas data caching (5-minute TTL)
   - Edge cases: Missing micro-skills, no question mappings
 
-**Phase 2: Integration Routes (Week 2-3)**
+**Phase 2: Integration Routes (Week 2) ✅ COMPLETE**
 
-**Routes to add tests:**
-1. `admin.js` (15.51%) - Admin authentication, metrics endpoints
-2. `analytics.js` (18.78%) - Dashboard, focus areas, progress
-3. `assessment.js` (13.13%) - Initial 30-question assessment flow
-4. `mockTests.js` (17.82%) - Mock test generation, submission, results
-5. `chapterPractice.js` (28.64%) - Practice session CRUD, tier enforcement
-6. `dailyQuiz.js` (19.34%) - Quiz generation, submission, theta updates
-7. `weakSpots.js` (20.77%) - Weak spot detection, retrieval, capsule events
+**Routes tested (Day 8-9):**
+1. ✅ `admin.js` - 21 tests (authentication, metrics, user management)
+2. ✅ `analytics.js` - 20+ tests (dashboard, focus areas, progress)
+3. ✅ `mockTests.js` - 36+ tests (full mock test lifecycle)
+4. ✅ `chapterPractice.js` - 30 tests (practice sessions, tier enforcement)
+5. ✅ `weakSpots.js` - 26 tests (cognitive mastery routes)
 
-**Test pattern for routes:**
-- Authentication/authorization (401/403 scenarios)
-- Request validation (400 bad requests)
-- Tier enforcement (402 payment required)
-- Success paths (200 responses)
-- Error handling (500 server errors)
-- Rate limiting behavior
+**Total:** 133 route integration tests, all passing in CI
 
-**Phase 3: AI Provider Integration (Week 4)**
+**Remaining routes (deferred to Week 3 or later):**
+6. `assessment.js` (13.13%) - Initial 30-question assessment flow
+7. `dailyQuiz.js` (19.34%) - Quiz generation, submission, theta updates
+
+**Test patterns used:**
+- Authentication/authorization (401/403 scenarios) ✅
+- Request validation (400 bad requests) ✅
+- Tier enforcement (402 payment required) ✅
+- Success paths (200 responses) ✅
+- Error handling (500 server errors) ✅
+- Rate limiting behavior ✅
+
+**Phase 3: Firebase Emulator Setup (Week 4 - Performance Testing) ⏸️ DEFERRED**
+
+**Decision (2026-02-28):** Defer Firebase Emulator setup until Week 4 Performance Testing phase
+
+**Rationale:**
+- Quick wins available with service tests (dailyQuiz, chapterPractice, assessment) using standard Jest mocks
+- Route integration tests (133 tests) already cover critical endpoints like mockTests
+- Emulator setup is 4-6 hour investment before writing ANY tests
+- 22 skipped mockTestService async tests are lower priority (helper functions all tested)
+- Performance testing (Week 4) will benefit more from emulator (load simulation, parallel tests)
+
+**When Firebase Emulator WILL be needed:**
+1. **Week 4 Performance Testing** - Simulate high load without affecting production
+2. **mockTestService async tests** - If we decide to complete the 22 skipped tests
+3. **Complex transaction tests** - Multi-collection atomic operations
+
+**When Firebase Emulator NOT needed:**
+- ✅ Service unit tests (using Jest mocks) - Current approach working well
+- ✅ Route integration tests (using mocked services) - Already complete
+- ✅ E2E tests (using staging Firebase) - Real environment preferred
+
+**Phase 4: AI Provider Integration (Week 4 or later) ⏸️ DEFERRED**
 
 **openai.js / claude.js** (currently 6%)
 - Test cases:
@@ -1119,19 +1144,65 @@ npm run test:e2e               # 10 critical flows, ~30 minutes
   - API call mocking
   - Error handling
 
-**Day 14: Backend Coverage Push (8 hours)**
-- [x] **Fill remaining service test gaps**
-  - `weakSpotScoringService.test.js` - Increase from 32% to 80%
-  - `chapterPracticeService.test.js` - Increase from 43% to 70%
-  - `assessmentService.test.js` - Increase from 31% to 70%
-  - `dailyQuizService.test.js` - Increase from 57% to 80%
+**Day 10-11: Service Coverage Push - Phase 1 (16 hours)** 🚀 STARTING
+- [ ] **dailyQuizService.test.js** (6 hours) - Increase from 57% to 80%+
+  - Test `generateDailyQuiz()` - IRT question selection, theta-based difficulty matching
+  - Test `submitDailyQuiz()` - Theta updates (1.0x multiplier), usage tracking
+  - Test tier limits (1/day Free, 10/day Pro, 25/day Ultra)
+  - Test spaced repetition integration
+  - Test edge cases: No questions available, invalid responses
+- [ ] **chapterPracticeService.test.js** (6 hours) - Increase from 43% to 70%+
+  - Test `startChapterPractice()` - Question selection, tier limits (5/15)
+  - Test `completeChapterPractice()` - Theta update (0.5x multiplier), weak spot detection
+  - Test session management (create, resume, invalidate)
+  - Test question recency filtering (not shown in last 30 days)
+  - Test edge cases: Session expiry, no questions for chapter
+- [ ] **assessmentService.test.js** (4 hours) - Increase from 31% to 70%+
+  - Test `generateAssessment()` - 30-question assessment generation
+  - Test `submitAssessment()` - Initial theta calculation, chapter mapping
+  - Test theta initialization (overall, subject, chapter)
+  - Test prerequisite checks (one assessment per user)
+  - Test edge cases: Incomplete responses, retake prevention
+
+**Day 12-13: Service Coverage Push - Phase 2 (16 hours)**
+- [ ] **weakSpotScoringService.test.js** (8 hours) - Increase from 32% to 70%+
+  - Test `detectWeakSpots()` - 3-component scoring (skill_deficit 0.60 + signature 0.25 + recurrence 0.15)
+  - Test `evaluateRetrieval()` - 2/3 passing threshold, node state transitions
+  - Test `getUserWeakSpots()` - Capsule status derivation from event log
+  - Test `logEngagementEvent()` - Event allowlist validation
+  - Test atlas data caching (5-minute TTL)
+  - Test edge cases: Missing micro-skills, no question mappings
+- [ ] **Other service gaps** (8 hours) - Target 60%+ coverage each
+  - `snapService.test.js` - Snap & Solve flow, OCR, solution generation
+  - `streakService.test.js` - Streak calculation, daily tracking
+  - `questionStatsService.test.js` - Question performance tracking
+
+**Day 14: Coverage Validation + Documentation (8 hours)**
+- [ ] **Run coverage report** (1 hour)
+  - Execute `npm run test:coverage` in backend/
+  - Verify coverage improvement (target: 45% → 65%+)
+  - Identify any remaining gaps
+- [ ] **Update documentation** (3 hours)
+  - Update COMPREHENSIVE-TESTING-PLAN.md with actual coverage achieved
+  - Document any deferred tests (like mockTestService async tests)
+  - Update BACKEND-TESTING-PRIORITY.md with completion status
+- [ ] **CI/CD verification** (2 hours)
+  - Verify all new tests passing in GitHub Actions
+  - Check for any flaky tests
+  - Ensure test execution time < 10 minutes
+- [ ] **Firebase Emulator decision checkpoint** (2 hours)
+  - Review mockTestService async tests (22 skipped)
+  - Decide: Continue with emulator setup OR defer to Week 4 Performance Testing
+  - **DECISION MADE:** Defer emulator until Week 4 Performance Testing
+  - Document rationale: Quick wins prioritized, route integration tests already cover mockTest endpoints
 
 **End of Week 2 Goals:**
-- ✅ Backend coverage: 70%+ (from 40%)
-- ✅ 5 critical routes tested (admin, mockTests, analytics, chapterPractice, weakSpots)
-- ✅ 4 remaining services tested (weakSpotScoring, chapterPractice, assessment, dailyQuiz)
-- ✅ Mobile test infrastructure ready (fixtures, factories)
-- ✅ Backend testing complete and solid foundation established
+- ✅ Backend coverage: 65%+ (from 45%, +20 points via service tests)
+- ✅ 5 critical routes tested (admin, mockTests, analytics, chapterPractice, weakSpots) - 133 tests ✅ DONE
+- ✅ 4 remaining services tested (dailyQuiz 80%+, chapterPractice 70%+, assessment 70%+, weakSpotScoring 70%+)
+- ⏸️ Mobile test infrastructure deferred to Week 3 (focus on backend depth first)
+- ⏸️ Firebase Emulator deferred to Week 4 Performance Testing
+- ✅ Backend testing substantially complete, ready for E2E testing in Week 3
 
 ---
 
