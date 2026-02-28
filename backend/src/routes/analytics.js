@@ -27,6 +27,18 @@ const { getEffectiveTier, getSubscriptionStatus } = require('../services/subscri
 const { getCurrentWeekIST } = require('../utils/dateUtils');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 
+/**
+ * Get tier display name
+ */
+function getTierDisplayName(tier) {
+  const displayNames = {
+    free: 'Free',
+    pro: 'Pro',
+    ultra: 'Ultra'
+  };
+  return displayNames[tier] || tier;
+}
+
 // ============================================================================
 // BATCHED ANALYTICS DASHBOARD (NEW - Reduces 4 API calls to 1)
 // ============================================================================
@@ -104,12 +116,45 @@ router.get('/dashboard', authenticateUser, validateSessionMiddleware, async (req
       total_quizzes: pastAndTodayData.reduce((sum, d) => sum + d.quizzes, 0)
     };
 
+    // Format subscription status to match /api/subscriptions/status structure
+    // Mobile expects nested { subscription: {...}, limits: {...}, features: {...} }
+    const formattedSubscription = {
+      subscription: {
+        tier: subscriptionStatus.tier,
+        tier_display_name: getTierDisplayName(subscriptionStatus.tier),
+        source: subscriptionStatus.source,
+        expires_at: subscriptionStatus.expires_at,
+        ...(subscriptionStatus.override_type && {
+          override: {
+            type: subscriptionStatus.override_type,
+            reason: subscriptionStatus.override_reason
+          }
+        }),
+        ...(subscriptionStatus.subscription_id && {
+          subscription_id: subscriptionStatus.subscription_id,
+          plan_type: subscriptionStatus.plan_type
+        }),
+        // Trial info from tierInfo if available
+        ...(subscriptionStatus.source === 'trial' && subscriptionStatus.trial_started_at && {
+          trial: {
+            tier_id: subscriptionStatus.tier,
+            days_remaining: subscriptionStatus.days_remaining || 0,
+            ends_at: subscriptionStatus.expires_at,
+            started_at: subscriptionStatus.trial_started_at?.toDate?.()?.toISOString() || subscriptionStatus.trial_started_at,
+            is_active: true
+          }
+        })
+      },
+      limits: subscriptionStatus.limits,
+      features: subscriptionStatus.features
+    };
+
     // Return all data in single response
     res.json({
       success: true,
       data: {
         profile,
-        subscription: subscriptionStatus,
+        subscription: formattedSubscription,
         overview,
         weeklyActivity
       }
