@@ -90,9 +90,17 @@ async function getEffectiveTier(userId, options = {}) {
   if (!options.skipCache) {
     const cached = getCachedTier(userId);
     if (cached) {
+      logger.info('DEBUG: Using cached tier', {
+        userId,
+        cachedTier: cached.tier,
+        cachedSource: cached.source,
+        cachedExpiresAt: cached.expires_at
+      });
       return cached;
     }
   }
+
+  logger.info('DEBUG: No cache, fetching fresh tier', { userId });
 
   try {
     const userDoc = await retryFirestoreOperation(async () => {
