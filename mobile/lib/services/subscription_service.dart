@@ -62,30 +62,21 @@ class SubscriptionService extends ChangeNotifier {
   /// Update subscription status silently (without triggering rebuilds)
   /// Used by Analytics screen to keep cache fresh without causing tier badge to flicker
   void updateStatusSilent(SubscriptionStatus status) {
-    final oldTier = _cachedStatus?.subscription.tier;
-    final newTier = status.subscription.tier;
     _cachedStatus = status;
-    _lastKnownTier = newTier;
+    _lastKnownTier = status.subscription.tier;
     _lastFetchTime = DateTime.now();
     _errorMessage = null;
     // DON'T call notifyListeners() - prevents unnecessary rebuilds of other screens
-    debugPrint('SubscriptionService: Status updated silently - oldTier=$oldTier, newTier=$newTier, source=${status.subscription.source}');
-    if (oldTier != newTier) {
-      debugPrint('⚠️ TIER CHANGED in silent update: $oldTier → $newTier');
-    }
   }
 
   /// Fetch subscription status from API
   Future<SubscriptionStatus?> fetchStatus(String authToken,
       {bool forceRefresh = false}) async {
-    debugPrint('SubscriptionService.fetchStatus called with token: ${authToken.substring(0, 20)}...');
-
     // Store previous source to detect trial expiry
     final previousSource = _cachedStatus?.subscription.source;
 
     // Return cached if valid and not forcing refresh
     if (_isCacheValid && !forceRefresh) {
-      debugPrint('SubscriptionService: Using cached status');
       return _cachedStatus;
     }
 
@@ -94,29 +85,20 @@ class SubscriptionService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      debugPrint('SubscriptionService: Fetching from API...');
       final headers = await ApiService.getAuthHeaders(authToken);
       final response = await http.get(
         Uri.parse('${ApiService.baseUrl}/api/subscriptions/status'),
         headers: headers,
       ).timeout(const Duration(seconds: 10));
 
-      debugPrint('SubscriptionService: Response status = ${response.statusCode}');
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         if (data['success'] == true) {
-          final oldTier = _cachedStatus?.subscription.tier;
           _cachedStatus = SubscriptionStatus.fromJson(data['data']);
           _lastKnownTier = _cachedStatus?.subscription.tier; // Save for flickering prevention
           _lastFetchTime = DateTime.now();
           _errorMessage = null;
-
-          debugPrint('SubscriptionService: fetchStatus() - oldTier=$oldTier, newTier=${_cachedStatus?.subscription.tier}, source=${_cachedStatus?.subscription.source}');
-          if (oldTier != null && oldTier != _cachedStatus?.subscription.tier) {
-            debugPrint('⚠️ TIER CHANGED in fetchStatus: $oldTier → ${_cachedStatus?.subscription.tier}');
-          }
 
           // Detect trial expiry
           final currentSource = _cachedStatus?.subscription.source;

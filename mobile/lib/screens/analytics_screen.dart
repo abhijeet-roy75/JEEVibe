@@ -113,7 +113,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
 
         // Update subscription cache SILENTLY (no notifyListeners, prevents flickering)
         // This keeps cache fresh so other screens get updated tier without API call
-        debugPrint('📊 Analytics: Received subscription data - tier=${dashboard.subscription.subscription.tier}, source=${dashboard.subscription.subscription.source}');
         _subscriptionService.updateStatusSilent(dashboard.subscription);
         final analyticsAccess = dashboard.subscription.features.analyticsAccess;
         _hasFullAnalytics = analyticsAccess == 'full';
