@@ -1051,5 +1051,10 @@ module.exports = {
   abandonTest,
 
   // Rate limiting
-  checkRateLimit
+  checkRateLimit,
+
+  // Helper functions (exported for testing)
+  initializeQuestionStates,
+  sanitizeQuestionsForClient,
+  isAnswerCorrect
 };
