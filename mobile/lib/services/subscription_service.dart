@@ -62,12 +62,17 @@ class SubscriptionService extends ChangeNotifier {
   /// Update subscription status silently (without triggering rebuilds)
   /// Used by Analytics screen to keep cache fresh without causing tier badge to flicker
   void updateStatusSilent(SubscriptionStatus status) {
+    final oldTier = _cachedStatus?.subscription.tier;
+    final newTier = status.subscription.tier;
     _cachedStatus = status;
-    _lastKnownTier = status.subscription.tier;
+    _lastKnownTier = newTier;
     _lastFetchTime = DateTime.now();
     _errorMessage = null;
     // DON'T call notifyListeners() - prevents unnecessary rebuilds of other screens
-    debugPrint('SubscriptionService: Status updated silently - tier=${status.subscription.tier}');
+    debugPrint('SubscriptionService: Status updated silently - oldTier=$oldTier, newTier=$newTier, source=${status.subscription.source}');
+    if (oldTier != newTier) {
+      debugPrint('⚠️ TIER CHANGED in silent update: $oldTier → $newTier');
+    }
   }
 
   /// Fetch subscription status from API
@@ -100,16 +105,18 @@ class SubscriptionService extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        debugPrint('SubscriptionService: Response data = ${data.toString()}');
 
         if (data['success'] == true) {
+          final oldTier = _cachedStatus?.subscription.tier;
           _cachedStatus = SubscriptionStatus.fromJson(data['data']);
           _lastKnownTier = _cachedStatus?.subscription.tier; // Save for flickering prevention
           _lastFetchTime = DateTime.now();
           _errorMessage = null;
 
-          debugPrint('SubscriptionService: Status cached - tier=${_cachedStatus?.subscription.tier}, source=${_cachedStatus?.subscription.source}');
-          debugPrint('SubscriptionService: Trial info = ${_cachedStatus?.subscription.trial?.toJson()}');
+          debugPrint('SubscriptionService: fetchStatus() - oldTier=$oldTier, newTier=${_cachedStatus?.subscription.tier}, source=${_cachedStatus?.subscription.source}');
+          if (oldTier != null && oldTier != _cachedStatus?.subscription.tier) {
+            debugPrint('⚠️ TIER CHANGED in fetchStatus: $oldTier → ${_cachedStatus?.subscription.tier}');
+          }
 
           // Detect trial expiry
           final currentSource = _cachedStatus?.subscription.source;
