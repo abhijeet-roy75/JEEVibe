@@ -1,0 +1,120 @@
+[
+  {
+    "event_id": "evt_001",
+    "user_id": "test-user-free-002",
+    "node_id": "node_phy_nlm_friction",
+    "event_type": "weak_spot_detected",
+    "session_id": "session_20260227_001",
+    "weak_spot_score": 0.75,
+    "severity_level": "moderate",
+    "timestamp": "2026-02-27T10:00:00Z"
+  },
+  {
+    "event_id": "evt_002",
+    "user_id": "test-user-free-002",
+    "node_id": "node_phy_nlm_friction",
+    "event_type": "capsule_opened",
+    "capsule_id": "capsule_phy_nlm_friction",
+    "timestamp": "2026-02-27T10:05:00Z"
+  },
+  {
+    "event_id": "evt_003",
+    "user_id": "test-user-free-002",
+    "node_id": "node_phy_nlm_friction",
+    "event_type": "capsule_completed",
+    "capsule_id": "capsule_phy_nlm_friction",
+    "timestamp": "2026-02-27T10:15:00Z"
+  },
+  {
+    "event_id": "evt_004",
+    "user_id": "test-user-free-002",
+    "node_id": "node_phy_nlm_friction",
+    "event_type": "retrieval_attempted",
+    "retrieval_result": "passed",
+    "correct_count": 2,
+    "total_questions": 3,
+    "timestamp": "2026-02-27T10:25:00Z"
+  },
+  {
+    "event_id": "evt_005",
+    "user_id": "test-user-free-002",
+    "node_id": "node_phy_nlm_friction",
+    "event_type": "state_change",
+    "old_state": "detected",
+    "new_state": "improving",
+    "timestamp": "2026-02-27T10:25:05Z"
+  },
+  {
+    "event_id": "evt_006",
+    "user_id": "test-user-pro-002",
+    "node_id": "node_chem_equilibrium",
+    "event_type": "weak_spot_detected",
+    "session_id": "session_20260227_002",
+    "weak_spot_score": 0.85,
+    "severity_level": "high",
+    "timestamp": "2026-02-27T11:00:00Z"
+  },
+  {
+    "event_id": "evt_007",
+    "user_id": "test-user-pro-002",
+    "node_id": "node_chem_equilibrium",
+    "event_type": "capsule_opened",
+    "capsule_id": "capsule_chem_equilibrium",
+    "timestamp": "2026-02-27T11:10:00Z"
+  },
+  {
+    "event_id": "evt_008",
+    "user_id": "test-user-pro-002",
+    "node_id": "node_math_integration_substitution",
+    "event_type": "weak_spot_detected",
+    "session_id": "session_20260227_003",
+    "weak_spot_score": 0.65,
+    "severity_level": "moderate",
+    "timestamp": "2026-02-27T12:00:00Z"
+  },
+  {
+    "event_id": "evt_009",
+    "user_id": "test-user-ultra-001",
+    "node_id": "node_phy_optics_interference",
+    "event_type": "weak_spot_detected",
+    "session_id": "session_20260227_004",
+    "weak_spot_score": 0.55,
+    "severity_level": "low",
+    "timestamp": "2026-02-27T13:00:00Z"
+  },
+  {
+    "event_id": "evt_010",
+    "user_id": "test-user-ultra-001",
+    "node_id": "node_phy_optics_interference",
+    "event_type": "capsule_opened",
+    "capsule_id": "capsule_phy_optics_interference",
+    "timestamp": "2026-02-27T13:05:00Z"
+  },
+  {
+    "event_id": "evt_011",
+    "user_id": "test-user-ultra-001",
+    "node_id": "node_phy_optics_interference",
+    "event_type": "capsule_completed",
+    "capsule_id": "capsule_phy_optics_interference",
+    "timestamp": "2026-02-27T13:20:00Z"
+  },
+  {
+    "event_id": "evt_012",
+    "user_id": "test-user-ultra-001",
+    "node_id": "node_phy_optics_interference",
+    "event_type": "retrieval_attempted",
+    "retrieval_result": "passed",
+    "correct_count": 3,
+    "total_questions": 3,
+    "timestamp": "2026-02-27T13:30:00Z"
+  },
+  {
+    "event_id": "evt_013",
+    "user_id": "test-user-ultra-001",
+    "node_id": "node_phy_optics_interference",
+    "event_type": "state_change",
+    "old_state": "improving",
+    "new_state": "mastered",
+    "timestamp": "2026-02-27T13:30:05Z"
+  }
+]

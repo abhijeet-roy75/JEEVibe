@@ -1,0 +1,114 @@
+{
+  "free_tier": {
+    "user_id": "test-user-free-001",
+    "subscription": {
+      "tier": "free",
+      "status": "active",
+      "last_synced": "2026-02-27T00:00:00Z"
+    },
+    "trial": null,
+    "subscriptionStatus": "free",
+    "subscriptionTier": "Free"
+  },
+  "pro_tier_paid": {
+    "user_id": "test-user-pro-001",
+    "subscription": {
+      "tier": "pro",
+      "status": "active",
+      "active_subscription_id": "sub_pro_001",
+      "last_synced": "2026-02-27T00:00:00Z"
+    },
+    "trial": null,
+    "subscriptionStatus": "pro",
+    "subscriptionTier": "Pro"
+  },
+  "pro_tier_override": {
+    "user_id": "test-user-pro-002",
+    "subscription": {
+      "tier": "pro",
+      "status": "active",
+      "last_synced": "2026-02-27T00:00:00Z",
+      "override": {
+        "type": "testing",
+        "tier_id": "pro",
+        "granted_by": "setup-test-users-script",
+        "granted_at": "2026-02-27T00:00:00Z",
+        "expires_at": "2026-05-28T00:00:00Z",
+        "reason": "Test user for automated testing"
+      }
+    },
+    "trial": null,
+    "subscriptionStatus": "pro",
+    "subscriptionTier": "Pro"
+  },
+  "ultra_tier_override": {
+    "user_id": "test-user-ultra-001",
+    "subscription": {
+      "tier": "ultra",
+      "status": "active",
+      "last_synced": "2026-02-27T00:00:00Z",
+      "override": {
+        "type": "testing",
+        "tier_id": "ultra",
+        "granted_by": "setup-test-users-script",
+        "granted_at": "2026-02-27T00:00:00Z",
+        "expires_at": "2026-05-28T00:00:00Z",
+        "reason": "Test user for automated testing"
+      }
+    },
+    "trial": null,
+    "subscriptionStatus": "ultra",
+    "subscriptionTier": "Ultra"
+  },
+  "trial_active": {
+    "user_id": "test-user-trial-active",
+    "subscription": {
+      "tier": "pro",
+      "status": "trial",
+      "last_synced": "2026-02-27T00:00:00Z"
+    },
+    "trial": {
+      "ends_at": "2026-03-24T00:00:00Z",
+      "started_at": "2026-02-22T00:00:00Z",
+      "is_active": true,
+      "tier_id": "pro"
+    },
+    "trialEndsAt": "2026-03-24T00:00:00Z",
+    "subscriptionStatus": "pro_trial",
+    "subscriptionTier": "Pro"
+  },
+  "trial_expiring": {
+    "user_id": "test-user-trial-expiring",
+    "subscription": {
+      "tier": "pro",
+      "status": "trial",
+      "last_synced": "2026-02-27T00:00:00Z"
+    },
+    "trial": {
+      "ends_at": "2026-02-28T00:00:00Z",
+      "started_at": "2026-01-29T00:00:00Z",
+      "is_active": true,
+      "tier_id": "pro"
+    },
+    "trialEndsAt": "2026-02-28T00:00:00Z",
+    "subscriptionStatus": "pro_trial",
+    "subscriptionTier": "Pro"
+  },
+  "trial_expired": {
+    "user_id": "test-user-trial-expired",
+    "subscription": {
+      "tier": "free",
+      "status": "active",
+      "last_synced": "2026-02-27T00:00:00Z"
+    },
+    "trial": {
+      "ends_at": "2026-02-20T00:00:00Z",
+      "started_at": "2026-01-21T00:00:00Z",
+      "is_active": false,
+      "tier_id": "pro"
+    },
+    "trialEndsAt": "2026-02-20T00:00:00Z",
+    "subscriptionStatus": "free",
+    "subscriptionTier": "Free"
+  }
+}

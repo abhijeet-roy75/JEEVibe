@@ -1,0 +1,139 @@
+{
+  "beginner_user": {
+    "user_id": "test-user-free-001",
+    "overall_theta": -0.5,
+    "overall_percentile": 30.9,
+    "theta_by_subject": {
+      "physics": {
+        "theta": -0.6,
+        "se": 0.5,
+        "questions_answered": 5
+      },
+      "chemistry": {
+        "theta": -0.5,
+        "se": 0.5,
+        "questions_answered": 3
+      },
+      "mathematics": {
+        "theta": -0.4,
+        "se": 0.5,
+        "questions_answered": 7
+      }
+    },
+    "theta_by_chapter": {
+      "physics_kinematics": {
+        "theta": -0.6,
+        "se": 0.4,
+        "questions_answered": 5
+      },
+      "chemistry_atomic_structure": {
+        "theta": -0.5,
+        "se": 0.45,
+        "questions_answered": 3
+      },
+      "mathematics_quadratic_equations": {
+        "theta": -0.4,
+        "se": 0.4,
+        "questions_answered": 7
+      }
+    }
+  },
+  "intermediate_user": {
+    "user_id": "test-user-free-002",
+    "overall_theta": -0.2,
+    "overall_percentile": 42.1,
+    "theta_by_subject": {
+      "physics": {
+        "theta": -0.3,
+        "se": 0.3,
+        "questions_answered": 30
+      },
+      "chemistry": {
+        "theta": -0.2,
+        "se": 0.3,
+        "questions_answered": 25
+      },
+      "mathematics": {
+        "theta": -0.1,
+        "se": 0.3,
+        "questions_answered": 35
+      }
+    },
+    "theta_by_chapter": {
+      "physics_kinematics": {
+        "theta": -0.2,
+        "se": 0.25,
+        "questions_answered": 15
+      },
+      "physics_laws_of_motion": {
+        "theta": -0.4,
+        "se": 0.3,
+        "questions_answered": 10
+      },
+      "chemistry_atomic_structure": {
+        "theta": -0.1,
+        "se": 0.28,
+        "questions_answered": 12
+      },
+      "mathematics_differentiation": {
+        "theta": 0.0,
+        "se": 0.25,
+        "questions_answered": 18
+      }
+    }
+  },
+  "advanced_user": {
+    "user_id": "test-user-ultra-002",
+    "overall_theta": 0.5,
+    "overall_percentile": 69.1,
+    "theta_by_subject": {
+      "physics": {
+        "theta": 0.6,
+        "se": 0.2,
+        "questions_answered": 300
+      },
+      "chemistry": {
+        "theta": 0.5,
+        "se": 0.2,
+        "questions_answered": 250
+      },
+      "mathematics": {
+        "theta": 0.4,
+        "se": 0.2,
+        "questions_answered": 350
+      }
+    },
+    "theta_by_chapter": {
+      "physics_kinematics": {
+        "theta": 0.7,
+        "se": 0.18,
+        "questions_answered": 50
+      },
+      "physics_laws_of_motion": {
+        "theta": 0.6,
+        "se": 0.19,
+        "questions_answered": 45
+      },
+      "chemistry_atomic_structure": {
+        "theta": 0.5,
+        "se": 0.20,
+        "questions_answered": 40
+      },
+      "chemistry_thermodynamics": {
+        "theta": 0.6,
+        "se": 0.19,
+        "questions_answered": 38
+      },
+      "mathematics_differentiation": {
+        "theta": 0.5,
+        "se": 0.19,
+        "questions_answered": 55
+      },
+      "mathematics_integration": {
+        "theta": 0.4,
+        "se": 0.21,
+        "questions_answered": 48
+      }
+    }
+  }
+}

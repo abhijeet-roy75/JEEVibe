@@ -15,6 +15,7 @@ const { db, admin } = require('../config/firebase');
 const { retryFirestoreOperation } = require('../utils/firestoreRetry');
 const logger = require('../utils/logger');
 const { getDatabaseNames } = require('./chapterMappingService');
+const { formatChapterKey } = require('./thetaCalculationService');
 
 // ============================================================================
 // CONSTANTS
@@ -524,14 +525,15 @@ async function selectQuestionsForChapters(chapterThetas, excludeQuestionIds = ne
 /**
  * Fallback: Select any available questions from the database
  * Used when no questions are found for selected chapters
- * 
+ *
  * @param {Set<string>} excludeQuestionIds - Question IDs to exclude
  * @param {number} limit - Maximum number of questions to return
+ * @param {Set<string>} unlockedChapterKeys - Optional set of unlocked chapter keys to filter by
  * @returns {Promise<Array>} Available question documents
  */
-async function selectAnyAvailableQuestions(excludeQuestionIds = new Set(), limit = 10) {
+async function selectAnyAvailableQuestions(excludeQuestionIds = new Set(), limit = 10, unlockedChapterKeys = null) {
   try {
-    logger.info(`selectAnyAvailableQuestions called with limit=${limit}`);
+    logger.info(`selectAnyAvailableQuestions called with limit=${limit}, unlockFiltering=${unlockedChapterKeys !== null}`);
 
     // Query all questions, limited by count
     const questionsRef = db.collection('questions')
@@ -553,6 +555,20 @@ async function selectAnyAvailableQuestions(excludeQuestionIds = new Set(), limit
     let questions = snapshot.docs
       .map(doc => normalizeQuestion(doc.id, doc.data()))
       .filter(q => q !== null);
+
+    // Filter by unlocked chapters (if provided)
+    if (unlockedChapterKeys !== null) {
+      const beforeUnlockFilter = questions.length;
+      questions = questions.filter(q => {
+        const chapterKey = q.chapter_key || formatChapterKey(q.subject, q.chapter);
+        return unlockedChapterKeys.has(chapterKey);
+      });
+      logger.info('Filtered questions by unlocked chapters', {
+        beforeUnlockFilter,
+        afterUnlockFilter: questions.length,
+        unlockedChapterCount: unlockedChapterKeys.size
+      });
+    }
 
     // Filter out excluded questions
     let filteredQuestions = questions.filter(q => !excludeQuestionIds.has(q.question_id));

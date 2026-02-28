@@ -1,0 +1,60 @@
+{
+  "template_id": "mock_test_jee_main_01",
+  "template_name": "JEE Main Mock Test 1",
+  "duration_seconds": 10800,
+  "total_questions": 90,
+  "subjects": {
+    "physics": {
+      "total_questions": 30,
+      "mcq_single": 20,
+      "numerical": 10,
+      "question_ids": [
+        "PHY_KIN_001", "PHY_KIN_002", "PHY_NLM_001", "PHY_NLM_002", "PHY_NLM_003",
+        "PHY_WORK_001", "PHY_WORK_002", "PHY_ENERGY_001", "PHY_ENERGY_002", "PHY_MOMENTUM_001",
+        "PHY_ROTATION_001", "PHY_ROTATION_002", "PHY_GRAV_001", "PHY_GRAV_002", "PHY_FLUID_001",
+        "PHY_THERMO_001", "PHY_THERMO_002", "PHY_WAVE_001", "PHY_WAVE_002", "PHY_OPTICS_001",
+        "PHY_ELECTRO_001", "PHY_ELECTRO_002", "PHY_CURRENT_001", "PHY_CURRENT_002", "PHY_MAG_001",
+        "PHY_EMI_001", "PHY_EMI_002", "PHY_AC_001", "PHY_MODERN_001", "PHY_MODERN_002"
+      ]
+    },
+    "chemistry": {
+      "total_questions": 30,
+      "mcq_single": 20,
+      "numerical": 10,
+      "question_ids": [
+        "CHEM_ATOM_001", "CHEM_ATOM_002", "CHEM_BONDING_001", "CHEM_BONDING_002", "CHEM_STATES_001",
+        "CHEM_THERMO_001", "CHEM_THERMO_002", "CHEM_EQUI_001", "CHEM_EQUI_002", "CHEM_REDOX_001",
+        "CHEM_HYDROGEN_001", "CHEM_SBLOCK_001", "CHEM_PBLOCK_001", "CHEM_DBLOCK_001", "CHEM_COORD_001",
+        "CHEM_ORG1_001", "CHEM_ORG1_002", "CHEM_ORG2_001", "CHEM_ORG2_002", "CHEM_ORG3_001",
+        "CHEM_AROMA_001", "CHEM_HALO_001", "CHEM_ALCOHOL_001", "CHEM_ALDEHYDE_001", "CHEM_ACID_001",
+        "CHEM_NITROGEN_001", "CHEM_BIO_001", "CHEM_POLYMER_001", "CHEM_PRACTICAL_001", "CHEM_ENV_001"
+      ]
+    },
+    "mathematics": {
+      "total_questions": 30,
+      "mcq_single": 20,
+      "numerical": 10,
+      "question_ids": [
+        "MATH_SET_001", "MATH_RELATION_001", "MATH_TRIG_001", "MATH_TRIG_002", "MATH_COMPLEX_001",
+        "MATH_LINEAR_001", "MATH_MATRIX_001", "MATH_DETERMINANT_001", "MATH_QUADRATIC_001", "MATH_SEQUENCE_001",
+        "MATH_BINOMIAL_001", "MATH_PERMUTATION_001", "MATH_PROBABILITY_001", "MATH_LIMIT_001", "MATH_CONTINUITY_001",
+        "MATH_CALC_001", "MATH_CALC_002", "MATH_AOD_001", "MATH_INTEGRAL_001", "MATH_INTEGRAL_002",
+        "MATH_DIFFEQUATION_001", "MATH_2D_001", "MATH_2D_002", "MATH_3D_001", "MATH_3D_002",
+        "MATH_VECTOR_001", "MATH_VECTOR_002", "MATH_STATS_001", "MATH_STATS_002", "MATH_STATS_003"
+      ]
+    }
+  },
+  "marking_scheme": {
+    "mcq_single_correct": 4,
+    "mcq_single_incorrect": -1,
+    "mcq_single_unattempted": 0,
+    "numerical_correct": 4,
+    "numerical_incorrect": -1,
+    "numerical_unattempted": 0
+  },
+  "maximum_marks": 300,
+  "passing_marks": 90,
+  "recommended_attempts": 75,
+  "created_at": "2026-02-27T00:00:00Z",
+  "active": true
+}

@@ -1,0 +1,116 @@
+{
+  "valid_quiz_submission": {
+    "user_id": "test-user-free-002",
+    "quiz_id": "quiz_20260227_001",
+    "responses": [
+      {
+        "question_id": "PHY_KIN_001",
+        "selected_answer": "B",
+        "is_correct": true,
+        "time_spent_seconds": 45
+      },
+      {
+        "question_id": "CHEM_ATOM_001",
+        "selected_answer": "B",
+        "is_correct": true,
+        "time_spent_seconds": 30
+      },
+      {
+        "question_id": "MATH_CALC_001",
+        "selected_answer": "A",
+        "is_correct": true,
+        "time_spent_seconds": 60
+      },
+      {
+        "question_id": "PHY_KIN_002",
+        "selected_answer": "C",
+        "is_correct": false,
+        "time_spent_seconds": 90
+      },
+      {
+        "question_id": "PHY_NLM_001",
+        "selected_answer": "B",
+        "is_correct": true,
+        "time_spent_seconds": 120
+      }
+    ],
+    "total_time_seconds": 345,
+    "completed_at": "2026-02-27T10:30:00Z"
+  },
+  "perfect_quiz_submission": {
+    "user_id": "test-user-pro-002",
+    "quiz_id": "quiz_20260227_002",
+    "responses": [
+      {
+        "question_id": "PHY_KIN_001",
+        "selected_answer": "B",
+        "is_correct": true,
+        "time_spent_seconds": 25
+      },
+      {
+        "question_id": "CHEM_ATOM_001",
+        "selected_answer": "B",
+        "is_correct": true,
+        "time_spent_seconds": 20
+      },
+      {
+        "question_id": "MATH_CALC_001",
+        "selected_answer": "A",
+        "is_correct": true,
+        "time_spent_seconds": 35
+      },
+      {
+        "question_id": "PHY_KIN_002",
+        "selected_answer": "B",
+        "is_correct": true,
+        "time_spent_seconds": 40
+      },
+      {
+        "question_id": "PHY_NLM_001",
+        "selected_answer": "B",
+        "is_correct": true,
+        "time_spent_seconds": 50
+      }
+    ],
+    "total_time_seconds": 170,
+    "completed_at": "2026-02-27T11:00:00Z"
+  },
+  "poor_quiz_submission": {
+    "user_id": "test-user-free-001",
+    "quiz_id": "quiz_20260227_003",
+    "responses": [
+      {
+        "question_id": "PHY_KIN_001",
+        "selected_answer": "A",
+        "is_correct": false,
+        "time_spent_seconds": 120
+      },
+      {
+        "question_id": "CHEM_ATOM_001",
+        "selected_answer": "A",
+        "is_correct": false,
+        "time_spent_seconds": 90
+      },
+      {
+        "question_id": "MATH_CALC_001",
+        "selected_answer": "B",
+        "is_correct": false,
+        "time_spent_seconds": 150
+      },
+      {
+        "question_id": "PHY_KIN_002",
+        "selected_answer": "A",
+        "is_correct": false,
+        "time_spent_seconds": 180
+      },
+      {
+        "question_id": "PHY_NLM_001",
+        "selected_answer": "A",
+        "is_correct": false,
+        "time_spent_seconds": 200
+      }
+    ],
+    "total_time_seconds": 740,
+    "completed_at": "2026-02-27T12:00:00Z"
+  }
+}

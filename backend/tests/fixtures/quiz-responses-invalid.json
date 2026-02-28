@@ -1,0 +1,61 @@
+{
+  "missing_user_id": {
+    "quiz_id": "quiz_20260227_001",
+    "responses": [
+      {
+        "question_id": "PHY_KIN_001",
+        "selected_answer": "B",
+        "is_correct": true
+      }
+    ]
+  },
+  "missing_quiz_id": {
+    "user_id": "test-user-free-001",
+    "responses": [
+      {
+        "question_id": "PHY_KIN_001",
+        "selected_answer": "B",
+        "is_correct": true
+      }
+    ]
+  },
+  "empty_responses": {
+    "user_id": "test-user-free-001",
+    "quiz_id": "quiz_20260227_001",
+    "responses": []
+  },
+  "invalid_answer_format": {
+    "user_id": "test-user-free-001",
+    "quiz_id": "quiz_20260227_001",
+    "responses": [
+      {
+        "question_id": "PHY_KIN_001",
+        "selected_answer": 123,
+        "is_correct": true
+      }
+    ]
+  },
+  "missing_question_id": {
+    "user_id": "test-user-free-001",
+    "quiz_id": "quiz_20260227_001",
+    "responses": [
+      {
+        "selected_answer": "B",
+        "is_correct": true
+      }
+    ]
+  },
+  "negative_time_spent": {
+    "user_id": "test-user-free-001",
+    "quiz_id": "quiz_20260227_001",
+    "responses": [
+      {
+        "question_id": "PHY_KIN_001",
+        "selected_answer": "B",
+        "is_correct": true,
+        "time_spent_seconds": -30
+      }
+    ]
+  },
+  "malformed_json": "{ user_id: 'test', quiz_id: 'quiz1', responses: [ { question_id: 'Q1' } ] }"
+}

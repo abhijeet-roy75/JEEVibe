@@ -692,9 +692,10 @@ async function generateDailyQuizInternal(userId) {
 
     // NEW: Filter chapters by unlock status (24-month countdown timeline)
     logger.info('Checking chapter unlock status', { userId });
+    let unlockedChapterKeys = null; // Declare outside try-catch for use in fallback
     try {
       const unlockResult = await getUnlockedChapters(userId);
-      const unlockedChapterKeys = new Set(unlockResult.unlockedChapterKeys);
+      unlockedChapterKeys = new Set(unlockResult.unlockedChapterKeys);
 
       logger.info('Chapter unlock status fetched', {
         userId,
@@ -895,7 +896,8 @@ async function generateDailyQuizInternal(userId) {
 
         const fallbackQuestions = await selectAnyAvailableQuestions(
           combinedExcludeIds,
-          questionsNeeded
+          questionsNeeded,
+          unlockedChapterKeys // Pass unlocked chapters to fallback
         );
 
         if (fallbackQuestions.length > 0) {

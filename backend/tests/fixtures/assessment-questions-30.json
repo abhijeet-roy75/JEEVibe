@@ -1,0 +1,104 @@
+[
+  {
+    "question_id": "ASSESS_PHY_001",
+    "subject": "Physics",
+    "broad_chapter": "Mechanics",
+    "chapter_key": "physics_kinematics",
+    "question_type": "mcq_single",
+    "difficulty": "easy",
+    "question_text": "A body moving with uniform acceleration covers 10m in the first 2 seconds. What is its acceleration?",
+    "options": [
+      { "option_id": "A", "text": "2.5 m/s²" },
+      { "option_id": "B", "text": "5 m/s²" },
+      { "option_id": "C", "text": "10 m/s²" },
+      { "option_id": "D", "text": "20 m/s²" }
+    ],
+    "correct_answer": "B",
+    "irt_parameters": { "difficulty_b": -0.3, "discrimination_a": 1.2, "guessing_c": 0.25 }
+  },
+  {
+    "question_id": "ASSESS_PHY_002",
+    "subject": "Physics",
+    "broad_chapter": "Electromagnetism",
+    "chapter_key": "physics_electrostatics",
+    "question_type": "mcq_single",
+    "difficulty": "medium",
+    "question_text": "Two point charges +2μC and -2μC are separated by 10cm. What is the electric field at the midpoint?",
+    "options": [
+      { "option_id": "A", "text": "Zero" },
+      { "option_id": "B", "text": "7.2 × 10⁵ N/C" },
+      { "option_id": "C", "text": "1.44 × 10⁶ N/C" },
+      { "option_id": "D", "text": "2.88 × 10⁶ N/C" }
+    ],
+    "correct_answer": "C",
+    "irt_parameters": { "difficulty_b": 0.5, "discrimination_a": 1.6, "guessing_c": 0.25 }
+  },
+  {
+    "question_id": "ASSESS_CHEM_001",
+    "subject": "Chemistry",
+    "broad_chapter": "Physical Chemistry",
+    "chapter_key": "chemistry_thermodynamics",
+    "question_type": "mcq_single",
+    "difficulty": "easy",
+    "question_text": "Which of the following is an extensive property?",
+    "options": [
+      { "option_id": "A", "text": "Temperature" },
+      { "option_id": "B", "text": "Pressure" },
+      { "option_id": "C", "text": "Volume" },
+      { "option_id": "D", "text": "Density" }
+    ],
+    "correct_answer": "C",
+    "irt_parameters": { "difficulty_b": -0.5, "discrimination_a": 1.1, "guessing_c": 0.25 }
+  },
+  {
+    "question_id": "ASSESS_CHEM_002",
+    "subject": "Chemistry",
+    "broad_chapter": "Organic Chemistry",
+    "chapter_key": "chemistry_organic_basics",
+    "question_type": "mcq_single",
+    "difficulty": "medium",
+    "question_text": "What is the IUPAC name of CH₃-CH(CH₃)-CH₂-CH₃?",
+    "options": [
+      { "option_id": "A", "text": "Butane" },
+      { "option_id": "B", "text": "2-Methylpropane" },
+      { "option_id": "C", "text": "2-Methylbutane" },
+      { "option_id": "D", "text": "3-Methylbutane" }
+    ],
+    "correct_answer": "C",
+    "irt_parameters": { "difficulty_b": 0.3, "discrimination_a": 1.4, "guessing_c": 0.25 }
+  },
+  {
+    "question_id": "ASSESS_MATH_001",
+    "subject": "Mathematics",
+    "broad_chapter": "Algebra",
+    "chapter_key": "mathematics_quadratic_equations",
+    "question_type": "mcq_single",
+    "difficulty": "easy",
+    "question_text": "What are the roots of x² - 5x + 6 = 0?",
+    "options": [
+      { "option_id": "A", "text": "1, 6" },
+      { "option_id": "B", "text": "2, 3" },
+      { "option_id": "C", "text": "-2, -3" },
+      { "option_id": "D", "text": "5, 1" }
+    ],
+    "correct_answer": "B",
+    "irt_parameters": { "difficulty_b": -0.4, "discrimination_a": 1.0, "guessing_c": 0.25 }
+  },
+  {
+    "question_id": "ASSESS_MATH_002",
+    "subject": "Mathematics",
+    "broad_chapter": "Calculus",
+    "chapter_key": "mathematics_differentiation",
+    "question_type": "mcq_single",
+    "difficulty": "medium",
+    "question_text": "What is the derivative of sin²(x)?",
+    "options": [
+      { "option_id": "A", "text": "cos²(x)" },
+      { "option_id": "B", "text": "2sin(x)cos(x)" },
+      { "option_id": "C", "text": "sin(2x)" },
+      { "option_id": "D", "text": "Both B and C" }
+    ],
+    "correct_answer": "D",
+    "irt_parameters": { "difficulty_b": 0.6, "discrimination_a": 1.7, "guessing_c": 0.25 }
+  }
+]

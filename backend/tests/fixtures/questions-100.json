@@ -1,0 +1,188 @@
+[
+  {
+    "question_id": "PHY_KIN_001",
+    "subject": "Physics",
+    "chapter": "Kinematics",
+    "chapter_key": "physics_kinematics",
+    "question_type": "mcq_single",
+    "difficulty": "easy",
+    "question_text": "A car accelerates from rest at 2 m/s². What is its velocity after 5 seconds?",
+    "question_text_html": "<p>A car accelerates from rest at 2 m/s². What is its velocity after 5 seconds?</p>",
+    "options": [
+      { "option_id": "A", "text": "5 m/s", "html": "<p>5 m/s</p>" },
+      { "option_id": "B", "text": "10 m/s", "html": "<p>10 m/s</p>" },
+      { "option_id": "C", "text": "15 m/s", "html": "<p>15 m/s</p>" },
+      { "option_id": "D", "text": "20 m/s", "html": "<p>20 m/s</p>" }
+    ],
+    "correct_answer": "B",
+    "solution_text": "Using v = u + at, where u = 0, a = 2 m/s², t = 5s: v = 0 + 2(5) = 10 m/s",
+    "solution_steps": [
+      { "step_number": 1, "description": "Identify given values", "formula": "u = 0, a = 2 m/s², t = 5s" },
+      { "step_number": 2, "description": "Apply first equation of motion", "formula": "v = u + at" },
+      { "step_number": 3, "description": "Substitute and calculate", "formula": "v = 0 + 2(5) = 10 m/s" }
+    ],
+    "key_insight": "First equation of motion relates velocity, acceleration, and time",
+    "common_mistakes": ["Forgetting that initial velocity is zero", "Using wrong formula (s = ut + ½at²)"],
+    "distractor_analysis": {
+      "A": "Multiplied acceleration by time incorrectly (2.5 × 2)",
+      "C": "Added acceleration and time instead of multiplying",
+      "D": "Used displacement formula instead of velocity"
+    },
+    "irt_parameters": {
+      "difficulty_b": -0.5,
+      "discrimination_a": 1.2,
+      "guessing_c": 0.25
+    },
+    "active": true,
+    "created_at": "2026-02-27T00:00:00Z"
+  },
+  {
+    "question_id": "PHY_KIN_002",
+    "subject": "Physics",
+    "chapter": "Kinematics",
+    "chapter_key": "physics_kinematics",
+    "question_type": "mcq_single",
+    "difficulty": "medium",
+    "question_text": "A ball is thrown vertically upward with velocity 20 m/s. What is the maximum height reached? (g = 10 m/s²)",
+    "question_text_html": "<p>A ball is thrown vertically upward with velocity 20 m/s. What is the maximum height reached? (g = 10 m/s²)</p>",
+    "options": [
+      { "option_id": "A", "text": "10 m", "html": "<p>10 m</p>" },
+      { "option_id": "B", "text": "20 m", "html": "<p>20 m</p>" },
+      { "option_id": "C", "text": "30 m", "html": "<p>30 m</p>" },
+      { "option_id": "D", "text": "40 m", "html": "<p>40 m</p>" }
+    ],
+    "correct_answer": "B",
+    "solution_text": "At maximum height, final velocity = 0. Using v² = u² - 2gh: 0 = 400 - 20h, h = 20m",
+    "solution_steps": [
+      { "step_number": 1, "description": "Identify given values", "formula": "u = 20 m/s, v = 0, g = 10 m/s²" },
+      { "step_number": 2, "description": "Apply third equation of motion", "formula": "v² = u² - 2gh" },
+      { "step_number": 3, "description": "Substitute and solve", "formula": "0 = 400 - 20h → h = 20m" }
+    ],
+    "key_insight": "At maximum height, velocity becomes zero",
+    "common_mistakes": ["Using addition instead of subtraction for upward motion", "Forgetting to square velocities"],
+    "distractor_analysis": {
+      "A": "Divided velocity by g directly (20/10)",
+      "C": "Used v = u - gt incorrectly",
+      "D": "Squared initial velocity without dividing by 2g"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.2,
+      "discrimination_a": 1.5,
+      "guessing_c": 0.25
+    },
+    "active": true,
+    "created_at": "2026-02-27T00:00:00Z"
+  },
+  {
+    "question_id": "CHEM_ATOM_001",
+    "subject": "Chemistry",
+    "chapter": "Atomic Structure",
+    "chapter_key": "chemistry_atomic_structure",
+    "question_type": "mcq_single",
+    "difficulty": "easy",
+    "question_text": "What is the maximum number of electrons in the L shell?",
+    "question_text_html": "<p>What is the maximum number of electrons in the L shell?</p>",
+    "options": [
+      { "option_id": "A", "text": "2", "html": "<p>2</p>" },
+      { "option_id": "B", "text": "8", "html": "<p>8</p>" },
+      { "option_id": "C", "text": "18", "html": "<p>18</p>" },
+      { "option_id": "D", "text": "32", "html": "<p>32</p>" }
+    ],
+    "correct_answer": "B",
+    "solution_text": "Maximum electrons in a shell = 2n². For L shell (n=2): 2(2²) = 8 electrons",
+    "solution_steps": [
+      { "step_number": 1, "description": "Identify shell number", "formula": "L shell → n = 2" },
+      { "step_number": 2, "description": "Apply electron capacity formula", "formula": "Max electrons = 2n²" },
+      { "step_number": 3, "description": "Calculate", "formula": "2(2²) = 2(4) = 8" }
+    ],
+    "key_insight": "Shell capacity follows 2n² rule",
+    "common_mistakes": ["Confusing with K shell (2 electrons)", "Using n instead of 2n²"],
+    "distractor_analysis": {
+      "A": "Confused with K shell capacity",
+      "C": "Used M shell capacity",
+      "D": "Used N shell capacity"
+    },
+    "irt_parameters": {
+      "difficulty_b": -0.7,
+      "discrimination_a": 1.0,
+      "guessing_c": 0.25
+    },
+    "active": true,
+    "created_at": "2026-02-27T00:00:00Z"
+  },
+  {
+    "question_id": "MATH_CALC_001",
+    "subject": "Mathematics",
+    "chapter": "Differentiation",
+    "chapter_key": "mathematics_differentiation",
+    "question_type": "mcq_single",
+    "difficulty": "medium",
+    "question_text": "Find the derivative of f(x) = 3x² + 5x - 2",
+    "question_text_html": "<p>Find the derivative of \\( f(x) = 3x^2 + 5x - 2 \\)</p>",
+    "options": [
+      { "option_id": "A", "text": "6x + 5", "html": "<p>\\( 6x + 5 \\)</p>" },
+      { "option_id": "B", "text": "3x + 5", "html": "<p>\\( 3x + 5 \\)</p>" },
+      { "option_id": "C", "text": "6x² + 5x", "html": "<p>\\( 6x^2 + 5x \\)</p>" },
+      { "option_id": "D", "text": "x² + 5", "html": "<p>\\( x^2 + 5 \\)</p>" }
+    ],
+    "correct_answer": "A",
+    "solution_text": "Apply power rule: d/dx(xⁿ) = nxⁿ⁻¹. f'(x) = 6x + 5",
+    "solution_steps": [
+      { "step_number": 1, "description": "Apply power rule to first term", "formula": "d/dx(3x²) = 6x" },
+      { "step_number": 2, "description": "Apply power rule to second term", "formula": "d/dx(5x) = 5" },
+      { "step_number": 3, "description": "Constant term derivative is zero", "formula": "d/dx(-2) = 0" },
+      { "step_number": 4, "description": "Combine results", "formula": "f'(x) = 6x + 5" }
+    ],
+    "key_insight": "Power rule: bring down exponent and reduce power by 1",
+    "common_mistakes": ["Forgetting to multiply coefficient by exponent", "Not reducing power by 1"],
+    "distractor_analysis": {
+      "B": "Forgot to multiply coefficient by exponent for x² term",
+      "C": "Didn't reduce power by 1",
+      "D": "Applied power rule incorrectly to both terms"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.1,
+      "discrimination_a": 1.4,
+      "guessing_c": 0.25
+    },
+    "active": true,
+    "created_at": "2026-02-27T00:00:00Z"
+  },
+  {
+    "question_id": "PHY_NLM_001",
+    "subject": "Physics",
+    "chapter": "Newton's Laws of Motion",
+    "chapter_key": "physics_laws_of_motion",
+    "question_type": "mcq_single",
+    "difficulty": "hard",
+    "question_text": "A block of mass 5 kg rests on a horizontal surface with coefficient of friction 0.4. What minimum horizontal force is needed to start moving it? (g = 10 m/s²)",
+    "question_text_html": "<p>A block of mass 5 kg rests on a horizontal surface with coefficient of friction 0.4. What minimum horizontal force is needed to start moving it? (g = 10 m/s²)</p>",
+    "options": [
+      { "option_id": "A", "text": "10 N", "html": "<p>10 N</p>" },
+      { "option_id": "B", "text": "20 N", "html": "<p>20 N</p>" },
+      { "option_id": "C", "text": "30 N", "html": "<p>30 N</p>" },
+      { "option_id": "D", "text": "50 N", "html": "<p>50 N</p>" }
+    ],
+    "correct_answer": "B",
+    "solution_text": "Maximum static friction = μN = μmg = 0.4 × 5 × 10 = 20 N. This is the minimum force needed.",
+    "solution_steps": [
+      { "step_number": 1, "description": "Calculate normal force", "formula": "N = mg = 5 × 10 = 50 N" },
+      { "step_number": 2, "description": "Calculate maximum static friction", "formula": "f_max = μN = 0.4 × 50 = 20 N" },
+      { "step_number": 3, "description": "Conclusion", "formula": "Minimum force = f_max = 20 N" }
+    ],
+    "key_insight": "To start motion, applied force must overcome maximum static friction",
+    "common_mistakes": ["Using mass instead of weight", "Dividing instead of multiplying", "Forgetting to multiply by g"],
+    "distractor_analysis": {
+      "A": "Used mass directly (5 × 0.4 × 10 = 2, then multiplied by 5)",
+      "C": "Added all values (5 + 0.4 × 50)",
+      "D": "Used weight directly (mg) without friction coefficient"
+    },
+    "irt_parameters": {
+      "difficulty_b": 0.8,
+      "discrimination_a": 1.8,
+      "guessing_c": 0.25
+    },
+    "active": true,
+    "created_at": "2026-02-27T00:00:00Z"
+  }
+]
