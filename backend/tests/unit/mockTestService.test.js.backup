@@ -345,7 +345,7 @@ describe('mockTestService', () => {
     });
   });
 
-  describe.skip('checkRateLimit (TODO: Fix Firestore mocks)', () => {
+  describe('checkRateLimit', () => {
     test('should allow test if under monthly limit', async () => {
       const mockUserDoc = {
         exists: true,
@@ -405,7 +405,7 @@ describe('mockTestService', () => {
     });
   });
 
-  describe.skip('getAvailableTemplates (TODO: Fix Firestore mocks)', () => {
+  describe('getAvailableTemplates', () => {
     test('should return list of active templates', async () => {
       const mockTemplates = [
         { id: 'template1', data: () => ({ active: true, template_name: 'JEE Main 1' }) },
@@ -440,7 +440,7 @@ describe('mockTestService', () => {
     });
   });
 
-  describe.skip('getTestResults (TODO: Fix Firestore mocks)', () => {
+  describe('getTestResults', () => {
     test('should return test results with score and percentile', async () => {
       const mockTestDoc = {
         exists: true,
@@ -476,7 +476,7 @@ describe('mockTestService', () => {
     });
   });
 
-  describe.skip('getUserMockTestHistory (TODO: Fix Firestore mocks)', () => {
+  describe('getUserMockTestHistory', () => {
     test('should return test history sorted by date', async () => {
       const mockTests = [
         {
@@ -521,7 +521,7 @@ describe('mockTestService', () => {
     });
   });
 
-  describe.skip('loadTemplateWithQuestions (TODO: Fix Firestore mocks)', () => {
+  describe('loadTemplateWithQuestions', () => {
     test('should load template with all questions', async () => {
       const mockTemplate = {
         template_id: 'template1',
@@ -560,7 +560,7 @@ describe('mockTestService', () => {
     });
   });
 
-  describe.skip('startMockTest (TODO: Fix Firestore mocks)', () => {
+  describe('startMockTest', () => {
     test('should create new mock test session', async () => {
       const mockTemplate = {
         template_id: 'template1',
@@ -628,7 +628,7 @@ describe('mockTestService', () => {
     });
   });
 
-  describe.skip('getActiveTest (TODO: Fix Firestore mocks)', () => {
+  describe('getActiveTest', () => {
     test('should return active test without questions', async () => {
       const mockActiveTest = {
         session_id: 'test123',
@@ -663,7 +663,7 @@ describe('mockTestService', () => {
     });
   });
 
-  describe.skip('getActiveTestWithQuestions (TODO: Fix Firestore mocks)', () => {
+  describe('getActiveTestWithQuestions', () => {
     test('should return test with sanitized questions', async () => {
       const mockTest = {
         session_id: 'test123',
@@ -692,7 +692,7 @@ describe('mockTestService', () => {
     });
   });
 
-  describe.skip('saveAnswer (TODO: Fix Firestore mocks)', () => {
+  describe('saveAnswer', () => {
     test('should save answer and update question state', async () => {
       mockUpdate.mockResolvedValue();
 
@@ -729,7 +729,7 @@ describe('mockTestService', () => {
     });
   });
 
-  describe.skip('clearAnswer (TODO: Fix Firestore mocks)', () => {
+  describe('clearAnswer', () => {
     test('should clear answer and set state to not_answered', async () => {
       mockUpdate.mockResolvedValue();
 
@@ -744,7 +744,7 @@ describe('mockTestService', () => {
     });
   });
 
-  describe.skip('submitMockTest (TODO: Fix Firestore mocks)', () => {
+  describe('submitMockTest', () => {
     test('should calculate score and update test status', async () => {
       const mockTest = {
         session_id: 'test123',
@@ -790,7 +790,7 @@ describe('mockTestService', () => {
     });
   });
 
-  describe.skip('abandonTest (TODO: Fix Firestore mocks)', () => {
+  describe('abandonTest', () => {
     test('should mark test as abandoned', async () => {
       mockUpdate.mockResolvedValue();
 
