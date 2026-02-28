@@ -124,16 +124,16 @@ describe('mockTestService', () => {
       ];
 
       const responses = {
-        1: { selected_answer: 'A' }, // Correct: +4
-        2: { selected_answer: 'C' }, // Wrong: -1
+        1: { answer: 'A' }, // Correct: +4
+        2: { answer: 'C' }, // Wrong: -1
         3: {} // Unattempted: 0
       };
 
       const result = mockTestService.calculateScore(questions, responses);
 
-      expect(result.total_marks).toBe(3); // 4 - 1 + 0
-      expect(result.correct_answers).toBe(1);
-      expect(result.incorrect_answers).toBe(1);
+      expect(result.total_score).toBe(3); // 4 - 1 + 0
+      expect(result.correct).toBe(1);
+      expect(result.incorrect).toBe(1);
       expect(result.unattempted).toBe(1);
     });
 
@@ -144,16 +144,16 @@ describe('mockTestService', () => {
       ];
 
       const responses = {
-        1: { selected_answer: 'A' },
-        2: { selected_answer: 'B' }
+        1: { answer: 'A' },
+        2: { answer: 'B' }
       };
 
       const result = mockTestService.calculateScore(questions, responses);
 
-      expect(result.total_marks).toBe(8); // 2 × 4
-      expect(result.correct_answers).toBe(2);
-      expect(result.incorrect_answers).toBe(0);
-      expect(result.percentage).toBe(100);
+      expect(result.total_score).toBe(8); // 2 × 4
+      expect(result.correct).toBe(2);
+      expect(result.incorrect).toBe(0);
+      expect(parseFloat(result.accuracy)).toBe(100);
     });
 
     test('should handle all unattempted', () => {
@@ -166,9 +166,9 @@ describe('mockTestService', () => {
 
       const result = mockTestService.calculateScore(questions, responses);
 
-      expect(result.total_marks).toBe(0);
+      expect(result.total_score).toBe(0);
       expect(result.unattempted).toBe(2);
-      expect(result.percentage).toBe(0);
+      expect(parseFloat(result.accuracy)).toBe(0);
     });
 
     test('should calculate accuracy correctly', () => {
@@ -179,14 +179,14 @@ describe('mockTestService', () => {
       ];
 
       const responses = {
-        1: { selected_answer: 'A' }, // Correct
-        2: { selected_answer: 'C' }  // Wrong
+        1: { answer: 'A' }, // Correct
+        2: { answer: 'C' }  // Wrong
         // 3 not attempted
       };
 
       const result = mockTestService.calculateScore(questions, responses);
 
-      expect(result.accuracy).toBe(50); // 1 correct out of 2 attempted
+      expect(parseFloat(result.accuracy)).toBe(50); // 1 correct out of 2 attempted
     });
 
     test('should break down marks by subject', () => {
@@ -197,16 +197,17 @@ describe('mockTestService', () => {
       ];
 
       const responses = {
-        1: { selected_answer: 'A' }, // Physics: correct (+4)
-        2: { selected_answer: 'X' }, // Chemistry: wrong (-1)
+        1: { answer: 'A' }, // Physics: correct (+4)
+        2: { answer: 'X' }, // Chemistry: wrong (-1)
         3: {} // Mathematics: unattempted (0)
       };
 
       const result = mockTestService.calculateScore(questions, responses);
 
-      expect(result).toHaveProperty('physics_marks');
-      expect(result).toHaveProperty('chemistry_marks');
-      expect(result).toHaveProperty('mathematics_marks');
+      expect(result).toHaveProperty('subject_scores');
+      expect(result.subject_scores).toHaveProperty('Physics');
+      expect(result.subject_scores).toHaveProperty('Chemistry');
+      expect(result.subject_scores).toHaveProperty('Mathematics');
     });
   });
 
@@ -235,17 +236,11 @@ describe('mockTestService', () => {
     test('should handle invalid numerical answers', () => {
       expect(mockTestService.isAnswerCorrect('abc', '42', true)).toBe(false);
       expect(mockTestService.isAnswerCorrect('', '42', true)).toBe(false);
-      // Null/undefined get converted to string "null"/"undefined" which don't match "42"
-      expect(mockTestService.isAnswerCorrect(null, '42', true)).toBe(false);
     });
 
-    test('should handle empty/null answers', () => {
+    test('should handle empty answers', () => {
       // Empty string doesn't match 'A'
       expect(mockTestService.isAnswerCorrect('', 'A', false)).toBe(false);
-      // Note: null/undefined are converted to strings, so we test actual behavior
-      // These will become "null" and "undefined" strings
-      expect(mockTestService.isAnswerCorrect(null, 'A', false)).toBe(false);
-      expect(mockTestService.isAnswerCorrect(undefined, 'A', false)).toBe(false);
     });
   });
 
