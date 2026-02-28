@@ -213,6 +213,15 @@ async function getEffectiveTier(userId, options = {}) {
       const trialEndTimestamp = userData.trialEndsAt || userData.trial?.ends_at;
       const trialEnd = trialEndTimestamp?.toDate ? trialEndTimestamp.toDate() : new Date(trialEndTimestamp);
 
+      logger.info('DEBUG: Trial check', {
+        userId,
+        has_trial_ends_at: !!userData.trial?.ends_at,
+        has_trialEndsAt: !!userData.trialEndsAt,
+        trialEnd: trialEnd.toISOString(),
+        now: now.toISOString(),
+        isActive: trialEnd > now
+      });
+
       if (trialEnd > now) {
         const daysRemaining = Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24));
 
@@ -254,6 +263,12 @@ async function getEffectiveTier(userId, options = {}) {
     }
 
     // 4. Default to free tier
+    logger.info('DEBUG: Defaulting to free tier', {
+      userId,
+      has_trial: !!(userData.trial?.ends_at || userData.trialEndsAt),
+      has_override: !!userData.subscription?.override,
+      has_paid_sub: !!userData.subscription?.active_subscription_id
+    });
     return cacheAndReturn({
       tier: 'free',
       source: 'default',
